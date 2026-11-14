@@ -1,4 +1,4 @@
-# AFK Fighting
+# Duo Quest
 
 A cooperative idle RPG for Roblox built around persistent two-player parties,
 automated combat, seasonal resets and capped permanent account progression.
