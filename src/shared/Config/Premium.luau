@@ -15,9 +15,11 @@
 	  Packs    Robux -> Sunstones. ProductId is the Developer Product id (0 until it exists in the creator dashboard).
 	           FirstBonus: the first time a player buys that pack they get this many extra Sunstones.
 	  Items    the Premium shop. { Id, Name, Text, Cost (Sunstones), Limit, Grants }
+	           Tag    optional label on the row ("BEST VALUE", "SAVE 10%")
+	           Offer  "Subclass" = hidden until the player reaches the subclass level and has seen the pop-up for it
 	           Limit  nil = unlimited | { Per = "Account" | "Season", Count = n }
-	           Grants any of: SkillPicks = n, Items = { [consumableId] = n }, Levels = n (hero levels),
-	                  PassLevels = n (season pass levels), BagUpgrades = n, Premium = true (the premium pass track)
+	           Grants any of: SkillPicks = n, Items = { [consumableId] = n }, PassMax = true (season pass straight to the top level),
+	                  BagUpgrades = n, Premium = true (the premium pass track)
 
 	Every number is a PLACEHOLDER to be tuned.
 ]]
@@ -37,19 +39,31 @@ return {
 			Grants = { SkillPicks = 3, BagUpgrades = 1, Items = { XPTonic = 5, PowerElixir = 3, GrandPetFood = 3 } },
 		},
 		{
-			Id = "LevelPack", Name = "Level-up Pack", Limit = { Per = "Season", Count = 3 }, Cost = 150,
-			Text = "Instantly gain 3 hero levels.",
-			Grants = { Levels = 3 },
+			Id = "EnhancedStarter", Name = "Enhanced Starter Pack", Tag = "BEST VALUE", Limit = { Per = "Account", Count = 1 }, Cost = 450,
+			Text = "8 free skill picks, 15 XP Tonics, 10 Power Elixirs, 10 Grand Pet Foods, 5 Iron Tonics, 5 Haste Draughts and 3 bag upgrades.",
+			Grants = { SkillPicks = 8, BagUpgrades = 3, Items = { XPTonic = 15, PowerElixir = 10, GrandPetFood = 10, IronTonic = 5, HasteDraught = 5 } },
 		},
 		{
-			Id = "SubclassPack", Name = "Subclass Pack", Limit = { Per = "Season", Count = 1 }, Cost = 180,
+			-- shown on screen as a pop-up when the player reaches the subclass level; listed here once they close it
+			Id = "SubclassPack", Name = "Subclass Pack", Offer = "Subclass", Limit = { Per = "Season", Count = 1 }, Cost = 180,
 			Text = "4 free skill picks to unlock the skills you want (including subclass skills), plus defense and speed boosts.",
 			Grants = { SkillPicks = 4, Items = { IronTonic = 3, HasteDraught = 3 } },
 		},
 		{
-			Id = "PassBoost", Name = "Pass Boost", Limit = { Per = "Season", Count = 4 }, Cost = 100,
-			Text = "Skip ahead 5 levels on the Season Pass.",
-			Grants = { PassLevels = 5 },
+			Id = "PremiumPass", Name = "Premium Season Pass", Limit = { Per = "Season", Count = 1 }, Cost = 400,
+			Text = "Unlocks the Premium reward track for this season's pass.",
+			Grants = { Premium = true },
+		},
+		{
+			Id = "PassMax", Name = "Pass Max-out", Limit = { Per = "Season", Count = 1 }, Cost = 700,
+			Text = "Instantly takes the Season Pass to level 30. Every reward is yours to claim (premium rewards need the Premium Pass).",
+			Grants = { PassMax = true },
+		},
+		{
+			-- cheaper than PremiumPass (400) + PassMax (700) = 1100; gone once the player owns either half
+			Id = "PassBundle", Name = "Premium Pass + Max-out Deal", Tag = "SAVE 10%", Limit = { Per = "Season", Count = 1 }, Cost = 990,
+			Text = "The Premium Season Pass and the Pass Max-out together: every free and premium reward, ready to claim.",
+			Grants = { Premium = true, PassMax = true },
 		},
 		{
 			Id = "BagPack", Name = "Bag Expansion", Limit = { Per = "Season", Count = 4 }, Cost = 60,
@@ -60,11 +74,6 @@ return {
 			Id = "BoostBundle", Name = "Boost Bundle", Limit = nil, Cost = 80,
 			Text = "5 XP Tonics, 5 Power Elixirs, 5 Haste Draughts and 10 Pet Foods.",
 			Grants = { Items = { XPTonic = 5, PowerElixir = 5, HasteDraught = 5, PetFood = 10 } },
-		},
-		{
-			Id = "PremiumPass", Name = "Premium Season Pass", Limit = { Per = "Season", Count = 1 }, Cost = 400,
-			Text = "Unlocks the Premium reward track for this season's pass.",
-			Grants = { Premium = true },
 		},
 	},
 }

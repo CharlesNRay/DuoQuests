@@ -41,7 +41,7 @@ local function shopTab(area, state, call, extra, redraw)
 		if not item.Hidden then
 			local soldOut = item.Left ~= nil and item.Left <= 0
 			local row = Kit.frame({ Size = UDim2.new(1, -8, 0, 70), BackgroundColor3 = C.PanelLight, Parent = scroll })
-			Kit.label({ Size = UDim2.new(1, -170, 0, 20), Position = UDim2.fromOffset(10, 4), Text = item.Name, TextSize = 14, Font = Enum.Font.GothamBold, TextColor3 = if soldOut then C.Dim else ORANGE, Parent = row })
+			local nameLabel = Kit.label({ Size = UDim2.new(1, -170, 0, 20), Position = UDim2.fromOffset(10, 4), Text = item.Name .. (if item.Tag and not soldOut then ("   [" .. item.Tag .. "]") else ""), TextSize = 14, Font = Enum.Font.GothamBold, TextColor3 = if soldOut then C.Dim else ORANGE, Parent = row })
 			Kit.label({ Size = UDim2.new(1, -170, 0, 32), Position = UDim2.fromOffset(10, 24), Text = item.Text, TextSize = 11, TextWrapped = true, TextYAlignment = Enum.TextYAlignment.Top, TextColor3 = C.Dim, Parent = row })
 			local limit = if item.Max then (if item.Per == "Account" then ("Once per account (%d/%d)"):format(item.Bought, item.Max) else ("%d/%d this season"):format(item.Bought, item.Max)) else "Unlimited"
 			Kit.label({ Size = UDim2.new(1, -170, 0, 14), Position = UDim2.fromOffset(10, 54), Text = limit, TextSize = 10, TextColor3 = C.Dim, Parent = row })
@@ -84,6 +84,39 @@ local function packsTab(area, state, call, extra, redraw)
 			call("DevSunstones")
 		end)
 	end
+end
+
+-- The pop-up shown once when the player reaches a milestone (the subclass level): offer = state.Player.PremiumOffer.
+-- Closing it (either button) tells the server, and the item is listed in the shop from then on.
+-- openShop(tab) opens the Premium shop on that tab. Returns the pop-up frame.
+function PremiumScreen.Popup(parent, state, call, openShop)
+	local offer = state.Player.PremiumOffer
+	if not offer then
+		return nil
+	end
+	local backdrop = Kit.frame({ Name = "PremiumOffer", Size = UDim2.fromScale(1, 1), BackgroundColor3 = Color3.fromRGB(0, 0, 0), BackgroundTransparency = 0.45, NoCorner = true, ZIndex = 20, Active = true, Parent = parent })
+	local card = Kit.frame({ Size = UDim2.fromOffset(440, 250), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = C.Bg, ZIndex = 21, Parent = backdrop })
+	Kit.new("UIStroke", { Color = ORANGE, Thickness = 2, Parent = card })
+	Kit.label({ Size = UDim2.new(1, -24, 0, 26), Position = UDim2.fromOffset(12, 12), Text = "Subclass unlocked!", TextSize = 20, Font = Enum.Font.GothamBold, TextColor3 = ORANGE, ZIndex = 22, Parent = card })
+	Kit.label({ Size = UDim2.new(1, -24, 0, 22), Position = UDim2.fromOffset(12, 42), Text = offer.Name, TextSize = 15, Font = Enum.Font.GothamBold, ZIndex = 22, Parent = card })
+	Kit.label({ Size = UDim2.new(1, -24, 0, 80), Position = UDim2.fromOffset(12, 68), Text = offer.Text .. "\n\nYou can always find it later in the Premium shop.", TextSize = 13, TextWrapped = true, TextYAlignment = Enum.TextYAlignment.Top, TextColor3 = C.Dim, ZIndex = 22, Parent = card })
+	local function close()
+		backdrop:Destroy()
+		call("DismissPremiumOffer", offer.Id)
+	end
+	local canBuy = (state.Player.Sunstones or 0) >= offer.Cost
+	Kit.button({ Size = UDim2.fromOffset(200, 46), Position = UDim2.new(0, 12, 1, -58), Text = if canBuy then ("Buy  🔶 " .. commas(offer.Cost)) else ("🔶 " .. commas(offer.Cost) .. " - get Sunstones"), BackgroundColor3 = ORANGE, TextColor3 = Color3.fromRGB(40, 24, 6), ZIndex = 22, Parent = card }, function()
+		if canBuy then
+			backdrop:Destroy()
+			call("BuyPremium", offer.Id)
+			call("DismissPremiumOffer", offer.Id)
+		else
+			close()
+			openShop("Sunstones")
+		end
+	end)
+	Kit.button({ Size = UDim2.fromOffset(200, 46), Position = UDim2.new(1, -212, 1, -58), Text = "Not now", ZIndex = 22, Parent = card }, close)
+	return backdrop
 end
 
 function PremiumScreen.Premium(container, state, call, extra)

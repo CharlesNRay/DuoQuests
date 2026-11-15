@@ -9,7 +9,9 @@
 	  Premium.AddSunstones(profile, n)
 	  Premium.AddPack(profile, packId)      -> true, { Sunstones, Bonus } | false, "BadPack"   (first purchase of a pack doubles it)
 	  Premium.Packs(profile)                -> { { Id, Name, Sunstones, Robux, FirstBonus, Bonus, ProductId } }  (Bonus = what the next buy adds)
-	  Premium.List(profile)                 -> { { Id, Name, Text, Cost, Bought, Max, Left, Affordable, Hidden } }
+	  Premium.List(profile)                 -> { { Id, Name, Text, Cost, Tag, Bought, Max, Left, Affordable, Hidden } }
+	  Premium.Offer(profile)                -> the item row to pop up on screen now (the Subclass Pack at the subclass level) | nil
+	  Premium.DismissOffer(profile, itemId) -> true | false, "BadItem"   (after this the item is listed in the shop)
 	  Premium.Buy(profile, itemId)          -> true, { Item, Cost, Granted } | false, "BadItem" | "LimitReached" | "NotEnough"
 ]]
 
@@ -19,6 +21,7 @@ local Consumables = require(script.Parent.Consumables)
 local Quests = require(script.Parent.Quests)
 local Gear = require(script.Parent.Gear)
 local GearConfig = require(script.Parent.Config.Gear)
+local SubclassConfig = require(script.Parent.Config.Subclasses)
 
 local Premium = {}
 
@@ -92,6 +95,53 @@ local function boughtCount(profile, item)
 	return seasonBought(profile)[item.Id] or 0
 end
 
+local SUBCLASS_LEVEL = math.huge
+for _, def in pairs(SubclassConfig.Defs) do
+	SUBCLASS_LEVEL = math.min(SUBCLASS_LEVEL, def.UnlockLevel)
+end
+
+local function seenOffers(profile)
+	profile.Season.PremiumOffers = profile.Season.PremiumOffers or {}
+	return profile.Season.PremiumOffers
+end
+
+-- is this item sold to this player right now? (separate from "shown in the shop": offers wait for their pop-up)
+local function available(profile, item)
+	local g = item.Grants
+	local pass = Quests.Pass(profile)
+	if item.Offer == "Subclass" and profile.Season.Level < SUBCLASS_LEVEL then
+		return false
+	end
+	if g.Premium and pass.Premium then
+		return false
+	end
+	if g.PassMax and pass.Level >= pass.MaxLevel then
+		return false
+	end
+	if g.BagUpgrades and Gear.BagUpgradeCost(profile) == nil then
+		return false
+	end
+	return true
+end
+
+function Premium.Offer(profile)
+	for _, item in ipairs(Config.Items) do
+		if item.Offer and available(profile, item) and not seenOffers(profile)[item.Id] and boughtCount(profile, item) < (item.Limit and item.Limit.Count or math.huge) then
+			return { Id = item.Id, Name = item.Name, Text = item.Text, Cost = item.Cost }
+		end
+	end
+	return nil
+end
+
+function Premium.DismissOffer(profile, itemId)
+	local item = itemById[itemId]
+	if not item or not item.Offer then
+		return false, "BadItem"
+	end
+	seenOffers(profile)[itemId] = true
+	return true
+end
+
 function Premium.List(profile)
 	local balance = account(profile).Sunstones
 	local rows = {}
@@ -99,10 +149,10 @@ function Premium.List(profile)
 		local bought = boughtCount(profile, item)
 		local max = if item.Limit then item.Limit.Count else nil
 		local left = if max then max - bought else nil
-		local hidden = item.Grants.Premium == true and Quests.Pass(profile).Premium
+		local hidden = not available(profile, item) or (item.Offer ~= nil and not seenOffers(profile)[item.Id])
 		table.insert(rows, {
-			Id = item.Id, Name = item.Name, Text = item.Text, Cost = item.Cost, Bought = bought, Max = max, Left = left,
-			Per = item.Limit and item.Limit.Per or nil, Affordable = balance >= item.Cost, Hidden = hidden or (item.Grants.BagUpgrades ~= nil and Gear.BagUpgradeCost(profile) == nil),
+			Id = item.Id, Name = item.Name, Text = item.Text, Cost = item.Cost, Tag = item.Tag, Bought = bought, Max = max, Left = left,
+			Per = item.Limit and item.Limit.Per or nil, Affordable = balance >= item.Cost, Hidden = hidden,
 		})
 	end
 	return rows
@@ -119,16 +169,9 @@ local function grant(profile, grants)
 		Consumables.Grant(profile, id, count)
 	end
 	done.Items = grants.Items
-	if grants.Levels then
-		local Progression = require(script.Parent.Progression) -- lazy: Progression records quest progress
-		for _ = 1, grants.Levels do
-			Progression.AddXP(season, Progression.XPToNext(season.Level))
-		end
-		done.Levels = grants.Levels
-	end
-	if grants.PassLevels then
-		Quests.AddPassXP(profile, grants.PassLevels * QuestConfig.Pass.XPPerLevel)
-		done.PassLevels = grants.PassLevels
+	if grants.PassMax then
+		Quests.AddPassXP(profile, QuestConfig.Pass.MaxLevel * QuestConfig.Pass.XPPerLevel)
+		done.PassMax = true
 	end
 	if grants.BagUpgrades then
 		local equipment = season.Equipment
@@ -157,7 +200,7 @@ function Premium.Buy(profile, itemId)
 	if item.Limit and boughtCount(profile, item) >= item.Limit.Count then
 		return false, "LimitReached"
 	end
-	if item.Grants.Premium and Quests.Pass(profile).Premium then
+	if not available(profile, item) then
 		return false, "LimitReached"
 	end
 	if a.Sunstones < item.Cost then

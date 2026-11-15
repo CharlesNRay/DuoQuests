@@ -178,6 +178,7 @@ local function buildState(player)
 			Pass = Quests.Pass(profile),
 			Sunstones = Premium.Sunstones(profile),
 			PremiumShop = Premium.List(profile),
+			PremiumOffer = Premium.Offer(profile),
 			SunstonePacks = Premium.Packs(profile),
 		},
 	}
@@ -563,6 +564,14 @@ function handlers.BuyPremium(player, profile, itemId)
 		afterBuildChange(player)
 	end
 	return ok, data
+end
+
+-- The player closed a pop-up offer (the Subclass Pack): from now on it is listed in the shop.
+function handlers.DismissPremiumOffer(_, profile, itemId)
+	if type(itemId) ~= "string" then
+		return false, "BadArgs"
+	end
+	return Premium.DismissOffer(profile, itemId)
 end
 
 -- Studio only: Sunstones without paying, so the shop can be tried.

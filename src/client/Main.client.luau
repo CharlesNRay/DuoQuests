@@ -161,10 +161,22 @@ function extra.RefreshBoss()
 	end
 end
 
+local offerPopup = nil
+local open -- defined below; the pop-up's shop button needs it
 local function redraw()
 	if not state then return end
 	extra.State = state
 	hud:Render(state)
+	-- a pop-up offer (the Subclass Pack at the subclass level) shows once, until the player closes it
+	if state.Player.PremiumOffer == nil then
+		offerPopup = nil
+	elseif offerPopup == nil then
+		offerPopup = require(script.Parent.UI.PremiumScreen).Popup(root, state, call, function(tab)
+			extra.PremiumTab = tab
+			extra.PremiumMsg = nil
+			open("Premium", "Premium Shop", true)
+		end)
+	end
 	Hub.SetDailyReady(state.Player.Daily ~= nil and state.Player.Daily.CanClaim == true)
 	syncWorld()
 	if current then
@@ -230,7 +242,7 @@ function call(action, ...)
 	return ok, data
 end
 
-local function open(name, label, keep)
+function open(name, label, keep)
 	if current == name and panel.Visible and not keep then
 		current = nil
 		lastDrawn = nil

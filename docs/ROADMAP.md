@@ -200,3 +200,7 @@ Newest first.
 - Studio helpers: first Dev button grants test items, a star toggles the premium pass, "Studio only: add 1,000 Sunstones" in the Get Sunstones tab.
 - TODO: PolicyService check for the premium pass's wish tickets in restricted regions; cosmetics shop; gifting; real product ids; verify in Studio.
 - Verified in Studio: four currency pills (gold, shards, blue Wishstones, orange Sunstones), Premium shop list, Get Sunstones packs, test Sunstones, buying the Starter Pack (spends 120, sold out afterwards, skill picks arrive).
+
+## Premium shop changes (Nov 15, night)
+- Level-up Pack and the +5 Pass Boost removed. New: Pass Max-out (700, takes the pass straight to level 30), Premium Pass + Max-out Deal (990 vs 1,100 separately; gone once either half is owned), Enhanced Starter Pack (450, once per account: 8 skill picks, 3 bag upgrades, big consumable stock; BEST VALUE tag).
+- Subclass Pack (180): hidden until the player reaches the subclass level, then a pop-up offers it once (Buy / Not now); after it is closed it is listed in the shop. Server tracks Season.PremiumOffers; API DismissPremiumOffer; client PremiumScreen.Popup. 37 premium tests.

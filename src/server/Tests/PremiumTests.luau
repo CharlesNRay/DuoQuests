@@ -69,22 +69,66 @@ return function(modulesOverride)
 	check("Buying spends Sunstones", Premium.Sunstones(s) == 5000 - Config.Items[1].Cost)
 	check("The Starter Pack is once per account", select(2, Premium.Buy(s, "StarterPack")) == "LimitReached")
 
-	local levelBefore = s.Season.Level
-	for _ = 1, 3 do assert(Premium.Buy(s, "LevelPack")) end
-	check("The Level-up Pack gives 3 hero levels each", s.Season.Level == levelBefore + 9)
-	check("The Level-up Pack is limited per season", select(2, Premium.Buy(s, "LevelPack")) == "LimitReached")
-
-	local passBefore = Quests.Pass(s).Level
-	Premium.Buy(s, "PassBoost")
-	check("The Pass Boost raises the pass level by 5", Quests.Pass(s).Level == passBefore + 5)
-
-	check("The Premium Pass item unlocks the premium track", not Quests.Pass(s).Premium and Premium.Buy(s, "PremiumPass") and Quests.Pass(s).Premium)
-	check("The Premium Pass cannot be bought twice", select(2, Premium.Buy(s, "PremiumPass")) == "LimitReached")
-	local hidden = false
-	for _, row in ipairs(Premium.List(s)) do
-		if row.Id == "PremiumPass" and row.Hidden then hidden = true end
+	-- the enhanced starter pack is bigger than the first and costs more, also once per account
+	local starter, enhanced
+	for _, item in ipairs(Config.Items) do
+		if item.Id == "StarterPack" then starter = item end
+		if item.Id == "EnhancedStarter" then enhanced = item end
 	end
-	check("The Premium Pass row hides once owned", hidden)
+	check("The Enhanced Starter Pack gives more and costs more", enhanced and enhanced.Cost > starter.Cost and enhanced.Grants.SkillPicks > starter.Grants.SkillPicks and enhanced.Grants.BagUpgrades > starter.Grants.BagUpgrades)
+	local picksE = s.Season.Currencies.SkillPicks
+	check("The Enhanced Starter Pack grants its skill picks", select(1, Premium.Buy(s, "EnhancedStarter")) and s.Season.Currencies.SkillPicks == picksE + enhanced.Grants.SkillPicks)
+	check("The Enhanced Starter Pack is once per account", select(2, Premium.Buy(s, "EnhancedStarter")) == "LimitReached")
+	local hasLevelPack = false
+	for _, item in ipairs(Config.Items) do if item.Id == "LevelPack" or item.Id == "PassBoost" then hasLevelPack = true end end
+	check("The level-up pack and the +5 pass boost are gone", not hasLevelPack)
+
+	-- the subclass pack waits for the subclass level, pops up once, then is listed in the shop
+	local sub = ProfileTemplate.New()
+	Premium.AddSunstones(sub, 5000)
+	local function listed(profile, id)
+		for _, row in ipairs(Premium.List(profile)) do
+			if row.Id == id and not row.Hidden then return true end
+		end
+		return false
+	end
+	check("No subclass offer before the subclass level", Premium.Offer(sub) == nil and not listed(sub, "SubclassPack") and select(2, Premium.Buy(sub, "SubclassPack")) == "LimitReached")
+	sub.Season.Level = 30
+	local offer = Premium.Offer(sub)
+	check("The subclass level pops the Subclass Pack up", offer ~= nil and offer.Id == "SubclassPack" and offer.Cost == 180)
+	check("It is not in the shop list until the pop-up is closed", not listed(sub, "SubclassPack"))
+	Premium.DismissOffer(sub, "SubclassPack")
+	check("Closing the pop-up lists it in the shop", Premium.Offer(sub) == nil and listed(sub, "SubclassPack"))
+	check("The Subclass Pack gives skill picks", select(1, Premium.Buy(sub, "SubclassPack")) and sub.Season.Currencies.SkillPicks == 4)
+	check("The Subclass Pack is once per season", select(2, Premium.Buy(sub, "SubclassPack")) == "LimitReached")
+	local buyFirst = ProfileTemplate.New()
+	buyFirst.Season.Level = 30
+	Premium.AddSunstones(buyFirst, 500)
+	check("Buying from the pop-up needs no earlier close", select(1, Premium.Buy(buyFirst, "SubclassPack")) and Premium.Offer(buyFirst) == nil)
+
+	-- pass: premium, max-out, and the cheaper bundle
+	local function cost(id)
+		for _, item in ipairs(Config.Items) do if item.Id == id then return item.Cost end end
+	end
+	check("The bundle is cheaper than buying the pass and the max-out separately", cost("PassBundle") < cost("PremiumPass") + cost("PassMax") and cost("PassMax") > cost("PremiumPass"))
+	local b1 = ProfileTemplate.New()
+	Premium.AddSunstones(b1, 5000)
+	check("Max-out lists before it is bought", listed(b1, "PassMax") and listed(b1, "PassBundle") and listed(b1, "PremiumPass"))
+	local ok2 = Premium.Buy(b1, "PassBundle")
+	local passB = Quests.Pass(b1)
+	check("The bundle unlocks premium and maxes the pass", ok2 and passB.Premium and passB.Level == passB.MaxLevel)
+	check("The bundle spent its price", Premium.Sunstones(b1) == 5000 - cost("PassBundle"))
+	check("Nothing pass-related is sold afterwards", not listed(b1, "PassMax") and not listed(b1, "PassBundle") and not listed(b1, "PremiumPass"))
+	local b2 = ProfileTemplate.New()
+	Premium.AddSunstones(b2, 5000)
+	Premium.Buy(b2, "PassMax")
+	check("Max-out takes the pass to the top level without premium", Quests.Pass(b2).Level == Quests.Pass(b2).MaxLevel and not Quests.Pass(b2).Premium)
+	check("The bundle is gone once the pass is maxed", not listed(b2, "PassBundle") and select(2, Premium.Buy(b2, "PassBundle")) == "LimitReached")
+	check("The Premium Pass can still be bought alone afterwards", listed(b2, "PremiumPass") and select(1, Premium.Buy(b2, "PremiumPass")) and Quests.Pass(b2).Premium)
+	local b3 = ProfileTemplate.New()
+	Premium.AddSunstones(b3, 5000)
+	Premium.Buy(b3, "PremiumPass")
+	check("The bundle is gone once premium is owned, max-out stays", not listed(b3, "PassBundle") and listed(b3, "PassMax"))
 
 	local counts = Consumables.Count(s, "PetFood")
 	Premium.Buy(s, "BoostBundle")
@@ -94,7 +138,9 @@ return function(modulesOverride)
 	-- season limits reset with the season; the account-wide purchase and Sunstones stay
 	local fresh = ProfileTemplate.NewSeasonData(2)
 	s.Season = fresh
-	check("Season-limited items are available again next season", Premium.List(s)[2].Left == 3)
+	local subRow
+	for _, row in ipairs(Premium.List(s)) do if row.Id == "BagPack" then subRow = row end end
+	check("Season-limited items are available again next season", subRow ~= nil and subRow.Left == subRow.Max)
 	check("Sunstones and account purchases survive the season reset", Premium.Sunstones(s) > 0 and select(2, Premium.Buy(s, "StarterPack")) == "LimitReached")
 
 	local rows = Premium.List(ProfileTemplate.New())
