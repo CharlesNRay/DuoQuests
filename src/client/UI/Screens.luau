@@ -633,10 +633,20 @@ function Screens.Wish(container, state, call, extra)
 	local left = Kit.frame({ Size = UDim2.new(0, 330, 1, -34), Position = UDim2.fromOffset(0, 34), BackgroundTransparency = 1, NoCorner = true, Parent = container })
 	local function wish(tier, count)
 		extra.WishResults = nil
+		if extra.WishAnim and extra.WishAnim.Parent then
+			extra.WishAnim:Destroy()
+		end
 		local ok, data = call("Wish", kind, tier.Id, pay, count)
 		if ok then
+			-- the results are stored first, so any redraw shows them; the animation plays over the panel and lifts to reveal them
 			extra.WishResults = { Kind = kind, Rows = data.Results }
 			redraw()
+			local panel = container.Parent
+			if panel and not extra.WishAnimOff then
+				extra.WishAnim = require(script.Parent.WishAnim).Play(panel, kind, data.Results, function()
+					extra.WishAnim = nil
+				end)
+			end
 		end
 	end
 	for index, tier in ipairs(info.Tiers) do

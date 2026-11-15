@@ -18,6 +18,8 @@
 	  LevelPassiveSlot(slotIndex)
 	  SetUltimate(ultimateId)           the party's ultimate (either member)
 	  GetLeaderboard(categoryId)        top rows + your own score, "Stage" or "Level"
+	  GetSeasonRewards()                brackets, your live standing, and finished seasons' rewards waiting to be claimed
+	  ClaimSeasonRewards(seasonId)      collect a finished season's reward (once)
 	  Inspect(userId)                   public card of a party member on this server
 	  ChooseSubclass(subclassId)        pick a subclass path (once per season)
 	  EquipGear(itemId, wornSlot?) / UnequipGear(slot) / SellGear(itemId)   equipment (8 worn slots)
@@ -63,6 +65,10 @@ local PartyService = require(script.Parent.PartyService)
 local WorldService = require(script.Parent.WorldService)
 local LeaderboardService = require(script.Parent.LeaderboardService)
 local Leaderboards = require(Shared.Leaderboards)
+local SeasonRewards = require(Shared.SeasonRewards)
+local SeasonRewardConfig = require(Shared.Config.SeasonRewards)
+local SeasonConfig = require(Shared.Config.Seasons)
+local SeasonResultsService = require(script.Parent.SeasonResultsService)
 
 local ApiService = {}
 
@@ -591,6 +597,76 @@ function handlers.DevPremium(_, profile)
 	local owned = not Quests.Pass(profile).Premium
 	Quests.SetPremium(profile, owned)
 	return true, owned
+end
+
+-- End-of-season rewards. Live standing is cached for a minute (it reads the shared boards).
+local liveCache = nil
+local function liveResults()
+	if liveCache == nil or os.clock() - liveCache.At > 60 then
+		local results = SeasonResultsService.Live()
+		if results then
+			liveCache = { At = os.clock(), Results = results }
+		end
+	end
+	return liveCache and liveCache.Results or nil
+end
+
+local function describe(standing)
+	return {
+		Ranked = standing.Ranked, Score = standing.Score, Percent = standing.Percent, Rank = standing.Rank,
+		ClassRank = standing.ClassRank, ClassId = standing.ClassId,
+		Percentile = standing.Percentile and standing.Percentile.Label or nil,
+		RankLabel = standing.RankReward and standing.RankReward.Label or nil,
+	}
+end
+
+function handlers.GetSeasonRewards(player, profile)
+	local out = { Brackets = SeasonRewards.Brackets(), MinStage = SeasonRewardConfig.MinStage, Pending = {} }
+	local seasonId = SeasonConfig.CurrentSeasonId
+	local season = SeasonConfig.Seasons[seasonId]
+	out.Season = { Id = seasonId, Name = season and season.Name or "", EndsAt = season and season.EndsAt or 0 }
+	local score = math.max(0, math.floor(profile.Season.HighestStage))
+	local results = liveResults()
+	if results then
+		local standing = SeasonRewards.Standing(results, { UserId = player.UserId, Score = score, ClassId = profile.Season.ClassId })
+		out.Live = describe(standing)
+		out.Live.Projected = SeasonRewards.Reward(standing).Sunstones
+		out.Live.Players = results.Total
+	else
+		out.Live = { Ranked = false, Score = score }
+	end
+	for id, def in pairs(SeasonConfig.Seasons) do
+		if SeasonResultsService.Ended(id) and not SeasonRewards.Claimed(profile, id) then
+			local final = SeasonResultsService.Results(id)
+			if final then
+				local info = SeasonResultsService.InfoFor(player.UserId, id, final, profile)
+				local standing = SeasonRewards.Standing(final, info)
+				if standing.Ranked then
+					local reward = SeasonRewards.Reward(standing)
+					table.insert(out.Pending, { SeasonId = id, Name = def.Name, Standing = describe(standing), Reward = reward })
+				end
+			end
+		end
+	end
+	table.sort(out.Pending, function(a, b)
+		return a.SeasonId < b.SeasonId
+	end)
+	return true, out
+end
+
+function handlers.ClaimSeasonRewards(player, profile, seasonId)
+	if type(seasonId) ~= "number" or SeasonConfig.Seasons[seasonId] == nil then
+		return false, "BadArgs"
+	end
+	if not SeasonResultsService.Ended(seasonId) then
+		return false, "NotOver"
+	end
+	local final = SeasonResultsService.Results(seasonId)
+	if not final then
+		return false, "Unavailable"
+	end
+	local info = SeasonResultsService.InfoFor(player.UserId, seasonId, final, profile)
+	return SeasonRewards.Claim(profile, seasonId, final, info)
 end
 
 function handlers.ChooseSubclass(player, profile, subclassId)
