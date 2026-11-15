@@ -86,13 +86,66 @@ function Party.New(partyId, seasonId, userIdA, userIdB, now, frontierA, frontier
 	}
 end
 
+-- A party that so far has one member (waiting for a partner). The member can
+-- play and progress alone; AddMember turns it into a pair.
+function Party.NewOpen(partyId, seasonId, userId, now)
+	return {
+		Version = Party.VERSION,
+		PartyId = partyId,
+		SeasonId = seasonId,
+		Members = { userId },
+		Stage = 1,
+		Frontier = 1,
+		Snapshots = {},
+		Pending = {},
+		LastActiveAt = now,
+		CreatedAt = now,
+	}
+end
+
+function Party.IsOpen(party)
+	return #party.Members == 1
+end
+
+-- Completes an open party. The pair starts at the WEAKER member's frontier
+-- (the stronger player carries the weaker one up). The first member's frontier
+-- comes from their saved snapshot; the newcomer's from their profile.
+function Party.AddMember(party, userId, name, profile, now)
+	assert(#party.Members == 1, "Party is not open")
+	assert(party.Members[1] ~= userId, "Already a member")
+	local first = party.Snapshots[key(party.Members[1])]
+	local firstFrontier = if first then first.Frontier else party.Frontier
+	table.insert(party.Members, userId)
+	party.Snapshots[key(userId)] = Party.MakeSnapshot(profile, userId, name, nil, now)
+	local start = math.min(firstFrontier, profile.Season.HighestStage)
+	party.Stage = start
+	party.Frontier = start
+	party.Pending = {}
+	party.LastActiveAt = now
+end
+
+-- Removes a member and their saved ghost and unclaimed AFK. Returns how many
+-- members are left (0 means the party should be deleted). Pay out the leaving
+-- member with Claim first.
+function Party.RemoveMember(party, userId)
+	for index, memberId in ipairs(party.Members) do
+		if memberId == userId then
+			table.remove(party.Members, index)
+			break
+		end
+	end
+	party.Snapshots[key(userId)] = nil
+	party.Pending[key(userId)] = nil
+	return #party.Members
+end
+
 function Party.Partner(party, userId)
 	if party.Members[1] == userId then
 		return party.Members[2]
 	elseif party.Members[2] == userId then
 		return party.Members[1]
 	end
-	return nil
+	return nil -- also nil for an open party with no partner yet
 end
 
 -- A new season wipes the shared stage, not the party itself.

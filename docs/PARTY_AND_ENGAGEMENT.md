@@ -18,6 +18,29 @@ Design notes, not built yet. Decisions from the designer are marked **Decided**.
   own frontier (`Season.HighestStage`) and gets credited when the party passes
   stages they hadn't reached.
 
+## Finding a party (decided direction)
+
+Players need a "Find a party" screen with three ways to get a partner:
+
+1. **Invite Roblox friends.** Friends can be invited straight from the friends
+   list (Roblox's social APIs only expose a player's friends who are in the
+   same server or playing, so the invite flow needs a design pass).
+2. **Invite others** from the party finder (players who are looking for a
+   partner) or by a shared join code.
+3. **Join at random** for players who don't care who they party with: a
+   matchmaking queue that pairs two players who opted in.
+
+Design notes for when this is built:
+- Matching should prefer similar stage and level, widening over time, since the
+  party starts at the weaker member's stage.
+- Players need a way to leave a party and to block or report a partner, and
+  the party record has to be cleaned up when it empties.
+- Invites and the random queue need a shared, cross-server list (MemoryStore),
+  and the pairing has to be race-safe so two servers cannot give the same
+  player two partners.
+- Roblox safety expectations apply: no free-text chat between matched
+  strangers beyond what Roblox's own chat provides.
+
 ## Joining a party (decided)
 
 A party starts at the WEAKER member's frontier. A stronger player does not lift
@@ -77,8 +100,29 @@ ghost snapshot and queued AFK gains.
 - Partner progress is paid by catching the member's frontier up to the party's,
   one stage at a time, so it can never be paid twice.
 
-Still to build: `PartyService` (DataStore record, MemoryStore routing so only
-one server runs a party, teleport to join, the server tick loop).
+## PartyService (built)
+
+`Services/PartyCore` (tested without Roblox) and `Services/PartyService`
+(Roblox glue, wired into `Main`).
+
+- Every player always has a party: a solo (open) one is made on first login.
+- **Join codes:** a member of an open party makes a 6-character code (15 minute
+  life, no confusing characters). Entering it joins that party; the joiner's own
+  solo party is deleted. A pair must leave before joining another.
+- **Leave:** the leaver is paid first, the remaining member keeps the party,
+  the last member leaving deletes it, and the leaver gets a fresh solo party.
+- **Hosting:** one server runs a party at a time (a host lock with a 60 s
+  timeout). Another server sends its player to the host with TeleportService
+  (written, NOT yet tested outside Studio).
+- **No overwrites between servers:** membership changes are atomic and bump a
+  revision; a host that finds the revision changed adopts the stored record
+  instead of saving over it.
+- **Pacing:** a fight resolves instantly, then the party waits out its
+  duration plus the pause, so real time matches the tuned economy.
+- Saved at most every 30 s per party and when a player leaves.
+
+Still to build: friend invites (SocialService invite prompt carrying the party
+code), random matchmaking, remotes for the client UI, an in-game party screen.
 
 ## Things to do on login (wish list, to prioritise)
 

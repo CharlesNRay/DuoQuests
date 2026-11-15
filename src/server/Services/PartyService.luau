@@ -1,0 +1,523 @@
+--[[
+	PartyService (ModuleScript)
+	Location: ServerScriptService > Server > Services > PartyService
+
+	Runs parties on this server: saves them, hosts them, runs the stage loop,
+	pays rewards, and handles creating, joining (by code) and leaving.
+	The rules live in Shared/Party and Services/PartyCore (both tested without
+	Roblox). This file only connects them to Roblox: DataStores, the timer loop,
+	players and teleports. Keep it thin.
+
+	How a party runs
+	  * Every player always has a party (a solo one is made for new players).
+	  * A party is HOSTED by one server at a time. If a player joins a server and
+	    their party is hosted on another live server, they are teleported there.
+	  * The host runs one stage fight at a time. A fight is resolved instantly,
+	    then the party "waits out" the fight's duration plus the pause between
+	    fights, so real time matches the pacing the economy was tuned against.
+	  * While only one member is online they fight with the partner's ghost.
+	  * Party records are saved at most every SAVE_INTERVAL seconds (DataStore
+	    writes to one key are rate limited) and when a player leaves.
+
+	Public API (called from Main and, later, the client remotes)
+	  PartyService.Init()
+	  PartyService.OnPlayerReady(player, profile)   after the profile is loaded
+	  PartyService.OnPlayerLeaving(player)          BEFORE the profile is released
+	  PartyService.CreateCode(player)               -> true, code, expiresAt | false, reason
+	  PartyService.JoinByCode(player, code)         -> true | false, reason
+	  PartyService.Leave(player)                    -> true | false, reason
+	  PartyService.RefreshSnapshot(player)          call after a player changes their build
+	  PartyService.GetState(player)                 -> table for the UI, or nil
+	  PartyService.GetLastClaim(player)             -> what they were paid at login
+
+	Studio: like DataService, falls back to in-memory stores if Studio cannot use
+	DataStores (nothing is saved). The teleport path only runs in a live game and
+	has NOT been tested yet.
+]]
+
+local DataStoreService = game:GetService("DataStoreService")
+local HttpService = game:GetService("HttpService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
+local TeleportService = game:GetService("TeleportService")
+
+local Shared = ReplicatedStorage:WaitForChild("Shared")
+local Party = require(Shared.Party)
+local OfflineConfig = require(Shared.Config.Offline)
+local Seasons = require(Shared.Config.Seasons)
+local TableUtil = require(Shared.Util.TableUtil)
+local PartyCore = require(script.Parent.PartyCore)
+
+local PARTY_STORE = "Parties_v1"
+local CODE_STORE = "PartyCodes_v1"
+local LOOP_INTERVAL = 1 -- seconds between checks of the hosted parties
+local SAVE_INTERVAL = 30 -- seconds between saves of a changed party
+local HEARTBEAT_INTERVAL = PartyCore.HOST_TIMEOUT / 3 -- keeps the host lock fresh
+local MAX_ATTEMPTS = 3
+
+local SERVER_ID = if game.JobId ~= "" then game.JobId else "studio"
+
+local PartyService = {}
+
+local deps = nil
+local initialized = false
+local hosted = {} -- [partyId] = { Record, Online = {[userId] = {Player, Profile, Name}}, NextFightAt, NextSaveAt, Dirty, Saving }
+local partyOf = {} -- [userId] = partyId
+local lastClaim = {} -- [userId] = what the player was paid at login
+
+-- Stores ----------------------------------------------------------------------------------
+
+local function retry(label, fn)
+	local lastError
+	for attempt = 1, MAX_ATTEMPTS do
+		local ok, result = pcall(fn)
+		if ok then
+			return true, result
+		end
+		lastError = result
+		warn(("[PartyService] %s failed (attempt %d/%d): %s"):format(label, attempt, MAX_ATTEMPTS, tostring(result)))
+		if attempt < MAX_ATTEMPTS then
+			task.wait(2 ^ attempt)
+		end
+	end
+	return false, lastError
+end
+
+local function newDataStoreStore(name)
+	local dataStore = DataStoreService:GetDataStore(name)
+	local store = {}
+	function store:Get(key)
+		return retry("Get " .. key, function()
+			return dataStore:GetAsync(key)
+		end)
+	end
+	function store:Update(key, transform)
+		return retry("Update " .. key, function()
+			return dataStore:UpdateAsync(key, transform)
+		end)
+	end
+	function store:Remove(key)
+		return (retry("Remove " .. key, function()
+			dataStore:RemoveAsync(key)
+		end))
+	end
+	return store
+end
+
+local function newMemoryStore()
+	local data = {}
+	local store = {}
+	function store:Get(key)
+		return true, if data[key] ~= nil then TableUtil.DeepCopy(data[key]) else nil
+	end
+	function store:Update(key, transform)
+		local result = transform(if data[key] ~= nil then TableUtil.DeepCopy(data[key]) else nil)
+		if result ~= nil then
+			data[key] = TableUtil.DeepCopy(result)
+		end
+		return true, result
+	end
+	function store:Remove(key)
+		data[key] = nil
+		return true
+	end
+	return store
+end
+
+-- Helpers -----------------------------------------------------------------------------------
+
+local function now()
+	return os.time()
+end
+
+local function managedSet(entry)
+	local set = {}
+	for userId in pairs(entry.Online) do
+		set[tostring(userId)] = true
+	end
+	return set
+end
+
+local function onlineList(entry)
+	local list = {}
+	for userId, online in pairs(entry.Online) do
+		table.insert(list, { UserId = userId, Name = online.Name, Profile = online.Profile })
+	end
+	return list
+end
+
+local function partnerIsOnline(entry, userId)
+	for otherId in pairs(entry.Online) do
+		if otherId ~= userId then
+			return true
+		end
+	end
+	return false
+end
+
+-- Saving and adopting changes ---------------------------------------------------------------
+
+local attach -- forward declaration
+
+-- Writes the hosted party. If someone joined or left on another server, adopts
+-- the stored record. If this server lost the host lock, re-attaches its players.
+local function saveEntry(entry)
+	if entry.Saving or entry.Dead then
+		return
+	end
+	entry.Saving = true
+	local ok, record, membershipChanged = PartyCore.SaveProgress(deps, entry.Record, managedSet(entry))
+	entry.Saving = false
+
+	if ok then
+		entry.Dirty = false
+		entry.NextSaveAt = now() + SAVE_INTERVAL
+		if membershipChanged then
+			entry.Record = record
+			-- Drop anyone who is no longer a member of this party.
+			for userId in pairs(table.clone(entry.Online)) do
+				if record.Members[1] ~= userId and record.Members[2] ~= userId then
+					entry.Online[userId] = nil
+				end
+			end
+		end
+	elseif record == "LostHost" then
+		warn("[PartyService] Lost the host lock for party " .. entry.Record.PartyId .. "; re-attaching its players")
+		entry.Dead = true
+		hosted[entry.Record.PartyId] = nil
+		for _, online in pairs(entry.Online) do
+			task.spawn(attach, online.Player, online.Profile)
+		end
+	elseif record == "NoParty" then
+		entry.Dead = true
+		hosted[entry.Record.PartyId] = nil
+	else
+		warn("[PartyService] Could not save party " .. entry.Record.PartyId .. ": " .. tostring(record))
+	end
+end
+
+-- Attaching players ----------------------------------------------------------------------------
+
+local function sendToHost(player, hostInfo)
+	if RunService:IsStudio() then
+		warn("[PartyService] Party is hosted on another server; teleport skipped in Studio.")
+		return
+	end
+	-- UNTESTED: sends the player to the server that is running their party.
+	local ok, err = pcall(function()
+		TeleportService:TeleportToPlaceInstance(game.PlaceId, hostInfo.JobId, player)
+	end)
+	if not ok then
+		warn("[PartyService] Teleport to party host failed: " .. tostring(err))
+	end
+end
+
+-- Puts a player into their party on this server (becoming host if nobody is),
+-- starts their session and pays what they are owed.
+function attach(player, profile)
+	local userId = player.UserId
+	local partyId = profile.Permanent.PartyId
+	local entry = hosted[partyId]
+
+	if entry then
+		-- Already hosted here: re-read the stored record in case membership changed.
+		local ok, record = PartyCore.Get(deps, partyId)
+		if not ok then
+			warn("[PartyService] Could not reload party " .. tostring(partyId) .. ": " .. tostring(record))
+			return false
+		end
+		entry.Record = record
+	else
+		local ok, record, hostInfo = PartyCore.AcquireHost(deps, partyId)
+		if not ok then
+			if record == "HostedElsewhere" then
+				sendToHost(player, hostInfo)
+			else
+				warn("[PartyService] Could not host party " .. tostring(partyId) .. ": " .. tostring(record))
+			end
+			return false
+		end
+		entry = { Record = record, Online = {}, NextFightAt = 0, NextSaveAt = 0, Dirty = true }
+		hosted[partyId] = entry
+	end
+
+	partyOf[userId] = partyId
+	local seasonId = Seasons.CurrentSeasonId
+	local partnerOnline = partnerIsOnline(entry, userId)
+	Party.OpenSession(entry.Record, seasonId, userId, player.Name, profile, partnerOnline, now())
+	entry.Online[userId] = { Player = player, Profile = profile, Name = player.Name }
+
+	local claim = Party.Claim(entry.Record, userId, profile)
+	lastClaim[userId] = claim
+	entry.Dirty = true
+
+	print(
+		("[PartyService] %s joined party %s (stage %d). Caught up %d stage(s); AFK: %s"):format(
+			player.Name,
+			tostring(partyId),
+			entry.Record.Stage,
+			claim.CatchUp.Stages,
+			if claim.Afk then ("%d gold, %d XP, %d shards"):format(claim.Afk.Gold, claim.Afk.XP, claim.Afk.Shards) else "none"
+		)
+	)
+	return true
+end
+
+-- Public API ------------------------------------------------------------------------------------
+
+function PartyService.OnPlayerReady(player, profile)
+	local userId = player.UserId
+	local seasonId = Seasons.CurrentSeasonId
+
+	local partyId = profile.Permanent.PartyId
+	if partyId ~= nil then
+		local ok, reason = PartyCore.Get(deps, partyId)
+		if not ok and reason == "NoParty" then
+			profile.Permanent.PartyId = nil -- the record was deleted; start fresh
+		elseif not ok then
+			warn("[PartyService] Could not read party for " .. player.Name .. ": " .. tostring(reason))
+			return false
+		end
+	end
+
+	if profile.Permanent.PartyId == nil then
+		local ok, reason = PartyCore.CreateSolo(deps, userId, player.Name, profile, seasonId)
+		if not ok then
+			warn("[PartyService] Could not create a party for " .. player.Name .. ": " .. tostring(reason))
+			return false
+		end
+	end
+	return attach(player, profile)
+end
+
+-- Ends the player's session. Call BEFORE DataService.ReleaseProfile.
+function PartyService.OnPlayerLeaving(player)
+	local userId = player.UserId
+	local partyId = partyOf[userId]
+	partyOf[userId] = nil
+	lastClaim[userId] = nil
+	local entry = partyId and hosted[partyId]
+	if not entry then
+		return
+	end
+
+	local online = entry.Online[userId]
+	if online then
+		Party.CloseSession(entry.Record, userId, online.Name, online.Profile, now())
+		entry.Online[userId] = nil
+	end
+	entry.Dirty = true
+	saveEntry(entry)
+
+	if next(entry.Online) == nil then
+		hosted[partyId] = nil
+		entry.Dead = true
+		PartyCore.ReleaseHost(deps, partyId)
+	end
+end
+
+function PartyService.CreateCode(player)
+	local partyId = partyOf[player.UserId]
+	if not partyId then
+		return false, "NoParty"
+	end
+	return PartyCore.CreateCode(deps, partyId, player.UserId)
+end
+
+function PartyService.JoinByCode(player, code)
+	local userId = player.UserId
+	local oldId = partyOf[userId]
+	local entry = oldId and hosted[oldId]
+	local online = entry and entry.Online[userId]
+	if not online then
+		return false, "NoParty"
+	end
+	local profile = online.Profile
+
+	local ok, joined, abandoned = PartyCore.JoinByCode(deps, userId, player.Name, profile, Seasons.CurrentSeasonId, code)
+	if not ok then
+		return false, joined
+	end
+
+	-- The player's old solo party ended with them: stop hosting it.
+	if abandoned and hosted[abandoned] then
+		hosted[abandoned].Dead = true
+		hosted[abandoned] = nil
+	end
+	partyOf[userId] = nil
+	attach(player, profile)
+	return true
+end
+
+function PartyService.Leave(player)
+	local userId = player.UserId
+	local partyId = partyOf[userId]
+	local entry = partyId and hosted[partyId]
+	if not entry or not entry.Online[userId] then
+		return false, "NoParty"
+	end
+	local profile = entry.Online[userId].Profile
+
+	-- Pay the leaver everything they are owed first, then save, then leave.
+	lastClaim[userId] = Party.Claim(entry.Record, userId, profile)
+	entry.Dirty = true
+	saveEntry(entry)
+
+	local ok, remaining = PartyCore.Leave(deps, userId, profile)
+	if not ok then
+		return false, remaining
+	end
+	entry.Online[userId] = nil
+	partyOf[userId] = nil
+
+	if remaining == 0 then
+		entry.Dead = true
+		hosted[partyId] = nil
+	else
+		local reloaded, record = PartyCore.Get(deps, partyId)
+		if reloaded then
+			entry.Record = record
+		end
+		if next(entry.Online) == nil then
+			-- Nobody is left online here: stop hosting it.
+			entry.Dead = true
+			hosted[partyId] = nil
+			PartyCore.ReleaseHost(deps, partyId)
+		end
+	end
+
+	-- Everyone always has a party: start a fresh solo one.
+	local created, reason = PartyCore.CreateSolo(deps, userId, player.Name, profile, Seasons.CurrentSeasonId)
+	if not created then
+		warn("[PartyService] Could not create a new party after leaving: " .. tostring(reason))
+		return true
+	end
+	attach(player, profile)
+	return true
+end
+
+function PartyService.RefreshSnapshot(player)
+	local partyId = partyOf[player.UserId]
+	local entry = partyId and hosted[partyId]
+	local online = entry and entry.Online[player.UserId]
+	if online then
+		Party.RefreshSnapshot(entry.Record, player.UserId, online.Name, online.Profile, now())
+		entry.Dirty = true
+	end
+end
+
+function PartyService.GetLastClaim(player)
+	return lastClaim[player.UserId]
+end
+
+function PartyService.GetState(player)
+	local partyId = partyOf[player.UserId]
+	local entry = partyId and hosted[partyId]
+	if not entry then
+		return nil
+	end
+	local record = entry.Record
+	local partnerId = Party.Partner(record, player.UserId)
+	local partnerSnapshot = partnerId and record.Snapshots[tostring(partnerId)]
+	return {
+		PartyId = partyId,
+		Stage = record.Stage,
+		Frontier = record.Frontier,
+		IsOpen = Party.IsOpen(record),
+		PartnerName = partnerSnapshot and partnerSnapshot.Name,
+		PartnerOnline = partnerId ~= nil and entry.Online[partnerId] ~= nil,
+		GhostLoadout = partnerSnapshot and table.clone(partnerSnapshot.GhostLoadout),
+	}
+end
+
+-- Loop -----------------------------------------------------------------------------------------
+
+local function tickEntry(entry, currentTime)
+	if next(entry.Online) == nil then
+		return
+	end
+
+	if currentTime >= entry.NextFightAt then
+		local seed = math.random(1, 1073741824)
+		local outcome = Party.OnlineTick(entry.Record, onlineList(entry), seed, currentTime)
+		if outcome then
+			entry.NextFightAt = currentTime + outcome.Duration + OfflineConfig.Intermission
+			entry.Dirty = true
+			if outcome.Won then
+				print(("[PartyService] Party %s cleared stage %d (%.1fs). Frontier %d."):format(entry.Record.PartyId, outcome.Stage, outcome.Duration, entry.Record.Frontier))
+			end
+			-- Levels and gold changed: keep each ghost snapshot fresh.
+			for userId, online in pairs(entry.Online) do
+				Party.RefreshSnapshot(entry.Record, userId, online.Name, online.Profile, currentTime)
+			end
+		end
+	end
+
+	if (entry.Dirty and currentTime >= entry.NextSaveAt) or (currentTime >= entry.NextSaveAt + HEARTBEAT_INTERVAL) then
+		task.spawn(saveEntry, entry)
+	end
+end
+
+function PartyService.Init()
+	if initialized then
+		return
+	end
+	initialized = true
+
+	local parties, codes
+	local usingMemory = false
+	if RunService:IsStudio() then
+		local ok = pcall(function()
+			DataStoreService:GetDataStore(PARTY_STORE):GetAsync("__studio_ping")
+		end)
+		usingMemory = not ok
+	end
+	if usingMemory then
+		warn("[PartyService] Studio DataStore access unavailable - using in-memory parties (nothing will be saved).")
+		parties, codes = newMemoryStore(), newMemoryStore()
+	else
+		parties, codes = newDataStoreStore(PARTY_STORE), newDataStoreStore(CODE_STORE)
+	end
+
+	deps = {
+		Parties = parties,
+		Codes = codes,
+		ServerId = SERVER_ID,
+		Now = now,
+		Random = function(n)
+			return math.random(1, n)
+		end,
+		NewId = function()
+			return HttpService:GenerateGUID(false)
+		end,
+	}
+
+	task.spawn(function()
+		while true do
+			task.wait(LOOP_INTERVAL)
+			local currentTime = now()
+			for _, entry in pairs(table.clone(hosted)) do
+				local ok, err = pcall(tickEntry, entry, currentTime)
+				if not ok then
+					warn("[PartyService] Tick failed: " .. tostring(err))
+				end
+			end
+		end
+	end)
+
+	-- On shutdown: close every session, save, and release the host locks.
+	game:BindToClose(function()
+		for partyId, entry in pairs(table.clone(hosted)) do
+			for userId, online in pairs(table.clone(entry.Online)) do
+				Party.CloseSession(entry.Record, userId, online.Name, online.Profile, now())
+				entry.Online[userId] = nil
+			end
+			entry.Dirty = true
+			saveEntry(entry)
+			PartyCore.ReleaseHost(deps, partyId)
+			hosted[partyId] = nil
+		end
+	end)
+end
+
+return PartyService

@@ -10,8 +10,10 @@ local Players = game:GetService("Players")
 
 local Services = script.Parent.Services
 local DataService = require(Services.DataService)
+local PartyService = require(Services.PartyService)
 
 DataService.Init()
+PartyService.Init()
 
 local function onPlayerAdded(player)
 	local profile, reason = DataService.LoadProfile(player)
@@ -30,10 +32,13 @@ local function onPlayerAdded(player)
 			profile.Season.Level
 		)
 	)
+
+	PartyService.OnPlayerReady(player, profile)
 end
 
 Players.PlayerAdded:Connect(onPlayerAdded)
 Players.PlayerRemoving:Connect(function(player)
+	PartyService.OnPlayerLeaving(player) -- while the profile is still loaded
 	DataService.ReleaseProfile(player)
 end)
 

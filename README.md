@@ -36,6 +36,8 @@ docs/
   server/                    -> ServerScriptService.Server
     Main.server.luau         starts services, connects players
     Services/DataService     session-locked loading and saving
+    Services/PartyCore       party saving, hosting, join codes, leave (no Roblox APIs)
+    Services/PartyService    runs parties: stage loop, rewards, DataStores
     Tests/                   run from the Studio command bar
 ```
 
@@ -68,5 +70,6 @@ require(game.ServerScriptService.Server.Tests.CombatTests)()
 require(game.ServerScriptService.Server.Tests.AbilityTests)()
 require(game.ServerScriptService.Server.Tests.StageTests)()
 require(game.ServerScriptService.Server.Tests.PartyTests)()
+require(game.ServerScriptService.Server.Tests.PartyCoreTests)()
 require(game.ServerScriptService.Server.Tests.PacingTests)()
 ```
