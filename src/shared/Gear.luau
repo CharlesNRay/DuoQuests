@@ -18,11 +18,15 @@
 	  Gear.Unequip(profile, slot)           reasons: "BadSlot", "Empty", "BagFull"
 	  Gear.Sell(profile, itemId)            -> true, gold   reasons: "NotFound"
 	  Gear.SellValue(item)                  -> gold
-	  Gear.List(profile)                    -> { Equipped = {slot = row}, Inventory = {rows} } for the UI
+	  Gear.List(profile)                    -> { Equipped = {slot = row}, Inventory = {rows}, Sets = {...} } for the UI
+	  Gear.SetFor(setId)                    -> definition + Loop for a set (setId = zone number)
+	  Gear.SetCounts(equipped)              -> { [setId] = pieces worn }
+	  Gear.DescribeMods(mods)               -> text like "Attack +5%, Defense +5%"
 ]]
 
 local Config = require(script.Parent.Config.Gear)
 local StageConfig = require(script.Parent.Config.Stages)
+local Zones = require(script.Parent.Zones)
 
 local Gear = {}
 
@@ -42,7 +46,42 @@ function Gear.StatOf(item)
 	return slot.Stat, (slot.Base + slot.PerStage * item.Power) * mult
 end
 
+-- A set belongs to a zone (10 stages). Past the authored sets the list repeats.
+function Gear.SetFor(setId)
+	local sets = Config.Sets
+	local def = sets[(setId - 1) % #sets + 1]
+	return def, (setId - 1) // #sets + 1
+end
+
+function Gear.SetCounts(equipped)
+	local counts = {}
+	for _, slotName in ipairs(Config.SlotOrder) do
+		local item = equipped and equipped[slotName]
+		if item and item.SetId then
+			counts[item.SetId] = (counts[item.SetId] or 0) + 1
+		end
+	end
+	return counts
+end
+
+local STAT_NAMES = { MaxHealth = "Health", AttackSpeed = "Attack speed", CritChance = "Crit chance", DamageDealt = "Damage dealt", HealingDealt = "Healing", DamageTaken = "Damage taken" }
+
+function Gear.DescribeMods(mods)
+	local parts = {}
+	for _, mod in ipairs(mods) do
+		local name = STAT_NAMES[mod.Stat] or mod.Stat
+		local value = mod.Value * 100
+		table.insert(parts, ("%s %s%s%%"):format(name, if value >= 0 then "+" else "-", tostring(math.abs(math.floor(value * 10 + 0.5) / 10))))
+	end
+	return table.concat(parts, ", ")
+end
+
 function Gear.Name(item)
+	if item.SetId then
+		local def, loop = Gear.SetFor(item.SetId)
+		local piece = def.Pieces[item.Slot] or (def.Name .. " " .. item.Slot)
+		return if loop > 1 then piece .. " " .. loop else piece
+	end
 	local names = Config.Names[item.Slot]
 	return names and names[item.Rarity] or (item.Rarity .. " " .. item.Slot)
 end
@@ -58,6 +97,20 @@ function Gear.Mods(equipped)
 			end
 		end
 	end
+	-- set bonuses: 2 pieces of one set, then 3
+	for setId, count in pairs(Gear.SetCounts(equipped)) do
+		local def = Gear.SetFor(setId)
+		if count >= 2 then
+			for _, mod in ipairs(def.Bonus2) do
+				table.insert(mods, table.clone(mod))
+			end
+		end
+		if count >= 3 then
+			for _, mod in ipairs(def.Bonus3) do
+				table.insert(mods, table.clone(mod))
+			end
+		end
+	end
 	return mods
 end
 
@@ -67,7 +120,19 @@ end
 
 function Gear.RollDrop(stage, isFrontier, itemRarityBonus, rand)
 	local drop = Config.Drop
-	local chance = if stage % StageConfig.BossEvery == 0 then drop.BossChance elseif isFrontier then drop.Chance else drop.ReplayChance
+	local isBoss = stage % StageConfig.BossEvery == 0
+	-- set pieces: only from the zone itself, on frontier fights and replays alike
+	local slotFor = function()
+		return Config.SlotOrder[math.min(#Config.SlotOrder, math.floor(rand() * #Config.SlotOrder) + 1)]
+	end
+	if isBoss then
+		if rand() < Config.SetBossChance then
+			return { Slot = slotFor(), Rarity = "Set", SetId = Zones.IndexForStage(stage) }
+		end
+	elseif rand() < Config.SetDropChance then
+		return { Slot = slotFor(), Rarity = "Set", SetId = Zones.IndexForStage(stage) }
+	end
+	local chance = if isBoss then drop.BossChance elseif isFrontier then drop.Chance else drop.ReplayChance
 	if rand() >= chance then
 		return nil
 	end
@@ -93,7 +158,11 @@ end
 function Gear.Grant(profile, stage, drop)
 	local equipment = bag(profile)
 	equipment.NextId = (equipment.NextId or 0) + 1
-	local item = { Id = "g" .. equipment.NextId, Slot = drop.Slot, Rarity = drop.Rarity, Power = stage }
+	local item = { Id = "g" .. equipment.NextId, Slot = drop.Slot, Rarity = drop.Rarity, Power = stage, SetId = drop.SetId }
+	if drop.SetId then
+		equipment.Collected = equipment.Collected or {}
+		equipment.Collected[drop.SetId .. ":" .. drop.Slot] = true
+	end
 	if #equipment.Inventory >= Config.InventoryCap then
 		local gold = Gear.SellValue(item)
 		profile.Season.Currencies.Gold += gold
@@ -158,12 +227,53 @@ end
 
 local function row(item)
 	local stat, value = Gear.StatOf(item)
-	return { Id = item.Id, Slot = item.Slot, Rarity = item.Rarity, Name = Gear.Name(item), Power = item.Power, Stat = stat, Value = value, SellValue = Gear.SellValue(item) }
+	local setName
+	if item.SetId then
+		local def, loop = Gear.SetFor(item.SetId)
+		setName = if loop > 1 then def.Name .. " " .. loop else def.Name
+	end
+	return { Id = item.Id, Slot = item.Slot, Rarity = item.Rarity, Name = Gear.Name(item), Power = item.Power, Stat = stat, Value = value, SellValue = Gear.SellValue(item), SetId = item.SetId, SetName = setName }
+end
+
+-- Every set up to the furthest zone reached, with what has been collected and worn.
+function Gear.Sets(profile)
+	local equipment = bag(profile)
+	local counts = Gear.SetCounts(equipment.Equipped)
+	local collected = equipment.Collected or {}
+	local last = Zones.IndexForStage(profile.Season.HighestStage)
+	local list = {}
+	for setId = 1, last do
+		local def, loop = Gear.SetFor(setId)
+		local zone = Zones.ForStage((setId - 1) * StageConfig.BossEvery + 1)
+		local pieces = {}
+		local have = 0
+		for _, slotName in ipairs(Config.SlotOrder) do
+			local owned = collected[setId .. ":" .. slotName] == true
+			if owned then
+				have += 1
+			end
+			local worn = equipment.Equipped[slotName]
+			table.insert(pieces, { Slot = slotName, Name = if loop > 1 then def.Pieces[slotName] .. " " .. loop else def.Pieces[slotName], Collected = owned, Worn = worn ~= nil and worn.SetId == setId })
+		end
+		table.insert(list, {
+			Id = setId,
+			Name = if loop > 1 then def.Name .. " " .. loop else def.Name,
+			ZoneName = zone.Name,
+			FirstStage = zone.FirstStage,
+			LastStage = zone.LastStage,
+			Pieces = pieces,
+			Collected = have,
+			Worn = counts[setId] or 0,
+			Bonus2 = Gear.DescribeMods(def.Bonus2),
+			Bonus3 = Gear.DescribeMods(def.Bonus3),
+		})
+	end
+	return list
 end
 
 function Gear.List(profile)
 	local equipment = bag(profile)
-	local result = { Equipped = {}, Inventory = {}, Cap = Config.InventoryCap }
+	local result = { Equipped = {}, Inventory = {}, Cap = Config.InventoryCap, Sets = Gear.Sets(profile) }
 	for slotName, item in pairs(equipment.Equipped) do
 		result.Equipped[slotName] = row(item)
 	end

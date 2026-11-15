@@ -31,9 +31,38 @@ return {
 		Trinket = { Common = "Lucky Charm", Rare = "Silver Ring", Epic = "Star Pendant" },
 	},
 
-	RarityMult = { Common = 1, Rare = 1.5, Epic = 2.2 },
+	RarityMult = { Common = 1, Rare = 1.5, Epic = 2.2, Set = 1.8 },
 	SellValue = { Common = 2, Rare = 6, Epic = 15 }, -- gold per item (before stage scaling)
 	SellPerStage = 0.2, -- extra gold per stage of Power
+
+	-- SET GEAR. Every zone (10 stages) has its own 3-piece set. Pieces only drop while you
+	-- fight a stage in that zone (frontier or replay), so a player stuck in a zone can farm
+	-- it. A piece is a bit stronger than a normal item (RarityMult.Set) and wearing 2 or 3
+	-- pieces of one set adds a bonus. Bonus mods use the usual { Stat, Mode, Value }.
+	SetDropChance = 0.14, -- per won fight in the zone
+	SetBossChance = 0.6, -- boss stage: chance the (guaranteed) drop is a set piece
+	Sets = {
+		{ Name = "Meadow Warden", Pieces = { Weapon = "Warden's Blade", Armor = "Warden's Vest", Trinket = "Warden's Charm" },
+			Bonus2 = { { Stat = "MaxHealth", Mode = "Mul", Value = 0.04 } }, Bonus3 = { { Stat = "Attack", Mode = "Mul", Value = 0.05 }, { Stat = "Defense", Mode = "Mul", Value = 0.05 } } },
+		{ Name = "Forest Stalker", Pieces = { Weapon = "Stalker's Bow", Armor = "Stalker's Cloak", Trinket = "Stalker's Fang" },
+			Bonus2 = { { Stat = "CritChance", Mode = "Add", Value = 0.02 } }, Bonus3 = { { Stat = "Attack", Mode = "Mul", Value = 0.06 }, { Stat = "AttackSpeed", Mode = "Mul", Value = 0.04 } } },
+		{ Name = "Stonebreak Plate", Pieces = { Weapon = "Stonebreaker", Armor = "Stonebreak Plate", Trinket = "Granite Sigil" },
+			Bonus2 = { { Stat = "Defense", Mode = "Mul", Value = 0.06 } }, Bonus3 = { { Stat = "MaxHealth", Mode = "Mul", Value = 0.08 }, { Stat = "DamageTaken", Mode = "Mul", Value = -0.03 } } },
+		{ Name = "Glimmer Regalia", Pieces = { Weapon = "Glimmer Staff", Armor = "Glimmer Robe", Trinket = "Geode Pendant" },
+			Bonus2 = { { Stat = "HealingDealt", Mode = "Mul", Value = 0.05 } }, Bonus3 = { { Stat = "Attack", Mode = "Mul", Value = 0.06 }, { Stat = "CritChance", Mode = "Add", Value = 0.03 } } },
+		{ Name = "Dune Wanderer", Pieces = { Weapon = "Scimitar of Dunes", Armor = "Wanderer's Wraps", Trinket = "Sun Amulet" },
+			Bonus2 = { { Stat = "AttackSpeed", Mode = "Mul", Value = 0.04 } }, Bonus3 = { { Stat = "DamageDealt", Mode = "Mul", Value = 0.06 }, { Stat = "MaxHealth", Mode = "Mul", Value = 0.05 } } },
+		{ Name = "Frostguard", Pieces = { Weapon = "Rimeblade", Armor = "Frostguard Mail", Trinket = "Icicle Charm" },
+			Bonus2 = { { Stat = "MaxHealth", Mode = "Mul", Value = 0.06 } }, Bonus3 = { { Stat = "Defense", Mode = "Mul", Value = 0.08 }, { Stat = "DamageTaken", Mode = "Mul", Value = -0.04 } } },
+		{ Name = "Emberforged", Pieces = { Weapon = "Cinder Axe", Armor = "Emberforged Plate", Trinket = "Magma Core" },
+			Bonus2 = { { Stat = "Attack", Mode = "Mul", Value = 0.05 } }, Bonus3 = { { Stat = "DamageDealt", Mode = "Mul", Value = 0.08 }, { Stat = "CritChance", Mode = "Add", Value = 0.03 } } },
+		{ Name = "Mire Hunter", Pieces = { Weapon = "Bog Spear", Armor = "Mire Hide", Trinket = "Swamp Totem" },
+			Bonus2 = { { Stat = "CritChance", Mode = "Add", Value = 0.03 } }, Bonus3 = { { Stat = "HealingDealt", Mode = "Mul", Value = 0.06 }, { Stat = "MaxHealth", Mode = "Mul", Value = 0.06 } } },
+		{ Name = "Tidebound Relics", Pieces = { Weapon = "Tidal Trident", Armor = "Coral Armor", Trinket = "Sunken Coin" },
+			Bonus2 = { { Stat = "Defense", Mode = "Mul", Value = 0.07 } }, Bonus3 = { { Stat = "Attack", Mode = "Mul", Value = 0.07 }, { Stat = "MaxHealth", Mode = "Mul", Value = 0.07 } } },
+		{ Name = "Skyborn", Pieces = { Weapon = "Cloudpiercer", Armor = "Skyborn Raiment", Trinket = "Wind Feather" },
+			Bonus2 = { { Stat = "AttackSpeed", Mode = "Mul", Value = 0.05 } }, Bonus3 = { { Stat = "DamageDealt", Mode = "Mul", Value = 0.08 }, { Stat = "Attack", Mode = "Mul", Value = 0.06 } } },
+	},
 
 	Drop = {
 		Chance = 0.2, -- per won fight at the frontier
