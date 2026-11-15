@@ -357,6 +357,16 @@ function Hud.new(root)
 		self:_startGauge(info)
 	end
 
+	function self:Notify(text)
+		self.Toast.Text = text
+		local mine = text
+		task.delay(6, function()
+			if self.Toast.Text == mine then
+				self.Toast.Text = ""
+			end
+		end)
+	end
+
 	-- Rebuild the shared ultimate gauge from the fight's events (same rules as the sim).
 	function self:_startGauge(info)
 		local teams = {}

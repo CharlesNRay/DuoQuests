@@ -14,6 +14,9 @@ return {
 		[1] = {
 			Id = 1,
 			Name = "Prototype Season",
+			-- unix seconds; the season boss withers in the last stretch so it dies near EndsAt
+			StartsAt = 1793491200, -- 2026-11-01
+			EndsAt = 1801440000, -- 2027-02-01
 			-- Seasonal mechanic hooks get registered here in later phases
 			-- (elements, relics, curses, partner bonds...).
 			Mechanic = "None",

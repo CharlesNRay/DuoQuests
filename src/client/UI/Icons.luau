@@ -99,7 +99,7 @@ function Icons.Passive(parent, def, props)
 end
 
 -- Pets: a tile tinted by the pet's colour with a glyph for its shape; border = rarity.
-local PET_GLYPHS = { Ball = "●", Cat = "🦊", Wisp = "✦", Bunny = "🐰", Bird = "🐦", Turtle = "🐢", Drake = "🐉" }
+local PET_GLYPHS = { Ball = "●", Cat = "🦊", Wisp = "✦", Bunny = "🐰", Bird = "🐦", Turtle = "🐢", Drake = "🐉", Golem = "🗿" }
 function Icons.Pet(parent, petId, props)
 	local PetConfig = require(game:GetService("ReplicatedStorage"):WaitForChild("Shared").Config.Pets)
 	local def = PetConfig.Defs[petId]

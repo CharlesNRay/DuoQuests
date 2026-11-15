@@ -133,7 +133,7 @@ end
 local PANEL_DEFAULT = Vector2.new(500, 286)
 local PANEL_SIZES = {
 	Map = Vector2.new(640, 298), Hero = Vector2.new(640, 298), Skills = Vector2.new(660, 344),
-	Merchant = Vector2.new(540, 292), Blacksmith = Vector2.new(540, 292), Wish = Vector2.new(640, 310),
+	Merchant = Vector2.new(540, 292), Blacksmith = Vector2.new(540, 292), Wish = Vector2.new(640, 310), Boss = Vector2.new(640, 310),
 }
 local SHOP_NPC = { Merchant = "Merchant", Blacksmith = "Blacksmith", Wish = "Tree" }
 local panel = Kit.frame({ Name = "Panel", Size = UDim2.new(0, 500, 0, 286), Position = UDim2.new(0.5, -250, 0, 42), BackgroundColor3 = Kit.Colors.Bg, Visible = false, ZIndex = 5, Parent = root })
@@ -145,6 +145,14 @@ Kit.button({ Size = UDim2.fromOffset(44, 36), Position = UDim2.new(1, -52, 0, 6)
 	Kit.HideTip()
 end)
 
+function extra.RefreshBoss()
+	local ok, data = api:InvokeServer("BossState")
+	if ok and data then
+		extra.Boss = data
+		extra.BossAt = os.clock()
+	end
+end
+
 local function redraw()
 	if not state then return end
 	extra.State = state
@@ -152,6 +160,9 @@ local function redraw()
 	Hub.SetDailyReady(state.Player.Daily ~= nil and state.Player.Daily.CanClaim == true)
 	syncWorld()
 	if current then
+		if current == "Boss" and extra.Boss == nil then
+			extra.RefreshBoss()
+		end
 		Screens[current](body, state, call, extra)
 	end
 end
@@ -274,11 +285,30 @@ Hub.Build({
 })
 hud:AddButton("Plaza", "mini", "⛲", "Plaza", goPlaza)
 hud:AddButton("Home", "mini", "🏠", "Home", goHome)
+hud:AddButton("Boss", "mini", "👹", "Bosses", function()
+	extra.Boss = nil
+	open("Boss", "Bosses")
+end)
 hud:AddButton("Log", "mini", "📋", "Fight log", function() open("Log", "Last Fight") end)
 
 push.OnClientEvent:Connect(function(kind, info)
 	if kind == "World" then
 		applyWorld(info)
+	elseif kind == "OpenBoss" then
+		extra.BossTab = info
+		extra.Boss = nil
+		open("Boss", "Bosses", true)
+	elseif kind == "BossEvent" then
+		if info.Kind == "WorldStart" then
+			hud:Notify(("👹 %s has appeared in the plaza! (%d min)"):format(info.Name, math.floor(info.Seconds / 60)))
+		elseif info.Kind == "WorldEnd" then
+			extra.BossMsg = ("Boss over! You dealt %d (%d tiers): %s"):format(info.Damage, info.Tiers, table.concat(info.Lines, ", "))
+			extra.BossTab = "World"
+			extra.Boss = nil
+			local ok, fresh = api:InvokeServer("GetState")
+			if ok and fresh then state = fresh end
+			open("Boss", "Bosses", true)
+		end
 	elseif kind == "ArenaFight" then
 		arenas:Play(info.Slot, info)
 	elseif kind == "Fight" then

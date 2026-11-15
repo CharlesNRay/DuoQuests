@@ -815,4 +815,126 @@ function Screens.Map(container, state, call, extra)
 end
 
 Screens.Msg = msg
+-- Bosses: the timed world boss (this server) and the season boss (every server) ---------------------
+local function clock(seconds)
+	seconds = math.max(0, math.floor(seconds))
+	if seconds >= 86400 then
+		return ("%dd %dh"):format(seconds // 86400, (seconds % 86400) // 3600)
+	elseif seconds >= 3600 then
+		return ("%dh %02dm"):format(seconds // 3600, (seconds % 3600) // 60)
+	end
+	return ("%d:%02d"):format(seconds // 60, seconds % 60)
+end
+
+function Screens.Boss(container, state, call, extra)
+	Kit.clear(container)
+	extra = extra or {}
+	local boss = extra.Boss
+	if not boss then
+		Kit.label({ Size = UDim2.fromScale(1, 1), Text = "Loading...", TextColor3 = C.Dim, Parent = container })
+		return
+	end
+	local age = os.clock() - (extra.BossAt or os.clock())
+	local tab = extra.BossTab or "World"
+	local function redraw()
+		Screens.Boss(container, state, call, extra)
+	end
+	local function refresh()
+		if extra.RefreshBoss then
+			extra.RefreshBoss()
+		end
+		redraw()
+	end
+	for index, name in ipairs({ "World", "Season" }) do
+		local label = if name == "World" then "World boss" else "Season boss"
+		Kit.button({ Size = UDim2.fromOffset(130, 28), Position = UDim2.fromOffset((index - 1) * 136, 0), Text = label, TextSize = 13, BackgroundColor3 = if name == tab then C.Accent else C.Panel, TextColor3 = if name == tab then Color3.fromRGB(30, 24, 10) else C.Text, Parent = container }, function()
+			extra.BossTab = name
+			extra.BossMsg = nil
+			redraw()
+		end)
+	end
+
+	local left = Kit.frame({ Size = UDim2.new(0, 250, 1, -34), Position = UDim2.fromOffset(0, 34), BackgroundColor3 = C.PanelLight, Parent = container })
+	local right = Kit.frame({ Size = UDim2.new(1, -258, 1, -34), Position = UDim2.fromOffset(258, 34), BackgroundTransparency = 1, NoCorner = true, Parent = container })
+	local scroll = Kit.new("ScrollingFrame", {
+		Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1, BorderSizePixel = 0,
+		CanvasSize = UDim2.new(), AutomaticCanvasSize = Enum.AutomaticSize.Y, ScrollBarThickness = 4, Parent = right,
+	})
+	Kit.new("UIListLayout", { Padding = UDim.new(0, 4), Parent = scroll })
+	local function tierRow(name, rewards, status, color)
+		local r = Kit.frame({ Size = UDim2.new(1, -8, 0, 44), BackgroundColor3 = Color3.fromRGB(30, 33, 50), Parent = scroll })
+		Kit.label({ Size = UDim2.new(1, -90, 0, 18), Position = UDim2.fromOffset(8, 3), Text = name, TextSize = 12, Font = Enum.Font.GothamBold, TextColor3 = color, Parent = r })
+		Kit.label({ Size = UDim2.new(1, -90, 0, 20), Position = UDim2.fromOffset(8, 21), Text = table.concat(rewards, ", "), TextSize = 10, TextColor3 = C.Dim, TextWrapped = true, Parent = r })
+		return r, status
+	end
+	local msg = extra.BossMsg
+	local function note(text, y)
+		Kit.label({ Size = UDim2.new(1, -16, 0, 44), Position = UDim2.new(0, 8, 1, y or -50), Text = text or "", TextSize = 11, TextColor3 = C.Accent, TextWrapped = true, Parent = left })
+	end
+
+	if tab == "World" then
+		local w = boss.World
+		Kit.label({ Size = UDim2.new(1, -16, 0, 22), Position = UDim2.fromOffset(8, 6), Text = "👹 " .. w.Name, TextSize = 16, Font = Enum.Font.GothamBold, Parent = left })
+		if w.Active then
+			local left_s = w.EndsIn - age
+			Kit.label({ Size = UDim2.new(1, -16, 0, 34), Position = UDim2.fromOffset(8, 30), Text = ("It is roaming the plaza!\nEnds in %s"):format(clock(left_s)), TextSize = 12, TextColor3 = C.Good, TextWrapped = true, Parent = left })
+			Kit.label({ Size = UDim2.new(1, -16, 0, 34), Position = UDim2.fromOffset(8, 68), Text = ("Your damage: %d\nStrikes: %d / %d"):format(w.Damage, w.Strikes, w.MaxStrikes), TextSize = 12, Parent = left })
+			local wait = math.max(0, w.CooldownLeft - age)
+			local can = wait <= 0 and w.Strikes < w.MaxStrikes
+			local text = if w.Strikes >= w.MaxStrikes then "No strikes left" elseif wait > 0 then ("Ready in %ds"):format(math.ceil(wait)) else "Strike!"
+			local b = Kit.button({ Size = UDim2.new(1, -16, 0, 40), Position = UDim2.fromOffset(8, 110), Text = text, TextSize = 15, BackgroundColor3 = if can then C.Accent else C.Panel, TextColor3 = if can then Color3.fromRGB(30, 24, 10) else C.Text, Parent = left }, function()
+				local ok, data = call("BossStrike", "World")
+				extra.BossMsg = if ok then ("Hit for %d! Total %d."):format(data.Damage, data.Total) else ("Could not strike: " .. tostring(data))
+				refresh()
+			end)
+			b.Active = can
+			Kit.label({ Size = UDim2.new(1, -16, 0, 40), Position = UDim2.fromOffset(8, 156), Text = "Each strike is a 45 second fight with your build. Rewards arrive when the timer ends.", TextSize = 10, TextColor3 = C.Dim, TextWrapped = true, Parent = left })
+		else
+			Kit.label({ Size = UDim2.new(1, -16, 0, 60), Position = UDim2.fromOffset(8, 34), Text = ("Not here right now.\nNext one in about %s"):format(clock(w.NextIn - age)), TextSize = 13, TextColor3 = C.Dim, TextWrapped = true, Parent = left })
+		end
+		note(msg)
+		for _, tier in ipairs(w.Tiers) do
+			local reached = tier.Id <= w.Reached
+			tierRow(("%s  -  %d damage"):format(tier.Name, tier.Need), tier.Rewards, reached, if reached then C.Good else C.Text)
+		end
+	else
+		local s = boss.Season
+		Kit.label({ Size = UDim2.new(1, -16, 0, 22), Position = UDim2.fromOffset(8, 6), Text = "🗿 " .. s.Name, TextSize = 16, Font = Enum.Font.GothamBold, Parent = left })
+		local bar = Kit.frame({ Size = UDim2.new(1, -16, 0, 16), Position = UDim2.fromOffset(8, 32), BackgroundColor3 = Color3.fromRGB(20, 22, 30), Parent = left })
+		Kit.frame({ Size = UDim2.fromScale(math.clamp(s.Fraction, 0, 1), 1), BackgroundColor3 = if s.Dead then C.Dim else C.Good, Parent = bar })
+		Kit.label({ Size = UDim2.new(1, -16, 0, 30), Position = UDim2.fromOffset(8, 52), Text = if s.Dead then "Defeated! Thank you, everyone." else ("%d%% health  -  all servers\nIt withers away in %s"):format(math.ceil(s.Fraction * 100), clock(s.EndsIn - age)), TextSize = 11, TextColor3 = C.Dim, TextWrapped = true, Parent = left })
+		Kit.label({ Size = UDim2.new(1, -16, 0, 34), Position = UDim2.fromOffset(8, 84), Text = ("Your damage: %d\nStrikes: %d  (need %d to share rewards)"):format(s.Damage, s.Strikes, s.MinContribution), TextSize = 11, TextWrapped = true, Parent = left })
+		local can = s.Charges > 0 and not s.Dead
+		local text = if s.Dead then "Defeated" elseif s.Charges > 0 then ("Strike  (%d / %d)"):format(s.Charges, s.MaxCharges) else ("Next charge in %s"):format(clock(s.NextChargeIn - age))
+		local b = Kit.button({ Size = UDim2.new(1, -16, 0, 36), Position = UDim2.fromOffset(8, 124), Text = text, TextSize = 14, BackgroundColor3 = if can then C.Accent else C.Panel, TextColor3 = if can then Color3.fromRGB(30, 24, 10) else C.Text, Parent = left }, function()
+			local ok, data = call("BossStrike", "Season")
+			extra.BossMsg = if ok then ("Hit for %d! It has %d%% left."):format(data.Damage, math.ceil(data.Fraction * 100)) else ("Could not strike: " .. tostring(data))
+			refresh()
+		end)
+		b.Active = can
+		if s.Egg then
+			Kit.button({ Size = UDim2.new(1, -16, 0, 32), Position = UDim2.fromOffset(8, 166), Text = "🥚 Hatch the Colossus Egg", TextSize = 13, BackgroundColor3 = C.Up, Parent = left }, function()
+				local ok, data = call("BossHatch")
+				extra.BossMsg = if ok then ("It hatched: " .. tostring(data) .. "! Find it in Pets.") else ("Could not hatch: " .. tostring(data))
+				refresh()
+			end)
+		end
+		note(msg, -44)
+		for _, t in ipairs(s.Thresholds) do
+			local status = if t.Claimed then "Claimed" elseif t.Reached then "Ready" else "Locked"
+			local color = if t.Claimed then C.Dim elseif t.Reached then C.Good else C.Text
+			local r = tierRow(("%s  -  %s"):format(t.Name, status), t.Rewards, t.Reached, color)
+			if t.Reached and not t.Claimed then
+				local btn = Kit.button({ Size = UDim2.fromOffset(64, 30), Position = UDim2.new(1, -72, 0.5, -15), Text = "Claim", TextSize = 12, BackgroundColor3 = if s.Strikes >= s.MinContribution then C.Accent else C.Panel, TextColor3 = Color3.fromRGB(30, 24, 10), Parent = r }, function()
+					local ok, data = call("BossClaim", t.Id)
+					extra.BossMsg = if ok then ("Claimed: " .. table.concat(data, ", ")) else (if data == "NoContribution" then "Strike the boss at least once to share the rewards." else "Could not claim: " .. tostring(data))
+					refresh()
+				end)
+				btn.Active = true
+			end
+		end
+	end
+end
+
+
 return Screens

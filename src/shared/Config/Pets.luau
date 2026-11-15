@@ -30,7 +30,7 @@ return {
 		"Slimey", "Foxling", "Mossback", "Pebbles", "Cottonpuff", "Chirpy",
 		"Wisp", "Emberkit", "Shellby", "Zephyr",
 		"Frostwing", "Starbun", "Thornback",
-		"EmberDrake", "Aurora",
+		"EmberDrake", "Aurora", "Colossling",
 	},
 
 	Defs = {
@@ -103,6 +103,11 @@ return {
 			Id = "EmberDrake", DisplayName = "Ember Drake", Rarity = "Legendary", Wish = true,
 			Look = { Shape = "Drake", Color = { 230, 70, 40 }, Size = 1.6, Glow = true },
 			Bonus = { Stat = "Attack", Mode = "Mul", Base = 0.16, PerLevel = 0.03 },
+		},
+		Colossling = {
+			Id = "Colossling", DisplayName = "Colossling", Rarity = "Legendary", Boss = true,
+			Look = { Shape = "Golem", Color = { 80, 150, 95 }, Size = 1.5 },
+			Bonus = { Stat = "MaxHealth", Mode = "Mul", Base = 0.18, PerLevel = 0.03 },
 		},
 		Aurora = {
 			Id = "Aurora", DisplayName = "Aurora", Rarity = "Legendary", Wish = true,

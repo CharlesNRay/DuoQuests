@@ -47,6 +47,7 @@ local Pets = require(Shared.Pets)
 local Gear = require(Shared.Gear)
 local Consumables = require(Shared.Consumables)
 local Wishing = require(Shared.Wishing)
+local BossService = require(script.Parent.BossService)
 local Hero = require(Shared.Hero)
 local World = require(Shared.World)
 local Daily = require(Shared.Daily)
@@ -242,6 +243,41 @@ function handlers.Wish(player, profile, kind, tierId, method, count)
 		return false, "TooFar"
 	end
 	local ok, data = Wishing.Wish(profile, kind, tierId, method, count)
+	if ok then
+		afterBuildChange(player)
+	end
+	return ok, data
+end
+
+-- Bosses: the world boss (this server, timed) and the season boss (all servers).
+function handlers.BossState(player, profile)
+	return true, BossService.GetState(player, profile)
+end
+
+function handlers.BossStrike(player, profile, which)
+	if which ~= "World" and which ~= "Season" then
+		return false, "BadArgs"
+	end
+	local ok, data = BossService.Strike(player, profile, which)
+	if ok then
+		afterBuildChange(player)
+	end
+	return ok, data
+end
+
+function handlers.BossClaim(player, profile, thresholdId)
+	if type(thresholdId) ~= "string" then
+		return false, "BadArgs"
+	end
+	local ok, data = BossService.Claim(player, profile, thresholdId)
+	if ok then
+		afterBuildChange(player)
+	end
+	return ok, data
+end
+
+function handlers.BossHatch(player, profile)
+	local ok, data = BossService.Hatch(player, profile)
 	if ok then
 		afterBuildChange(player)
 	end
@@ -483,6 +519,7 @@ function ApiService.Init()
 	push.Parent = folder
 
 	WorldService.Init(push)
+	BossService.Init(push, DataService.GetProfile)
 
 	api.OnServerInvoke = function(player, action, ...)
 		local now = os.clock()

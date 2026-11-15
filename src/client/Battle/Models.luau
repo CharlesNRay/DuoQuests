@@ -121,6 +121,14 @@ function Models.Pet(petId)
 			end
 		end
 		eyes(model, root, s * 0.08, s * 0.1, -s * 0.9)
+	elseif look.Shape == "Golem" then
+		root = part(model, { Name = "Body", Size = Vector3.new(s * 0.9, s * 0.8, s * 0.7), Color = c, Material = Enum.Material.Slate, CFrame = CFrame.new(0, s * 0.7, 0) })
+		part(model, { Size = Vector3.new(s * 0.6, s * 0.5, s * 0.55), Color = c:Lerp(Color3.new(1, 1, 1), 0.1), Material = Enum.Material.Slate, CFrame = root.CFrame * CFrame.new(0, s * 0.62, -s * 0.05) })
+		for _, side in ipairs({ -1, 1 }) do
+			part(model, { Size = Vector3.new(s * 0.28, s * 0.6, s * 0.28), Color = c:Lerp(Color3.new(0, 0, 0), 0.2), Material = Enum.Material.Slate, CFrame = root.CFrame * CFrame.new(side * s * 0.62, -s * 0.05, 0) })
+			part(model, { Size = Vector3.new(s * 0.3, s * 0.4, s * 0.3), Color = c:Lerp(Color3.new(0, 0, 0), 0.2), Material = Enum.Material.Slate, CFrame = root.CFrame * CFrame.new(side * s * 0.25, -s * 0.6, 0) })
+			part(model, { Size = Vector3.new(s * 0.1, s * 0.1, s * 0.08), Color = Color3.fromRGB(150, 255, 150), Material = Enum.Material.Neon, CFrame = root.CFrame * CFrame.new(side * s * 0.12, s * 0.66, -s * 0.34) })
+		end
 	elseif look.Shape == "Drake" then
 		root = part(model, { Name = "Body", Shape = Enum.PartType.Ball, Size = Vector3.new(s * 0.9, s * 0.9, s * 1.5), Color = c, CFrame = CFrame.new(0, s * 0.9, 0) })
 		part(model, { Shape = Enum.PartType.Ball, Size = Vector3.new(s * 0.6, s * 0.55, s * 0.7), Color = c, CFrame = root.CFrame * CFrame.new(0, s * 0.35, -s * 0.9) })

@@ -142,3 +142,10 @@ Newest first.
 - Wishing Tree in the plaza (glowing tree + spring). Pet wishes (tickets or gold) and Skill wishes (tickets or shards); three tiers unlocked at stages 1/15/40 with better odds; 10-pulls; pity (Rare+ every 10, Epic+ every 40, pet Legendary every 90); duplicate pets become pet XP.
 - 15 pets, 13 wish-only, each with its own look (new shapes: Bunny, Bird, Turtle, Drake) and stat; new Legendary rarity.
 - Shard-unlock button removed from the Skills page; skills come from wishes or boss free picks. Pets page now shows pet icons and how to get each pet.
+
+
+## Boss events (world boss + season boss)
+- World boss: appears on a timer on every server and wanders the plaza; each player strikes it (45s fight with their own build, cooldown, strike cap); at the end of the timer everyone gets every damage tier they reached (cumulative).
+- Season boss "Verdant Colossus": one health bar for all servers (DataStore counter, UpdateAsync batches), permanent HP loss, withers in the season's finale so it dies near the end; health thresholds give community rewards (claim in the Boss window); on death every contributor gets a Colossus Egg -> Colossling (Legendary pet).
+- Code: Shared/Bosses + Config/Bosses (rules/data, BossEventTests), Server/Services/BossService, ApiService BossState/BossStrike/BossClaim/BossHatch, Screens.Boss + HUD button.
+- TODO: Colossling pet model (Golem shape), partner joins a strike, tune numbers, season StartsAt/EndsAt per season.
