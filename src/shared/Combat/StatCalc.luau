@@ -11,6 +11,7 @@ local Classes = require(script.Parent.Parent.Config.Classes)
 local Enemies = require(script.Parent.Parent.Config.Enemies)
 local Skills = require(script.Parent.Parent.Skills)
 local Passives = require(script.Parent.Parent.Passives)
+local Pets = require(script.Parent.Parent.Pets)
 local Entity = require(script.Parent.Entity)
 
 local StatCalc = {}
@@ -50,10 +51,9 @@ end
 -- Stats that default to 1 when a class does not list them (see Simulation).
 local MULTIPLIER_STATS = { DamageDealt = true, HealingDealt = true, DamageTaken = true }
 
--- Folds equipped passives into base stats before the fight starts.
-local function applyPassives(stats, classId, passiveIds, passiveLevels)
-	local resolved = Passives.Resolve(classId, passiveIds, passiveLevels)
-	for _, mod in ipairs(resolved.Combat) do
+-- Folds modifiers (passives, pets) into base stats before the fight starts.
+local function applyMods(stats, mods)
+	for _, mod in ipairs(mods) do
 		local current = stats[mod.Stat]
 		if current == nil then
 			current = if MULTIPLIER_STATS[mod.Stat] then 1 else 0
@@ -66,7 +66,11 @@ local function applyPassives(stats, classId, passiveIds, passiveLevels)
 	end
 end
 
--- options (all optional): AbilityIds, SlotLevels, PassiveIds, PassiveLevels
+local function applyPassives(stats, classId, passiveIds, passiveLevels)
+	applyMods(stats, Passives.Resolve(classId, passiveIds, passiveLevels).Combat)
+end
+
+-- options (all optional): AbilityIds, SlotLevels, PassiveIds, PassiveLevels, PetId, PetLevel
 function StatCalc.NewPartyMember(id, name, classId, level, options)
 	local class = Classes[classId]
 	assert(class ~= nil, "Unknown class: " .. tostring(classId))
@@ -74,12 +78,16 @@ function StatCalc.NewPartyMember(id, name, classId, level, options)
 
 	local stats = StatCalc.ClassStats(classId, level)
 	applyPassives(stats, classId, options.PassiveIds, options.PassiveLevels)
+	if options.PetId then
+		applyMods(stats, Pets.Mods(options.PetId, options.PetLevel))
+	end
 
 	return Entity.new({
 		Id = id,
 		Name = name,
 		Team = "Party",
 		DefId = classId,
+		PetId = options.PetId,
 		DamageType = class.DamageType,
 		BasicAttack = class.BasicAttack,
 		Stats = stats,

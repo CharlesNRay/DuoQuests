@@ -1,0 +1,140 @@
+--[[
+	PresentationTests (ModuleScript)
+	Location: ServerScriptService > Server > Tests > PresentationTests
+
+	Not run automatically. In Studio's Command Bar (View > Command Bar), run:
+
+	  require(game.ServerScriptService.Server.Tests.PresentationTests)()
+
+	Checks the pure data the 3D presentation depends on: zones, and the event
+	log plus roster that a fight sends to the client for replay.
+]]
+
+local function loadModules(override)
+	if override then
+		return override
+	end
+	local Shared = game:GetService("ReplicatedStorage"):WaitForChild("Shared")
+	return {
+		Zones = require(Shared.Zones),
+		ZoneConfig = require(Shared.Config.Zones),
+		Enemies = require(Shared.Config.Enemies),
+		Stages = require(Shared.Stages),
+		StageRunner = require(Shared.StageRunner),
+		ProfileTemplate = require(Shared.ProfileTemplate),
+	}
+end
+
+return function(modulesOverride)
+	local m = loadModules(modulesOverride)
+	local Zones, ZoneConfig, Enemies, Stages, StageRunner, ProfileTemplate = m.Zones, m.ZoneConfig, m.Enemies, m.Stages, m.StageRunner, m.ProfileTemplate
+	local warnFn = warn or print
+
+	local passed, failed = 0, 0
+	local function check(name, condition)
+		if condition then
+			passed += 1
+			print("  PASS  " .. name)
+		else
+			failed += 1
+			warnFn("  FAIL  " .. name)
+		end
+	end
+
+	print("Running PresentationTests...")
+
+	-- Zones ----------------------------------------------------------------------
+	check("Stages 1-10 are zone 1 and 11-20 are zone 2", Zones.IndexForStage(1) == 1 and Zones.IndexForStage(10) == 1 and Zones.IndexForStage(11) == 2)
+	check("The boss is the last stage of a zone", Zones.StageInZone(10) == 10 and Zones.StageInZone(11) == 1 and Stages.IsBoss(10))
+	local z = Zones.ForStage(15)
+	check("A zone reports its first and last stage", z.FirstStage == 11 and z.LastStage == 20)
+	local count = Zones.Count()
+	check("Zones loop after the authored list with a loop number", Zones.ForStage(count * 10 + 1).Loop == 2 and Zones.ForStage(1).Loop == 1)
+	check("Every zone theme has the fields the scene needs", (function()
+		for _, theme in ipairs(ZoneConfig) do
+			if not (theme.Name and theme.Ground and theme.Sky and theme.Accent and theme.Scenery and theme.Brightness) then
+				return false
+			end
+		end
+		return true
+	end)())
+
+	-- Enemy looks ----------------------------------------------------------------
+	local looksOk = true
+	for _, def in pairs(Enemies) do
+		if not (def.Look and def.Look.Shape and def.Look.Color and def.Look.Size) then
+			looksOk = false
+		end
+	end
+	check("Every enemy has a Look (shape, colour, size)", looksOk)
+
+	-- Replay data from a fight ---------------------------------------------------
+	local function newMembers()
+		local list = {
+			{ Id = "1", Name = "Warrior", Profile = ProfileTemplate.New() },
+			{ Id = "2", Name = "Cleric", Profile = ProfileTemplate.New() },
+		}
+		list[2].Profile.Season.ClassId = "Cleric"
+		return list
+	end
+	local members = newMembers()
+	local outcome = StageRunner.Run(members, 1, 7, nil, true)
+	check("A recorded fight returns events and a roster", outcome.Events ~= nil and #outcome.Events > 0 and outcome.Roster ~= nil)
+	local partyCount, enemyCount, hasUser = 0, 0, true
+	for _, entry in ipairs(outcome.Roster) do
+		if entry.Team == "Party" then
+			partyCount += 1
+			hasUser = hasUser and entry.UserId ~= nil
+		else
+			enemyCount += 1
+		end
+		if not (entry.Id and entry.Name and entry.DefId and entry.MaxHealth) then
+			hasUser = false
+		end
+	end
+	check("The roster lists both heroes (with user ids) and the enemies", partyCount == 2 and enemyCount >= 1 and hasUser)
+	local idsKnown, endsOnce = true, 0
+	local known = {}
+	for _, entry in ipairs(outcome.Roster) do
+		known[entry.Id] = true
+	end
+	for _, event in ipairs(outcome.Events) do
+		if event.Type == "Damage" and not (known[event.Source] and known[event.Target]) then
+			idsKnown = false
+		end
+		if event.Type == "End" then
+			endsOnce += 1
+		end
+	end
+	check("Event sources and targets all appear in the roster", idsKnown)
+	check("The log ends exactly once", endsOnce == 1)
+	local plain = StageRunner.Run(newMembers(), 1, 7)
+	check("Without record there is no event log (cheap path)", plain.Events == nil and plain.Roster == nil)
+	check("Recording does not change the outcome", plain.Won == outcome.Won and plain.Duration == outcome.Duration)
+
+	-- shared hub layout
+	local World = require(game:GetService("ReplicatedStorage"):WaitForChild("Shared"):WaitForChild("World"))
+	local seen, distinct, clear = {}, true, true
+	local ox1, _, oz1 = World.ArenaOrigin(1)
+	for slot = 1, 24 do
+		local x, y, z = World.ArenaOrigin(slot)
+		local key = x .. "," .. z
+		if seen[key] then
+			distinct = false
+		end
+		seen[key] = { x, z }
+	end
+	for a = 1, 24 do
+		for b = a + 1, 24 do
+			local pa, pb = seen[select(1, World.ArenaOrigin(a)) .. "," .. select(3, World.ArenaOrigin(a))], seen[select(1, World.ArenaOrigin(b)) .. "," .. select(3, World.ArenaOrigin(b))]
+			if math.abs(pa[1] - pb[1]) < World.ARENA_WIDTH and math.abs(pa[2] - pb[2]) < World.ARENA_DEPTH then
+				clear = false
+			end
+		end
+	end
+	check("Arena slots 1-24 are at distinct places", distinct)
+	check("Arena pads never overlap", clear)
+	check("Arena 1 is in front of the spawn", oz1 < select(3, World.SpawnPosition()) and ox1 ~= nil)
+
+	print(("PresentationTests done: %d passed, %d failed"):format(passed, failed))
+end

@@ -10,8 +10,10 @@
 	  StageRunner.UltimateFor(members, frontier, chosenId)
 	                                         -> { Id, Level } or nil: the party
 	                                            ultimate for these two classes
-	  StageRunner.Run(members, stage, seed, ultimate)  -> outcome
-	                                         (ultimate optional, from UltimateFor)
+	  StageRunner.Run(members, stage, seed, ultimate, record)  -> outcome
+	                                         (ultimate optional, from UltimateFor;
+	                                          record = true adds Events and Roster
+	                                          so a client can replay the fight)
 
 	members is a list of { Id, Name, Profile } for a player who is online, or
 	{ Id, Name, Snapshot } for a ghost (an offline partner's saved build, see
@@ -26,6 +28,10 @@
 	  TimedOut    true if the stage timer ran out (counts as a loss)
 	  Duration    fight length in seconds
 	  Result      the raw Simulation result
+	  Events      (only when record) the fight's event log, see Combat/Simulation
+	  Roster      (only when record) everyone in the fight:
+	              { { Id, Name, Team, DefId, MaxHealth, UserId?, PetId? } }
+	              Party members' DefId is their class; UserId is set for them.
 	}
 
 	Why step back instead of retrying the same stage? A party that is too weak
@@ -39,23 +45,26 @@ local Simulation = require(script.Parent.Combat.Simulation)
 local StatCalc = require(script.Parent.Combat.StatCalc)
 local Stages = require(script.Parent.Stages)
 local Ultimates = require(script.Parent.Ultimates)
+local Pets = require(script.Parent.Pets)
 
 local StageRunner = {}
 
 function StageRunner.NewParty(members)
 	local party = {}
 	for _, member in ipairs(members) do
-		local classId, level, loadout, slotLevels, passiveIds, passiveLevels
+		local classId, level, loadout, slotLevels, passiveIds, passiveLevels, petId, petLevel
 		if member.Profile then
 			local season = member.Profile.Season
 			classId, level = season.ClassId, season.Level
 			loadout, slotLevels = season.Loadouts[classId], season.SlotLevels[classId]
 			passiveIds, passiveLevels = season.PassiveLoadouts[classId], season.PassiveSlotLevels[classId]
+			petId, petLevel = Pets.Active(member.Profile)
 		else
 			local snapshot = member.Snapshot
 			classId, level = snapshot.ClassId, snapshot.Level
 			loadout, slotLevels = snapshot.GhostLoadout, snapshot.SlotLevels
 			passiveIds, passiveLevels = snapshot.PassiveIds, snapshot.PassiveLevels
+			petId, petLevel = snapshot.PetId, snapshot.PetLevel
 		end
 		table.insert(
 			party,
@@ -64,6 +73,8 @@ function StageRunner.NewParty(members)
 				SlotLevels = slotLevels,
 				PassiveIds = passiveIds,
 				PassiveLevels = passiveLevels,
+				PetId = petId,
+				PetLevel = petLevel,
 			})
 		)
 	end
@@ -94,15 +105,32 @@ function StageRunner.UltimateFor(members, frontier, chosenId)
 	return { Id = id, Level = Ultimates.PartyLevel(levelLists) }
 end
 
-function StageRunner.Run(members, stage, seed, ultimate)
+function StageRunner.Run(members, stage, seed, ultimate, record)
 	local sim = Simulation.new({
 		Party = StageRunner.NewParty(members),
 		Enemies = Stages.NewEnemies(stage),
 		Seed = seed,
 		Ultimate = ultimate,
 		MaxSeconds = Stages.TimeLimit(stage),
-		RecordEvents = false,
+		RecordEvents = record == true,
 	})
+	local roster
+	if record then
+		roster = {}
+		for _, team in ipairs({ sim.Party, sim.Enemies }) do
+			for _, entity in ipairs(team) do
+				table.insert(roster, {
+					Id = entity.Id,
+					Name = entity.Name,
+					Team = entity.Team,
+					DefId = entity.DefId,
+					PetId = entity.PetId,
+					MaxHealth = entity.Stats.MaxHealth,
+					UserId = if entity.Team == "Party" then tonumber(entity.Id) else nil,
+				})
+			end
+		end
+	end
 	local result = sim:Run()
 	local won = result.Winner == "Party"
 
@@ -123,6 +151,8 @@ function StageRunner.Run(members, stage, seed, ultimate)
 		TimedOut = result.Winner == "Timeout",
 		Duration = result.Duration,
 		Result = result,
+		Events = if record then sim.Events else nil,
+		Roster = roster,
 	}
 end
 

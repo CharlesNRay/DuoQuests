@@ -11,9 +11,11 @@ local Players = game:GetService("Players")
 local Services = script.Parent.Services
 local DataService = require(Services.DataService)
 local PartyService = require(Services.PartyService)
+local ApiService = require(Services.ApiService)
 
 DataService.Init()
 PartyService.Init()
+ApiService.Init()
 
 local function onPlayerAdded(player)
 	local profile, reason = DataService.LoadProfile(player)

@@ -24,6 +24,7 @@
 local Economy = require(script.Parent.Config.Economy)
 local Stages = require(script.Parent.Stages)
 local Passives = require(script.Parent.Passives)
+local Pets = require(script.Parent.Pets)
 
 local Progression = {}
 
@@ -83,6 +84,8 @@ function Progression.ApplyClear(profile, stage)
 		season.Currencies.SkillPicks += skillPicks
 	end
 
+	local petsGained = Pets.GrantForClear(profile, stage)
+
 	if isFrontier then
 		season.HighestStage = stage + 1
 	end
@@ -94,6 +97,7 @@ function Progression.ApplyClear(profile, stage)
 		XP = rewards.XP,
 		Shards = rewards.Shards,
 		SkillPicks = skillPicks,
+		PetsGained = petsGained,
 		LevelsGained = levelsGained,
 		Level = season.Level,
 	}

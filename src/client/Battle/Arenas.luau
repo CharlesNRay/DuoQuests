@@ -1,0 +1,173 @@
+--[[
+	Arenas (ModuleScript): every party's battle pad in the shared world.
+
+	The server tells us which parties are on this server and which arena slot each
+	one fights in (WorldService). We build a Scene + Replay for each slot, keep an
+	info card above it, and replay fights as they happen: your own party's through
+	the normal "Fight" push, everyone else's through "ArenaFight" (only when you
+	are close enough to see it).
+
+	  local arenas = Arenas.new(localUserId)
+	  arenas:Apply(snapshot)            snapshot = WorldService.Snapshot()
+	  arenas:Play(slot, info, onDone)   draw a fight in a slot
+	  arenas:MySlot()                   slot of the party you are in (or nil)
+	  arenas:OriginOf(slot)             Vector3
+]]
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local Shared = ReplicatedStorage:WaitForChild("Shared")
+local World = require(Shared.World)
+local Zones = require(Shared.Zones)
+local Stages = require(Shared.Stages)
+local PetConfig = require(Shared.Config.Pets)
+local Scene = require(script.Parent.Scene)
+local Replay = require(script.Parent.Replay)
+
+local Arenas = {}
+Arenas.__index = Arenas
+
+local WATCH_DISTANCE = 170 -- studs; farther arenas are not animated
+
+function Arenas.new(localUserId)
+	return setmetatable({ UserId = localUserId, BySlot = {}, Mine = nil }, Arenas)
+end
+
+function Arenas:OriginOf(slot)
+	local x, y, z = World.ArenaOrigin(slot)
+	return Vector3.new(x, y, z)
+end
+
+function Arenas:MySlot()
+	return self.Mine
+end
+
+local function makeCard(origin)
+	local anchor = Instance.new("Part")
+	anchor.Name = "ArenaCard"
+	anchor.Anchored = true
+	anchor.CanCollide = false
+	anchor.CanQuery = false
+	anchor.Transparency = 1
+	anchor.Size = Vector3.new(1, 1, 1)
+	anchor.Position = origin + Vector3.new(0, 15, 24)
+	anchor.Parent = workspace
+	local gui = Instance.new("BillboardGui")
+	gui.Size = UDim2.fromOffset(260, 120)
+	gui.MaxDistance = 150
+	gui.Adornee = anchor
+	gui.Parent = anchor
+	local frame = Instance.new("Frame")
+	frame.Size = UDim2.fromScale(1, 1)
+	frame.BackgroundColor3 = Color3.fromRGB(20, 22, 34)
+	frame.BackgroundTransparency = 0.25
+	frame.Parent = gui
+	Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 10)
+	local label = Instance.new("TextLabel")
+	label.Size = UDim2.new(1, -12, 1, -8)
+	label.Position = UDim2.fromOffset(6, 4)
+	label.BackgroundTransparency = 1
+	label.RichText = true
+	label.TextColor3 = Color3.new(1, 1, 1)
+	label.Font = Enum.Font.GothamMedium
+	label.TextSize = 16
+	label.TextXAlignment = Enum.TextXAlignment.Left
+	label.TextYAlignment = Enum.TextYAlignment.Top
+	label.Parent = frame
+	return anchor, label
+end
+
+function Arenas:_get(slot)
+	local arena = self.BySlot[slot]
+	if arena then
+		return arena
+	end
+	local origin = self:OriginOf(slot)
+	local scene = Scene.new(origin)
+	local anchor, label = makeCard(origin)
+	arena = { Slot = slot, Scene = scene, Replay = Replay.new(scene), Anchor = anchor, Label = label, Fighting = false, Zone = nil }
+	self.BySlot[slot] = arena
+	return arena
+end
+
+local function distanceTo(origin)
+	local camera = workspace.CurrentCamera
+	return camera and (camera.CFrame.Position - origin).Magnitude or 0
+end
+
+local function rosterOf(party)
+	local roster = {}
+	for _, member in ipairs(party.Members) do
+		table.insert(roster, {
+			Id = tostring(member.UserId),
+			Name = member.Online and member.Name or (member.Name .. " (ghost)"),
+			Team = "Party",
+			DefId = member.ClassId,
+			PetId = member.PetId,
+			MaxHealth = 100,
+			UserId = member.UserId,
+		})
+	end
+	return roster
+end
+
+local function cardText(party, zone)
+	local lines = { ("<b>%s</b>  -  Stage %d%s"):format(zone.Name, party.Stage, Stages.IsBoss(party.Stage) and " BOSS" or "") }
+	for _, member in ipairs(party.Members) do
+		local pet = member.PetId and PetConfig.Defs[member.PetId]
+		table.insert(lines, ("%s  Lv %d %s%s%s"):format(member.Name, member.Level, member.ClassId, pet and ("  + " .. pet.DisplayName) or "", member.Online and "" or "  (ghost)"))
+	end
+	return table.concat(lines, "\n")
+end
+
+function Arenas:Apply(snapshot)
+	local seen = {}
+	self.Mine = nil
+	for _, party in ipairs(snapshot.Parties) do
+		seen[party.Slot] = true
+		for _, member in ipairs(party.Members) do
+			if member.UserId == self.UserId then
+				self.Mine = party.Slot
+			end
+		end
+	end
+	for slot, arena in pairs(self.BySlot) do
+		if not seen[slot] and slot ~= self.Mine then
+			arena.Replay:Destroy()
+			arena.Scene:Destroy()
+			arena.Anchor:Destroy()
+			self.BySlot[slot] = nil
+		end
+	end
+	for _, party in ipairs(snapshot.Parties) do
+		local arena = self:_get(party.Slot)
+		local zone = Zones.ForStage(party.Stage)
+		if arena.Zone ~= zone.Name then
+			arena.Zone = zone.Name
+			arena.Scene:SetZone(zone.Theme)
+		end
+		arena.Label.Text = cardText(party, zone)
+		if not arena.Fighting then
+			arena.Replay:Idle(rosterOf(party))
+		end
+	end
+end
+
+-- Draw a fight in a slot. Others' fights are skipped when you are far away.
+function Arenas:Play(slot, info, onDone)
+	local arena = self:_get(slot)
+	if slot ~= self.Mine and distanceTo(arena.Scene.Origin) > WATCH_DISTANCE then
+		if onDone then
+			onDone()
+		end
+		return
+	end
+	arena.Fighting = true
+	arena.Replay:Play(info, function()
+		arena.Fighting = false
+		if onDone then
+			onDone()
+		end
+	end)
+end
+
+return Arenas

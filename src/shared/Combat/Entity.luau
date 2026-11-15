@@ -39,6 +39,7 @@ function Entity.new(def)
 		Name = def.Name or def.Id,
 		Team = def.Team,
 		DefId = def.DefId,
+		PetId = def.PetId, -- party members: the equipped pet (display only)
 		DamageType = def.DamageType or "Physical",
 		BasicAttack = def.BasicAttack, -- { Id, DisplayName, Range }; presentation only
 

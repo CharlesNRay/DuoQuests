@@ -223,5 +223,18 @@ return function(modulesOverride)
 	local weakClaim = Party.Claim(carry, CLERIC_ID, weak)
 	check("The weaker player is paid full frontier rewards for the carried stage", weakClaim.CatchUp.Stages == 3 and weak.Season.HighestStage == 4 and weakClaim.CatchUp.Gold > 0)
 
+	-- stage selection from the map (farming)
+	local fp = newParty(strong, weak, 1000)
+	fp.Frontier = 5
+	fp.Stage = 5
+	check("A member can pick an unlocked earlier stage", Party.SetStage(fp, WARRIOR_ID, 2) and fp.Stage == 2 and fp.Farm == true)
+	check("Locked stages are refused", select(2, Party.SetStage(fp, WARRIOR_ID, 6)) == "Locked")
+	check("Bad stages are refused", select(2, Party.SetStage(fp, WARRIOR_ID, 0)) == "BadStage" and select(2, Party.SetStage(fp, WARRIOR_ID, 1.5)) == "BadStage")
+	check("Strangers cannot pick a stage", select(2, Party.SetStage(fp, 99999, 1)) == "NotMember")
+	local farmed = Party.OnlineTick(fp, { { UserId = WARRIOR_ID, Name = "Strong", Profile = strong } }, 5, 2000)
+	check("A won farm fight stays on the same stage", farmed.Won and fp.Stage == 2 and fp.Frontier == 5)
+	Party.SetStage(fp, WARRIOR_ID, 5)
+	check("Picking the frontier ends farming", fp.Farm == nil and fp.Stage == 5)
+
 	print(("PartyTests done: %d passed, %d failed"):format(passed, failed))
 end

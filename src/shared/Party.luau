@@ -11,6 +11,7 @@
 	  Members      { userIdA, userIdB }
 	  Stage        the stage the party is fighting now
 	  Frontier     the furthest stage the party has unlocked
+	  Farm         true while replaying an earlier stage picked on the map
 	  Snapshots    { [tostring(userId)] = snapshot }   the "ghost" of each member
 	  Pending      { [tostring(userId)] = AFK rewards waiting to be claimed }
 	  LastActiveAt os.time of the last moment any member was online
@@ -19,7 +20,7 @@
 	UltimateId   optional: the pair's chosen ultimate (Party.SetUltimate)
 
 	Snapshot (a member's saved build, used as their ghost while offline)
-	  UserId, Name, ClassId, Level, Frontier, SlotLevels, Owned, GhostLoadout,
+	  UserId, Name, ClassId, PetId?, PetLevel?, Level, Frontier, SlotLevels, Owned, GhostLoadout,
 	  History, SavedAt
 	  GhostLoadout is separate from the player's own loadout. Either party member
 	  can edit it (SetGhostLoadout), so partners never have to be online together
@@ -48,6 +49,7 @@ local Offline = require(script.Parent.Offline)
 local Progression = require(script.Parent.Progression)
 local Skills = require(script.Parent.Skills)
 local StageRunner = require(script.Parent.StageRunner)
+local Pets = require(script.Parent.Pets)
 local Ultimates = require(script.Parent.Ultimates)
 local Classes = require(script.Parent.Config.Classes)
 
@@ -191,10 +193,13 @@ function Party.MakeSnapshot(profile, userId, name, previous, now)
 		history = {}
 	end
 
+	local petId, petLevel = Pets.Active(profile)
 	return {
 		UserId = userId,
 		Name = name,
 		ClassId = classId,
+		PetId = petId,
+		PetLevel = petLevel,
 		Level = season.Level,
 		Frontier = season.HighestStage,
 		SlotLevels = copyList(season.SlotLevels[classId]),
@@ -272,6 +277,28 @@ function Party.SetUltimate(party, userId, ultimateId)
 		return false, reason
 	end
 	party.UltimateId = ultimateId
+	return true
+end
+
+-- Stage selection -----------------------------------------------------------------
+
+-- Either member picks any stage the party has already unlocked (1..Frontier) from
+-- the world map. Picking an earlier stage means "farm it": the party keeps fighting
+-- that stage after each win until someone picks another one. Losses still step back
+-- one stage, as usual. Picking the Frontier goes back to normal progression.
+-- Returns true or false + reason: "NotMember", "BadStage", "Locked".
+function Party.SetStage(party, userId, stage)
+	if not isMember(party, userId) then
+		return false, "NotMember"
+	end
+	if type(stage) ~= "number" or stage ~= math.floor(stage) or stage < 1 then
+		return false, "BadStage"
+	end
+	if stage > party.Frontier then
+		return false, "Locked"
+	end
+	party.Stage = stage
+	party.Farm = if stage < party.Frontier then true else nil
 	return true
 end
 
@@ -414,11 +441,15 @@ function Party.OnlineTick(party, online, seed, now)
 	end
 
 	local stage = party.Stage
-	local outcome = StageRunner.Run(members, stage, seed, StageRunner.UltimateFor(members, party.Frontier, party.UltimateId))
+	local outcome = StageRunner.Run(members, stage, seed, StageRunner.UltimateFor(members, party.Frontier, party.UltimateId), true)
 	if outcome.Won and stage >= party.Frontier then
 		party.Frontier = stage + 1
 	end
-	party.Stage = outcome.NextStage
+	local farming = party.Farm == true and outcome.Won and stage < party.Frontier
+	party.Stage = if farming then stage else outcome.NextStage
+	if party.Stage >= party.Frontier then
+		party.Farm = nil
+	end
 	party.LastActiveAt = now
 	return outcome
 end

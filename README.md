@@ -18,6 +18,7 @@ src/
       Seasons                current season
       Stages, Economy        stage layout; every reward and cost number
       Offline                AFK rate tiers (50% first 12 h, then less)
+      Zones                  regions (10 stages each, boss last): name, colours, scenery
     Combat/                  pure combat simulation (no Roblox APIs)
       Simulation             fixed-tick, deterministic fight between two teams
       Hooks                  event hooks that seasonal mechanics plug into
@@ -28,6 +29,8 @@ src/
     Passives.luau            passive slots, unlocks, equip rules, stat totals (3 slots)
     Ultimates.luau           which party ultimates a class pair can use
     Stages.luau              what each stage contains (every 10th is a boss)
+    Zones.luau               which zone a stage belongs to
+    Remotes.luau             names of the client/server remotes
     Progression.luau         XP, levels, clear rewards, frontier, milestones
     Economy.luau             spending: unlock skills, level slots, equip
     StageRunner.luau         runs one stage fight and applies rewards
@@ -41,7 +44,12 @@ docs/
     Services/DataService     session-locked loading and saving
     Services/PartyCore       party saving, hosting, join codes, leave (no Roblox APIs)
     Services/PartyService    runs parties: stage loop, rewards, DataStores
+    Services/ApiService      the doorway for the UI: checked requests, fight pushes
     Tests/                   run from the Studio command bar
+  client/                    -> StarterPlayerScripts.Client
+    Main.client.luau         builds the UI and 3D scene, listens for fights
+    UI/                      Kit (helpers), Hud, Screens (skills/passives/ultimate/party)
+    Battle/                  3D side-view battle: Scene, Models, Actor, Replay
 ```
 
 ## How combat is extended
@@ -59,9 +67,13 @@ docs/
 ## Working on it
 
 1. Install Rojo (VS Code extension + Studio plugin).
-2. Open this folder in VS Code, run **Rojo: Open Menu > Start server**.
-3. In Studio, open a Baseplate, click **Connect** in the Rojo plugin.
-4. Changes to files sync into Studio automatically.
+2. Open this folder in VS Code (File > Open Recent), click **Rojo** in the status bar and
+   start the server for `default.project.json`. If you change `default.project.json`,
+   stop and start it again.
+3. In Studio, open `DuoQuest.rbxl` (a Baseplate saved in this folder; git ignores it) and
+   click **Connect** in the Rojo plugin.
+4. Changes to files sync into Studio automatically. Stop Play, wait a few seconds, then
+   Play again to see edits.
 
 File naming: `Name.luau` = ModuleScript, `Name.server.luau` = Script,
 `Name.client.luau` = LocalScript.
@@ -79,5 +91,8 @@ require(game.ServerScriptService.Server.Tests.PartyTests)()
 require(game.ServerScriptService.Server.Tests.PartyCoreTests)()
 require(game.ServerScriptService.Server.Tests.SkillStatsTests)()
 require(game.ServerScriptService.Server.Tests.PassiveUltimateTests)()
+require(game.ServerScriptService.Server.Tests.PresentationTests)()
 require(game.ServerScriptService.Server.Tests.PacingTests)()
 ```
+
+See [docs/ROADMAP.md](docs/ROADMAP.md) for what's done and what's next.

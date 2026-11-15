@@ -47,6 +47,7 @@ local TeleportService = game:GetService("TeleportService")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Party = require(Shared.Party)
+local Pets = require(Shared.Pets)
 local OfflineConfig = require(Shared.Config.Offline)
 local Seasons = require(Shared.Config.Seasons)
 local TableUtil = require(Shared.Util.TableUtil)
@@ -68,6 +69,7 @@ local initialized = false
 local hosted = {} -- [partyId] = { Record, Online = {[userId] = {Player, Profile, Name}}, NextFightAt, NextSaveAt, Dirty, Saving }
 local partyOf = {} -- [userId] = partyId
 local lastClaim = {} -- [userId] = what the player was paid at login
+local fightListener = nil -- function(record, outcome, onlineList, waitSeconds), set by ApiService
 
 -- Stores ----------------------------------------------------------------------------------
 
@@ -415,6 +417,19 @@ local function entryFor(player)
 	return partyId and hosted[partyId]
 end
 
+function PartyService.SetStage(player, stage)
+	local entry = entryFor(player)
+	if not entry then
+		return false, "NoParty"
+	end
+	local ok, reason = Party.SetStage(entry.Record, player.UserId, stage)
+	if ok then
+		entry.Dirty = true
+		entry.NextFightAt = 0 -- start the chosen stage right away
+	end
+	return ok, reason
+end
+
 function PartyService.SetUltimate(player, ultimateId)
 	local entry = entryFor(player)
 	if not entry then
@@ -451,6 +466,98 @@ function PartyService.RevertGhostLoadout(player)
 		entry.Dirty = true
 	end
 	return ok, reason
+end
+
+-- ApiService hooks in here to tell clients about each finished fight.
+function PartyService.SetFightListener(fn)
+	fightListener = fn
+end
+
+-- The partner's saved build (their ghost), for the partner loadout popup.
+function PartyService.GetPartner(player)
+	local entry = entryFor(player)
+	if not entry then
+		return nil
+	end
+	local partnerId = Party.Partner(entry.Record, player.UserId)
+	local snapshot = partnerId and entry.Record.Snapshots[tostring(partnerId)]
+	if not snapshot then
+		return nil
+	end
+	return {
+		UserId = partnerId,
+		Name = snapshot.Name,
+		ClassId = snapshot.ClassId,
+		Level = snapshot.Level,
+		PetId = snapshot.PetId,
+		PetLevel = snapshot.PetLevel,
+		Online = entry.Online[partnerId] ~= nil,
+		SlotLevels = table.clone(snapshot.SlotLevels),
+		GhostLoadout = table.clone(snapshot.GhostLoadout),
+		Owned = table.clone(snapshot.Owned),
+		PassiveIds = table.clone(snapshot.PassiveIds or {}),
+		PassiveLevels = table.clone(snapshot.PassiveLevels or {}),
+		CanRevert = #(snapshot.History or {}) > 0,
+	}
+end
+
+-- The member's own snapshot (used to offer "undo partner edits").
+function PartyService.GetMyGhostHistory(player)
+	local entry = entryFor(player)
+	local snapshot = entry and entry.Record.Snapshots[tostring(player.UserId)]
+	return snapshot and #(snapshot.History or {}) or 0
+end
+
+function PartyService.GetUltimateInfo(player)
+	local entry = entryFor(player)
+	if not entry or #entry.Record.Members ~= 2 then
+		return nil
+	end
+	local first = entry.Record.Snapshots[tostring(entry.Record.Members[1])]
+	local second = entry.Record.Snapshots[tostring(entry.Record.Members[2])]
+	if not first or not second then
+		return nil
+	end
+	local Ultimates = require(Shared.Ultimates)
+	return {
+		Options = Ultimates.ForPair(first.ClassId, second.ClassId),
+		Frontier = entry.Record.Frontier,
+		Chosen = Ultimates.Resolve(first.ClassId, second.ClassId, entry.Record.Frontier, entry.Record.UltimateId),
+	}
+end
+
+-- One line per hosted party with someone online, for the shared hub: who is in it,
+-- their class and level (live if online, else the ghost snapshot).
+function PartyService.GetHostedSummaries()
+	local list = {}
+	for partyId, entry in pairs(hosted) do
+		if next(entry.Online) ~= nil then
+			local record = entry.Record
+			local members = {}
+			for _, userId in ipairs(record.Members) do
+				local online = entry.Online[userId]
+				local snapshot = record.Snapshots[tostring(userId)]
+				local season = online and online.Profile.Season
+				local petId, petLevel
+				if online then
+					petId, petLevel = Pets.Active(online.Profile)
+				elseif snapshot then
+					petId, petLevel = snapshot.PetId, snapshot.PetLevel
+				end
+				table.insert(members, {
+					PetId = petId,
+					PetLevel = petLevel,
+					UserId = userId,
+					Name = (online and online.Name) or (snapshot and snapshot.Name) or "?",
+					ClassId = (season and season.ClassId) or (snapshot and snapshot.ClassId) or "Warrior",
+					Level = (season and season.Level) or (snapshot and snapshot.Level) or 1,
+					Online = online ~= nil,
+				})
+			end
+			table.insert(list, { PartyId = partyId, Stage = record.Stage, Frontier = record.Frontier, Members = members })
+		end
+	end
+	return list
 end
 
 function PartyService.GetLastClaim(player)
@@ -490,10 +597,14 @@ local function tickEntry(entry, currentTime)
 		local seed = math.random(1, 1073741824)
 		local outcome = Party.OnlineTick(entry.Record, onlineList(entry), seed, currentTime)
 		if outcome then
-			entry.NextFightAt = currentTime + outcome.Duration + OfflineConfig.Intermission
+			local waitSeconds = outcome.Duration + OfflineConfig.Intermission
+			entry.NextFightAt = currentTime + waitSeconds
 			entry.Dirty = true
 			if outcome.Won then
 				print(("[PartyService] Party %s cleared stage %d (%.1fs). Frontier %d."):format(entry.Record.PartyId, outcome.Stage, outcome.Duration, entry.Record.Frontier))
+			end
+			if fightListener then
+				task.spawn(fightListener, entry.Record, outcome, onlineList(entry), waitSeconds)
 			end
 			-- Levels and gold changed: keep each ghost snapshot fresh.
 			for userId, online in pairs(entry.Online) do
