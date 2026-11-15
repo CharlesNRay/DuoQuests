@@ -190,3 +190,4 @@ Newest first.
 ## Premium pass track and pet skill icons (Nov 15, night)
 - Season pass has two tracks side by side: Free and Premium (locked until `Season.Pass.Premium`; `Quests.SetPremium(profile, true)` is what a Robux purchase will call). Premium pays Wishstones, consumables, Pet Wish on 5/15/25, Skill Wish on 10/20/30, a skill pick at 20 and 30 Wishstones at 30; never gold. Claim all takes both tracks. Studio-only HUD button (star) toggles premium for testing.
 - Pet skills have their own icons (Icons.PetSkill) on the Pets page with a hover tip; the pet's rank is the level badge.
+- Verified in Studio (Nov 15): Weekly and Daily tabs, premium pass column, Pets page skill icons, Wishing Tree prompt (works within ~14 studs of the trunk), Wish screen (Pet/Skill ticket labels, unlocked skill tiers, locked pet tiers), skill wish results, Skills page Rank up and Upgrade. Fixed: unsupported emoji in pet skill icons, wish result grid overlapping the footer (5 per row).

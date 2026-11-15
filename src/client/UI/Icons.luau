@@ -136,7 +136,7 @@ function Icons.Passive(parent, def, props)
 end
 
 -- Pets: a tile tinted by the pet's colour with a glyph for its shape; border = rarity.
-local PET_GLYPHS = { Ball = "●", Cat = "🦊", Wisp = "✦", Bunny = "🐰", Bird = "🐦", Turtle = "🐢", Drake = "🐉", Golem = "🗿" }
+local PET_GLYPHS = { Ball = "●", Cat = "🦊", Wisp = "✨", Bunny = "🐰", Bird = "🐦", Turtle = "🐢", Drake = "🐉", Golem = "🗿" }
 function Icons.Pet(parent, petId, props)
 	local PetConfig = require(game:GetService("ReplicatedStorage"):WaitForChild("Shared").Config.Pets)
 	local def = PetConfig.Defs[petId]
@@ -147,11 +147,11 @@ end
 
 -- Pet skills: every one has its own glyph and colour, bordered by the pet's rarity, with the pet's rank as the level badge.
 local PET_SKILL_LOOK = {
-	["Goo Bubble"] = { rgb(100, 200, 120), "🫧" }, ["Fox Fire"] = { rgb(230, 120, 50), "🔥" }, ["Mossy Guard"] = { rgb(80, 150, 100), "🌿" },
-	Rockfall = { rgb(140, 130, 120), "🪨" }, ["Soft Landing"] = { rgb(190, 210, 235), "☁" }, ["Cheerful Song"] = { rgb(230, 180, 80), "🎵" },
+	["Goo Bubble"] = { rgb(100, 200, 120), "💧" }, ["Fox Fire"] = { rgb(230, 120, 50), "🔥" }, ["Mossy Guard"] = { rgb(80, 150, 100), "🌿" },
+	Rockfall = { rgb(140, 130, 120), "⛰" }, ["Soft Landing"] = { rgb(190, 210, 235), "☁" }, ["Cheerful Song"] = { rgb(230, 180, 80), "🎵" },
 	Spark = { rgb(230, 220, 90), "⚡" }, ["Ember Claw"] = { rgb(200, 80, 50), "🐾" }, ["Tidal Shell"] = { rgb(70, 140, 200), "🐚" },
 	Tailwind = { rgb(120, 200, 190), "💨" }, ["Cold Snap"] = { rgb(120, 190, 235), "❄" }, ["Star Wish"] = { rgb(240, 220, 120), "🌠" },
-	["Thorn Armor"] = { rgb(90, 140, 70), "🌵" }, Dragonfire = { rgb(210, 70, 50), "🐲" }, ["Colossal Stomp"] = { rgb(150, 110, 80), "🦶" },
+	["Thorn Armor"] = { rgb(90, 140, 70), "🌵" }, Dragonfire = { rgb(210, 70, 50), "🐲" }, ["Colossal Stomp"] = { rgb(150, 110, 80), "👣" },
 	["Aurora Veil"] = { rgb(140, 200, 220), "🌈" },
 }
 function Icons.PetSkill(parent, petId, props)

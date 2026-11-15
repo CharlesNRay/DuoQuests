@@ -680,15 +680,15 @@ function Screens.Wish(container, state, call, extra)
 		return
 	end
 	local grid = Kit.frame({ Size = UDim2.new(1, -12, 1, -46), Position = UDim2.fromOffset(6, 6), BackgroundTransparency = 1, NoCorner = true, Parent = right })
-	Kit.new("UIGridLayout", { CellSize = UDim2.fromOffset(52, 68), CellPadding = UDim2.fromOffset(4, 2), SortOrder = Enum.SortOrder.LayoutOrder, Parent = grid })
+	Kit.new("UIGridLayout", { CellSize = UDim2.fromOffset(48, 68), CellPadding = UDim2.fromOffset(3, 2), SortOrder = Enum.SortOrder.LayoutOrder, Parent = grid })
 	for index, rowData in ipairs(res.Rows) do
 		local cell = Kit.frame({ BackgroundTransparency = 1, NoCorner = true, LayoutOrder = index, Parent = grid })
 		local tile
 		if kind == "Pet" then
-			tile = Icons.Pet(cell, rowData.Id, { Size = UDim2.fromOffset(48, 48), Position = UDim2.fromOffset(2, 0) })
+			tile = Icons.Pet(cell, rowData.Id, { Size = UDim2.fromOffset(48, 48), Position = UDim2.fromOffset(0, 0) })
 		else
 			local def = Abilities[rowData.Id]
-			tile = Icons.Skill(cell, def, { Size = UDim2.fromOffset(48, 48), Position = UDim2.fromOffset(2, 0), Tier = rowData.Rarity })
+			tile = Icons.Skill(cell, def, { Size = UDim2.fromOffset(48, 48), Position = UDim2.fromOffset(0, 0), Tier = rowData.Rarity })
 			Kit.Hover(tile, function() return Tips.Skill(def, 1) end)
 		end
 		local shown = if kind == "Pet" then (require(Shared.Config.Pets).Defs[rowData.Id] or {}).DisplayName else (Abilities[rowData.Id] or {}).DisplayName
