@@ -479,8 +479,23 @@ end
 -- is no better than what is worn in its slot. Set pieces and upgraded items are never sold in bulk.
 function Gear.SellBulk(profile, mode)
 	local rarities = { Common = true, Uncommon = true, Rare = true, Epic = true, Legendary = true }
-	if mode ~= "Worse" and not rarities[mode] then
+	-- mode: one rarity, "Worse", or a list of rarities (the Merchant's ticked boxes)
+	local wanted = {}
+	if type(mode) == "table" then
+		for _, id in ipairs(mode) do
+			if not rarities[id] then
+				return false, "BadMode"
+			end
+			wanted[id] = true
+		end
+		if next(wanted) == nil then
+			return false, "BadMode"
+		end
+		mode = "List"
+	elseif mode ~= "Worse" and not rarities[mode] then
 		return false, "BadMode"
+	else
+		wanted[mode] = true
 	end
 	local equipment = bag(profile)
 	local kept, count, gold = {}, 0, 0
@@ -488,7 +503,7 @@ function Gear.SellBulk(profile, mode)
 		local sell = false
 		if not item.SetId and (item.Upgrade or 0) == 0 then
 			if mode ~= "Worse" then
-				sell = item.Rarity == mode
+				sell = wanted[item.Rarity] == true
 			else
 				local worn = Gear.Replaced(equipment.Equipped, item.Slot)
 				if worn then

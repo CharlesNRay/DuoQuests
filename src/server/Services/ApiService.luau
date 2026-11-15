@@ -405,7 +405,7 @@ function handlers.SellGear(player, profile, itemId)
 end
 
 function handlers.SellBulk(player, profile, mode)
-	if type(mode) ~= "string" then
+	if type(mode) ~= "string" and not isList(mode, 5) then
 		return false, "BadArgs"
 	end
 	if not nearShop(player, "Merchant") then

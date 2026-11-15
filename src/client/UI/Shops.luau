@@ -48,7 +48,7 @@ function Shops.Merchant(container, state, call, extra)
 	extra = extra or {}
 	local tab = extra.MerchantTab or "Sell"
 	local gear = state.Player.Gear
-	local scroll = list(container, 44)
+	local scroll = list(container, if tab == "Sell" then 78 else 44)
 	Kit.label({ Size = UDim2.new(0.3, 0, 0, 40), Text = ("Gold: %d\nBag %d/%d"):format(gold(state), #gear.Inventory, gear.Cap), TextColor3 = C.Accent, TextSize = 13, Parent = container })
 	for index, name in ipairs({ "Sell", "Supplies" }) do
 		Kit.button({ Size = UDim2.fromOffset(78, 38), Position = UDim2.new(0.3, (index - 1) * 82, 0, 0), Text = name, BackgroundColor3 = if tab == name then C.Accent else C.Panel, TextColor3 = if tab == name then C.Bg else C.Text, Parent = container }, function()
@@ -75,10 +75,33 @@ function Shops.Merchant(container, state, call, extra)
 		return
 	end
 
-	-- one button per rarity: sells every bagged piece of that rarity (set pieces and upgraded gear are kept)
-	for index, rarity in ipairs({ "Common", "Uncommon", "Rare", "Epic", "Legendary" }) do
-		local b = Kit.button({ Size = UDim2.new(0.12, -4, 0, 38), Position = UDim2.new(0.4 + (index - 1) * 0.12, 0, 0, 0), Text = "Sell all\n" .. rarity, TextSize = 11, TextColor3 = Kit.rarityColor(rarity), Parent = container }, function()
-			call("SellBulk", rarity)
+	-- ticked rarities are sold by the one Sell button (set pieces and upgraded gear are always kept)
+	local RARITIES = { "Common", "Uncommon", "Rare", "Epic", "Legendary" }
+	extra.SellRarities = extra.SellRarities or { Common = true }
+	local picked, count, goldTotal = {}, 0, 0
+	for _, rarity in ipairs(RARITIES) do
+		if extra.SellRarities[rarity] then
+			table.insert(picked, rarity)
+		end
+	end
+	for _, item in ipairs(gear.Inventory) do
+		if extra.SellRarities[item.Rarity] and not item.SetId and (item.Upgrade or 0) == 0 then
+			count += 1
+			goldTotal += item.SellValue or 0
+		end
+	end
+	local can = count > 0
+	local sellButton = Kit.button({ Size = UDim2.new(0.38, -4, 0, 38), Position = UDim2.new(0.62, 0, 0, 0), Text = if can then ("Sell selected  (%d items, +%dg)"):format(count, goldTotal) else "Sell selected  (nothing ticked)", TextSize = 13, BackgroundColor3 = if can then C.Accent else C.Panel, TextColor3 = if can then C.Bg else C.Dim, Parent = container }, function()
+		if can then
+			call("SellBulk", picked)
+		end
+	end)
+	sellButton.Active = can
+	for index, rarity in ipairs(RARITIES) do
+		local on = extra.SellRarities[rarity] == true
+		Kit.button({ Size = UDim2.new(0.2, -4, 0, 28), Position = UDim2.new((index - 1) * 0.2, 0, 0, 44), Text = (if on then "☑ " else "☐ ") .. rarity, TextSize = 12, TextWrapped = false, TextColor3 = Kit.rarityColor(rarity), BackgroundColor3 = if on then C.PanelLight else C.Panel, Parent = container }, function()
+			extra.SellRarities[rarity] = if on then nil else true
+			Shops.Merchant(container, state, call, extra)
 		end)
 	end
 
