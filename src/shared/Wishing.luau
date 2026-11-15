@@ -4,7 +4,7 @@
 
 	The gacha rules behind the Wishing Tree. Pure functions; the data is in Config/Wishing.
 
-	  Wishing.Info(profile, kind)  -> { Tiers = { { Id, Name, Unlocked, UnlockStage, Gold|Shards, Tickets, Odds } },
+	  Wishing.Info(profile, kind)  -> { Tiers = { { Id, Name, Unlocked, UnlockStage, Cost, Tickets, Odds } },
 	                                    Tickets = n, Currency = n, CurrencyName, PityRare, PityEpic, LeftRare, LeftEpic, Remaining? }
 	  Wishing.Wish(profile, kind, tierId, method, count, rng?) -> true, { Results = {...}, Spent = n } | false, reason
 	      kind "Pet" | "Skill"; method "Ticket" | "Currency"; count 1 or 10 (a skill wish is capped by what is left to find)
@@ -43,11 +43,8 @@ local function pity(profile, kind)
 end
 
 local function currencyOf(profile, kind)
-	local c = profile.Season.Currencies
-	if kind == "Pet" then
-		return c.Gold or 0, "Gold"
-	end
-	return c.Shards or 0, "Shards"
+	-- one currency pays for every wish, pet or skill
+	return profile.Season.Currencies.Wishstones or 0, "Wishstones"
 end
 
 local function unowned(profile, kind)
@@ -84,7 +81,7 @@ function Wishing.Info(profile, kind)
 	for _, tier in ipairs(tiers) do
 		table.insert(out.Tiers, {
 			Id = tier.Id, Name = tier.Name, UnlockStage = tier.UnlockStage, Unlocked = frontier >= tier.UnlockStage,
-			Cost = tier.Gold or tier.Shards, Tickets = tier.Tickets, Odds = tier.Odds,
+			Cost = tier.Cost, Tickets = tier.Tickets, Odds = tier.Odds,
 		})
 	end
 	return out
@@ -193,17 +190,15 @@ function Wishing.Wish(profile, kind, tierId, method, count, rng)
 			return false, "NotEnough"
 		end
 	else
-		spent = (tier.Gold or tier.Shards) * count
+		spent = tier.Cost * count
 		if (currencyOf(profile, kind)) < spent then
 			return false, "NotEnough"
 		end
 	end
 	if method == "Ticket" then
 		take(profile, ticketId, spent)
-	elseif kind == "Pet" then
-		profile.Season.Currencies.Gold -= spent
 	else
-		profile.Season.Currencies.Shards -= spent
+		profile.Season.Currencies.Wishstones -= spent
 	end
 
 	local p = pity(profile, kind)
@@ -273,10 +268,8 @@ function Wishing.Wish(profile, kind, tierId, method, count, rng)
 		spent -= back
 		if method == "Ticket" then
 			Consumables.Grant(profile, ticketId, back)
-		elseif kind == "Pet" then
-			profile.Season.Currencies.Gold += back
 		else
-			profile.Season.Currencies.Shards += back
+			profile.Season.Currencies.Wishstones += back
 		end
 	end
 	return true, { Results = results, Spent = spent }

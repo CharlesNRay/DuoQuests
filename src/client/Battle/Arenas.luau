@@ -57,7 +57,7 @@ local function makeCard(origin)
 	anchor.Parent = workspace
 	local gui = Instance.new("BillboardGui")
 	gui.Size = UDim2.fromOffset(260, 120)
-	gui.MaxDistance = 150
+	gui.MaxDistance = 55 -- only readable when you are close; far cards would overlap
 	gui.Adornee = anchor
 	gui.Parent = anchor
 	local frame = Instance.new("Frame")

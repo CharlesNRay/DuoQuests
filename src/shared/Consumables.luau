@@ -48,7 +48,9 @@ function Consumables.Grant(profile, id, count)
 	return true
 end
 
-function Consumables.Use(profile, id, now, petId)
+-- `force` uses a boost even when part of its time would be lost to the MaxStack cap (otherwise it is refused with
+-- "WouldWaste" and the seconds that would be lost, so the UI can warn first).
+function Consumables.Use(profile, id, now, petId, force)
 	local def = Config.Defs[id]
 	if def == nil then
 		return false, "Unknown"
@@ -74,6 +76,10 @@ function Consumables.Use(profile, id, now, petId)
 	-- timed boost: using it again adds time
 	local buffs = profile.Season.Buffs
 	local base = math.max(now, buffs[id] or 0)
+	local wasted = base + def.Duration - (now + Config.MaxStack)
+	if wasted > 0 and not force then
+		return false, "WouldWaste", wasted
+	end
 	buffs[id] = math.min(base + def.Duration, now + Config.MaxStack)
 	s[id] -= 1
 	return true, buffs[id]
@@ -181,7 +187,7 @@ function Consumables.List(profile)
 		if (s[id] or 0) > 0 then
 			table.insert(rows, {
 				Id = id, Name = def.DisplayName, Glyph = def.Glyph, Kind = def.Kind, Rarity = def.Rarity, Count = s[id],
-				Description = def.Description, Duration = def.Duration,
+				Description = def.Description, Duration = def.Duration, MaxStack = Config.MaxStack,
 			})
 		end
 	end

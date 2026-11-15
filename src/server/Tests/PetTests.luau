@@ -45,6 +45,13 @@ return function(modulesOverride)
 	check("The first owned pet becomes active automatically", Pets.Active(profile) == "Slimey")
 	check("Clearing the stage again gives nothing twice", #Progression.ApplyClear(profile, 1).PetsGained == 0)
 
+	check("A frontier clear pays Wishstones", (profile.Season.Currencies.Wishstones or 0) >= 2 and summary.Wishstones >= 2)
+	local stones = profile.Season.Currencies.Wishstones
+	local replayTotal = 0
+	for _ = 1, 8 do
+		replayTotal += Progression.ApplyClear(profile, 1).Wishstones
+	end
+	check("Replays pay a Wishstone only every few clears", replayTotal == 2 and profile.Season.Currencies.Wishstones == stones + 2)
 	check("Unknown pets are refused", select(2, Pets.Equip(profile, "Nope")) == "UnknownPet")
 	check("A pet you do not own cannot be equipped", select(2, Pets.Equip(profile, "Foxling")) == "NotOwned")
 

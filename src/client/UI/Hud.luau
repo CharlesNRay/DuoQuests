@@ -102,15 +102,20 @@ function Hud.new(root)
 	local right = Kit.frame({ Size = UDim2.fromOffset(296, 10), AutomaticSize = Enum.AutomaticSize.Y, Position = UDim2.new(1, -6, 0, 4), AnchorPoint = Vector2.new(1, 0), BackgroundTransparency = 1, NoCorner = true, Parent = chrome })
 	Kit.new("UIListLayout", { Padding = UDim.new(0, 4), HorizontalAlignment = Enum.HorizontalAlignment.Right, Parent = right })
 	local topRow = Kit.frame({ Size = UDim2.new(1, 0, 0, 86), BackgroundTransparency = 1, NoCorner = true, Parent = right })
-	local money = Kit.frame({ Size = UDim2.fromOffset(100, 52), BackgroundTransparency = 1, NoCorner = true, Parent = topRow })
+	local money = Kit.frame({ Size = UDim2.fromOffset(100, 80), BackgroundTransparency = 1, NoCorner = true, Parent = topRow })
 	local goldPill = pill(money, { Size = UDim2.new(1, 0, 0, 24), Position = UDim2.fromOffset(0, 0) })
 	local shardPill = pill(money, { Size = UDim2.new(1, 0, 0, 24), Position = UDim2.fromOffset(0, 28) })
-	self.GoldPill, self.ShardPill = goldPill, shardPill
+	local stonePill = pill(money, { Size = UDim2.new(1, 0, 0, 24), Position = UDim2.fromOffset(0, 56) })
+	self.GoldPill, self.ShardPill, self.StonePill = goldPill, shardPill, stonePill
+	self.Stones = Kit.label({ Size = UDim2.new(1, -6, 1, 0), Position = UDim2.fromOffset(6, 0), Text = "", TextSize = 13, Font = Enum.Font.GothamBold, TextColor3 = Color3.fromRGB(255, 170, 230), TextWrapped = false, Parent = stonePill })
 	self.Gold = Kit.label({ Size = UDim2.new(1, -6, 1, 0), Position = UDim2.fromOffset(6, 0), Text = "", TextSize = 13, Font = Enum.Font.GothamBold, TextColor3 = C.Accent, TextWrapped = false, Parent = goldPill })
 	self.Shards = Kit.label({ Size = UDim2.new(1, -6, 1, 0), Position = UDim2.fromOffset(6, 0), Text = "", TextSize = 13, Font = Enum.Font.GothamBold, TextColor3 = Color3.fromRGB(150, 210, 255), TextWrapped = false, Parent = shardPill })
 
 	Kit.Hover(goldPill, function()
 		return ("<b>Gold</b>\n%s"):format(commas(self.GoldExact or 0))
+	end)
+	Kit.Hover(stonePill, function()
+		return ("<b>Wishstones</b>\n%s\nSpend them at the Wishing Tree on pet or skill wishes. Earned by clearing stages."):format(commas(self.StoneExact or 0))
 	end)
 	Kit.Hover(shardPill, function()
 		return ("<b>Shards</b>\n%s"):format(commas(self.ShardExact or 0))
@@ -339,6 +344,8 @@ function Hud.new(root)
 		self.Gold.Text = "💰 " .. short(me.Gold)
 		self.Shards.Text = "💠 " .. short(me.Shards)
 		self.GoldExact, self.ShardExact = me.Gold, me.Shards
+		self.Stones.Text = "✨ " .. short(me.Wishstones or 0)
+		self.StoneExact = me.Wishstones or 0
 
 		Kit.clear(self.BuffRow)
 		self.BuffChips = {}
@@ -415,6 +422,9 @@ function Hud.new(root)
 		local text = info.Won and ("Stage " .. info.Stage .. " cleared!") or (info.TimedOut and "Time ran out - holding on the stage before" or "Defeated - holding on the stage before")
 		if info.Reward then
 			text ..= string.format("  +%d gold  +%d xp", info.Reward.Gold or 0, info.Reward.XP or 0)
+			if (info.Reward.Wishstones or 0) > 0 then
+				text ..= string.format("  +%d wishstone%s", info.Reward.Wishstones, if info.Reward.Wishstones > 1 then "s" else "")
+			end
 			if info.Reward.Item then
 				text ..= "  +" .. info.Reward.Item
 			end

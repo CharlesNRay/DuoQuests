@@ -79,6 +79,17 @@ function Progression.ApplyClear(profile, stage, rand)
 
 	season.Currencies.Gold += rewards.Gold
 	season.Currencies.Shards += rewards.Shards
+	-- Wishstones: a frontier clear pays, boss stages pay extra, every few replays pay one
+	local wishstones = 0
+	if isFrontier then
+		wishstones = Economy.WishstonesFrontier + (if Stages.IsBoss(stage) then Economy.WishstonesBoss else 0)
+	else
+		season.ReplayClears = (season.ReplayClears or 0) + 1
+		if season.ReplayClears % Economy.WishstonesReplayEvery == 0 then
+			wishstones = 1
+		end
+	end
+	season.Currencies.Wishstones = (season.Currencies.Wishstones or 0) + wishstones
 	local levelsGained = Progression.AddXP(season, rewards.XP)
 
 	local skillPicks = 0
@@ -118,6 +129,7 @@ function Progression.ApplyClear(profile, stage, rand)
 		Gold = rewards.Gold,
 		XP = rewards.XP,
 		Shards = rewards.Shards,
+		Wishstones = wishstones,
 		SkillPicks = skillPicks,
 		PetsGained = petsGained,
 		Item = item,

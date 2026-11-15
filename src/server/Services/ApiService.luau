@@ -146,6 +146,7 @@ local function buildState(player)
 			XPNeeded = Progression.XPToNext(season.Level),
 			Gold = season.Currencies.Gold,
 			Shards = season.Currencies.Shards,
+			Wishstones = season.Currencies.Wishstones or 0,
 			SkillPicks = season.Currencies.SkillPicks,
 			Frontier = season.HighestStage,
 			Loadout = table.clone(season.Loadouts[classId]),
@@ -434,11 +435,11 @@ function handlers.UpgradeGear(player, profile, itemId)
 end
 
 -- The Stash: use a boost, feed a pet, buy supplies at the Merchant.
-function handlers.UseConsumable(player, profile, id, petId)
+function handlers.UseConsumable(player, profile, id, petId, force)
 	if type(id) ~= "string" or (petId ~= nil and type(petId) ~= "string") then
 		return false, "BadArgs"
 	end
-	local ok, result = Consumables.Use(profile, id, os.time(), petId)
+	local ok, result = Consumables.Use(profile, id, os.time(), petId, force == true)
 	if ok then
 		afterBuildChange(player)
 	end
@@ -462,6 +463,7 @@ function handlers.DevGrant(player, profile)
 	end
 	profile.Season.Currencies.Gold += 5000
 	profile.Season.Currencies.Shards += 600
+	profile.Season.Currencies.Wishstones = (profile.Season.Currencies.Wishstones or 0) + 60
 	for _, id in ipairs(Consumables.Order) do
 		Consumables.Grant(profile, id, if id == "PetWish" or id == "SkillWish" then 12 else 3)
 	end
@@ -624,7 +626,7 @@ function ApiService.Init()
 					Wait = waitSeconds,
 					Roster = outcome.Roster,
 					Events = events,
-					Reward = reward and { Gold = reward.Gold, XP = reward.XP, Shards = reward.Shards, Item = reward.Item and Gear.Name(reward.Item) or nil, Pets = reward.PetsGained } or nil,
+					Reward = reward and { Gold = reward.Gold, XP = reward.XP, Shards = reward.Shards, Wishstones = reward.Wishstones, Item = reward.Item and Gear.Name(reward.Item) or nil, Pets = reward.PetsGained } or nil,
 				})
 			end
 		end

@@ -427,6 +427,7 @@ function PartyService.SetStage(player, stage)
 	if ok then
 		entry.Dirty = true
 		entry.NextFightAt = 0 -- start the chosen stage right away
+		entry.FightUntil = nil
 	end
 	return ok, reason
 end
@@ -440,6 +441,7 @@ function PartyService.Advance(player)
 	if ok then
 		entry.Dirty = true
 		entry.NextFightAt = 0
+		entry.FightUntil = nil
 	end
 	return ok, reason
 end
@@ -699,7 +701,8 @@ function PartyService.GetState(player)
 	local partnerSnapshot = partnerId and record.Snapshots[tostring(partnerId)]
 	return {
 		PartyId = partyId,
-		Stage = record.Stage,
+		-- while a fight is playing show the stage that is being fought (the record already points at the next one)
+		Stage = if entry.FightUntil and now() < entry.FightUntil and entry.FightStage then entry.FightStage else record.Stage,
 		Frontier = record.Frontier,
 		Holding = record.Farm == true and record.Stage < record.Frontier,
 		IsOpen = Party.IsOpen(record),
@@ -724,6 +727,7 @@ local function tickEntry(entry, currentTime)
 		if outcome then
 			local waitSeconds = outcome.Duration + OfflineConfig.Intermission
 			entry.NextFightAt = currentTime + waitSeconds
+			entry.FightStage, entry.FightUntil = outcome.Stage, currentTime + outcome.Duration
 			entry.Dirty = true
 			if outcome.Won then
 				print(("[PartyService] Party %s cleared stage %d (%.1fs). Frontier %d."):format(entry.Record.PartyId, outcome.Stage, outcome.Duration, entry.Record.Frontier))

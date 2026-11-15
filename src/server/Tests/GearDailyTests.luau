@@ -301,5 +301,15 @@ return function(modulesOverride)
 	check("Gear.Look reports a set at 2 pieces", look.SetId == 3 and look.SetCount == 2)
 	check("Gear.Look with nothing worn is empty", next(lookGear.Look({})) == nil and next(lookGear.Look(nil)) == nil)
 
+	local capProfile = ProfileTemplate.New()
+	local capNow = 1000
+	C.Grant(capProfile, "XPTonic", 12)
+	for _ = 1, 8 do
+		C.Use(capProfile, "XPTonic", capNow)
+	end
+	local capOk, capReason, capWasted = C.Use(capProfile, "XPTonic", capNow)
+	check("A boost that would pass the time cap is refused with a warning", capOk == false and capReason == "WouldWaste" and capWasted > 0 and C.Count(capProfile, "XPTonic") == 4)
+	check("Forcing it uses the boost anyway, capped", C.Use(capProfile, "XPTonic", capNow, nil, true) and capProfile.Season.Buffs.XPTonic == capNow + 7200)
+
 	print(("GearDailyTests done: %d passed, %d failed"):format(passed, failed))
 end

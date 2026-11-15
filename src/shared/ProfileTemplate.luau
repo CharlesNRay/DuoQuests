@@ -58,6 +58,7 @@ function ProfileTemplate.NewSeasonData(seasonId)
 		Currencies = {
 			Gold = 0, -- levels skill slots
 			Shards = 0, -- Skill Shards: unlock skills of your choice
+			Wishstones = 0, -- the Wishing Tree currency (pets and skills), earned from clearing stages
 			SkillPicks = 0, -- free skill unlocks from first-clearing boss stages
 		},
 

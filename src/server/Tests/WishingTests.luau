@@ -39,13 +39,13 @@ return function(modulesOverride)
 
 	local profile = ProfileTemplate.New()
 	local ok, reason = Wishing.Wish(profile, "Pet", "Meadow", "Currency", 1, seeded(1))
-	check("A wish you cannot afford fails and spends nothing", ok == false and reason == "NotEnough" and profile.Season.Currencies.Gold == 0)
+	check("A wish you cannot afford fails and spends nothing", ok == false and reason == "NotEnough" and (profile.Season.Currencies.Wishstones or 0) == 0)
 	check("A locked tier is refused", select(2, Wishing.Wish(profile, "Pet", "Starlit", "Currency", 1, seeded(1))) == "TierLocked")
 	check("Bad arguments are refused", select(2, Wishing.Wish(profile, "Pet", "Meadow", "Currency", 3, seeded(1))) == "BadArgs" and select(2, Wishing.Wish(profile, "Nope", "Meadow", "Ticket", 1)) == "BadArgs")
 
-	profile.Season.Currencies.Gold = 1000
+	profile.Season.Currencies.Wishstones = 10
 	ok, reason = Wishing.Wish(profile, "Pet", "Meadow", "Currency", 1, seeded(2))
-	check("A gold pet wish works and charges gold", ok == true and profile.Season.Currencies.Gold == 800 and #reason.Results == 1)
+	check("A Wishstone pet wish works and charges Wishstones", ok == true and profile.Season.Currencies.Wishstones == 7 and #reason.Results == 1)
 	check("The pet is owned afterwards", profile.Permanent.Pets[reason.Results[1].Id] == true)
 
 	Consumables.Grant(profile, "PetWish", 12)
@@ -93,17 +93,17 @@ return function(modulesOverride)
 	local sp = ProfileTemplate.New()
 	local info = Wishing.Info(sp, "Skill")
 	check("Skill info lists the tiers and what is left to find", #info.Tiers == 3 and info.Remaining > 0 and info.Tiers[1].Unlocked and not info.Tiers[3].Unlocked)
-	sp.Season.Currencies.Shards = 500
+	sp.Season.Currencies.Wishstones = 500
 	local owned0 = 0
 	for _ in pairs(sp.Season.OwnedAbilities) do owned0 += 1 end
 	local sok, sdata = Wishing.Wish(sp, "Skill", "Meadow", "Currency", 10, seeded(5))
 	local owned1 = 0
 	for _ in pairs(sp.Season.OwnedAbilities) do owned1 += 1 end
 	check("A skill ten-pull unlocks new skills only", sok == true and owned1 == owned0 + #sdata.Results and #sdata.Results >= 1)
-	check("Skill wishes spend shards per wish", sp.Season.Currencies.Shards == 500 - 40 * #sdata.Results)
+	check("Skill wishes spend the same Wishstones per wish", sp.Season.Currencies.Wishstones == 500 - 3 * #sdata.Results)
 	local drained = ProfileTemplate.New()
 	drained.Season.HighestStage = 100
-	drained.Season.Currencies.Shards = 100000
+	drained.Season.Currencies.Wishstones = 100000
 	for _ = 1, 30 do
 		Wishing.Wish(drained, "Skill", "Starlit", "Currency", 10, seeded(11))
 	end

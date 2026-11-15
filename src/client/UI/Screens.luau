@@ -43,6 +43,10 @@ local function num(value)
 	return tostring(math.floor(value + 0.5))
 end
 
+local function minutes(seconds)
+	return if seconds >= 3600 then ("%.1fh"):format(seconds / 3600) else ("%d min"):format(math.ceil(seconds / 60))
+end
+
 local function statsText(ability, level)
 	local parts = {}
 	for _, r in ipairs(AbilityStats.Rows(ability, level)) do
@@ -259,8 +263,27 @@ local function stashTab(container, state, call, extra)
 	Kit.label({ Size = UDim2.new(1, -16, 0, 22), Position = UDim2.fromOffset(8, 6), Text = ("%s  %s  x%d"):format(selRow.Glyph, selRow.Name, selRow.Count), TextSize = 15, Font = Enum.Font.GothamBold, TextColor3 = Kit.rarityColor(selRow.Rarity), Parent = detail })
 	Kit.label({ Size = UDim2.new(1, -16, 0, 50), Position = UDim2.fromOffset(8, 30), Text = selRow.Description, TextSize = 12, TextYAlignment = Enum.TextYAlignment.Top, Parent = detail })
 	if selRow.Kind == "Buff" then
-		Kit.button({ Size = UDim2.new(1, -16, 0, 34), Position = UDim2.new(0, 8, 1, -44), Text = "Use now", BackgroundColor3 = C.Up, Parent = detail }, function()
-			call("UseConsumable", selRow.Id)
+		-- using a boost adds its time up to a cap: warn first so nothing is wasted
+		local remaining = 0
+		for _, buff in ipairs(me.Buffs or {}) do
+			if buff.Id == selRow.Id then
+				remaining = buff.Remaining
+			end
+		end
+		local cap = selRow.MaxStack or 7200
+		local wasted = remaining + (selRow.Duration or 0) - cap
+		local confirming = extra.StashConfirm == selRow.Id
+		if wasted > 0 then
+			Kit.label({ Size = UDim2.new(1, -16, 0, 34), Position = UDim2.new(0, 8, 1, -86), Text = ("Careful: %s of this boost would be wasted (the cap is %s)."):format(minutes(wasted), minutes(cap)), TextSize = 11, TextColor3 = C.Bad, Parent = detail })
+		end
+		Kit.button({ Size = UDim2.new(1, -16, 0, 34), Position = UDim2.new(0, 8, 1, -44), Text = if wasted <= 0 then "Use now" elseif confirming then "Tap again to use anyway" else "Use now (wastes time)", BackgroundColor3 = if wasted > 0 then C.Bad else C.Up, Parent = detail }, function()
+			if wasted > 0 and not confirming then
+				extra.StashConfirm = selRow.Id
+				Screens.Bag(container, state, call, extra)
+				return
+			end
+			extra.StashConfirm = nil
+			call("UseConsumable", selRow.Id, nil, true)
 		end)
 	elseif selRow.Kind == "PetFood" then
 		Kit.label({ Size = UDim2.new(1, -16, 0, 16), Position = UDim2.fromOffset(8, 84), Text = "Feed to:", TextSize = 11, TextColor3 = C.Dim, Parent = detail })

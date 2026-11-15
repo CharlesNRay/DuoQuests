@@ -56,6 +56,7 @@ function Actor.new(scene, model, info)
 	self.Bar = Instance.new("BillboardGui")
 	self.Bar.Size = UDim2.fromOffset(70, 10)
 	self.Bar.AlwaysOnTop = true
+	self.Bar.MaxDistance = 70 -- far fights show no bars (they would pile up)
 	self.Bar.StudsOffsetWorldSpace = Vector3.new(0, 0, 0)
 	self.Back = Instance.new("Frame")
 	self.Back.Size = UDim2.fromScale(1, 1)

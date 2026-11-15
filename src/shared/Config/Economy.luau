@@ -25,6 +25,12 @@ return {
 	ShardStageStep = 10,
 	BossShardBonus = 5, -- extra shards for clearing a boss stage
 
+	-- Wishstones: the one currency for the Wishing Tree (pet and skill wishes). Every first (frontier) clear pays
+	-- WishstonesFrontier, boss stages add WishstonesBoss, and every WishstonesReplayEvery-th replay pays one.
+	WishstonesFrontier = 2,
+	WishstonesBoss = 4,
+	WishstonesReplayEvery = 4,
+
 	-- Replaying a stage you already cleared pays this fraction, so the
 	-- frontier is always the best place to be (no farming old content).
 	ReplayFactor = 0.5,

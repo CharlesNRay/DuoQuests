@@ -47,22 +47,7 @@ function Scene.new(origin)
 	self.Folder.Parent = workspace
 
 	self.Ground = prop(self.Folder, { Name = "Ground", Size = Vector3.new(64, 1, 42), CFrame = CFrame.new(origin + Vector3.new(0, -0.5, 0)) })
-	-- the sky is a gradient painted on an invisible wall (a lit Neon part washed pale skies out)
-	self.Backdrop = prop(self.Folder, { Name = "Backdrop", Size = Vector3.new(64, 34, 1), CFrame = CFrame.new(origin + Vector3.new(0, 17, -21)), Transparency = 1 })
-	local gui = Instance.new("SurfaceGui")
-	gui.Face = Enum.NormalId.Back -- the +Z side, towards the camera
-	gui.LightInfluence = 0
-	gui.SizingMode = Enum.SurfaceGuiSizingMode.FixedSize
-	gui.CanvasSize = Vector2.new(640, 340)
-	gui.Parent = self.Backdrop
-	local sky = Instance.new("Frame")
-	sky.Size = UDim2.fromScale(1, 1)
-	sky.BorderSizePixel = 0
-	sky.BackgroundColor3 = Color3.new(1, 1, 1)
-	sky.Parent = gui
-	self.SkyGradient = Instance.new("UIGradient")
-	self.SkyGradient.Rotation = 90
-	self.SkyGradient.Parent = sky
+	-- (no backdrop wall: the real sky and horizon show behind the fight)
 	self.Scenery = Instance.new("Folder")
 	self.Scenery.Name = "Scenery"
 	self.Scenery.Parent = self.Folder
@@ -231,7 +216,6 @@ function Scene:SetZone(theme)
 	self.Props = {}
 	self.Ground.Color = color(theme.Ground)
 	local sky = color(theme.Sky)
-	self.SkyGradient.Color = ColorSequence.new(sky:Lerp(Color3.new(0, 0, 0), 0.35), sky:Lerp(Color3.new(1, 1, 1), 0.3))
 	local okMaterial, material = pcall(function()
 		return Enum.Material[theme.Material or "Grass"]
 	end)
