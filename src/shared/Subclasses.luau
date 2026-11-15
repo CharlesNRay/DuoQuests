@@ -24,6 +24,7 @@
 
 local Config = require(script.Parent.Config.Subclasses)
 local Classes = require(script.Parent.Config.Classes)
+local SkillProgress = require(script.Parent.SkillProgress)
 
 local Subclasses = {}
 
@@ -125,7 +126,7 @@ function Subclasses.Choose(profile, classId, subclassId)
 	profile.Season.OwnedAbilities = profile.Season.OwnedAbilities or {}
 	local granted = def.Skills[1]
 	if granted then
-		profile.Season.OwnedAbilities[granted] = true
+		SkillProgress.Receive(profile.Season, granted, "Legendary") -- the path's signature skill comes as Legendary
 	end
 	return true
 end

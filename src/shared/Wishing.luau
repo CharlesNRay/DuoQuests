@@ -11,8 +11,8 @@
 	      Results rows: { Id, Rarity, New = bool,
 	                      Copies = n? (a duplicate pet: copies banked now), DupXP = n? (a duplicate at max rank / a spare skill copy),
 	                      Upgrade = true? (a skill copy of a higher tier than you hold: it waits for you to apply it) }
-	      A skill wish rolls a rarity first, then a skill whose own rarity is no higher; the copy comes at the rolled
-	      rarity. Spare copies become skill XP; nothing happens to a skill until the player presses Rank up / Upgrade.
+	      A skill wish rolls a rarity first, then a skill whose own rarity is no higher (your subclass's skills can
+	      always come up, and arrive as Legendary); the copy comes at the rolled rarity. Spare copies become skill XP; nothing happens to a skill until the player presses Rank up / Upgrade.
 	      reasons: "BadArgs", "UnknownTier", "TierLocked", "NotEnough"
 	  rng is a function() -> [0,1); default uses Random.
 
@@ -154,7 +154,7 @@ local function pickSkill(profile, rarity, rand)
 	local all = Skills.Pool(season.ClassId, Subclasses.Current(profile, season.ClassId))
 	local eligible = {}
 	for _, id in ipairs(all) do
-		if Abilities[id] and SkillProgress.TierRank[SkillProgress.BaseTier(id)] <= SkillProgress.TierRank[rarity] then
+		if Abilities[id] and (SkillProgress.IsSubclassSkill(id) or SkillProgress.TierRank[SkillProgress.BaseTier(id)] <= SkillProgress.TierRank[rarity]) then
 			table.insert(eligible, id)
 		end
 	end

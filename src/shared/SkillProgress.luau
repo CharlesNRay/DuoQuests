@@ -20,6 +20,7 @@
 local Abilities = require(script.Parent.Config.Abilities)
 local Config = require(script.Parent.Config.SkillProgress)
 local Rarities = require(script.Parent.Config.Rarities)
+local SubclassConfig = require(script.Parent.Config.Subclasses)
 
 local SkillProgress = {}
 SkillProgress.Config = Config
@@ -44,6 +45,20 @@ local function baseTier(id)
 	return tierName(def and def.Rarity or "Common")
 end
 SkillProgress.BaseTier = baseTier
+
+-- A subclass path's signature skills arrive as Legendary the first time you wish one up.
+local subclassSkills
+function SkillProgress.IsSubclassSkill(id)
+	if subclassSkills == nil then
+		subclassSkills = {}
+		for _, def in pairs(SubclassConfig.Defs) do
+			for _, skillId in ipairs(def.Skills or {}) do
+				subclassSkills[skillId] = true
+			end
+		end
+	end
+	return subclassSkills[id] == true
+end
 
 local function stateOf(season, id, create)
 	season.SkillState = season.SkillState or {}
@@ -110,14 +125,14 @@ function SkillProgress.Info(season)
 end
 
 -- A copy of a skill at `rarity` was won (the skill is already owned, or is being given now).
--- "New": first copy (held at the rarity it dropped as). "Upgrade": a higher tier is now waiting (any lower waiting
+-- "New": first copy (held at the rarity it dropped as; a subclass skill is always Legendary). "Upgrade": a higher tier is now waiting (any lower waiting
 -- copy turns into XP). "XP": spare copy, worth XP (and, at max rank, kept as banked XP anyway).
 function SkillProgress.Receive(season, id, rarity)
 	rarity = tierName(rarity)
 	if season.OwnedAbilities[id] == nil then
 		season.OwnedAbilities[id] = true
 		local s = stateOf(season, id, true)
-		s.Tier = if TIER_RANK[rarity] > TIER_RANK[baseTier(id)] then rarity else baseTier(id)
+		s.Tier = if SkillProgress.IsSubclassSkill(id) then "Legendary" elseif TIER_RANK[rarity] > TIER_RANK[baseTier(id)] then rarity else baseTier(id)
 		return "New"
 	end
 	local s = stateOf(season, id, true)

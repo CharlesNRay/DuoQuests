@@ -179,3 +179,4 @@ Newest first.
 ## Party leave fixes (Nov 15)
 - A fresh solo party (after Leave) starts at the player's own frontier, never stage 1.
 - The fight clock is carried over when you leave (PartyService.Leave): a new party's first fight is no longer due at once, so spamming Leave cannot clear a stage per click.
+- Skill wishes are open from the start (no stage-locked tiers) and can give any class skill; Legendary joined the skill odds. A chosen subclass's skills join the wish pool and arrive as Legendary (choosing a path also grants its first skill as Legendary).

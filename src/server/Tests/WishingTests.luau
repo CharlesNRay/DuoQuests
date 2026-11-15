@@ -92,7 +92,7 @@ return function(modulesOverride)
 	-- skills
 	local sp = ProfileTemplate.New()
 	local info = Wishing.Info(sp, "Skill")
-	check("Skill info lists the tiers and what is left to find", #info.Tiers == 3 and info.Remaining > 0 and info.Tiers[1].Unlocked and not info.Tiers[3].Unlocked)
+	check("Skill info lists the tiers, all open from the start", #info.Tiers == 3 and info.Remaining > 0 and info.Tiers[1].Unlocked and info.Tiers[2].Unlocked and info.Tiers[3].Unlocked)
 	sp.Season.Currencies.Wishstones = 500
 	local owned0 = 0
 	for _ in pairs(sp.Season.OwnedAbilities) do owned0 += 1 end
@@ -106,6 +106,38 @@ return function(modulesOverride)
 	check("A skill ten-pull gives ten results; new rows match the skills gained", sok == true and #sdata.Results == 10 and owned1 == owned0 + newRows and newRows >= 1)
 	check("Skill wishes spend the same Wishstones per wish", sp.Season.Currencies.Wishstones == 500 - 3 * #sdata.Results)
 	check("Skill wishes pay with SkillWish tickets, not pet tickets", Wishing.Config.TicketIds.Skill == "SkillWish" and Wishing.Config.TicketIds.Pet == "PetWish")
+	-- a fresh player can already wish at the top tier
+	local fresh = ProfileTemplate.New()
+	fresh.Season.Currencies.Wishstones = 100
+	check("A new player can make a Starlit skill wish", select(1, Wishing.Wish(fresh, "Skill", "Starlit", "Currency", 1, seeded(3))) == true)
+
+	-- subclass skills: wishable once the path is chosen, and they arrive Legendary
+	local SubclassConfig = m.SubclassConfig
+	local pathId = fresh.Season.ClassId == "Warrior" and "Berserker"
+	local pathDef
+	for id, def in pairs(SubclassConfig.Defs) do
+		if def.Class == fresh.Season.ClassId and def.Parent == def.Class and not pathDef then
+			pathDef = def
+			pathId = id
+		end
+	end
+	check("Subclass skills are Legendary on first copy", m.SkillProgress.IsSubclassSkill(pathDef.Skills[1]))
+	local sub = ProfileTemplate.New()
+	sub.Season.Subclasses = sub.Season.Subclasses or {}
+	sub.Season.Subclasses[sub.Season.ClassId] = pathId
+	sub.Season.Currencies.Wishstones = 100000
+	local gotPath = false
+	for i = 1, 400 do
+		local _, d2 = Wishing.Wish(sub, "Skill", "Starlit", "Currency", 1, seeded(100 + i))
+		local row = d2.Results[1]
+		if row.New and m.SkillProgress.IsSubclassSkill(row.Id) then
+			gotPath = true
+			check("A subclass skill arrives as Legendary", m.SkillProgress.Get(sub.Season, row.Id).Tier == "Legendary")
+			break
+		end
+	end
+	check("A chosen path's skills can come up from wishes", gotPath)
+
 	local drained = ProfileTemplate.New()
 	drained.Season.HighestStage = 100
 	drained.Season.Currencies.Wishstones = 100000
