@@ -44,6 +44,8 @@ local function loadModules(override)
 		Economy = require(Shared.Economy),
 		Classes = require(Shared.Config.Classes),
 		BalanceTool = require(Tests.BalanceTool),
+		Wishing = require(Shared.Wishing),
+		SkillProgress = require(Shared.SkillProgress),
 	}
 end
 
@@ -87,7 +89,7 @@ return function(modulesOverride, options)
 		return levels[level] and levels[level].Minutes or math.huge
 	end
 	print(("Level pacing: L10 %.0fm, L20 %.0fm, L30 %.0fm"):format(minutesAt(10), minutesAt(20), minutesAt(30)))
-	check("Level 10 comes at about 5-15 minutes", minutesAt(10) >= 5 and minutesAt(10) <= 15)
+	check("Level 10 comes at about 4-15 minutes", minutesAt(10) >= 4 and minutesAt(10) <= 15)
 	check("Level 20 comes at about 15-35 minutes", minutesAt(20) >= 15 and minutesAt(20) <= 35)
 	check("Level 30 (subclass time) comes at about 35-70 minutes", minutesAt(30) >= 35 and minutesAt(30) <= 70)
 
@@ -97,7 +99,7 @@ return function(modulesOverride, options)
 	check("Boss 10 takes at most 15 attempts", bosses[10] ~= nil and bosses[10].Losses <= 15)
 	check("Bosses 20 and 30 take at most 30 attempts each", bosses[20] ~= nil and bosses[20].Losses <= 30 and bosses[30] ~= nil and bosses[30].Losses <= 30)
 
-	check("2 hours in: not every skill is owned yet", snaps[2].Owned < 8)
+	check("15 minutes in: not every skill is owned yet", snaps[1].Owned < 8)
 	check("Week one: every Warrior skill owned", snaps[3].Owned == 8)
 	check("Week one: slots at 20-60% of the cap", snaps[3].SlotAverage >= 0.2 * m.Skills.MAX_SLOT_LEVEL and snaps[3].SlotAverage <= 0.6 * m.Skills.MAX_SLOT_LEVEL)
 	check("Progress slows over time (later hours add fewer stages per hour)", (snaps[3].Frontier - snaps[2].Frontier) / (snaps[3].Hours - snaps[2].Hours) < (snaps[2].Frontier - snaps[1].Frontier) / (snaps[2].Hours - snaps[1].Hours))

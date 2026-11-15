@@ -13,7 +13,7 @@
 	  Pets.Describe(petId, level)           -> short text, e.g. "+5% Max Health"
 	  Pets.GrantForClear(profile, stage)    -> list of pet ids newly received
 	  Pets.Equip(profile, petId)            reasons: "UnknownPet", "NotOwned"
-	  Pets.Rank(profile, petId) / Pets.AddDuplicate(profile, petId)   duplicates rank a pet up
+	  Pets.Rank / Pets.Copies / Pets.AddDuplicate / Pets.RankUp   duplicates bank as copies; the player ranks a pet up by hand
 	  Pets.SkillId(petId)                   the pet's own skill (cast by its owner; level = rank)
 	  Pets.List(profile)                    -> rows for the UI (owned or not)
 
@@ -101,17 +101,48 @@ function Pets.Describe(petId, level, rank)
 	return table.concat(parts, ", ")
 end
 
--- A duplicate pull of a pet you own: +1 rank, or pet XP once it is at max rank.
--- Returns "Rank", newRank  or  "XP", amount.
+-- A duplicate pull of a pet you own is banked as a COPY; the player spends copies to rank the pet up (RankUp). Once
+-- the pet is at max rank a duplicate is pet XP instead. Returns "Copy", copiesNow  or  "XP", amount.
 function Pets.AddDuplicate(profile, petId)
-	profile.Permanent.PetRanks = profile.Permanent.PetRanks or {}
-	local rank = Pets.Rank(profile, petId)
-	if rank < Config.MaxRank then
-		profile.Permanent.PetRanks[petId] = rank + 1
-		return "Rank", rank + 1
+	if Pets.Rank(profile, petId) >= Config.MaxRank then
+		Pets.AddXP(profile, petId, Config.DupFallbackXP)
+		return "XP", Config.DupFallbackXP
 	end
-	Pets.AddXP(profile, petId, Config.DupFallbackXP)
-	return "XP", Config.DupFallbackXP
+	profile.Permanent.PetCopies = profile.Permanent.PetCopies or {}
+	local copies = (profile.Permanent.PetCopies[petId] or 0) + 1
+	profile.Permanent.PetCopies[petId] = copies
+	return "Copy", copies
+end
+
+function Pets.Copies(profile, petId)
+	return (profile.Permanent.PetCopies or {})[petId] or 0
+end
+
+function Pets.RankCost(rank)
+	return Config.RankCost[rank]
+end
+
+-- Spend banked copies on the next rank. Reasons: "UnknownPet", "NotOwned", "MaxRank", "NotEnoughCopies"
+function Pets.RankUp(profile, petId)
+	if type(petId) ~= "string" or Config.Defs[petId] == nil then
+		return false, "UnknownPet"
+	end
+	if not owned(profile, petId) then
+		return false, "NotOwned"
+	end
+	local rank = Pets.Rank(profile, petId)
+	if rank >= Config.MaxRank then
+		return false, "MaxRank"
+	end
+	local cost = Config.RankCost[rank]
+	local copies = Pets.Copies(profile, petId)
+	if copies < cost then
+		return false, "NotEnoughCopies"
+	end
+	profile.Permanent.PetCopies[petId] = copies - cost
+	profile.Permanent.PetRanks = profile.Permanent.PetRanks or {}
+	profile.Permanent.PetRanks[petId] = rank + 1
+	return true, rank + 1
 end
 
 function Pets.GrantForClear(profile, stage)
@@ -194,6 +225,8 @@ function Pets.List(profile)
 			Text = Pets.Describe(petId, level, rank),
 			Rank = rank,
 			MaxRank = Config.MaxRank,
+			Copies = Pets.Copies(profile, petId),
+			RankCost = Config.RankCost[rank],
 			Skill = def.Skill and { Id = Pets.SkillId(petId), Name = def.Skill.Name, Text = def.Skill.Text } or nil,
 		})
 	end

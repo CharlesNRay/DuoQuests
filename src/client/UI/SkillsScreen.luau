@@ -113,6 +113,28 @@ local function actionButton(parent, text, y, color, onClick)
 	return Kit.button({ Size = UDim2.new(1, -16, 0, 28), Position = UDim2.new(0, 8, 0, y), Text = text, TextSize = 13, BackgroundColor3 = color or C.PanelLight, Parent = parent }, onClick)
 end
 
+local function slotUnlockText(slot)
+	for _, u in ipairs(PassiveCfg.SlotUnlocks) do
+		if u.Slots >= slot then
+			return "Stage " .. tostring(u.Stage)
+		end
+	end
+	return "Locked"
+end
+
+-- Icon props for a skill the player owns: border = the tier they hold, a mark when something can be pressed
+local function skillProps(me, id, extra)
+	local info = (me.SkillInfo or {})[id]
+	local props = extra or {}
+	if info then
+		props.Tier = info.Tier
+		if info.CanRank or info.CanUpgrade then
+			props.Badge = if info.CanUpgrade then "▲" else "+"
+		end
+	end
+	return props
+end
+
 local function inside(frame, point)
 	if not (frame and frame.Parent) then
 		return false
@@ -226,7 +248,7 @@ function SkillsScreen.Skills(container, state, call, extra)
 	for slot, id in ipairs(equipped) do
 		local def = Abilities[id]
 		if def then
-			local tile = Icons.Skill(main, def, { Size = UDim2.fromOffset(52, 52), Position = UDim2.fromOffset((slot - 1) * 58, 16), Level = levels[slot] })
+			local tile = Icons.Skill(main, def, skillProps(me, id, { Size = UDim2.fromOffset(52, 52), Position = UDim2.fromOffset((slot - 1) * 58, 16), Level = levels[slot] }))
 			slotTiles[slot] = tile
 			Kit.Hover(tile, function() return Tips.Skill(def, levels[slot] or 1) end)
 			attach(tile, def, sel.Slot == slot, function()
@@ -250,7 +272,7 @@ function SkillsScreen.Skills(container, state, call, extra)
 		for slot = 1, Passives.SLOTS do
 			local locked = slot > (me.PassiveSlots or 0)
 			local pdef = not locked and PassiveCfg.Defs[pEquipped[slot]] or nil
-			local tile = Icons.Passive(main, pdef, { Size = UDim2.fromOffset(44, 44), Position = UDim2.fromOffset(244 + (slot - 1) * 50, 20), Level = if pdef then (me.PassiveLevels or {})[slot] else nil, Locked = locked })
+			local tile = Icons.Passive(main, pdef, { Size = UDim2.fromOffset(44, 44), Position = UDim2.fromOffset(244 + (slot - 1) * 50, 20), Level = if pdef then (me.PassiveLevels or {})[slot] else nil, Locked = locked, Milestone = locked, LockText = if locked then slotUnlockText(slot) else nil })
 			if pdef then
 				Kit.Hover(tile, function() return Tips.Passive(pdef, (me.PassiveLevels or {})[slot] or 1) end)
 			end
@@ -338,8 +360,8 @@ function SkillsScreen.Skills(container, state, call, extra)
 		local g = iconGrid()
 		for _, id in ipairs(owned) do
 			local def = Abilities[id]
-			local tile = Icons.Skill(g, def, {})
-			Kit.Hover(tile, function() return Tips.Skill(def, 1) end)
+			local tile = Icons.Skill(g, def, if isPartner then {} else skillProps(me, id, { Level = (me.SkillInfo or {})[id] and me.SkillInfo[id].Level or nil }))
+			Kit.Hover(tile, function() return Tips.Skill(def, if isPartner then 1 else ((me.SkillInfo or {})[id] or {}).Level or 1) end)
 			attach(tile, def, sel.Id == id, function()
 				extra.SkillSel = { Id = id, Target = sel.Slot or sel.Target }
 				redraw()
@@ -375,7 +397,7 @@ function SkillsScreen.Skills(container, state, call, extra)
 				any = true
 				local pdef = PassiveCfg.Defs[id]
 				local open = Passives.IsUnlocked(id, me.Frontier)
-				local tile = Icons.Passive(g, pdef, { Locked = not open })
+				local tile = Icons.Passive(g, pdef, { Locked = not open, Milestone = not open, LockText = if open then nil else ("Stage " .. tostring(pdef.UnlockStage or 1)) })
 				Kit.Hover(tile, function() return Tips.Passive(pdef, 1) end)
 				attach(tile, nil, sel.PId == id, function()
 					extra.SkillSel = { PId = id, Target = sel.PSlot or sel.Target }
@@ -455,44 +477,62 @@ function SkillsScreen.Skills(container, state, call, extra)
 	local isEquipped = sel.Slot ~= nil
 	local isOwned = ownedSet[selectedId] == true
 	local level = if isEquipped then (levels[sel.Slot] or 1) else 1
-	Kit.label({ Size = UDim2.new(1, -16, 1, -104), Position = UDim2.fromOffset(8, 6), Text = Tips.Skill(selectedDef, level), RichText = true, TextSize = 12, TextYAlignment = Enum.TextYAlignment.Top, Parent = right })
+	local info = if isPartner then nil else (me.SkillInfo or {})[selectedId]
+	local header = ""
+	if info and isOwned then
+		header = ("%s  -  %s  -  Rank %d/%d\n"):format(Kit.tint(info.Tier, Kit.rarityColor(info.Tier)), Kit.tint("Level " .. level, C.Dim), info.Rank, info.MaxRank)
+	end
+	Kit.label({ Size = UDim2.new(1, -16, 1, -(if isOwned and not isPartner then 128 else 104)), Position = UDim2.fromOffset(8, 6), Text = header .. Tips.Skill(selectedDef, level), RichText = true, TextSize = 12, TextYAlignment = Enum.TextYAlignment.Top, Parent = right })
+
+	-- Rank up / Upgrade are pressed by hand (copies from the Wishing Tree become XP and tier upgrades that wait for you)
+	local function progressButtons()
+		if not info then
+			return
+		end
+		local bar = Kit.frame({ Size = UDim2.new(1, -16, 0, 6), Position = UDim2.new(0, 8, 1, -124), BackgroundColor3 = Color3.fromRGB(20, 22, 34), NoCorner = true, Parent = right })
+		if info.XPNeeded then
+			Kit.frame({ Size = UDim2.fromScale(math.clamp(info.XP / info.XPNeeded, 0, 1), 1), BackgroundColor3 = if info.CanRank then C.Up else C.Accent, NoCorner = true, Parent = bar })
+		else
+			Kit.frame({ Size = UDim2.fromScale(1, 1), BackgroundColor3 = C.Accent, NoCorner = true, Parent = bar })
+		end
+		local rankText = if info.XPNeeded then (if info.CanRank then "Rank up!  (%d/%d XP)" else "Rank up  (%d/%d XP)"):format(info.XP, info.XPNeeded) else "Max rank"
+		local rankBtn = actionButton(right, rankText, 0, if info.CanRank then C.Up else C.Panel, function()
+			if info.CanRank then
+				call("RankUpSkill", selectedId)
+			end
+		end)
+		rankBtn.Position = UDim2.new(0, 8, 1, -114)
+		rankBtn.Active = info.CanRank
+		local pending = info.Pending ~= nil and info.CanUpgrade
+		local upBtn = actionButton(right, if pending then ("Upgrade to " .. info.Pending .. "!") else "No upgrade waiting", 0, if pending then C.Accent else C.Panel, function()
+			if pending then
+				call("UpgradeSkill", selectedId)
+			end
+		end)
+		upBtn.Position = UDim2.new(0, 8, 1, -82)
+		upBtn.Active = pending
+		if pending then
+			upBtn.TextColor3 = Color3.fromRGB(30, 24, 10)
+		end
+	end
 
 	if isEquipped then
-		local slot = sel.Slot
 		if not isPartner then
-			local cost = Economy.SlotLevelCost(me.SlotLevels[slot])
-			actionButton(right, cost and ("Level up  -  " .. cost .. "g") or "Max level", 0, C.Up, function()
-				if cost then
-					call("LevelSlot", slot)
-				end
-			end).Position = UDim2.new(0, 8, 1, -98)
+			progressButtons()
 		end
-		local earlier = Kit.button({ Size = UDim2.new(0.5, -12, 0, 28), Position = UDim2.new(0, 8, 1, -64), Text = "◀ Earlier", TextSize = 12, Parent = right }, function()
-			if slot > 1 then
-				equipped[slot], equipped[slot - 1] = equipped[slot - 1], equipped[slot]
-				extra.SkillSel = { Slot = slot - 1 }
-				save(equipped)
-			end
-		end)
-		local later = Kit.button({ Size = UDim2.new(0.5, -12, 0, 28), Position = UDim2.new(0.5, 4, 1, -64), Text = "Later ▶", TextSize = 12, Parent = right }, function()
-			if slot < #equipped then
-				equipped[slot], equipped[slot + 1] = equipped[slot + 1], equipped[slot]
-				extra.SkillSel = { Slot = slot + 1 }
-				save(equipped)
-			end
-		end)
-		earlier.Active = slot > 1
-		later.Active = slot < #equipped
-		note(right, "Drag icons to reorder, or drag a pool skill onto this slot.", -32, 30)
+		note(right, "Drag icons to reorder, or drag a pool skill onto this slot. Duplicates from the Wishing Tree become XP.", -46, 44)
 	elseif isOwned then
 		local target = math.clamp(sel.Target or #equipped, 1, #equipped)
 		local swapOut = Abilities[equipped[target]]
+		if not isPartner then
+			progressButtons()
+		end
 		actionButton(right, ("Equip in slot %d"):format(target), 0, C.Up, function()
 			equipped[target] = selectedId
 			extra.SkillSel = { Slot = target }
 			save(equipped)
-		end).Position = UDim2.new(0, 8, 1, -64)
-		note(right, swapOut and ("Replaces " .. swapOut.DisplayName .. ". Or drag the icon onto any slot.") or "", -32, 30)
+		end).Position = UDim2.new(0, 8, 1, -50)
+		note(right, swapOut and ("Replaces " .. swapOut.DisplayName .. ". Or drag the icon onto any slot.") or "", -20, 18)
 	else
 		local picks = me.SkillPicks or 0
 		actionButton(right, ("Unlock with a pick  (%d)"):format(picks), 0, C.Up, function()

@@ -55,15 +55,26 @@ return function(modulesOverride)
 	check("Unknown pets are refused", select(2, Pets.Equip(profile, "Nope")) == "UnknownPet")
 	check("A pet you do not own cannot be equipped", select(2, Pets.Equip(profile, "Foxling")) == "NotOwned")
 
-	-- pets level from XP (food, fighting), never for gold; duplicates rank them up
+	-- pets level from XP (food, fighting), never for gold; duplicates are banked and ranked up BY HAND
 	check("Pets can no longer be levelled with gold", Pets.LevelUp == nil and Pets.LevelCost == nil)
-	check("A new pet is rank 1", Pets.Rank(profile, "Slimey") == 1)
-	local kind, newRank = Pets.AddDuplicate(profile, "Slimey")
-	check("A duplicate raises the rank by one", kind == "Rank" and newRank == 2 and Pets.Rank(profile, "Slimey") == 2)
-	for _ = 1, 10 do
+	check("A new pet is rank 1 with no copies", Pets.Rank(profile, "Slimey") == 1 and Pets.Copies(profile, "Slimey") == 0)
+	local kind, copies = Pets.AddDuplicate(profile, "Slimey")
+	check("A duplicate is banked as a copy, not an automatic rank", kind == "Copy" and copies == 1 and Pets.Rank(profile, "Slimey") == 1)
+	local ok, rank = Pets.RankUp(profile, "Slimey")
+	check("Rank up spends the copy by hand", ok and rank == 2 and Pets.Copies(profile, "Slimey") == 0)
+	check("Rank up needs enough copies", select(2, Pets.RankUp(profile, "Slimey")) == "NotEnoughCopies")
+	check("Rank 2 to 3 costs " .. PetConfig.RankCost[2], PetConfig.RankCost[2] ~= nil)
+	check("Unknown and unowned pets cannot rank up", select(2, Pets.RankUp(profile, "Nope")) == "UnknownPet" and select(2, Pets.RankUp(profile, "Mossback")) == "NotOwned")
+	for _ = 1, 30 do
 		Pets.AddDuplicate(profile, "Slimey")
+		Pets.RankUp(profile, "Slimey")
 	end
-	check("Rank stops at the max; extra duplicates give pet XP", Pets.Rank(profile, "Slimey") == PetConfig.MaxRank and select(1, Pets.AddDuplicate(profile, "Slimey")) == "XP")
+	check("Rank stops at the max; extra duplicates give pet XP", Pets.Rank(profile, "Slimey") == PetConfig.MaxRank and select(1, Pets.AddDuplicate(profile, "Slimey")) == "XP" and select(2, Pets.RankUp(profile, "Slimey")) == "MaxRank")
+	local total = 0
+	for r = 1, PetConfig.MaxRank - 1 do
+		total += PetConfig.RankCost[r]
+	end
+	check("A max rank pet costs a sensible number of copies", total >= 6 and total <= 14)
 	local lowRank = Pets.Mods("Slimey", 1, 1)[1].Value
 	local highRank = Pets.Mods("Slimey", 1, PetConfig.MaxRank)[1].Value
 	check("A higher rank gives a bigger bonus", highRank > lowRank * 2)

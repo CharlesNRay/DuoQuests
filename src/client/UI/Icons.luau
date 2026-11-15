@@ -3,7 +3,7 @@
 
 	  Icons.SkillKind(def)                  -> "Damage"|"AoE"|"Heal"|"Shield"|"Revive"|"Taunt"|"Buff"
 	  Icons.Skill(parent, def, props)       -> Frame: coloured tile + glyph, rarity border,
-	                                           optional level badge. props: Size, Position, Level,
+	                                           optional level badge. props: Size, Position, Level, Tier (border colour = the tier you hold), Badge ("!" ready mark),
 	                                           Locked (greys it out)
 	  Icons.Ultimate(parent, def, props)    -> same look for a party ultimate
 	  Icons.Item(parent, item, props)       -> tile for a gear piece (slot glyph, rarity/set border)
@@ -73,6 +73,24 @@ local function tile(parent, color, glyph, border, props)
 		TextScaled = true, TextTransparency = if props.Locked then 0.5 else 0, Parent = f,
 	})
 	Kit.new("UITextSizeConstraint", { MaxTextSize = 26, MinTextSize = 8, Parent = f:FindFirstChildOfClass("TextLabel") })
+	if props.Locked and props.Milestone then
+		-- locked behind a milestone (a stage to reach): dark veil, a big padlock and what unlocks it
+		Kit.frame({ Size = UDim2.fromScale(1, 1), BackgroundColor3 = Color3.fromRGB(8, 8, 14), BackgroundTransparency = 0.3, ZIndex = 4, Parent = f })
+		local lock = Kit.label({ Size = UDim2.fromScale(1, 0.62), Position = UDim2.fromScale(0, 0.04), Text = "🔒", TextXAlignment = Enum.TextXAlignment.Center, TextScaled = true, ZIndex = 5, Parent = f })
+		Kit.new("UITextSizeConstraint", { MaxTextSize = 24, MinTextSize = 8, Parent = lock })
+		local stroke = f:FindFirstChildOfClass("UIStroke")
+		if stroke then
+			stroke.Color = Color3.fromRGB(200, 90, 80)
+		end
+		if props.LockText then
+			Kit.label({ Size = UDim2.new(1, 0, 0, 12), Position = UDim2.new(0, 0, 1, -13), Text = props.LockText, TextSize = 10, Font = Enum.Font.GothamBold, TextColor3 = Color3.fromRGB(255, 190, 170), TextXAlignment = Enum.TextXAlignment.Center, TextWrapped = false, ZIndex = 6, Parent = f })
+		end
+	end
+	if props.Badge then
+		-- a "ready" mark: something here can be ranked up or upgraded
+		local b = Kit.label({ Size = UDim2.fromOffset(16, 16), Position = UDim2.new(1, -13, 0, -5), Text = props.Badge, TextSize = 12, Font = Enum.Font.GothamBlack, TextColor3 = Color3.fromRGB(30, 24, 10), BackgroundTransparency = 0, BackgroundColor3 = Color3.fromRGB(255, 200, 70), TextXAlignment = Enum.TextXAlignment.Center, TextWrapped = false, ZIndex = 7, Parent = f })
+		Kit.corner(8).Parent = b
+	end
 	if props.Level then
 		Kit.label({
 			Size = UDim2.fromOffset(22, 14), Position = UDim2.new(1, -22, 1, -14), Text = tostring(props.Level), TextSize = 11,
@@ -102,7 +120,7 @@ local SKILL_LOOK = {
 function Icons.Skill(parent, def, props)
 	local kind = Icons.SkillKind(def)
 	local own = SKILL_LOOK[def.Id]
-	return tile(parent, if own then own[1] else KIND_COLORS[kind], if own then own[2] else KIND_GLYPHS[kind], Kit.rarityColor(def.Rarity), props)
+	return tile(parent, if own then own[1] else KIND_COLORS[kind], if own then own[2] else KIND_GLYPHS[kind], Kit.rarityColor((props and props.Tier) or def.Rarity), props)
 end
 
 -- Passives: tinted by category, with a plain glyph. A nil def is an empty slot.

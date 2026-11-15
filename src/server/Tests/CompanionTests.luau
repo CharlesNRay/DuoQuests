@@ -57,7 +57,9 @@ return function(modulesOverride)
 
 	-- it keeps pace with its owner
 	profile.Season.Level = 12
-	profile.Season.SlotLevels.Warrior = { 5, 5, 5, 5 }
+	for _, id in ipairs(profile.Season.Loadouts.Warrior) do
+		profile.Season.SkillState[id] = { Tier = m.SkillProgress.BaseTier(id), Rank = 5, XP = 0 }
+	end
 	Party.OnlineTick(party, { { UserId = OWNER, Name = "Owner", Profile = profile } }, 8, 300)
 	check("The companion matches its owner's level and slots", party.Companion.Level == 12 and party.Companion.SlotLevels[1] == 5)
 	check("Its subclass path comes at the unlock stage", party.Companion.SubclassId == nil)

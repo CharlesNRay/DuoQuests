@@ -165,3 +165,13 @@ Newest first.
 - Daily quests (3 per day + bonus) and a 30-level season pass (free track; Premium levels reserved). Quests window (HUD 📜). Pass XP from stage clears and quests.
 - Skills have unique icons; panels keep their scroll position on refresh; tree moved onto the grass; townsfolk are non-solid and walk away from you; arena backdrop wall removed; arena name cards show only up close; fight HUD shows the stage being fought (not the next one).
 - TODO: premium pass track, boss strike quest, weekly quests, pet skill icons, verify all of this in Studio.
+
+## Skill rarity, ranks and manual upgrades (Nov 15, afternoon)
+- Skills now have a TIER (Common/Rare/Epic/Legendary, the rarity you hold) and a RANK (1-10). Combat level = rank + tier levels above the skill's own base rarity (max 20). Config/SkillProgress, shared/SkillProgress; state in Season.SkillState (resets with the season).
+- A skill wish rolls a rarity, then any class skill whose own rarity is not higher (unowned skills 3x as likely). First copy = skill unlocked at that tier. A higher-tier copy of an owned skill WAITS as an upgrade (button: Skills page > Upgrade); a lower copy waiting is turned into XP. Spare copies become skill XP (10/25/60/150 by rarity) and the player presses Rank up themselves (664 XP total to max). Nothing upgrades by itself.
+- Pets: duplicates are banked as COPIES (Permanent.PetCopies); the player spends 1/1/2/2/3 copies per rank on the Pets page. Max rank pets turn spares into pet XP.
+- Gold slot levelling is gone (Economy.LevelSlot stays in code, unused); levels follow the skill (ghost snapshots carry Party SkillLevels, so moving a skill keeps its level).
+- Season pass never pays gold or shards: odd levels consumables, even levels Wishstones, every 5th level a Skill Wish (5/15/25) or Pet Wish (10/20/30) ticket; Skill Wish and Pet Wish tickets are separate everywhere (daily bonus gives one of each).
+- Skills page: Earlier/Later buttons removed (drag to reorder); locked things (passive slots, locked passives, locked pets, locked wish tiers) show a padlock veil with the stage needed. Red dots on Skills/Pets docks when a rank up or upgrade is ready.
+- Wishing Tree name tag moved above the canopy.
+- Pacing (simulated, Bright skill wishes, ~12 skills per class): 100 wishes -> top four skills ~level 12-13; 200 -> ~2 maxed; 300 -> ~5 maxed.

@@ -48,6 +48,7 @@ local Ultimates = require(script.Parent.Ultimates)
 local Pets = require(script.Parent.Pets)
 local Consumables = require(script.Parent.Consumables)
 local Gear = require(script.Parent.Gear)
+local SkillProgress = require(script.Parent.SkillProgress)
 
 local StageRunner = {}
 
@@ -58,7 +59,8 @@ function StageRunner.NewParty(members)
 		if member.Profile then
 			local season = member.Profile.Season
 			classId, level = season.ClassId, season.Level
-			loadout, slotLevels = season.Loadouts[classId], season.SlotLevels[classId]
+			loadout = season.Loadouts[classId]
+			slotLevels = SkillProgress.SlotLevelsFor(season, loadout)
 			passiveIds, passiveLevels = season.PassiveLoadouts[classId], season.PassiveSlotLevels[classId]
 			petId, petLevel, petRank = Pets.Active(member.Profile)
 			subclassId = season.Subclasses and season.Subclasses[classId] or nil
@@ -67,7 +69,8 @@ function StageRunner.NewParty(members)
 		else
 			local snapshot = member.Snapshot
 			classId, level = snapshot.ClassId, snapshot.Level
-			loadout, slotLevels = snapshot.GhostLoadout, snapshot.SlotLevels
+			loadout = snapshot.GhostLoadout
+			slotLevels = if snapshot.SkillLevels then SkillProgress.LevelsFor(loadout, snapshot.SkillLevels) else snapshot.SlotLevels
 			passiveIds, passiveLevels = snapshot.PassiveIds, snapshot.PassiveLevels
 			petId, petLevel, petRank = snapshot.PetId, snapshot.PetLevel, snapshot.PetRank
 			subclassId = snapshot.SubclassId
@@ -103,10 +106,11 @@ function StageRunner.UltimateFor(members, frontier, chosenId)
 		if member.Profile then
 			local season = member.Profile.Season
 			classes[index] = season.ClassId
-			levelLists[index] = season.SlotLevels[season.ClassId]
+			levelLists[index] = SkillProgress.SlotLevelsFor(season, season.Loadouts[season.ClassId])
 		else
 			classes[index] = member.Snapshot.ClassId
-			levelLists[index] = member.Snapshot.SlotLevels
+			local snap = member.Snapshot
+			levelLists[index] = if snap.SkillLevels then SkillProgress.LevelsFor(snap.GhostLoadout, snap.SkillLevels) else snap.SlotLevels
 		end
 	end
 	local id = Ultimates.Resolve(classes[1], classes[2], frontier, chosenId)

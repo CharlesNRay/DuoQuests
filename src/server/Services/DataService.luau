@@ -65,6 +65,7 @@ local Migrations = {
 		data.Season.EquippedAbilities = nil
 		data.Season.AbilityLevels = nil
 		data.Season.OwnedAbilities = data.Season.OwnedAbilities or {}
+		data.Season.SkillState = data.Season.SkillState or {}
 		data.Season.Loadouts = data.Season.Loadouts or {}
 		data.Season.SlotLevels = data.Season.SlotLevels or {}
 		ProfileTemplate.GrantStarterAbilities(data)

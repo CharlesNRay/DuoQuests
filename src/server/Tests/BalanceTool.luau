@@ -9,8 +9,8 @@
 	Config/Stages.
 
 	The auto-player is deliberately simple: fight the stage the party is on,
-	then spend everything (unlock the cheapest skill it can afford, level its
-	lowest slot, equip the best skills it owns). Real players will do better
+	then spend everything (unlock the cheapest skill it can afford, wish for skills with
+	its Wishstones and rank/upgrade them, equip the best skills it owns). Real players will do better
 	and worse, so treat the output as a guide, not a prediction.
 
 	BalanceTool.Run(m, options) -> { snapshots }
@@ -24,6 +24,35 @@
 
 local BalanceTool = {}
 
+-- deterministic stand-in for Random (plain Luau has none, and runs should repeat)
+local lcg = 12345
+local function rand()
+	lcg = (lcg * 1103515245 + 12345) % 2147483648
+	return lcg / 2147483648
+end
+
+-- Skills grow from wishes now: spend Wishstones on the best skill tier it can afford, then press every Rank up /
+-- Upgrade button (a real player does this by hand; the bot does it at once).
+local function wishForSkills(m, profile)
+	for _ = 1, 400 do
+		local info = m.Wishing.Info(profile, "Skill")
+		local pick
+		for _, tier in ipairs(info.Tiers) do
+			if tier.Unlocked and info.Currency >= tier.Cost then
+				pick = tier
+			end
+		end
+		if pick == nil or not m.Wishing.Wish(profile, "Skill", pick.Id, "Currency", 1, rand) then
+			break
+		end
+	end
+	for abilityId in pairs(profile.Season.OwnedAbilities) do
+		m.SkillProgress.Upgrade(profile, abilityId)
+		while m.SkillProgress.RankUp(profile, abilityId) do
+		end
+	end
+end
+
 local function spend(m, profile, classId)
 	local subclassId = m.Subclasses and m.Subclasses.Current(profile, classId)
 	local progressed = true
@@ -35,16 +64,8 @@ local function spend(m, profile, classId)
 				break
 			end
 		end
-		local lowest, lowestLevel = 1, math.huge
-		for index, level in ipairs(profile.Season.SlotLevels[classId]) do
-			if level < lowestLevel then
-				lowest, lowestLevel = index, level
-			end
-		end
-		if m.Economy.LevelSlot(profile, classId, lowest) then
-			progressed = true
-		end
 	end
+	wishForSkills(m, profile)
 end
 
 local function equipBest(m, profile, classId)
@@ -157,14 +178,15 @@ function BalanceTool.Run(m, options)
 				end
 			end
 			local total = 0
-			for _, level in ipairs(warrior.Season.SlotLevels.Warrior) do
+			local levels = m.SkillProgress.SlotLevelsFor(warrior.Season, warrior.Season.Loadouts.Warrior)
+			for _, level in ipairs(levels) do
 				total += level
 			end
 			snapshots[nextSnapshot] = {
 				Hours = hours[nextSnapshot],
 				Frontier = warrior.Season.HighestStage,
 				Level = warrior.Season.Level,
-				SlotAverage = total / #warrior.Season.SlotLevels.Warrior,
+				SlotAverage = total / #levels,
 				Owned = owned,
 				Fights = fights,
 			}

@@ -70,6 +70,7 @@ function ProfileTemplate.NewSeasonData(seasonId)
 		Buffs = {}, -- [consumableId] = os.time() the boost ends
 		PetXP = {}, -- [petId] = xp towards the next pet level
 		OwnedAbilities = {}, -- [abilityId] = true
+		SkillState = {}, -- [abilityId] = { Tier, Rank, XP, Pending? } (see SkillProgress; no entry = rank 1 at base rarity)
 		Loadouts = {}, -- [classId] = equipped ability ids, priority order
 		SlotLevels = {}, -- [classId] = level per slot position
 		PassiveLoadouts = {}, -- [classId] = equipped passive ids (see Passives)

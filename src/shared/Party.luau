@@ -48,6 +48,7 @@
 local Offline = require(script.Parent.Offline)
 local Progression = require(script.Parent.Progression)
 local Skills = require(script.Parent.Skills)
+local SkillProgress = require(script.Parent.SkillProgress)
 local StageRunner = require(script.Parent.StageRunner)
 local Pets = require(script.Parent.Pets)
 local ProfileTemplate = require(script.Parent.ProfileTemplate)
@@ -211,7 +212,8 @@ function Party.MakeSnapshot(profile, userId, name, previous, now)
 		Gear = TableUtil.DeepCopy((season.Equipment and season.Equipment.Equipped) or {}),
 		Level = season.Level,
 		Frontier = season.HighestStage,
-		SlotLevels = copyList(season.SlotLevels[classId]),
+		SlotLevels = SkillProgress.SlotLevelsFor(season, season.Loadouts[classId]),
+		SkillLevels = SkillProgress.LevelMap(season),
 		PassiveIds = copyList(season.PassiveLoadouts[classId] or {}), -- view only for the partner
 		PassiveLevels = copyList(season.PassiveSlotLevels[classId] or {}),
 		Owned = owned,
@@ -219,6 +221,14 @@ function Party.MakeSnapshot(profile, userId, name, previous, now)
 		History = history,
 		SavedAt = now,
 	}
+end
+
+-- The levels a snapshot's ghost fights its skills at, by slot (skill levels follow the SKILL, not the slot)
+function Party.GhostLevels(snapshot)
+	if snapshot.SkillLevels then
+		return SkillProgress.LevelsFor(snapshot.GhostLoadout, snapshot.SkillLevels)
+	end
+	return copyList(snapshot.SlotLevels or {})
 end
 
 function Party.RefreshSnapshot(party, userId, name, profile, now)
@@ -249,9 +259,10 @@ end
 -- Bring the companion's level, slots and path up to its owner's.
 local function followOwner(companion, ownerProfile)
 	local season = ownerProfile.Season
-	local level = averageSlotLevel(season.SlotLevels[season.ClassId])
+	local level = averageSlotLevel(SkillProgress.SlotLevelsFor(season, season.Loadouts[season.ClassId]))
 	companion.Level = season.Level
 	companion.Frontier = season.HighestStage
+	companion.SkillLevels = nil -- the companion fights at its owner's average level
 	for index = 1, Skills.SLOTS do
 		companion.SlotLevels[index] = level
 	end

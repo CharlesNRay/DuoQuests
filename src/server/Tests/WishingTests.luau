@@ -87,7 +87,7 @@ return function(modulesOverride)
 	end
 	Consumables.Grant(p3, "PetWish", 3)
 	local _, d = Wishing.Wish(p3, "Pet", "Meadow", "Ticket", 1, seeded(9))
-	check("A duplicate pet ranks it up instead", d.Results[1].New == false and (d.Results[1].Rank or 0) >= 2)
+	check("A duplicate pet is banked as a copy", d.Results[1].New == false and (d.Results[1].Copies or 0) >= 1 and Pets.Rank(p3, d.Results[1].Id) == 1)
 
 	-- skills
 	local sp = ProfileTemplate.New()
@@ -99,15 +99,25 @@ return function(modulesOverride)
 	local sok, sdata = Wishing.Wish(sp, "Skill", "Meadow", "Currency", 10, seeded(5))
 	local owned1 = 0
 	for _ in pairs(sp.Season.OwnedAbilities) do owned1 += 1 end
-	check("A skill ten-pull unlocks new skills only", sok == true and owned1 == owned0 + #sdata.Results and #sdata.Results >= 1)
+	local newRows = 0
+	for _, r in ipairs(sdata.Results) do
+		if r.New then newRows += 1 end
+	end
+	check("A skill ten-pull gives ten results; new rows match the skills gained", sok == true and #sdata.Results == 10 and owned1 == owned0 + newRows and newRows >= 1)
 	check("Skill wishes spend the same Wishstones per wish", sp.Season.Currencies.Wishstones == 500 - 3 * #sdata.Results)
+	check("Skill wishes pay with SkillWish tickets, not pet tickets", Wishing.Config.TicketIds.Skill == "SkillWish" and Wishing.Config.TicketIds.Pet == "PetWish")
 	local drained = ProfileTemplate.New()
 	drained.Season.HighestStage = 100
 	drained.Season.Currencies.Wishstones = 100000
 	for _ = 1, 30 do
 		Wishing.Wish(drained, "Skill", "Starlit", "Currency", 10, seeded(11))
 	end
-	check("When every skill is owned the wish says NothingLeft", select(2, Wishing.Wish(drained, "Skill", "Starlit", "Currency", 1, seeded(12))) == "NothingLeft")
+	check("Skill wishes never run dry: spare copies keep coming", select(1, Wishing.Wish(drained, "Skill", "Starlit", "Currency", 1, seeded(12))) == true)
+	local anyXP = 0
+	for _, st in pairs(drained.Season.SkillState) do
+		anyXP += st.XP or 0
+	end
+	check("Spare copies became skill XP", anyXP > 0)
 
 	print(("WishingTests done: %d passed, %d failed"):format(passed, failed))
 end

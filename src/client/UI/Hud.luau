@@ -356,7 +356,14 @@ function Hud.new(root)
 			table.insert(self.BuffChips, { Frame = f, Label = l, Glyph = buff.Glyph, EndsAt = os.clock() + buff.Remaining })
 		end
 
-		self:SetBadge("Skills", (me.SkillPicks or 0) > 0 or #(me.SubclassChoices or {}) > 0)
+		self:SetBadge("Skills", (me.SkillPicks or 0) > 0 or #(me.SubclassChoices or {}) > 0 or me.SkillReady == true)
+		local petReady = false
+		for _, pet in ipairs(me.Pets or {}) do
+			if pet.Owned and (pet.Rank or 1) < (pet.MaxRank or 1) and (pet.Copies or 0) >= (pet.RankCost or 1) then
+				petReady = true
+			end
+		end
+		self:SetBadge("Pets", petReady)
 		self:SetBadge("Party", party == nil)
 		-- red dot on Quests when a quest, the daily bonus or a pass level is waiting to be claimed
 		local waiting = me.Quests ~= nil and me.Quests.BonusReady == true

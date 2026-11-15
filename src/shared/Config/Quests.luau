@@ -16,29 +16,33 @@
 
 	  Pass.MaxLevel, Pass.XPPerLevel
 	  Pass.PerClear / PerFrontier / PerBoss     Pass XP from stage clears (frontier and boss stack with the clear)
-	  Pass.Rewards   level -> { GoldClears?, Wishstones?, Shards?, SkillPicks?, Items = { [consumableId] = n }? , Premium? }
+	  Pass.Rewards   level -> { Wishstones?, SkillPicks?, Items = { [consumableId] = n }, Premium? }  (never gold)
 
 	Every number is a PLACEHOLDER to be tuned.
 ]]
 
+-- The pass never pays gold: odd levels give a consumable, even levels give Wishstones, and every 5th level gives a
+-- wish ticket (Skill Wish on 5/15/25, Pet Wish on 10/20/30). Levels 15 and 30 add a free skill pick.
+local CONSUMABLE_CYCLE = {
+	{ XPTonic = 1 }, { PowerElixir = 1 }, { PetFood = 2 }, { IronTonic = 1 }, { HasteDraught = 1 }, { GrandPetFood = 1 },
+}
 local Rewards = {}
 for level = 1, 30 do
-	local r = { GoldClears = 4 + level // 2 }
+	local r = { Items = {} }
 	if level % 2 == 0 then
-		r.Wishstones = 2 + level // 10
+		r.Wishstones = 2 + level // 10 + (if level % 10 == 0 then 2 else 0)
+	else
+		for id, n in pairs(CONSUMABLE_CYCLE[((level - 1) // 2) % #CONSUMABLE_CYCLE + 1]) do
+			r.Items[id] = n + level // 20
+		end
 	end
-	if level % 3 == 0 then
-		r.Items = { XPTonic = 1 + level // 15 }
+	if level % 10 == 5 then
+		r.Items.SkillWish = 1 + level // 25
+	elseif level % 10 == 0 then
+		r.Items.PetWish = if level == 30 then 2 else 1
 	end
-	if level % 5 == 0 then
-		r.Shards = 10 + level
-		r.Items = r.Items or {}
-		r.Items.PetFood = 2
-	end
-	if level % 10 == 0 then
+	if level == 15 or level == 30 then
 		r.SkillPicks = 1
-		r.Items = r.Items or {}
-		r.Items.PetWish = 1
 	end
 	if level == 30 then
 		r.Wishstones = 20
@@ -60,7 +64,7 @@ return {
 	},
 	QuestsPerDay = 3,
 	QuestReward = { GoldClears = 6, Wishstones = 2, PassXP = 40 },
-	BonusReward = { Wishstones = 5, PassXP = 60, Tickets = { PetWish = 1 } },
+	BonusReward = { Wishstones = 5, PassXP = 60, Tickets = { PetWish = 1, SkillWish = 1 } },
 
 	Pass = {
 		MaxLevel = 30,

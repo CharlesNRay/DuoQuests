@@ -95,5 +95,30 @@ return function(modulesOverride)
 	local okD, summary = Daily.Claim(p4, day1)
 	check("The daily login gives Wishstones", okD and summary.Wishstones > 0 and (p4.Season.Currencies.Wishstones or 0) == summary.Wishstones)
 
+	-- the pass never pays gold; it gives consumables, wishes and both kinds of wish ticket
+	local goldy, skillTickets, petTickets, stones, items = false, 0, 0, 0, 0
+	for level = 1, QuestConfig.Pass.MaxLevel do
+		local r = QuestConfig.Pass.Rewards[level]
+		if r.GoldClears or r.Gold or r.Shards then
+			goldy = true
+		end
+		stones += r.Wishstones or 0
+		for id, n in pairs(r.Items or {}) do
+			items += n
+			if id == "SkillWish" then skillTickets += n end
+			if id == "PetWish" then petTickets += n end
+		end
+	end
+	check("The season pass pays no gold or shards", not goldy)
+	check("The pass gives Wishstones and consumables", stones > 40 and items > 15)
+	check("The pass gives both Skill and Pet wish tickets", skillTickets >= 3 and petTickets >= 3)
+	check("The daily bonus gives both ticket kinds", QuestConfig.BonusReward.Tickets.PetWish == 1 and QuestConfig.BonusReward.Tickets.SkillWish == 1)
+	local pp = ProfileTemplate.New()
+	Quests.AddPassXP(pp, QuestConfig.Pass.XPPerLevel * 30)
+	local goldBefore = pp.Season.Currencies.Gold
+	Quests.ClaimAllPass(pp)
+	check("Claiming the whole pass leaves gold alone", pp.Season.Currencies.Gold == goldBefore)
+	check("Claiming the pass fills the stash with tickets", Consumables.Count(pp, "SkillWish") >= 3 and Consumables.Count(pp, "PetWish") >= 3)
+
 	print(("QuestTests done: %d passed, %d failed"):format(passed, failed))
 end

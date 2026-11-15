@@ -43,6 +43,7 @@ local Economy = require(Shared.Economy)
 local Passives = require(Shared.Passives)
 local Progression = require(Shared.Progression)
 local Skills = require(Shared.Skills)
+local SkillProgress = require(Shared.SkillProgress)
 local Party = require(Shared.Party)
 local Pets = require(Shared.Pets)
 local Gear = require(Shared.Gear)
@@ -152,7 +153,9 @@ local function buildState(player)
 			SkillPicks = season.Currencies.SkillPicks,
 			Frontier = season.HighestStage,
 			Loadout = table.clone(season.Loadouts[classId]),
-			SlotLevels = table.clone(season.SlotLevels[classId]),
+			SlotLevels = SkillProgress.SlotLevelsFor(season, season.Loadouts[classId]),
+			SkillInfo = SkillProgress.Info(season),
+			SkillReady = SkillProgress.AnyReady(season),
 			Owned = table.clone(season.OwnedAbilities),
 			PassiveIds = table.clone(season.PassiveLoadouts[classId]),
 			PassiveLevels = table.clone(season.PassiveSlotLevels[classId]),
@@ -229,11 +232,35 @@ function handlers.EquipSkills(player, profile, ids)
 	return ok, reason
 end
 
-function handlers.LevelSlot(player, profile, slotIndex)
-	if type(slotIndex) ~= "number" then
+-- Skills grow by hand: spend XP on a rank, or apply a higher tier that a wish brought (see SkillProgress).
+function handlers.RankUpSkill(player, profile, abilityId)
+	if type(abilityId) ~= "string" then
 		return false, "BadArgs"
 	end
-	local ok, reason = Economy.LevelSlot(profile, profile.Season.ClassId, slotIndex)
+	local ok, reason = SkillProgress.RankUp(profile, abilityId)
+	if ok then
+		afterBuildChange(player)
+	end
+	return ok, reason
+end
+
+function handlers.UpgradeSkill(player, profile, abilityId)
+	if type(abilityId) ~= "string" then
+		return false, "BadArgs"
+	end
+	local ok, reason = SkillProgress.Upgrade(profile, abilityId)
+	if ok then
+		afterBuildChange(player)
+	end
+	return ok, reason
+end
+
+-- Pets: spend banked duplicate copies on a rank.
+function handlers.RankUpPet(player, profile, petId)
+	if type(petId) ~= "string" then
+		return false, "BadArgs"
+	end
+	local ok, reason = Pets.RankUp(profile, petId)
 	if ok then
 		afterBuildChange(player)
 	end

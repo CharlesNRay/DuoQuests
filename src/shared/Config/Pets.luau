@@ -22,9 +22,11 @@
 return {
 	MaxLevel = 10,
 	XPPerLevel = 100, -- pet XP to go from level L to L+1 is this * L (pet food and fighting)
-	-- Duplicates rank a pet up (Permanent.PetRanks): each duplicate pull is +1 rank, up to MaxRank. A rank adds
-	-- RankBonus (a fraction) of the pet's stats and raises its skill level by one. Pets levelled by food/fighting.
+	-- Duplicates are banked as copies (Permanent.PetCopies). The player spends RankCost[rank] copies to rank the
+	-- pet up by hand (Permanent.PetRanks), up to MaxRank. A rank adds RankBonus (a fraction) of the pet's stats and
+	-- raises its skill level by one. Pets level separately from food/fighting.
 	MaxRank = 6,
+	RankCost = { 1, 1, 2, 2, 3 }, -- copies to go from rank r to r+1 (9 copies for a max rank pet)
 	RankBonus = 0.25,
 	DupFallbackXP = 80, -- pet XP when a duplicate comes in after the pet is already at max rank
 	-- Stat sizes at Share 1 for a Common pet; Share splits them (a one-stat pet gets 1.25, a two-stat pet 0.7 + 0.5,

@@ -79,10 +79,6 @@ function Screens.Skills(container, state, call)
 				call("EquipSkills", equipped)
 			end)
 		end
-		local cost = require(Shared.Economy).SlotLevelCost(me.SlotLevels[slot])
-		Kit.button({ Size = UDim2.fromOffset(92, 44), Position = UDim2.new(1, -100, 0.5, -22), Text = cost and ("Level\n" .. cost .. "g") or "MAX", Parent = r }, function()
-			call("LevelSlot", slot)
-		end)
 	end
 
 	-- subclass: pick a path when one is offered, otherwise show the chosen one
@@ -555,7 +551,7 @@ end
 -- Pets ---------------------------------------------------------------------
 function Screens.Pets(container, state, call)
 	local scroll = list(container)
-	Kit.label({ Size = UDim2.new(1, 0, 0, 30), Text = "Pets follow you, add stats and cast their own skill in fights. Win them at the Wishing Tree - a duplicate ranks your pet up (stronger stats, stronger skill). Feed them (Bag > Stash) and fight to level them.", TextColor3 = C.Dim, TextSize = 12, Parent = scroll })
+	Kit.label({ Size = UDim2.new(1, 0, 0, 30), Text = "Pets follow you, add stats and cast their own skill in fights. Win them at the Wishing Tree. Duplicates are saved as copies - spend them to rank a pet up yourself (stronger stats and skill). Feed them (Bag > Stash) and fight to level them.", TextColor3 = C.Dim, TextSize = 12, Parent = scroll })
 	local rows = table.clone(state.Player.Pets or {})
 	local rank = { Legendary = 4, Epic = 3, Rare = 2, Common = 1 }
 	table.sort(rows, function(a, b)
@@ -569,20 +565,29 @@ function Screens.Pets(container, state, call)
 	end)
 	for _, pet in ipairs(rows) do
 		if pet.Owned then
-			local r = row(scroll, 78)
-			Icons.Pet(r, pet.Id, { Size = UDim2.fromOffset(44, 44), Position = UDim2.fromOffset(8, 17) })
+			local r = row(scroll, 92)
+			Icons.Pet(r, pet.Id, { Size = UDim2.fromOffset(44, 44), Position = UDim2.fromOffset(8, 24) })
 			local stars = string.rep("★", pet.Rank or 1) .. string.rep("☆", (pet.MaxRank or 1) - (pet.Rank or 1))
 			local title = ("%s  %s  Lv %d/%d  [%s]%s"):format(pet.Name, stars, pet.Level, pet.MaxLevel, pet.Rarity, pet.Active and "  (equipped)" or "")
 			local skill = if pet.Skill then ("\nSkill: %s (Lv %d) - %s"):format(pet.Skill.Name, pet.Rank or 1, pet.Skill.Text) else ""
-			Kit.label({ Size = UDim2.new(1, -150, 1, 0), Position = UDim2.fromOffset(60, 0), Text = title .. "\n" .. pet.Text .. skill, TextColor3 = Kit.rarityColor(pet.Rarity), TextSize = 12, Parent = r })
+			local maxed = (pet.Rank or 1) >= (pet.MaxRank or 1)
+			local copyLine = if maxed then "\nMax rank - spare copies become pet XP" else ("\nCopies: %d / %d for the next rank"):format(pet.Copies or 0, pet.RankCost or 1)
+			Kit.label({ Size = UDim2.new(1, -150, 1, 0), Position = UDim2.fromOffset(60, 0), Text = title .. "\n" .. pet.Text .. skill .. copyLine, TextColor3 = Kit.rarityColor(pet.Rarity), TextSize = 12, Parent = r })
+			local canRank = not maxed and (pet.Copies or 0) >= (pet.RankCost or 1)
+			local rankBtn = Kit.button({ Size = UDim2.fromOffset(80, 32), Position = UDim2.new(1, -90, 0, 6), Text = if maxed then "Max" elseif canRank then "Rank up!" else "Rank up", TextSize = 12, BackgroundColor3 = if canRank then C.Accent else C.Panel, TextColor3 = if canRank then Color3.fromRGB(30, 24, 10) else C.Dim, Parent = r }, function()
+				if canRank then
+					call("RankUpPet", pet.Id)
+				end
+			end)
+			rankBtn.Active = canRank
 			if not pet.Active then
-				Kit.button({ Size = UDim2.fromOffset(80, 40), Position = UDim2.new(1, -90, 0.5, -20), Text = "Equip", Parent = r }, function()
+				Kit.button({ Size = UDim2.fromOffset(80, 32), Position = UDim2.new(1, -90, 1, -38), Text = "Equip", Parent = r }, function()
 					call("EquipPet", pet.Id)
 				end)
 			end
 		else
 			local r = row(scroll, 56)
-			Icons.Pet(r, pet.Id, { Size = UDim2.fromOffset(40, 40), Position = UDim2.fromOffset(8, 8), Locked = true })
+			Icons.Pet(r, pet.Id, { Size = UDim2.fromOffset(40, 40), Position = UDim2.fromOffset(8, 8), Locked = true, Milestone = pet.UnlockStage ~= nil, LockText = if pet.UnlockStage then ("Stg " .. pet.UnlockStage) else nil })
 			local how = if pet.UnlockStage then ("Clear stage %d to get this pet"):format(pet.UnlockStage) else "Win it at the Wishing Tree"
 			local skill = if pet.Skill then ("  -  Skill: " .. pet.Skill.Name) else ""
 			Kit.label({ Size = UDim2.new(1, -72, 1, 0), Position = UDim2.fromOffset(56, 0), Text = ("%s  [%s]\n%s%s"):format(pet.Name, pet.Rarity, how, skill), TextColor3 = C.Dim, Parent = r })
@@ -613,7 +618,7 @@ function Screens.Wish(container, state, call, extra)
 	local pay = extra.WishPay or "Ticket"
 	Kit.label({ Size = UDim2.fromOffset(120, 28), Position = UDim2.fromOffset(280, 0), Text = "Pay with:", TextSize = 12, TextColor3 = C.Dim, Parent = container })
 	for index, method in ipairs({ "Ticket", "Currency" }) do
-		local text = if method == "Ticket" then ("Tickets (%d)"):format(info.Tickets) else ("%s (%d)"):format(info.CurrencyName, info.Currency)
+		local text = if method == "Ticket" then ("%s tickets (%d)"):format(kind, info.Tickets) else ("%s (%d)"):format(info.CurrencyName, info.Currency)
 		Kit.button({ Size = UDim2.fromOffset(110, 28), Position = UDim2.fromOffset(336 + (index - 1) * 116, 0), Text = text, TextSize = 12, TextWrapped = false, BackgroundColor3 = if method == pay then C.Up else C.Panel, Parent = container }, function()
 			extra.WishPay = method
 			redraw()
@@ -641,6 +646,10 @@ function Screens.Wish(container, state, call, extra)
 		local cost = if pay == "Ticket" then ("%d ticket"):format(tier.Tickets) else ("%d %s"):format(tier.Cost, info.CurrencyName)
 		Kit.label({ Size = UDim2.new(1, -150, 0, 20), Position = UDim2.fromOffset(8, 4), Text = tier.Name, TextSize = 14, Font = Enum.Font.GothamBold, TextColor3 = if tier.Unlocked then C.Text else C.Dim, Parent = card })
 		Kit.label({ Size = UDim2.new(1, -150, 0, 34), Position = UDim2.fromOffset(8, 24), RichText = true, TextSize = 11, Text = if tier.Unlocked then (table.concat(odds, "  ") .. "\n" .. cost .. " each") else ("Reach stage %d to unlock"):format(tier.UnlockStage), TextColor3 = C.Dim, Parent = card })
+		if not tier.Unlocked then
+			card.BackgroundColor3 = Color3.fromRGB(22, 23, 34)
+			Kit.label({ Size = UDim2.fromOffset(60, 50), Position = UDim2.new(1, -66, 0.5, -25), Text = "🔒", TextSize = 30, TextXAlignment = Enum.TextXAlignment.Center, TextYAlignment = Enum.TextYAlignment.Center, TextColor3 = Color3.fromRGB(255, 190, 170), Parent = card })
+		end
 		if tier.Unlocked then
 			local canOne = (pay == "Ticket" and info.Tickets >= tier.Tickets) or (pay == "Currency" and info.Currency >= tier.Cost)
 			local canTen = (pay == "Ticket" and info.Tickets >= tier.Tickets * 10) or (pay == "Currency" and info.Currency >= tier.Cost * 10)
@@ -655,7 +664,7 @@ function Screens.Wish(container, state, call, extra)
 	end
 	local pityText = ("Guaranteed: Rare+ within %d wishes, Epic+ within %d%s"):format(info.LeftRare, info.LeftEpic, info.LeftLegendary and (", Legendary within " .. info.LeftLegendary) or "")
 	if kind == "Skill" then
-		pityText ..= ("\n%d skills left to find"):format(info.Remaining or 0)
+		pityText ..= ("\n%d skills not found yet - spare copies become skill XP"):format(info.Remaining or 0)
 	end
 	
 	-- right: what you just got
@@ -663,7 +672,7 @@ function Screens.Wish(container, state, call, extra)
 	Kit.label({ Size = UDim2.new(1, -12, 0, 30), Position = UDim2.new(0, 6, 1, -32), Text = pityText, TextSize = 10, TextColor3 = C.Dim, TextYAlignment = Enum.TextYAlignment.Bottom, Parent = right })
 	local res = extra.WishResults
 	if not res or res.Kind ~= kind then
-		Kit.label({ Size = UDim2.new(1, -16, 0, 80), Position = UDim2.fromOffset(8, 8), Text = if kind == "Pet" then "Wish for a new companion. Duplicates turn into pet XP." else "Wish for a skill you do not have yet. Tickets drop from fights and bosses.", TextColor3 = C.Dim, TextSize = 12, TextYAlignment = Enum.TextYAlignment.Top, Parent = right })
+		Kit.label({ Size = UDim2.new(1, -16, 0, 80), Position = UDim2.fromOffset(8, 8), Text = if kind == "Pet" then "Wish for a companion. A duplicate is saved as a copy - spend copies on the Pets page to rank a pet up." else "Wish for skills. A copy at a higher rarity than yours waits for you to Upgrade it; spare copies become XP to rank a skill up (Skills page).", TextColor3 = C.Dim, TextSize = 12, TextYAlignment = Enum.TextYAlignment.Top, Parent = right })
 		return
 	end
 	local grid = Kit.frame({ Size = UDim2.new(1, -12, 1, -46), Position = UDim2.fromOffset(6, 6), BackgroundTransparency = 1, NoCorner = true, Parent = right })
@@ -675,14 +684,14 @@ function Screens.Wish(container, state, call, extra)
 			tile = Icons.Pet(cell, rowData.Id, { Size = UDim2.fromOffset(48, 48), Position = UDim2.fromOffset(2, 0) })
 		else
 			local def = Abilities[rowData.Id]
-			tile = Icons.Skill(cell, def, { Size = UDim2.fromOffset(48, 48), Position = UDim2.fromOffset(2, 0) })
+			tile = Icons.Skill(cell, def, { Size = UDim2.fromOffset(48, 48), Position = UDim2.fromOffset(2, 0), Tier = rowData.Rarity })
 			Kit.Hover(tile, function() return Tips.Skill(def, 1) end)
 		end
 		local shown = if kind == "Pet" then (require(Shared.Config.Pets).Defs[rowData.Id] or {}).DisplayName else (Abilities[rowData.Id] or {}).DisplayName
 		Kit.label({ Size = UDim2.new(1, 4, 0, 10), Position = UDim2.fromOffset(-2, 46), Text = shown or "", TextSize = 9, TextXAlignment = Enum.TextXAlignment.Center, TextWrapped = false, TextTruncate = Enum.TextTruncate.AtEnd, ZIndex = 3, Parent = cell })
 		tile.BackgroundTransparency = 1
 		TweenService:Create(tile, TweenInfo.new(0.25 + index * 0.06), { BackgroundTransparency = 0 }):Play()
-		Kit.label({ Size = UDim2.new(1, 0, 0, 16), Position = UDim2.fromOffset(0, 55), Text = if rowData.New then "NEW!" elseif rowData.Rank then ("Rank " .. rowData.Rank) else ("+%d xp"):format(rowData.DupXP or 0), TextSize = 10, TextXAlignment = Enum.TextXAlignment.Center, TextWrapped = false, TextColor3 = if rowData.New then Kit.rarityColor(rowData.Rarity) else C.Dim, Font = Enum.Font.GothamBold, Parent = cell })
+		Kit.label({ Size = UDim2.new(1, 0, 0, 16), Position = UDim2.fromOffset(0, 55), Text = if rowData.New then "NEW!" elseif rowData.Upgrade then ("▲ " .. rowData.Rarity) elseif rowData.Copies then "+1 copy" else ("+%d xp"):format(rowData.DupXP or 0), TextSize = 10, TextXAlignment = Enum.TextXAlignment.Center, TextWrapped = false, TextColor3 = if rowData.New or rowData.Upgrade then Kit.rarityColor(rowData.Rarity) else C.Dim, Font = Enum.Font.GothamBold, Parent = cell })
 	end
 end
 

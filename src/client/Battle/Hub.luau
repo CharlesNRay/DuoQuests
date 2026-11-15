@@ -268,7 +268,7 @@ local function wishingTree(position, lookAt, handler)
 		local crystal = part(model, { Name = "Crystal", Size = Vector3.new(0.7, 2, 0.7), CFrame = CFrame.new(position + Vector3.new(math.sin(a) * 7 * K, 10.5 * K, math.cos(a) * 7 * K)) * CFrame.Angles(0, a, 0), Color = if index % 2 == 0 then glow else pink, Material = Enum.Material.Neon, Transparency = 0.2, CanCollide = false })
 		table.insert(pulsers, { Part = crystal, Phase = index * 0.9, Base = 0.2, Amount = 0.25 })
 	end
-	nameTag(trunk, "WISHING TREE", "Wish for pets & skills", Color3.fromRGB(160, 235, 255), 12 * K)
+	nameTag(trunk, "WISHING TREE", "Wish for pets & skills", Color3.fromRGB(160, 235, 255), 27 * K) -- above the canopy, not inside it
 	prompt(trunk, "Make a wish", "Wishing Tree", handler).MaxActivationDistance = 26
 	return model
 end
