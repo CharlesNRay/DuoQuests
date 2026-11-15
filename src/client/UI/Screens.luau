@@ -32,6 +32,14 @@ local function row(parent, height)
 	return Kit.frame({ Size = UDim2.new(1, -8, 0, height or 64), BackgroundColor3 = C.PanelLight, Parent = parent })
 end
 
+-- gear numbers can be small early on: show one decimal under 10
+local function num(value)
+	if value < 10 then
+		return ("%.1f"):format(value)
+	end
+	return tostring(math.floor(value + 0.5))
+end
+
 local function statsText(ability, level)
 	local parts = {}
 	for _, r in ipairs(AbilityStats.Rows(ability, level)) do
@@ -156,7 +164,7 @@ function Screens.Gear(container, state, call)
 		local item = gear.Equipped[slotName]
 		local r = row(scroll, 52)
 		if item then
-			Kit.label({ Size = UDim2.new(1, -120, 1, 0), Position = UDim2.fromOffset(8, 0), Text = ("%s: %s  [%s]\n+%d %s  (from stage %d)"):format(slotName, item.Name, item.Rarity, math.floor(item.Value + 0.5), item.Stat, item.Power), TextColor3 = Kit.rarityColor(item.Rarity), Parent = r })
+			Kit.label({ Size = UDim2.new(1, -120, 1, 0), Position = UDim2.fromOffset(8, 0), Text = ("%s: %s  [%s]\n+%s %s  (from stage %d)"):format(slotName, item.Name, item.Rarity, num(item.Value), item.Stat, item.Power), TextColor3 = Kit.rarityColor(item.Rarity), Parent = r })
 			Kit.button({ Size = UDim2.fromOffset(100, 40), Position = UDim2.new(1, -108, 0.5, -20), Text = "Unequip", Parent = r }, function()
 				call("UnequipGear", slotName)
 			end)
@@ -167,7 +175,7 @@ function Screens.Gear(container, state, call)
 	Kit.label({ Size = UDim2.new(1, 0, 0, 22), Text = ("Bag %d/%d  (gear drops from stages; a full bag sells new drops)"):format(#gear.Inventory, gear.Cap), TextColor3 = C.Dim, TextSize = 13, Parent = scroll })
 	for _, item in ipairs(gear.Inventory) do
 		local r = row(scroll, 52)
-		Kit.label({ Size = UDim2.new(1, -230, 1, 0), Position = UDim2.fromOffset(8, 0), Text = ("%s  [%s]\n%s +%d  (stage %d)"):format(item.Name, item.Rarity, item.Slot, math.floor(item.Value + 0.5), item.Power), TextColor3 = Kit.rarityColor(item.Rarity), Parent = r })
+		Kit.label({ Size = UDim2.new(1, -230, 1, 0), Position = UDim2.fromOffset(8, 0), Text = ("%s  [%s]\n%s +%s  (stage %d)"):format(item.Name, item.Rarity, item.Slot, num(item.Value), item.Power), TextColor3 = Kit.rarityColor(item.Rarity), Parent = r })
 		Kit.button({ Size = UDim2.fromOffset(100, 40), Position = UDim2.new(1, -216, 0.5, -20), Text = "Equip", Parent = r }, function()
 			call("EquipGear", item.Id)
 		end)
@@ -388,6 +396,7 @@ end
 -- Zones as rows; the zone you are in (or picked with the arrows) shows its ten
 -- stages. Cleared and current stages can be fought again; the rest are locked.
 function Screens.Map(container, state, call, extra)
+	Kit.clear(container)
 	local party = state.Party
 	if not party then
 		Kit.label({ Size = UDim2.new(1, 0, 0, 40), Text = "Join or create a party to travel the map.", TextColor3 = C.Dim, Parent = container })

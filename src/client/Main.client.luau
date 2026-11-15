@@ -21,7 +21,7 @@ local folder = ReplicatedStorage:WaitForChild(Remotes.FolderName)
 local api = folder:WaitForChild(Remotes.Api)
 local push = folder:WaitForChild(Remotes.Push)
 
-local gui = Kit.new("ScreenGui", { Name = "DuoQuestUI", ResetOnSpawn = false, IgnoreGuiInset = true, Parent = Players.LocalPlayer:WaitForChild("PlayerGui") })
+local gui = Kit.new("ScreenGui", { Name = "DuoQuestUI", ResetOnSpawn = false, ZIndexBehavior = Enum.ZIndexBehavior.Sibling, IgnoreGuiInset = true, Parent = Players.LocalPlayer:WaitForChild("PlayerGui") })
 local root = Kit.new("Frame", { Name = "Root", Size = UDim2.fromOffset(844, 390), AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.5), BackgroundTransparency = 1, Parent = gui })
 local scale = Kit.new("UIScale", { Parent = root })
 local function fit()
