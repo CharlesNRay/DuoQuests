@@ -77,15 +77,15 @@ function Hub.Build(handlers, origin)
 	folder.Parent = workspace
 
 	local front = origin + Vector3.new(0, 0, 31)
-	board(front + Vector3.new(-14, 0, 0), "WORLD MAP", Color3.fromRGB(40, 90, 150), "Open map", handlers.Map)
-	board(front + Vector3.new(14, 0, 0), "RANKINGS", Color3.fromRGB(110, 50, 140), "View leaderboards", handlers.Ranks)
+	board(front + Vector3.new(-40, 0, -9), "WORLD MAP", Color3.fromRGB(40, 90, 150), "Open map", handlers.Map)
+	board(front + Vector3.new(40, 0, -9), "RANKINGS", Color3.fromRGB(110, 50, 140), "View leaderboards", handlers.Ranks)
 
 	-- daily gift chest
 	local chest = Instance.new("Model")
 	chest.Name = "Daily Gift"
 	chest.Parent = folder
-	local base = part(chest, { Name = "Base", Size = Vector3.new(4, 2.4, 3), Position = front + Vector3.new(27, 1.2, 2), Color = Color3.fromRGB(150, 100, 56), Material = Enum.Material.Wood })
-	part(chest, { Name = "Lid", Size = Vector3.new(4.2, 1, 3.2), Position = front + Vector3.new(27, 2.9, 2), Color = Color3.fromRGB(255, 196, 70), Material = Enum.Material.Metal })
+	local base = part(chest, { Name = "Base", Size = Vector3.new(4, 2.4, 3), Position = front + Vector3.new(24, 1.2, 4), Color = Color3.fromRGB(150, 100, 56), Material = Enum.Material.Wood })
+	part(chest, { Name = "Lid", Size = Vector3.new(4.2, 1, 3.2), Position = front + Vector3.new(24, 2.9, 4), Color = Color3.fromRGB(255, 196, 70), Material = Enum.Material.Metal })
 	chestPrompt = prompt(base, "Daily gift", "Daily Login", handlers.Daily)
 end
 

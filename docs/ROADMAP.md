@@ -93,3 +93,16 @@ Newest first.
 - [x] Played in Studio with Rojo: hub, HUD, Skills, Party (ghost Cleric loadout), Pets, Daily, Gear, boss floor 10 with the ghost Cleric all work; no errors in the output.
 - [x] Fixed: panels drew blank (UI layering mode), Map screen drew over the previous panel, gear stats showed +0.
 - [ ] Not yet seen in Studio: slimelet spawns on screen, Warlord/Spore Mother fights, subclass choice at level 30, leaderboards board, inspect click, world map on a second player.
+
+## 2026-11-15 (UI overhaul, checked in Studio)
+- [x] HUD laid out Roblox-style: portrait with XP + gold/shards top-left, zone/stage top-centre, character rail (Skills, Passives, Pets, Party) left, world rail (Map, Gear, Bag, Daily, Ranks) right, Fight log + Battle view bottom-right, party cards bottom-left, skill bar bottom-centre. Red dots on Skills (picks/subclass), Daily (claimable), Party (no party).
+- [x] Ultimate is no longer a button: a charge gauge under its icon fills with the same rules as the sim and pulses when it fires; the ultimate is picked in the Party screen.
+- [x] World interactables (home base in front of your own arena): World Map board, Rankings board, Daily Gift chest (ProximityPrompts). Every arena has a gold "Watch battle" pad: step on it and use the prompt to watch anyone's fight; a "Stop" bar returns the camera. Your own pad reads "Battle view".
+- [x] Bag is its own screen; Gear shows worn pieces plus a Sets tab (collection per zone with bonuses). Hovering an item shows a tooltip and tints the row green (better, or completes a set bonus) or red (worse, or loses a set bonus).
+- [x] Gear sets: one per 10-stage zone, drop only in that zone (boss floors most), stronger than normal gear there, 2/3-piece bonuses.
+- [x] Skill icons (generated glyph tiles by effect kind, rarity border) with hover tooltips in Skills, the skill bar and the partner's loadout; passive/ultimate tooltips too.
+- [x] Last-fight log (Fight log): timestamped casts, boss telegraphs ("lands at" times so a shield/heal can be timed), summons, deaths, ultimate; toggle for every hit.
+- [x] Per-zone scenery: ground material, sky gradient, themed props (cacti, snow pines, lava rocks, dead trees, pillars, clouds, crystals...) and foreground decor for all 10 zones.
+- [x] Bug found and fixed: the server was not sending Spawn/Telegraph/Status events, so minions and boss warnings never reached the client.
+- [ ] Not yet checked: Sunken Ruins / Cloud Spire scenery, touch devices (tooltips are written for tap), two real players watching each other, set-bonus hover text on a real set piece.
+- [ ] Owner's "more" list is still to come.
