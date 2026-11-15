@@ -98,7 +98,7 @@ end
 function Tips.Item(item, gear)
 	local cmp = Tips.Compare(item, gear)
 	local rarity = if item.SetId then "Set" else item.Rarity
-	local lines = { ("<b>%s</b>"):format(Kit.tint(item.Name, Kit.rarityColor(rarity))), dim(("%s  -  %s  -  from stage %d"):format(item.Slot, if item.SetId then "Set piece" else item.Rarity, item.Power)) }
+	local lines = { ("<b>%s</b>"):format(Kit.tint(item.Name, Kit.rarityColor(rarity))), dim(("%s  -  %s  -  from stage %d"):format(item.Slot, if item.SetId then "Set piece" else item.Rarity, item.Power)), Kit.tint(("Item Power %d"):format(item.ItemPower or 0), C.Accent) }
 	table.insert(lines, ("+%s %s"):format(num(item.Value), item.Stat))
 	if cmp.Verdict == "Worn" then
 		table.insert(lines, dim("Currently worn"))

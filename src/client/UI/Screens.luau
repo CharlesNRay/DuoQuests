@@ -177,77 +177,83 @@ end
 
 local VERDICT_TINT = { Up = C.Up, Down = C.Down }
 
-function Screens.Gear(container, state, call, extra)
+function Screens.Gear(container, state, call)
 	local gear = state.Player.Gear
 	local scroll = list(container)
-	extra = extra or {}
-	local tab = extra.GearTab or "Equipped"
-	tabs(scroll, tab, { "Equipped", "Sets" }, function(option)
-		extra.GearTab = option
-		Screens.Gear(container, state, call, extra)
-	end)
-
-	if tab == "Equipped" then
-		for _, slotName in ipairs({ "Weapon", "Armor", "Trinket" }) do
-			local item = gear.Equipped[slotName]
-			local r = row(scroll, 56)
-			if item then
-				Icons.Item(r, item, { Size = UDim2.fromOffset(40, 40), Position = UDim2.fromOffset(8, 8) })
-				Kit.Hover(r, function() return Tips.Item(item, gear) end)
-				Kit.label({ Size = UDim2.new(1, -170, 1, 0), Position = UDim2.fromOffset(58, 0), Text = ("%s\n+%s %s  (from stage %d)"):format(item.Name, Tips.Num(item.Value), item.Stat, item.Power), TextColor3 = Kit.rarityColor(if item.SetId then "Set" else item.Rarity), Parent = r })
-				Kit.button({ Size = UDim2.fromOffset(92, 40), Position = UDim2.new(1, -100, 0.5, -20), Text = "Unequip", Parent = r }, function()
-					call("UnequipGear", slotName)
-				end)
-			else
-				Kit.label({ Size = UDim2.new(1, -16, 1, 0), Position = UDim2.fromOffset(8, 0), Text = slotName .. ": empty  (open the Bag to equip something)", TextColor3 = C.Dim, Parent = r })
-			end
+	for _, slotName in ipairs({ "Weapon", "Armor", "Trinket" }) do
+		local item = gear.Equipped[slotName]
+		local r = row(scroll, 56)
+		if item then
+			Icons.Item(r, item, { Size = UDim2.fromOffset(40, 40), Position = UDim2.fromOffset(8, 8) })
+			Kit.Hover(r, function() return Tips.Item(item, gear) end)
+			Kit.label({ Size = UDim2.new(1, -170, 1, 0), Position = UDim2.fromOffset(58, 0), Text = ("%s%s\n+%s %s   -   Item Power %d"):format(item.Name, (item.Upgrade or 0) > 0 and ("  +" .. item.Upgrade) or "", Tips.Num(item.Value), item.Stat, item.ItemPower or 0), TextColor3 = Kit.rarityColor(if item.SetId then "Set" else item.Rarity), Parent = r })
+			Kit.button({ Size = UDim2.fromOffset(92, 40), Position = UDim2.new(1, -100, 0.5, -20), Text = "Unequip", Parent = r }, function()
+				call("UnequipGear", slotName)
+			end)
+		else
+			Kit.label({ Size = UDim2.new(1, -16, 1, 0), Position = UDim2.fromOffset(8, 0), Text = slotName .. ": empty  (open the Bag to equip something)", TextColor3 = C.Dim, Parent = r })
 		end
-		-- active set bonuses
-		local any = false
-		for _, set in ipairs(gear.Sets or {}) do
-			if set.Worn >= 2 then
-				any = true
-				local r = row(scroll, 48)
-				Kit.label({ Size = UDim2.new(1, -16, 1, 0), Position = UDim2.fromOffset(8, 0), Text = ("%s  (%d/3 worn)\n2 pieces: %s%s"):format(set.Name, set.Worn, set.Bonus2, set.Worn >= 3 and ("\n3 pieces: " .. set.Bonus3) or ""), TextColor3 = C.Set, TextSize = 12, Parent = r })
-				r.Size = UDim2.new(1, -8, 0, set.Worn >= 3 and 62 or 48)
-			end
-		end
-		if not any then
-			Kit.label({ Size = UDim2.new(1, 0, 0, 36), Text = "Wear 2 or 3 pieces of the same set for bonuses. Sets drop in their own zone - check the Sets tab.", TextColor3 = C.Dim, TextSize = 12, Parent = scroll })
-		end
-		return
 	end
-
-	-- Sets: one card per zone reached
-	if #(gear.Sets or {}) == 0 then
-		Kit.label({ Size = UDim2.new(1, 0, 0, 30), Text = "Sets appear as you reach new zones.", TextColor3 = C.Dim, Parent = scroll })
-	end
+	-- set bonuses come from the set pieces you are WEARING (they are ordinary gear)
+	local any = false
 	for _, set in ipairs(gear.Sets or {}) do
-		local r = row(scroll, 118)
-		Kit.label({ Size = UDim2.new(1, -16, 0, 20), Position = UDim2.fromOffset(8, 4), Text = ("%s   %d/3 found   -   %s, stages %d-%d"):format(set.Name, set.Collected, set.ZoneName, set.FirstStage, set.LastStage), TextColor3 = C.Set, Font = Enum.Font.GothamBold, TextSize = 13, Parent = r })
-		for index, piece in ipairs(set.Pieces) do
-			local cell = Kit.frame({ Size = UDim2.fromOffset(120, 24), Position = UDim2.fromOffset(8 + (index - 1) * 126, 26), BackgroundColor3 = if piece.Worn then C.Up else C.Panel, Parent = r })
-			Kit.label({ Size = UDim2.new(1, -4, 1, 0), Position = UDim2.fromOffset(4, 0), Text = (piece.Collected and "" or "? ") .. piece.Name, TextSize = 11, TextWrapped = false, TextTruncate = Enum.TextTruncate.AtEnd, TextColor3 = piece.Collected and C.Text or C.Dim, Parent = cell })
+		if set.Worn >= 1 then
+			any = true
+			local r = row(scroll, 62)
+			Kit.label({ Size = UDim2.new(1, -16, 1, 0), Position = UDim2.fromOffset(8, 0), Text = ("%s  (%d/3 worn)\n2 pieces: %s\n3 pieces: %s"):format(set.Name, set.Worn, set.Bonus2, set.Bonus3), TextColor3 = if set.Worn >= 2 then C.Set else C.Dim, TextSize = 12, Parent = r })
 		end
-		Kit.label({ Size = UDim2.new(1, -16, 0, 56), Position = UDim2.fromOffset(8, 56), Text = ("2 pieces: %s\n3 pieces: %s\nDrops in %s (boss floors drop it most). Pieces beat normal gear from this zone."):format(set.Bonus2, set.Bonus3, set.ZoneName), TextSize = 12, TextColor3 = if set.Worn >= 2 then C.Good else C.Dim, Parent = r })
+	end
+	if not any then
+		Kit.label({ Size = UDim2.new(1, 0, 0, 36), Text = "Set pieces are normal gear that drops in their own zone. Wear 2 or 3 of one set for bonuses.", TextColor3 = C.Dim, TextSize = 12, Parent = scroll })
 	end
 end
 
 function Screens.Bag(container, state, call, extra)
 	local gear = state.Player.Gear
-	local scroll = list(container)
-	Kit.label({ Size = UDim2.new(1, 0, 0, 34), TextWrapped = true, Text = ("Bag %d/%d  -  hover an item: green = better than what you wear, red = worse.  Sell at the Merchant, upgrade at the Blacksmith (in the plaza)."):format(#gear.Inventory, gear.Cap), TextColor3 = C.Dim, TextSize = 12, Parent = scroll })
+	extra = extra or {}
+	local compact = extra.BagCompact == true
+	Kit.clear(container)
+	-- header: count, view toggle
+	Kit.label({ Size = UDim2.new(1, -150, 0, 32), TextWrapped = true, Text = ("Bag %d/%d  -  strongest first (Item Power).  Hover an item: green = better than what you wear.  Sell at the Merchant, upgrade at the Blacksmith."):format(#gear.Inventory, gear.Cap), TextColor3 = C.Dim, TextSize = 11, Parent = container })
+	Kit.button({ Size = UDim2.fromOffset(140, 30), Position = UDim2.new(1, -140, 0, 0), Text = if compact then "View: icons" else "View: list", Parent = container }, function()
+		extra.BagCompact = not compact
+		Screens.Bag(container, state, call, extra)
+	end)
+	local scroll = Kit.new("ScrollingFrame", {
+		Size = UDim2.new(1, 0, 1, -36), Position = UDim2.fromOffset(0, 36), BackgroundTransparency = 1, BorderSizePixel = 0,
+		CanvasSize = UDim2.new(), AutomaticCanvasSize = Enum.AutomaticSize.Y, ScrollBarThickness = 5, Parent = container,
+	})
 	if #gear.Inventory == 0 then
 		Kit.label({ Size = UDim2.new(1, 0, 0, 30), Text = "Empty. Win fights to find gear.", TextColor3 = C.Dim, Parent = scroll })
+		return
 	end
-	for _, item in ipairs(gear.Inventory) do
+	if compact then
+		Kit.new("UIPadding", { PaddingLeft = UDim.new(0, 2), PaddingTop = UDim.new(0, 2), Parent = scroll })
+		Kit.new("UIGridLayout", { CellSize = UDim2.fromOffset(46, 46), CellPadding = UDim2.fromOffset(6, 6), SortOrder = Enum.SortOrder.LayoutOrder, Parent = scroll })
+		for index, item in ipairs(gear.Inventory) do
+			local cmp = Tips.Compare(item, gear)
+			local tile = Icons.Item(scroll, item, { Size = UDim2.fromOffset(46, 46), Level = item.ItemPower, LayoutOrder = index })
+			if cmp.Verdict == "Up" then
+				Kit.label({ Size = UDim2.fromOffset(14, 14), Position = UDim2.fromOffset(2, 0), Text = "▲", TextSize = 11, TextColor3 = C.Good, TextWrapped = false, ZIndex = 3, Parent = tile })
+			end
+			Kit.Hover(tile, function() return Tips.Item(item, gear) end)
+			local click = Kit.new("TextButton", { Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1, Text = "", ZIndex = 6, Parent = tile })
+			click.Activated:Connect(function()
+				call("EquipGear", item.Id)
+			end)
+		end
+		return
+	end
+	Kit.new("UIListLayout", { Padding = UDim.new(0, 6), SortOrder = Enum.SortOrder.LayoutOrder, Parent = scroll })
+	for index, item in ipairs(gear.Inventory) do
 		local cmp = Tips.Compare(item, gear)
 		local r = row(scroll, 52)
+		r.LayoutOrder = index
 		r.BackgroundColor3 = VERDICT_TINT[cmp.Verdict] or C.PanelLight
 		Icons.Item(r, item, { Size = UDim2.fromOffset(40, 40), Position = UDim2.fromOffset(8, 6) })
 		Kit.Hover(r, function() return Tips.Item(item, gear) end)
 		local arrow = if cmp.Verdict == "Up" then "  ▲" elseif cmp.Verdict == "Down" then "  ▼" else ""
-		Kit.label({ Size = UDim2.new(1, -170, 1, 0), Position = UDim2.fromOffset(58, 0), Text = ("%s%s%s\n%s +%s %s  (stage %d)"):format(item.Name, (item.Upgrade or 0) > 0 and ("  +" .. item.Upgrade) or "", arrow, item.Slot, Tips.Num(item.Value), item.Stat, item.Power), TextColor3 = C.Text, Parent = r })
+		Kit.label({ Size = UDim2.new(1, -170, 1, 0), Position = UDim2.fromOffset(58, 0), Text = ("%s%s%s\n%s +%s %s   -   Item Power %d"):format(item.Name, (item.Upgrade or 0) > 0 and ("  +" .. item.Upgrade) or "", arrow, item.Slot, Tips.Num(item.Value), item.Stat, item.ItemPower or 0), TextColor3 = C.Text, Parent = r })
 		Kit.button({ Size = UDim2.fromOffset(90, 40), Position = UDim2.new(1, -104, 0.5, -20), Text = "Equip", Parent = r }, function()
 			call("EquipGear", item.Id)
 		end)

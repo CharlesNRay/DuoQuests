@@ -130,8 +130,8 @@ end
 -- every screen can pick its own panel size (reference units); the rest use the default
 local PANEL_DEFAULT = Vector2.new(500, 286)
 local PANEL_SIZES = {
-	Map = Vector2.new(640, 304), Hero = Vector2.new(640, 304), Skills = Vector2.new(640, 304),
-	Merchant = Vector2.new(540, 296), Blacksmith = Vector2.new(540, 296),
+	Map = Vector2.new(640, 298), Hero = Vector2.new(640, 298), Skills = Vector2.new(640, 298),
+	Merchant = Vector2.new(540, 292), Blacksmith = Vector2.new(540, 292),
 }
 local SHOP_NPC = { Merchant = "Merchant", Blacksmith = "Blacksmith" }
 local panel = Kit.frame({ Name = "Panel", Size = UDim2.new(0, 500, 0, 286), Position = UDim2.new(0.5, -250, 0, 42), BackgroundColor3 = Kit.Colors.Bg, Visible = false, ZIndex = 5, Parent = root })
@@ -180,7 +180,7 @@ local function open(name, label, keep)
 	title.Text = label
 	local size = PANEL_SIZES[name] or PANEL_DEFAULT
 	panel.Size = UDim2.fromOffset(size.X, size.Y)
-	panel.Position = UDim2.new(0.5, -size.X / 2, 0, if size.Y > 290 then 34 else 42)
+	panel.Position = UDim2.new(0.5, -size.X / 2, 0, if size.Y > 290 then 2 else 6) -- slid up so the menu dock stays visible
 	panel.Visible = true
 	redraw()
 end
@@ -245,13 +245,11 @@ hud.OnMap = function() open("Map", "World Map") end
 hud.OnAdvance = function() call("Advance") end
 hud:AddButton("Hero", "dock", "🧙", "Hero", function() open("Hero", "Hero") end)
 hud:AddButton("Skills", "dock", "⚔️", "Skills", function() open("Skills", "Skills") end)
-hud:AddButton("Passives", "dock", "📜", "Passives", function() open("Passives", "Passives") end)
 hud:AddButton("Pets", "dock", "🐱", "Pets", function() open("Pets", "Pets") end)
 hud:AddButton("Party", "dock", "👥", "Party", function() open("Party", "Party") end)
 
 hud:AddButton("Gear", "dock", "🛡️", "Gear", function() open("Gear", "Gear & Sets") end)
 hud:AddButton("Bag", "dock", "🎒", "Bag", function() open("Bag", "Bag") end)
-hud:AddButton("Ranks", "dock", "🏆", "Ranks", function() showBoard(extra.BoardCategory or "Stage") end)
 
 -- the plaza: boards, chest and the two shop NPCs open the same screens as the dock
 local function shopOpen(name, label)

@@ -32,6 +32,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
+local Gear = require(Shared.Gear)
 local ProfileTemplate = require(Shared.ProfileTemplate)
 local TableUtil = require(Shared.Util.TableUtil)
 
@@ -293,6 +294,7 @@ function DataService.LoadProfile(player)
 		return nil, "NewerSchema"
 	end
 	TableUtil.Reconcile(data, ProfileTemplate.Defaults())
+	Gear.EnsureStarter(data) -- everybody starts with a weapon (old profiles too)
 
 	-- Player may have left while we were loading.
 	if player.Parent == nil then

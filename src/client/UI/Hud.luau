@@ -4,10 +4,10 @@
 	it on desktop), the touch thumbstick and jump button in the bottom corners, the system top bar.
 
 	Two layers:
-	  Chrome  (always)  top-left portrait + partner card; top-right gold / shards, the live MAP CARD
+	  Chrome  (always)  top-left portrait + partner card; top-right the live MAP CARD with gold / shards just left of it
 	                    (zone, stage, ten stage pips, Advance button while the party is holding) and
 	                    the small buttons (Plaza, Home, Fight log, Battle view); bottom-centre menu dock
-	                    (Hero Skills Passives Pets Party Gear Bag Ranks)
+	                    (Hero Skills Pets Party Gear Bag; passives live in Skills, Ranks at the plaza board)
 	  Combat  (only while watching a battle) stage pill, fight timer, toast, your skill bar and the
 	                    party ultimate gauge. "Hide HUD" in the watching bar hides all of Chrome.
 
@@ -66,7 +66,7 @@ function Hud.new(root)
 	self.Chrome, self.Combat = chrome, combat
 
 	-- top-left: portrait + partner -----------------------------------------
-	local safeTop = if UserInputService.KeyboardEnabled then 110 else 52 -- the chat window sits top-left on desktop
+	local safeTop = if UserInputService.KeyboardEnabled then 12 else 14 -- just under Roblox's own menu + chat buttons
 	local portrait = pill(chrome, { Size = UDim2.fromOffset(220, 46), Position = UDim2.fromOffset(8, safeTop) })
 	self.Badge = Kit.frame({ Size = UDim2.fromOffset(38, 38), Position = UDim2.fromOffset(4, 4), BackgroundColor3 = C.Accent, Parent = portrait })
 	Kit.corner(19).Parent = self.Badge
@@ -80,17 +80,18 @@ function Hud.new(root)
 	self.Cards = Kit.frame({ Size = UDim2.fromOffset(220, 30), Position = UDim2.fromOffset(8, safeTop + 50), BackgroundTransparency = 1, NoCorner = true, Parent = chrome })
 	Kit.new("UIListLayout", { Padding = UDim.new(0, 3), Parent = self.Cards })
 
-	-- top-right: gold + shards, the live map card, small buttons ---------------------
-	local right = Kit.frame({ Size = UDim2.fromOffset(190, 10), AutomaticSize = Enum.AutomaticSize.Y, Position = UDim2.new(1, -8, 0, 6), AnchorPoint = Vector2.new(1, 0), BackgroundTransparency = 1, NoCorner = true, Parent = chrome })
+	-- top-right: the map card in the very corner, gold + shards directly to its left ----------
+	local right = Kit.frame({ Size = UDim2.fromOffset(296, 10), AutomaticSize = Enum.AutomaticSize.Y, Position = UDim2.new(1, -6, 0, 4), AnchorPoint = Vector2.new(1, 0), BackgroundTransparency = 1, NoCorner = true, Parent = chrome })
 	Kit.new("UIListLayout", { Padding = UDim.new(0, 4), HorizontalAlignment = Enum.HorizontalAlignment.Right, Parent = right })
-	local money = Kit.frame({ Size = UDim2.new(1, 0, 0, 24), BackgroundTransparency = 1, NoCorner = true, Parent = right })
-	local goldPill = pill(money, { Size = UDim2.new(0.5, -2, 1, 0), Position = UDim2.fromOffset(0, 0) })
-	local shardPill = pill(money, { Size = UDim2.new(0.5, -2, 1, 0), Position = UDim2.new(0.5, 2, 0, 0) })
+	local topRow = Kit.frame({ Size = UDim2.new(1, 0, 0, 86), BackgroundTransparency = 1, NoCorner = true, Parent = right })
+	local money = Kit.frame({ Size = UDim2.fromOffset(100, 52), BackgroundTransparency = 1, NoCorner = true, Parent = topRow })
+	local goldPill = pill(money, { Size = UDim2.new(1, 0, 0, 24), Position = UDim2.fromOffset(0, 0) })
+	local shardPill = pill(money, { Size = UDim2.new(1, 0, 0, 24), Position = UDim2.fromOffset(0, 28) })
 	self.Gold = Kit.label({ Size = UDim2.new(1, -6, 1, 0), Position = UDim2.fromOffset(6, 0), Text = "", TextSize = 13, Font = Enum.Font.GothamBold, TextColor3 = C.Accent, TextWrapped = false, Parent = goldPill })
 	self.Shards = Kit.label({ Size = UDim2.new(1, -6, 1, 0), Position = UDim2.fromOffset(6, 0), Text = "", TextSize = 13, Font = Enum.Font.GothamBold, TextColor3 = Color3.fromRGB(150, 210, 255), TextWrapped = false, Parent = shardPill })
 
 	-- the map card: a small live picture of where the party is. Tap it for the full map.
-	local mapCard = Kit.button({ Size = UDim2.new(1, 0, 0, 86), Text = "", BackgroundColor3 = Color3.fromRGB(70, 110, 70), Parent = right }, function()
+	local mapCard = Kit.button({ Size = UDim2.fromOffset(190, 86), Position = UDim2.fromScale(1, 0), AnchorPoint = Vector2.new(1, 0), Text = "", BackgroundColor3 = Color3.fromRGB(70, 110, 70), Parent = topRow }, function()
 		if self.OnMap then
 			self.OnMap()
 		end

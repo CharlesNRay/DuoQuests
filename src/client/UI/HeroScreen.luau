@@ -5,7 +5,7 @@
 
 	Left: a turntable of the character (a copy of the real avatar for a real player, built from the
 	player's Roblox look for an offline partner, or the plain class model for the starter ghost),
-	name, class, level, path and pet. Right: stats, skills, passives and the gear that is worn.
+	name, class, level, path and pet. The worn gear is drawn on the avatar (weapon by the hand, armour on the chest, trinket at the neck). Right: stats, skills and passives.
 	Every skill, passive and item has the same hover tooltip as elsewhere.
 ]]
 local Players = game:GetService("Players")
@@ -127,18 +127,26 @@ local function skillRow(parent, ids, levels)
 	end
 end
 
-local function gearTiles(parent, worn)
-	local holder = Kit.frame({ Size = UDim2.new(1, 0, 0, 62), BackgroundTransparency = 1, NoCorner = true, Parent = parent })
-	Kit.new("UIListLayout", { FillDirection = Enum.FillDirection.Horizontal, Padding = UDim.new(0, 8), Parent = holder })
+-- Worn gear sits on the avatar where it belongs: weapon by the hand, armour on the chest, trinket
+-- at the neck. Tiles are children of the viewport, so they float over the turntable.
+local DOLL = {
+	Weapon = { Position = UDim2.new(0, 6, 0, 66), Label = "Weapon" },
+	Armor = { Position = UDim2.new(1, -46, 0, 56), Label = "Armor" },
+	Trinket = { Position = UDim2.new(1, -46, 0, 8), Label = "Trinket" },
+}
+
+local function gearOnDoll(viewport, worn)
 	for _, slot in ipairs(SLOTS) do
+		local spot = DOLL[slot]
 		local item = worn[slot]
-		local cell = Kit.frame({ Size = UDim2.new(1 / 3, -6, 0, 58), BackgroundColor3 = C.PanelLight, Parent = holder })
 		if item then
-			Icons.Item(cell, item, { Size = UDim2.fromOffset(44, 44), Position = UDim2.fromOffset(7, 7) })
-			Kit.label({ Size = UDim2.new(1, -58, 1, 0), Position = UDim2.fromOffset(56, 0), Text = ("%s%s\n+%s %s"):format(item.Name, (item.Upgrade or 0) > 0 and (" +" .. item.Upgrade) or "", Tips.Num(item.Value), item.Stat), TextSize = 12, TextColor3 = if item.SetId then C.Set else Kit.rarityColor(item.Rarity), Parent = cell })
-			Kit.Hover(cell, function() return Tips.Item(item, { Equipped = worn }) end)
+			local tile = Icons.Item(viewport, item, { Size = UDim2.fromOffset(40, 40), Position = spot.Position, Level = item.ItemPower })
+			tile.ZIndex = 4
+			Kit.Hover(tile, function() return Tips.Item(item, { Equipped = worn }) end)
 		else
-			Kit.label({ Size = UDim2.new(1, -8, 1, 0), Position = UDim2.fromOffset(8, 0), Text = slot .. "\nempty", TextSize = 12, TextColor3 = C.Dim, Parent = cell })
+			local empty = Kit.frame({ Size = UDim2.fromOffset(40, 40), Position = spot.Position, BackgroundColor3 = Color3.fromRGB(24, 26, 40), BackgroundTransparency = 0.3, ZIndex = 4, Parent = viewport })
+			Kit.new("UIStroke", { Color = Color3.fromRGB(90, 98, 130), Thickness = 1, Parent = empty })
+			Kit.label({ Size = UDim2.fromScale(1, 1), Text = spot.Label, TextSize = 9, TextColor3 = C.Dim, TextXAlignment = Enum.TextXAlignment.Center, TextWrapped = false, ZIndex = 5, Parent = empty })
 		end
 	end
 end
@@ -211,7 +219,8 @@ function HeroScreen.Hero(container, state, _, extra)
 
 	-- left: the avatar and headline facts
 	local left = Kit.frame({ Size = UDim2.new(0, 190, 1, -38), Position = UDim2.fromOffset(0, 38), BackgroundTransparency = 1, NoCorner = true, Parent = container })
-	turntable(left, hero, UDim2.new(1, 0, 1, -92))
+	local viewport = turntable(left, hero, UDim2.new(1, 0, 1, -92))
+	gearOnDoll(viewport, hero.Worn or {})
 	local classDef = Classes[hero.ClassId]
 	local pet = hero.PetId and PetConfig.Defs[hero.PetId]
 	local subclass = hero.SubclassId and Subclasses.Defs[hero.SubclassId]
@@ -249,8 +258,6 @@ function HeroScreen.Hero(container, state, _, extra)
 			Kit.Hover(r, function() return Tips.Passive(def, level) end)
 		end
 	end
-	section(scroll, "GEAR")
-	gearTiles(scroll, hero.Worn or {})
 end
 
 return HeroScreen

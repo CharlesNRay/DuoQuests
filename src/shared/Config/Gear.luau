@@ -39,11 +39,11 @@ return {
 	SellValue = { Common = 2, Rare = 6, Epic = 15 }, -- gold per item (before stage scaling)
 	SellPerStage = 0.2, -- extra gold per stage of Power
 
-	-- SET GEAR. Every zone (10 stages) has its own 3-piece set. Pieces only drop while you
+	-- SET GEAR (ordinary wearable gear, not a separate loot roll). Every zone (10 stages) has its own 3-piece set. Pieces only drop while you
 	-- fight a stage in that zone (frontier or replay), so a player stuck in a zone can farm
 	-- it. A piece is a bit stronger than a normal item (RarityMult.Set) and wearing 2 or 3
 	-- pieces of one set adds a bonus. Bonus mods use the usual { Stat, Mode, Value }.
-	SetDropChance = 0.14, -- per won fight in the zone
+	SetDropChance = 0.22, -- of the drops that happen, how many turn out to be a piece of the zone's set
 	SetBossChance = 0.6, -- boss stage: chance the (guaranteed) drop is a set piece
 	Sets = {
 		{ Name = "Meadow Warden", Pieces = { Weapon = "Warden's Blade", Armor = "Warden's Vest", Trinket = "Warden's Charm" },

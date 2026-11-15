@@ -10,6 +10,8 @@
 	Season.Equipment = { Equipped = { Weapon = item, ... }, Inventory = { item, ... }, NextId = n }
 
 	  Gear.StatOf(item)                     -> stat name, value
+	  Gear.ItemPower(item)                  -> one comparable number for any item (stat / base stat * 10)
+	  Gear.EnsureStarter(profile)           gives a wooden-sword-level Common weapon if you own no weapon at all
 	  Gear.Name(item)                       -> display name
 	  Gear.Mods(equipped)                   -> list of { Stat, Mode = "Add", Value } for StatCalc
 	  Gear.RollDrop(stage, isFrontier, itemRarityBonus, rand)  -> { Slot, Rarity } or nil
@@ -50,6 +52,33 @@ function Gear.StatOf(item)
 	local mult = Config.RarityMult[item.Rarity] or 1
 	local upgrade = 1 + Config.Upgrade.ValuePerLevel * (item.Upgrade or 0)
 	return slot.Stat, (slot.Base + slot.PerStage * item.Power) * mult * upgrade
+end
+
+-- Item Power: one number that compares any two items (a weapon against armour too), counting rarity,
+-- the stage it dropped at and Blacksmith upgrades. A Common item from stage 1 is about 12.
+function Gear.ItemPower(item)
+	local slot = Config.Slots[item.Slot]
+	if slot == nil then
+		return 0
+	end
+	local _, value = Gear.StatOf(item)
+	return math.floor(10 * value / slot.Base + 0.5)
+end
+
+-- Everybody starts with a weapon. Safe to call every login: it only acts when you own no weapon.
+function Gear.EnsureStarter(profile)
+	local equipment = bag(profile)
+	if equipment.Equipped.Weapon then
+		return false
+	end
+	for _, item in ipairs(equipment.Inventory) do
+		if item.Slot == "Weapon" then
+			return false
+		end
+	end
+	equipment.NextId = (equipment.NextId or 0) + 1
+	equipment.Equipped.Weapon = { Id = "g" .. equipment.NextId, Slot = "Weapon", Rarity = "Common", Power = 1 }
+	return true
 end
 
 -- A set belongs to a zone (10 stages). Past the authored sets the list repeats.
@@ -127,20 +156,17 @@ end
 function Gear.RollDrop(stage, isFrontier, itemRarityBonus, rand)
 	local drop = Config.Drop
 	local isBoss = stage % StageConfig.BossEvery == 0
-	-- set pieces: only from the zone itself, on frontier fights and replays alike
-	local slotFor = function()
-		return Config.SlotOrder[math.min(#Config.SlotOrder, math.floor(rand() * #Config.SlotOrder) + 1)]
-	end
-	if isBoss then
-		if rand() < Config.SetBossChance then
-			return { Slot = slotFor(), Rarity = "Set", SetId = Zones.IndexForStage(stage) }
-		end
-	elseif rand() < Config.SetDropChance then
-		return { Slot = slotFor(), Rarity = "Set", SetId = Zones.IndexForStage(stage) }
-	end
 	local chance = if isBoss then drop.BossChance elseif isFrontier then drop.Chance else drop.ReplayChance
 	if rand() >= chance then
 		return nil
+	end
+	local slotFor = function()
+		return Config.SlotOrder[math.min(#Config.SlotOrder, math.floor(rand() * #Config.SlotOrder) + 1)]
+	end
+	-- Set pieces are ordinary gear: some drops simply turn out to be a piece of the zone's set.
+	-- (They only come from the zone itself, on frontier fights and replays alike.)
+	if rand() < (if isBoss then Config.SetBossChance else Config.SetDropChance) then
+		return { Slot = slotFor(), Rarity = "Set", SetId = Zones.IndexForStage(stage) }
 	end
 	-- rarity roll: the ItemRarity bonus shifts weight from Common to Rare/Epic
 	local weights = table.clone(drop.Weights)
@@ -156,8 +182,7 @@ function Gear.RollDrop(stage, isFrontier, itemRarityBonus, rand)
 	elseif roll >= weights.Common then
 		rarity = "Rare"
 	end
-	local slot = Config.SlotOrder[math.min(#Config.SlotOrder, math.floor(rand() * #Config.SlotOrder) + 1)]
-	return { Slot = slot, Rarity = rarity }
+	return { Slot = slotFor(), Rarity = rarity }
 end
 
 -- Put a drop into the bag (or sell it if the bag is full).
@@ -248,7 +273,7 @@ local function row(item)
 	end
 	return {
 		Id = item.Id, Slot = item.Slot, Rarity = item.Rarity, Name = Gear.Name(item), Power = item.Power, Stat = stat, Value = value,
-		SellValue = Gear.SellValue(item), SetId = item.SetId, SetName = setName,
+		ItemPower = Gear.ItemPower(item), SellValue = Gear.SellValue(item), SetId = item.SetId, SetName = setName,
 		Upgrade = item.Upgrade or 0, MaxUpgrade = Config.Upgrade.MaxLevel, UpgradeCost = cost, NextValue = nextValue,
 	}
 end
@@ -371,6 +396,13 @@ function Gear.List(profile)
 	for _, item in ipairs(equipment.Inventory) do
 		table.insert(result.Inventory, row(item))
 	end
+	-- strongest first, so upgrades are at the top left of the bag
+	table.sort(result.Inventory, function(a, b)
+		if a.ItemPower ~= b.ItemPower then
+			return a.ItemPower > b.ItemPower
+		end
+		return a.Id < b.Id
+	end)
 	return result
 end
 

@@ -2,7 +2,9 @@
 	SkillsScreen (ModuleScript): the Skills page, icons first.
 
 	  SkillsScreen.Skills(container, state, call, extra)
-	    extra.SkillSel   { Slot = n } an equipped skill is selected, or { Id = abilityId } one from the pool
+	    extra.SkillSel   { Slot = n } an equipped skill is selected, or { Id = abilityId } one from the pool;
+                     { PSlot = n } a passive slot, or { PId = passiveId, Target = slot } one from the passive pool
+    Passives live here too: they are skills that are always on and do not use the four skill slots.
 
 	Left   your PARTNER (you are not listed: your own stats are on the Hero screen), with their skills
 	Centre your four equipped skills as icons (cast order, left to right), then icons of the skills you
@@ -19,6 +21,8 @@ local Classes = require(Shared.Config.Classes)
 local Economy = require(Shared.Economy)
 local Skills = require(Shared.Skills)
 local Subclasses = require(Shared.Subclasses)
+local PassiveCfg = require(Shared.Config.Passives)
+local Passives = require(Shared.Passives)
 local Kit = require(script.Parent.Kit)
 local Icons = require(script.Parent.Icons)
 local Tips = require(script.Parent.Tips)
@@ -35,7 +39,7 @@ end
 
 -- A skill icon that can be clicked; the selected one gets a bright frame.
 local function iconButton(parent, def, props, selected, onClick)
-	local tile = Icons.Skill(parent, def, props)
+	local tile = if props.Passive ~= nil then Icons.Passive(parent, props.Passive or nil, props) else Icons.Skill(parent, def, props)
 	local stroke = tile:FindFirstChildOfClass("UIStroke")
 	if selected and stroke then
 		stroke.Color = Color3.new(1, 1, 1)
@@ -65,6 +69,8 @@ function SkillsScreen.Skills(container, state, call, extra)
 		sel = { Slot = 1 }
 		extra.SkillSel = sel
 	end
+	local isPassive = sel.PSlot ~= nil or sel.PId ~= nil
+	local pEquipped = table.clone(me.PassiveIds or {})
 	local selectedId = if sel.Slot then equipped[sel.Slot] else sel.Id
 	local selectedDef = selectedId and Abilities[selectedId]
 
@@ -139,6 +145,18 @@ function SkillsScreen.Skills(container, state, call, extra)
 		subY += 20
 	end
 
+	-- passive slots: always-on skills that do not take a primary slot
+	Kit.label({ Size = UDim2.new(1, 0, 0, 16), Position = UDim2.fromOffset(2, subY), Text = "PASSIVES  (always on)", TextSize = 11, TextColor3 = C.Dim, Font = Enum.Font.GothamBold, Parent = centre })
+	for slot = 1, Passives.SLOTS do
+		local locked = slot > (me.PassiveSlots or 0)
+		local pdef = not locked and PassiveCfg.Defs[pEquipped[slot]] or nil
+		iconButton(centre, nil, { Size = UDim2.fromOffset(44, 44), Position = UDim2.fromOffset(2 + (slot - 1) * 50, subY + 16), Level = if pdef then (me.PassiveLevels or {})[slot] else nil, Locked = locked, Passive = pdef or false }, sel.PSlot == slot, function()
+			extra.SkillSel = { PSlot = slot }
+			redraw()
+		end)
+	end
+	subY += 64
+
 	local pool = Kit.new("ScrollingFrame", {
 		Size = UDim2.new(1, 0, 1, -subY), Position = UDim2.fromOffset(0, subY), BackgroundTransparency = 1, BorderSizePixel = 0,
 		CanvasSize = UDim2.new(), AutomaticCanvasSize = Enum.AutomaticSize.Y, ScrollBarThickness = 4, Parent = centre,
@@ -183,8 +201,81 @@ function SkillsScreen.Skills(container, state, call, extra)
 		end
 	end
 
+	section("PASSIVES")
+	do
+		local g = iconGrid()
+		local any = false
+		for _, id in ipairs(Passives.Pool(me.ClassId)) do
+			if not table.find(pEquipped, id) then
+				any = true
+				local pdef = PassiveCfg.Defs[id]
+				local open = Passives.IsUnlocked(id, me.Frontier)
+				iconButton(g, nil, { Passive = pdef, Locked = not open }, sel.PId == id, function()
+					extra.SkillSel = { PId = id, Target = sel.PSlot or sel.Target }
+					redraw()
+				end)
+			end
+		end
+		if not any then
+			Kit.label({ Size = UDim2.new(1, 0, 0, 16), Text = "Every passive is equipped", TextSize = 11, TextColor3 = C.Dim, Parent = g })
+		end
+	end
+
 	-- RIGHT: the selected skill ---------------------------------------------------
 	local right = panelFrame(container, LEFT + CENTRE + GAP * 2, RIGHT)
+	if isPassive then
+		local pdef, slot
+		if sel.PSlot then
+			slot = sel.PSlot
+			pdef = if slot <= (me.PassiveSlots or 0) then PassiveCfg.Defs[pEquipped[slot]] else nil
+		else
+			pdef = PassiveCfg.Defs[sel.PId]
+		end
+		local function note(text, y)
+			Kit.label({ Size = UDim2.new(1, -16, 0, 30), Position = UDim2.new(0, 8, 1, y), Text = text, TextSize = 11, TextColor3 = C.Dim, Parent = right })
+		end
+		if not pdef then
+			local text = "Empty passive slot.\nPick an unlocked passive below to put in it."
+			if slot and slot > (me.PassiveSlots or 0) then
+				local unlock
+				for _, u in ipairs(PassiveCfg.SlotUnlocks) do
+					if u.Slots >= slot and not unlock then
+						unlock = u.Stage
+					end
+				end
+				text = ("Passive slot %d is locked.\nReach stage %s to open it."):format(slot, tostring(unlock or "?"))
+			end
+			Kit.label({ Size = UDim2.new(1, -16, 0, 60), Position = UDim2.fromOffset(8, 8), Text = text, TextColor3 = C.Dim, TextYAlignment = Enum.TextYAlignment.Top, Parent = right })
+			return
+		end
+		local plevel = if slot then (me.PassiveLevels or {})[slot] or 1 else 1
+		local lines = { Tips.Passive(pdef, plevel) }
+		for _, r in ipairs(Passives.Rows(pdef.Id, plevel)) do
+			table.insert(lines, Kit.tint(r.Label .. ": ", C.Dim) .. tostring(r.Value))
+		end
+		Kit.label({ Size = UDim2.new(1, -16, 1, -72), Position = UDim2.fromOffset(8, 6), Text = table.concat(lines, "\n"), RichText = true, TextSize = 12, TextYAlignment = Enum.TextYAlignment.Top, Parent = right })
+		if slot then
+			local cost = Economy.PassiveSlotLevelCost(plevel)
+			actionButton(right, cost and ("Level up  -  " .. cost .. "g") or "Max level", 0, C.Up, function()
+				if cost then
+					call("LevelPassiveSlot", slot)
+				end
+			end).Position = UDim2.new(0, 8, 1, -66)
+			note("Tap an unlocked passive to swap it in for this one.", -32)
+		elseif Passives.IsUnlocked(pdef.Id, me.Frontier) then
+			local target = math.clamp(sel.Target or (#pEquipped + 1), 1, math.min(#pEquipped + 1, math.max(me.PassiveSlots or 1, 1)))
+			local swapOut = PassiveCfg.Defs[pEquipped[target]]
+			actionButton(right, ("Equip in passive slot %d"):format(target), 0, C.Up, function()
+				pEquipped[target] = pdef.Id
+				extra.SkillSel = { PSlot = target }
+				call("EquipPassives", pEquipped)
+			end).Position = UDim2.new(0, 8, 1, -66)
+			note(swapOut and ("Replaces " .. swapOut.DisplayName .. ". Select a passive slot first to choose which.") or "Goes in the first free slot.", -34)
+		else
+			note(("Unlocks when you reach stage %d."):format(pdef.UnlockStage or 1), -48)
+		end
+		return
+	end
 	if not selectedDef then
 		Kit.label({ Size = UDim2.new(1, -16, 0, 40), Position = UDim2.fromOffset(8, 8), Text = "Pick a skill to see its details.", TextColor3 = C.Dim, Parent = right })
 		return

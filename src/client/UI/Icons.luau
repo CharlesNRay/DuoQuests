@@ -87,6 +87,17 @@ function Icons.Skill(parent, def, props)
 	return tile(parent, KIND_COLORS[kind], KIND_GLYPHS[kind], Kit.rarityColor(def.Rarity), props)
 end
 
+-- Passives: tinted by category, with a plain glyph. A nil def is an empty slot.
+local PASSIVE_LOOK = {
+	Damage = { Color3.fromRGB(190, 80, 70), "⚔" }, Defense = { Color3.fromRGB(80, 120, 190), "🛡" },
+	Healing = { Color3.fromRGB(80, 170, 110), "✚" }, Gold = { Color3.fromRGB(200, 165, 60), "💰" },
+	XP = { Color3.fromRGB(120, 100, 200), "★" }, Rarity = { Color3.fromRGB(190, 110, 170), "✦" },
+}
+function Icons.Passive(parent, def, props)
+	local look = PASSIVE_LOOK[def and def.Category or ""] or { Color3.fromRGB(70, 74, 96), "+" }
+	return tile(parent, look[1], look[2], if def then Color3.fromRGB(235, 225, 190) else Color3.fromRGB(110, 116, 140), props)
+end
+
 function Icons.Ultimate(parent, def, props)
 	return tile(parent, KIND_COLORS.Ultimate, KIND_GLYPHS.Ultimate, Kit.rarityColor(def and def.Rarity or "Epic"), props)
 end

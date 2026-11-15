@@ -121,3 +121,11 @@ Newest first.
 - Daily button removed (use the plaza gift); gold/shards top-right; live Map card (stage, zone, pips) top-right opens the world map.
 - Skills screen revamp: icon-only equipped row + unlocked pool, detail side panel on the right, party on the left.
 - Failed stage now steps the party back one stage and holds (Farm) until the player presses Advance (`Advance` API, `Party.Advance`).
+
+## 2026-11-15 gear + menus pass
+- Passives merged into the Skills page (3 passive slots under the equipped skills, passive pool below, details + level/equip on the right); Passives and Ranks buttons removed from the dock (rankings stay at the plaza board).
+- Menus slid up so the dock stays visible; party card sits right under Roblox's menu/chat buttons; map card in the top-right corner with gold/shards directly left.
+- Item Power (stat / slot base * 10, comparable across slots) on every item; bag sorted strongest first; Bag has a list / icons-only toggle.
+- Everybody starts with a Common weapon (Gear.EnsureStarter at profile load).
+- Set pieces are now a variant of a normal drop (no separate set roll) and are worn like any gear; the Sets collection tab is gone (Gear tab shows bonuses of worn sets).
+- Hero page draws worn gear on the avatar (weapon by the hand, armour on the chest, trinket at the neck). No helmet slot exists yet (3 slots: Weapon, Armor, Trinket).

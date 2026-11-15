@@ -50,17 +50,17 @@ return function(modulesOverride)
 
 	-- drops
 	check("A high roll means no drop", Gear.RollDrop(3, true, 0, fixed(0.99)) == nil)
-	local drop = Gear.RollDrop(3, true, 0, fixed(0.99, 0.0, 0.0, 0.0))
+	local drop = Gear.RollDrop(3, true, 0, fixed(0.0, 0.99, 0.0, 0.0))
 	check("A low roll drops a common weapon", drop ~= nil and drop.Rarity == "Common" and drop.Slot == "Weapon")
-	check("A top rarity roll is Epic", Gear.RollDrop(3, true, 0, fixed(0.99, 0.0, 0.999, 0.9)).Rarity == "Epic")
-	check("Bosses always drop", Gear.RollDrop(10, false, 0, fixed(0.99, 0.0, 0.0)) ~= nil)
-	check("Replays drop less often than the frontier", Gear.RollDrop(3, false, 0, fixed(0.99, 0.15, 0.0, 0.0)) == nil and Gear.RollDrop(3, true, 0, fixed(0.99, 0.15, 0.0, 0.0)) ~= nil)
+	check("A top rarity roll is Epic", Gear.RollDrop(3, true, 0, fixed(0.0, 0.99, 0.999, 0.9)).Rarity == "Epic")
+	check("Bosses always drop", Gear.RollDrop(10, false, 0, fixed(0.0, 0.99, 0.0)) ~= nil)
+	check("Replays drop less often than the frontier", Gear.RollDrop(3, false, 0, fixed(0.15, 0.99, 0.0, 0.0)) == nil and Gear.RollDrop(3, true, 0, fixed(0.15, 0.99, 0.0, 0.0)) ~= nil)
 	local lucky = 0
 	local plainCount = 0
 	for i = 1, 200 do
 		local r = (i % 100) / 100
-		local with = Gear.RollDrop(3, true, 0.3, fixed(0.99, 0.0, r, 0.0))
-		local without = Gear.RollDrop(3, true, 0, fixed(0.99, 0.0, r, 0.0))
+		local with = Gear.RollDrop(3, true, 0.3, fixed(0.0, 0.99, r, 0.0))
+		local without = Gear.RollDrop(3, true, 0, fixed(0.0, 0.99, r, 0.0))
 		if with and with.Rarity ~= "Common" then lucky += 1 end
 		if without and without.Rarity ~= "Common" then plainCount += 1 end
 	end
@@ -73,6 +73,25 @@ return function(modulesOverride)
 	check("Boss set roll drops the zone set", setBoss ~= nil and setBoss.Rarity == "Set" and setBoss.SetId == 3)
 	local sets = Gear.Sets and Gear.SetFor(1)
 	check("Set definitions exist for zone 1", sets ~= nil and sets.Pieces ~= nil and sets.Bonus2 ~= nil and sets.Bonus3 ~= nil)
+	check("Set pieces only appear as part of a normal drop (no drop, no set)", Gear.RollDrop(25, true, 0, fixed(0.99, 0.0)) == nil)
+
+	-- item power, starter weapon, bag order
+	local ipW = Gear.ItemPower({ Slot = "Weapon", Rarity = "Common", Power = 1 })
+	local ipA = Gear.ItemPower({ Slot = "Armor", Rarity = "Common", Power = 1 })
+	check("Item Power is comparable across slots", ipW == ipA and ipW > 0)
+	check("Rarer and later items have more Item Power", Gear.ItemPower({ Slot = "Weapon", Rarity = "Epic", Power = 40 }) > Gear.ItemPower({ Slot = "Weapon", Rarity = "Common", Power = 40 }) and Gear.ItemPower({ Slot = "Weapon", Rarity = "Common", Power = 40 }) > ipW)
+	local fresh = ProfileTemplate.New()
+	check("A new profile has no weapon until the starter is given", fresh.Season.Equipment.Equipped.Weapon == nil)
+	check("The starter weapon is given once", Gear.EnsureStarter(fresh) == true and fresh.Season.Equipment.Equipped.Weapon.Rarity == "Common" and Gear.EnsureStarter(fresh) == false)
+	local withBag = ProfileTemplate.New()
+	Gear.Grant(withBag, 4, { Slot = "Weapon", Rarity = "Common" })
+	check("No starter when a weapon is already in the bag", Gear.EnsureStarter(withBag) == false)
+	local sorted = ProfileTemplate.New()
+	Gear.Grant(sorted, 3, { Slot = "Armor", Rarity = "Common" })
+	Gear.Grant(sorted, 30, { Slot = "Weapon", Rarity = "Epic" })
+	Gear.Grant(sorted, 12, { Slot = "Trinket", Rarity = "Rare" })
+	local listed = Gear.List(sorted).Inventory
+	check("The bag lists the strongest item first", listed[1].ItemPower >= listed[2].ItemPower and listed[2].ItemPower >= listed[3].ItemPower and listed[1].Slot == "Weapon")
 
 	-- bag, equip, sell
 	local profile = ProfileTemplate.New()
