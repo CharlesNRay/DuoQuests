@@ -37,12 +37,30 @@ local Tips = require(script.Parent.Tips)
 local C = Kit.Colors
 
 local Hud = {}
+local short
 
 local MAP_GLYPHS = {
 	Trees = "🌳", Pines = "🌲", Rocks = "⛰️", Crystals = "💎", Cacti = "🌵",
 	SnowPines = "❄️", LavaRocks = "🌋", DeadTrees = "🪦", Pillars = "🏛️", Clouds = "☁️",
 }
 local INTRO = 0.8 -- matches Battle/Replay: monsters run in before the first blow
+
+-- 1234 -> "1,234" (tooltips) and 12500 -> "12.5K" (the compact HUD pills)
+local function commas(n)
+	local text = tostring(math.floor(n))
+	local out = text:reverse():gsub("(%d%d%d)", "%1,"):reverse()
+	return (out:gsub("^,", ""))
+end
+short = function(n)
+	if n >= 1e9 then
+		return ("%.1fB"):format(n / 1e9)
+	elseif n >= 1e6 then
+		return ("%.2fM"):format(n / 1e6)
+	elseif n >= 1e4 then
+		return ("%.1fK"):format(n / 1e3)
+	end
+	return tostring(math.floor(n))
+end
 
 local function pill(parent, props)
 	local f = Kit.frame({ Size = props.Size, Position = props.Position, BackgroundColor3 = Color3.fromRGB(16, 18, 30), BackgroundTransparency = 0.25, Parent = parent })
@@ -87,8 +105,16 @@ function Hud.new(root)
 	local money = Kit.frame({ Size = UDim2.fromOffset(100, 52), BackgroundTransparency = 1, NoCorner = true, Parent = topRow })
 	local goldPill = pill(money, { Size = UDim2.new(1, 0, 0, 24), Position = UDim2.fromOffset(0, 0) })
 	local shardPill = pill(money, { Size = UDim2.new(1, 0, 0, 24), Position = UDim2.fromOffset(0, 28) })
+	self.GoldPill, self.ShardPill = goldPill, shardPill
 	self.Gold = Kit.label({ Size = UDim2.new(1, -6, 1, 0), Position = UDim2.fromOffset(6, 0), Text = "", TextSize = 13, Font = Enum.Font.GothamBold, TextColor3 = C.Accent, TextWrapped = false, Parent = goldPill })
 	self.Shards = Kit.label({ Size = UDim2.new(1, -6, 1, 0), Position = UDim2.fromOffset(6, 0), Text = "", TextSize = 13, Font = Enum.Font.GothamBold, TextColor3 = Color3.fromRGB(150, 210, 255), TextWrapped = false, Parent = shardPill })
+
+	Kit.Hover(goldPill, function()
+		return ("<b>Gold</b>\n%s"):format(commas(self.GoldExact or 0))
+	end)
+	Kit.Hover(shardPill, function()
+		return ("<b>Shards</b>\n%s"):format(commas(self.ShardExact or 0))
+	end)
 
 	-- the map card: a small live picture of where the party is. Tap it for the full map.
 	local mapCard = Kit.button({ Size = UDim2.fromOffset(190, 86), Position = UDim2.fromScale(1, 0), AnchorPoint = Vector2.new(1, 0), Text = "", BackgroundColor3 = Color3.fromRGB(70, 110, 70), Parent = topRow }, function()
@@ -310,8 +336,9 @@ function Hud.new(root)
 		local frac = if me.XPNeeded and me.XPNeeded > 0 then math.clamp((me.XP or 0) / me.XPNeeded, 0, 1) else 0
 		self.XpFill.Size = UDim2.fromScale(frac, 1)
 		self.XpText = ("Level %d\nXP %d / %d"):format(me.Level, me.XP or 0, me.XPNeeded or 0)
-		self.Gold.Text = "💰 " .. me.Gold
-		self.Shards.Text = "💠 " .. me.Shards
+		self.Gold.Text = "💰 " .. short(me.Gold)
+		self.Shards.Text = "💠 " .. short(me.Shards)
+		self.GoldExact, self.ShardExact = me.Gold, me.Shards
 
 		Kit.clear(self.BuffRow)
 		self.BuffChips = {}
@@ -327,17 +354,32 @@ function Hud.new(root)
 
 		-- party cards
 		Kit.clear(self.Cards)
-		local function card(name, classId, level, note)
+		local function card(name, classId, level, note, onClick, tip)
 			local f = pill(self.Cards, { Size = UDim2.fromOffset(220, 28), Position = UDim2.new() })
 			local dot = Kit.frame({ Size = UDim2.fromOffset(18, 18), Position = UDim2.fromOffset(6, 5), BackgroundColor3 = C[classId] or C.Accent, Parent = f })
 			Kit.corner(10).Parent = dot
 			Kit.label({ Size = UDim2.new(1, -32, 1, 0), Position = UDim2.fromOffset(32, 0), Text = ("%s  Lv %d%s"):format(name, level, note or ""), TextSize = 13, TextWrapped = false, TextTruncate = Enum.TextTruncate.AtEnd, Parent = f })
+			if onClick then
+				local b = Kit.new("TextButton", { Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1, Text = "", ZIndex = 4, Parent = f })
+				b.Activated:Connect(onClick)
+				if tip then
+					Kit.Hover(b, function() return tip end)
+				end
+			end
 		end
 		if party and party.Partner then
 			local p = party.Partner
-			card(p.Name, p.ClassId, p.Level, p.Online and "" or "  (ghost)")
+			card(p.Name, p.ClassId, p.Level, p.Online and "" or "  (ghost)", function()
+				if self.OnPartner then
+					self.OnPartner()
+				end
+			end, ("<b>%s</b>  Lv %d %s\n%s\nClick for her stats, skills and gear"):format(p.Name, p.Level, p.ClassId, if p.Online then "Online" else "Fights as a ghost while away"))
 		elseif party then
-			card("Waiting for partner...", "", 0, "")
+			card("Waiting for partner...", "", 0, "", function()
+				if self.OnParty then
+					self.OnParty()
+				end
+			end, "Click to find a partner")
 		end
 
 		-- skill bar: equipped skills in cast order

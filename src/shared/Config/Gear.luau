@@ -40,17 +40,17 @@ return {
 	SetThresholds = { 2, 4 },
 
 	Names = {
-		Weapon = { Common = "Iron Sword", Rare = "Steel Blade", Epic = "Dragonfang" },
-		Helmet = { Common = "Leather Cap", Rare = "Iron Helm", Epic = "Crown of Valor" },
-		Armor = { Common = "Leather Vest", Rare = "Chain Mail", Epic = "Aegis Plate" },
-		Pants = { Common = "Cloth Pants", Rare = "Mail Leggings", Epic = "Titan Greaves" },
-		Boots = { Common = "Worn Boots", Rare = "Swift Boots", Epic = "Windrunners" },
-		Ring = { Common = "Copper Ring", Rare = "Silver Ring", Epic = "Ring of Fate" },
-		Amulet = { Common = "Lucky Charm", Rare = "Jade Amulet", Epic = "Star Pendant" },
+		Weapon = { Common = "Iron Sword", Uncommon = "Hunter's Blade", Rare = "Steel Blade", Epic = "Dragonfang", Legendary = "Moonsteel Saber" },
+		Helmet = { Common = "Leather Cap", Uncommon = "Hardened Helm", Rare = "Iron Helm", Epic = "Crown of Valor", Legendary = "Halo of Ages" },
+		Armor = { Common = "Leather Vest", Uncommon = "Studded Armor", Rare = "Chain Mail", Epic = "Aegis Plate", Legendary = "Mythic Bulwark" },
+		Pants = { Common = "Cloth Pants", Uncommon = "Reinforced Pants", Rare = "Mail Leggings", Epic = "Titan Greaves", Legendary = "Giantstride Greaves" },
+		Boots = { Common = "Worn Boots", Uncommon = "Trailblazer Boots", Rare = "Swift Boots", Epic = "Windrunners", Legendary = "Skystep Treads" },
+		Ring = { Common = "Copper Ring", Uncommon = "Bronze Signet", Rare = "Silver Ring", Epic = "Ring of Fate", Legendary = "Ring of Eternity" },
+		Amulet = { Common = "Lucky Charm", Uncommon = "Fox Talisman", Rare = "Jade Amulet", Epic = "Star Pendant", Legendary = "Heart of the World" },
 	},
 
-	RarityMult = { Common = 1, Rare = 1.5, Epic = 2.2, Set = 1.8 },
-	SellValue = { Common = 2, Rare = 6, Epic = 15 }, -- gold per item (before stage scaling)
+	RarityMult = { Common = 1, Uncommon = 1.25, Rare = 1.55, Epic = 2.2, Legendary = 3.2, Set = 1.8 },
+	SellValue = { Common = 2, Uncommon = 4, Rare = 8, Epic = 18, Legendary = 45 }, -- gold per item (before stage scaling)
 	SellPerStage = 0.2, -- extra gold per stage of Power
 
 	-- SET GEAR (ordinary wearable gear, not a separate loot roll). Every zone (10 stages) has its own 3-piece set. Pieces only drop while you
@@ -87,7 +87,17 @@ return {
 		ReplayChance = 0.1, -- replaying a cleared stage
 		BossChance = 1, -- boss stages always drop
 		-- weights for the rarity roll
-		Weights = { Common = 80, Rare = 17, Epic = 3 },
+		-- Rarity depends on how far you have got (the frontier stage), blended smoothly between these anchors:
+		-- ~stages 1-20 Common/Uncommon, 20-40 Uncommon/Rare (a little Epic), 40-60 Rare/Epic, 60+ Epic/Legendary.
+		-- (Stage numbers roughly match player levels; tune freely.)
+		Order = { "Common", "Uncommon", "Rare", "Epic", "Legendary" },
+		Anchors = {
+			{ Stage = 10, Weights = { Common = 60, Uncommon = 40 } },
+			{ Stage = 30, Weights = { Uncommon = 45, Rare = 50, Epic = 5 } },
+			{ Stage = 50, Weights = { Rare = 30, Epic = 65, Legendary = 5 } },
+			{ Stage = 70, Weights = { Epic = 75, Legendary = 25 } },
+			{ Stage = 100, Weights = { Epic = 50, Legendary = 50 } },
+		},
 		-- each 0.1 of the ItemRarity passive bonus moves this much weight from Common
 		BonusShift = 60,
 	},

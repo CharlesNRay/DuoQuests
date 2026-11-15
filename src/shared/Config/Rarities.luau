@@ -27,6 +27,14 @@ return {
 		Color = { 190, 190, 190 }, -- RGB
 	},
 
+	Uncommon = {
+		Id = "Uncommon",
+		DisplayName = "Uncommon",
+		Order = 1.5,
+		PowerPerLevel = 0.09,
+		Color = { 96, 214, 130 }, -- RGB
+	},
+
 	Rare = {
 		Id = "Rare",
 		DisplayName = "Rare",

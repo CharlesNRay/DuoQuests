@@ -164,12 +164,22 @@ function SkillsScreen.Skills(container, state, call, extra)
 	local equipped = table.clone(if isPartner then (partner.GhostLoadout or {}) else me.Loadout)
 	local levels = if isPartner then (partner.SlotLevels or {}) else me.SlotLevels
 	local ownedSet = if isPartner then (partner.Owned or {}) else me.Owned
+	-- Changes show instantly (the local state is updated and the screen redrawn first); the server call
+	-- follows in the background and its reply refreshes everything again.
 	local function save(ids)
 		if isPartner then
-			call("SetGhostLoadout", ids)
+			partner.GhostLoadout = table.clone(ids)
 		else
-			call("EquipSkills", ids)
+			me.Loadout = table.clone(ids)
 		end
+		redraw()
+		task.spawn(function()
+			if isPartner then
+				call("SetGhostLoadout", ids)
+			else
+				call("EquipSkills", ids)
+			end
+		end)
 	end
 
 	local sel = extra.SkillSel
@@ -179,6 +189,13 @@ function SkillsScreen.Skills(container, state, call, extra)
 	end
 	local isPassive = not isPartner and (sel.PSlot ~= nil or sel.PId ~= nil)
 	local pEquipped = table.clone(me.PassiveIds or {})
+	local function equipPassives()
+		me.PassiveIds = table.clone(pEquipped)
+		redraw()
+		task.spawn(function()
+			call("EquipPassives", pEquipped)
+		end)
+	end
 	local selectedId = if sel.Slot then equipped[sel.Slot] else sel.Id
 	local selectedDef = selectedId and Abilities[selectedId]
 
@@ -246,7 +263,7 @@ function SkillsScreen.Skills(container, state, call, extra)
 				if to and to ~= slot and to <= (me.PassiveSlots or 0) and to <= #pEquipped then
 					pEquipped[slot], pEquipped[to] = pEquipped[to], pEquipped[slot]
 					extra.SkillSel = { PSlot = to }
-					call("EquipPassives", pEquipped)
+					equipPassives()
 				end
 			end else nil, if pdef then ghostOf(pdef) else nil)
 		end
@@ -369,7 +386,7 @@ function SkillsScreen.Skills(container, state, call, extra)
 						to = math.min(to, #pEquipped + 1)
 						pEquipped[to] = id
 						extra.SkillSel = { PSlot = to }
-						call("EquipPassives", pEquipped)
+						equipPassives()
 					end
 				end else nil, ghostOf(pdef))
 			end
@@ -423,7 +440,7 @@ function SkillsScreen.Skills(container, state, call, extra)
 			actionButton(right, ("Equip in passive slot %d"):format(target), 0, C.Up, function()
 				pEquipped[target] = pdef.Id
 				extra.SkillSel = { PSlot = target }
-				call("EquipPassives", pEquipped)
+				equipPassives()
 			end).Position = UDim2.new(0, 8, 1, -64)
 			note(right, swapOut and ("Replaces " .. swapOut.DisplayName .. ". Select a passive slot first to choose which.") or "Goes in the first free slot.", -34, 30)
 		else

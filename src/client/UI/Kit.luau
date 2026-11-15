@@ -21,6 +21,7 @@ Kit.Colors = {
 	Good = Color3.fromRGB(96, 214, 130),
 	Bad = Color3.fromRGB(235, 90, 90),
 	Common = Color3.fromRGB(170, 176, 190),
+	Uncommon = Color3.fromRGB(96, 214, 130),
 	Rare = Color3.fromRGB(90, 160, 255),
 	Epic = Color3.fromRGB(190, 110, 255),
 	Legendary = Color3.fromRGB(255, 176, 48),

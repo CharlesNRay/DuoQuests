@@ -555,10 +555,14 @@ function ApiService.Init()
 
 	api.OnServerInvoke = function(player, action, ...)
 		local now = os.clock()
-		if lastCall[player.UserId] and now - lastCall[player.UserId] < MIN_INTERVAL then
-			return false, "TooFast"
+		-- cheap read-only calls are not throttled, so a refresh right after an action is never refused
+		local readOnly = action == "GetState" or action == "BossState" or action == "GetWorld"
+		if not readOnly then
+			if lastCall[player.UserId] and now - lastCall[player.UserId] < MIN_INTERVAL then
+				return false, "TooFast"
+			end
+			lastCall[player.UserId] = now
 		end
-		lastCall[player.UserId] = now
 
 		local handler = type(action) == "string" and handlers[action] or nil
 		if handler == nil then

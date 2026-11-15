@@ -52,17 +52,24 @@ return function(modulesOverride)
 	check("A high roll means no drop", Gear.RollDrop(3, true, 0, fixed(0.99)) == nil)
 	local drop = Gear.RollDrop(3, true, 0, fixed(0.0, 0.99, 0.0, 0.0))
 	check("A low roll drops a common weapon", drop ~= nil and drop.Rarity == "Common" and drop.Slot == "Weapon")
-	check("A top rarity roll is Epic", Gear.RollDrop(3, true, 0, fixed(0.0, 0.99, 0.999, 0.9)).Rarity == "Epic")
+	check("Early stages never drop Rare or better", Gear.RollDrop(3, true, 0, fixed(0.0, 0.99, 0.999, 0.9)).Rarity == "Uncommon")
+	check("Stage 50 drops Epics at the top of the roll", Gear.RollDrop(50, true, 0, fixed(0.0, 0.99, 0.9, 0.9)).Rarity == "Epic")
+	check("Stage 80 can drop Legendary", Gear.RollDrop(80, true, 0, fixed(0.0, 0.99, 0.999, 0.9)).Rarity == "Legendary")
+	local w25, w50, w80 = Gear.RarityWeights(25), Gear.RarityWeights(50), Gear.RarityWeights(80)
+	check("Stages 1-20 are Common and Uncommon only", Gear.RarityWeights(5).Rare == 0 and Gear.RarityWeights(5).Uncommon > 0 and Gear.RarityWeights(18).Epic < 4)
+	check("Stages 20-40 give Uncommon and Rare with little Epic", w25.Uncommon > 0 and w25.Rare > 20 and w25.Epic > 0 and w25.Epic < 10 and w25.Legendary == 0)
+	check("Stage 50 is Rare/Epic with a hint of Legendary", w50.Epic > w50.Rare and w50.Legendary > 0 and w50.Common == 0)
+	check("Past stage 60 it is Epic and Legendary", w80.Epic + w80.Legendary > 95 and w80.Legendary > 25)
 	check("Bosses always drop", Gear.RollDrop(10, false, 0, fixed(0.0, 0.99, 0.0)) ~= nil)
 	check("Replays drop less often than the frontier", Gear.RollDrop(3, false, 0, fixed(0.15, 0.99, 0.0, 0.0)) == nil and Gear.RollDrop(3, true, 0, fixed(0.15, 0.99, 0.0, 0.0)) ~= nil)
 	local lucky = 0
 	local plainCount = 0
 	for i = 1, 200 do
 		local r = (i % 100) / 100
-		local with = Gear.RollDrop(3, true, 0.3, fixed(0.0, 0.99, r, 0.0))
-		local without = Gear.RollDrop(3, true, 0, fixed(0.0, 0.99, r, 0.0))
-		if with and with.Rarity ~= "Common" then lucky += 1 end
-		if without and without.Rarity ~= "Common" then plainCount += 1 end
+		local with = Gear.RollDrop(15, true, 0.3, fixed(0.0, 0.99, r, 0.0))
+		local without = Gear.RollDrop(15, true, 0, fixed(0.0, 0.99, r, 0.0))
+		if with and with.Rarity ~= "Common" and with.Rarity ~= "Uncommon" then lucky += 1 end
+		if without and without.Rarity ~= "Common" and without.Rarity ~= "Uncommon" then plainCount += 1 end
 	end
 	check("The ItemRarity bonus gives better drops", lucky > plainCount)
 

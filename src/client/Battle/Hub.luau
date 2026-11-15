@@ -29,6 +29,8 @@ local lotFolder
 local chestPrompt
 local walkers = {}
 local waterRings = {}
+local orbiters = {} -- circling lanterns around the Wishing Tree
+local pulsers = {} -- glowing parts that breathe
 local clock = 0
 
 local STONE = Color3.fromRGB(168, 160, 146)
@@ -174,51 +176,100 @@ end
 
 -- The Wishing Tree: a glowing tree on a little island with a spring around it.
 local function wishingTree(position, lookAt, handler)
+	local K = 1.45 -- the tree is big: it is the heart of the plaza's magic
 	local model = Instance.new("Model")
 	model.Name = "Wishing Tree"
 	model.Parent = folder
-	disc(model, position, 11, 0.5, 0.2, STONE_DARK)
-	disc(model, position, 9.4, 0.3, 0.7, Color3.fromRGB(90, 170, 230), Enum.Material.Glass)
-	disc(model, position, 4, 0.9, 0.7, Color3.fromRGB(90, 130, 80), Enum.Material.Grass)
-	local trunk = part(model, { Name = "Trunk", Size = Vector3.new(2.4, 9, 2.4), Position = position + Vector3.new(0, 5.2, 0), Color = Color3.fromRGB(110, 80, 70), Material = Enum.Material.Wood })
-	for index = 1, 3 do
-		local a = math.rad(index * 120)
-		part(model, { Name = "Root", Size = Vector3.new(0.9, 0.9, 4), CFrame = CFrame.new(position + Vector3.new(math.sin(a) * 2.2, 1.2, math.cos(a) * 2.2)) * CFrame.Angles(math.rad(-20), a, 0), Color = Color3.fromRGB(100, 74, 64), Material = Enum.Material.Wood })
-	end
 	local glow = Color3.fromRGB(70, 190, 230)
 	local pink = Color3.fromRGB(230, 110, 190)
+	local gold = Color3.fromRGB(255, 226, 140)
+	-- a raised stone planter set into the paving, with a starlit pool around the roots
+	disc(model, position, 12 * K, 1.1, 0.2, STONE_DARK, Enum.Material.Slate)
+	disc(model, position, 11 * K, 0.5, 1.2, Color3.fromRGB(80, 160, 215), Enum.Material.Glass)
+	disc(model, position, 4.6 * K, 1, 1.3, Color3.fromRGB(90, 130, 80), Enum.Material.Grass)
+	-- glowing rune rings on the paving around it (they breathe)
+	for index, r in ipairs({ 14.5 * K, 16.5 * K }) do
+		local ring = disc(model, position, r, 0.12, 0.42 + index * 0.02, if index == 1 then glow else pink, Enum.Material.Neon)
+		ring.Transparency = 0.55
+		table.insert(pulsers, { Part = ring, Phase = index * 1.7 })
+	end
+	for index = 1, 8 do
+		local a = math.rad(index * 45)
+		local stone = part(model, { Name = "RuneStone", Size = Vector3.new(1.6, 4.5, 1.6), CFrame = CFrame.new(position + Vector3.new(math.sin(a) * 15.5 * K, 2.4, math.cos(a) * 15.5 * K)) * CFrame.Angles(0, a, math.rad(4)), Color = Color3.fromRGB(120, 120, 135), Material = Enum.Material.Slate })
+		local rune = part(model, { Name = "Rune", Size = Vector3.new(0.9, 1.6, 0.1), CFrame = stone.CFrame * CFrame.new(0, 0.6, -0.85), Color = glow, Material = Enum.Material.Neon, CanCollide = false })
+		table.insert(pulsers, { Part = rune, Phase = index })
+	end
+	local trunk = part(model, { Name = "Trunk", Size = Vector3.new(2.8 * K, 9.5 * K, 2.8 * K), Position = position + Vector3.new(0, 5.5 * K + 1, 0), Color = Color3.fromRGB(120, 86, 76), Material = Enum.Material.Wood })
+	for index = 1, 5 do
+		local a = math.rad(index * 72)
+		part(model, { Name = "Root", Size = Vector3.new(1 * K, 1 * K, 5 * K), CFrame = CFrame.new(position + Vector3.new(math.sin(a) * 2.8 * K, 1.8, math.cos(a) * 2.8 * K)) * CFrame.Angles(math.rad(-22), a, 0), Color = Color3.fromRGB(105, 78, 68), Material = Enum.Material.Wood })
+	end
+	for index = 1, 4 do -- crooked boughs
+		local a = math.rad(index * 90 + 20)
+		part(model, { Name = "Bough", Size = Vector3.new(1 * K, 1 * K, 7 * K), CFrame = CFrame.new(position + Vector3.new(math.sin(a) * 2.6 * K, 12 * K, math.cos(a) * 2.6 * K)) * CFrame.Angles(math.rad(-38), a, 0), Color = Color3.fromRGB(115, 82, 72), Material = Enum.Material.Wood })
+	end
 	local canopy = {
-		{ Vector3.new(0, 13, 0), 11, glow }, { Vector3.new(4, 11, 2), 7, pink }, { Vector3.new(-4, 11.5, -1), 7.5, glow },
-		{ Vector3.new(1, 16.5, -2), 6, pink }, { Vector3.new(-2, 10, 4), 5.5, pink },
+		{ Vector3.new(0, 15, 0), 12, glow }, { Vector3.new(5, 12.5, 2), 8, pink }, { Vector3.new(-5, 13, -1), 8.5, glow },
+		{ Vector3.new(1, 19, -2), 7, pink }, { Vector3.new(-2, 11.5, 5), 6.5, pink }, { Vector3.new(3, 17, 4), 6, glow },
+		{ Vector3.new(-4, 17.5, -4), 6, pink }, { Vector3.new(6, 15, -4), 5, gold },
 	}
 	local first
 	for _, c in ipairs(canopy) do
-		local ball = part(model, { Name = "Canopy", Shape = Enum.PartType.Ball, Size = Vector3.new(c[2], c[2] * 0.85, c[2]), Position = position + c[1], Color = c[3], Material = Enum.Material.SmoothPlastic, Transparency = 0.12, CanCollide = false })
+		local size = c[2] * K
+		local ball = part(model, { Name = "Canopy", Shape = Enum.PartType.Ball, Size = Vector3.new(size, size * 0.85, size), Position = position + c[1] * K + Vector3.new(0, 0.5, 0), Color = c[3], Material = Enum.Material.SmoothPlastic, Transparency = 0.1, CanCollide = false })
 		first = first or ball
+		table.insert(pulsers, { Part = ball, Phase = size, Base = 0.1, Amount = 0.08 })
 	end
 	local light = Instance.new("PointLight")
 	light.Color = glow
-	light.Range = 30
-	light.Brightness = 0.5
+	light.Range = 46
+	light.Brightness = 0.7
 	light.Parent = first
-	local sparkles = Instance.new("ParticleEmitter")
-	sparkles.Rate = 14
-	sparkles.Lifetime = NumberRange.new(3, 5)
-	sparkles.Speed = NumberRange.new(1, 3)
-	sparkles.SpreadAngle = Vector2.new(180, 180)
-	sparkles.Size = NumberSequence.new({ NumberSequenceKeypoint.new(0, 0.5), NumberSequenceKeypoint.new(1, 0) })
-	sparkles.Color = ColorSequence.new(glow, pink)
-	sparkles.LightEmission = 1
-	sparkles.Acceleration = Vector3.new(0, 1.5, 0)
-	sparkles.Parent = first
-	-- little floating wish lanterns
-	for index = 1, 6 do
-		local a = math.rad(index * 60)
-		local lantern = part(model, { Name = "Lantern", Shape = Enum.PartType.Ball, Size = Vector3.new(1, 1.2, 1), Position = position + Vector3.new(math.sin(a) * 7, 6 + (index % 3), math.cos(a) * 7), Color = Color3.fromRGB(255, 220, 130), Material = Enum.Material.Neon, CanCollide = false })
-		lantern.Name = "Lantern"
+	local function emitter(parent, rate, c1, c2, size, speed, accel)
+		local e = Instance.new("ParticleEmitter")
+		e.Rate = rate
+		e.Lifetime = NumberRange.new(3, 6)
+		e.Speed = NumberRange.new(speed * 0.5, speed)
+		e.SpreadAngle = Vector2.new(180, 180)
+		e.Size = NumberSequence.new({ NumberSequenceKeypoint.new(0, size), NumberSequenceKeypoint.new(1, 0) })
+		e.Color = ColorSequence.new(c1, c2)
+		e.LightEmission = 1
+		e.Acceleration = accel
+		e.Parent = parent
+		return e
 	end
-	nameTag(trunk, "WISHING TREE", "Wish for pets & skills", Color3.fromRGB(160, 235, 255), 11)
-	prompt(trunk, "Make a wish", "Wishing Tree", handler)
+	emitter(first, 30, glow, pink, 0.7, 4, Vector3.new(0, 1.5, 0))
+	-- falling blossoms drifting down from the canopy
+	local blossoms = emitter(first, 12, Color3.fromRGB(255, 190, 230), Color3.fromRGB(255, 255, 255), 0.6, 1.5, Vector3.new(0, -2.2, 0))
+	blossoms.Shape = Enum.ParticleEmitterShape.Sphere
+	blossoms.ShapeInOut = Enum.ParticleEmitterShapeInOut.Outward
+	blossoms.Lifetime = NumberRange.new(5, 8)
+	-- fireflies and motes rising from the pool
+	local pool = part(model, { Name = "PoolGlow", Size = Vector3.new(2, 0.2, 2), Position = position + Vector3.new(0, 1.6, 0), Transparency = 1, CanCollide = false })
+	local motes = emitter(pool, 22, gold, glow, 0.45, 2.5, Vector3.new(0, 3, 0))
+	motes.Shape = Enum.ParticleEmitterShape.Disc
+	motes.Lifetime = NumberRange.new(4, 7)
+	-- a beam of light rising from the crown
+	local beam = part(model, { Name = "Beam", Size = Vector3.new(1.2, 70, 1.2), Position = position + Vector3.new(0, 24 * K + 30, 0), Color = glow, Material = Enum.Material.Neon, Transparency = 0.85, CanCollide = false })
+	table.insert(pulsers, { Part = beam, Phase = 0.5, Base = 0.85, Amount = 0.1 })
+	-- wish lanterns and star-orbs circling the tree
+	for index = 1, 10 do
+		local lantern = part(model, { Name = "Lantern", Shape = Enum.PartType.Ball, Size = Vector3.new(1.3, 1.6, 1.3), Position = position, Color = if index % 3 == 0 then pink else gold, Material = Enum.Material.Neon, CanCollide = false })
+		local lamp = Instance.new("PointLight")
+		lamp.Range = 12
+		lamp.Brightness = 0.6
+		lamp.Color = lantern.Color
+		lamp.Parent = lantern
+		table.insert(orbiters, { Part = lantern, Centre = position, Radius = (9 + (index % 4) * 2.2) * K, Height = (6 + (index % 5) * 2.6) * K, Speed = (0.25 + (index % 3) * 0.08) * (if index % 2 == 0 then 1 else -1), Phase = index * 0.63 })
+	end
+	-- crystals hanging from the boughs
+	for index = 1, 7 do
+		local a = math.rad(index * 51)
+		local crystal = part(model, { Name = "Crystal", Size = Vector3.new(0.7, 2, 0.7), CFrame = CFrame.new(position + Vector3.new(math.sin(a) * 7 * K, 10.5 * K, math.cos(a) * 7 * K)) * CFrame.Angles(0, a, 0), Color = if index % 2 == 0 then glow else pink, Material = Enum.Material.Neon, Transparency = 0.2, CanCollide = false })
+		table.insert(pulsers, { Part = crystal, Phase = index * 0.9, Base = 0.2, Amount = 0.25 })
+	end
+	nameTag(trunk, "WISHING TREE", "Wish for pets & skills", Color3.fromRGB(160, 235, 255), 12 * K)
+	prompt(trunk, "Make a wish", "Wishing Tree", handler).MaxActivationDistance = 26
 	return model
 end
 
@@ -296,6 +347,8 @@ function Hub.Build(handlers)
 	end
 	table.clear(walkers)
 	table.clear(waterRings)
+	table.clear(orbiters)
+	table.clear(pulsers)
 	folder = Instance.new("Folder")
 	folder.Name = "DuoQuestPlaza"
 	folder.Parent = workspace
@@ -416,6 +469,17 @@ function Hub.Update(dt)
 	clock += dt
 	for _, ring in ipairs(waterRings) do
 		ring.Size = Vector3.new(2.4, 2.4, 2.4) * (1 + math.sin(clock * 3) * 0.08)
+	end
+	for _, o in ipairs(orbiters) do
+		if o.Part.Parent then
+			local a = o.Phase + clock * o.Speed
+			o.Part.Position = o.Centre + Vector3.new(math.sin(a) * o.Radius, o.Height + math.sin(clock * 1.3 + o.Phase * 3) * 0.9, math.cos(a) * o.Radius)
+		end
+	end
+	for _, p in ipairs(pulsers) do
+		if p.Part.Parent then
+			p.Part.Transparency = math.clamp((p.Base or 0.55) + math.sin(clock * 1.8 + p.Phase) * (p.Amount or 0.2), 0, 0.95)
+		end
 	end
 	local reach = World.PLAZA.Radius - 8
 	for _, w in ipairs(walkers) do

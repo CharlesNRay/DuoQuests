@@ -16,6 +16,7 @@
 	  Gear.Name(item)                       -> display name
 	  Gear.Mods(equipped)                   -> list of { Stat, Mode = "Add", Value } for StatCalc
 	  Gear.RollDrop(stage, isFrontier, itemRarityBonus, rand)  -> { Slot, Rarity } or nil
+	  Gear.RarityWeights(stage)             -> { Common=, Uncommon=, Rare=, Epic=, Legendary= } drop weights at that stage
 	  Gear.Grant(profile, stage, drop)      -> item, soldFor  (bag full: sold for gold)
 	  Gear.Equip(profile, itemId, wornSlot?)  reasons: "NotFound", "BadSlot"; a Ring goes to a free ring slot, else replaces the weaker
 	  Gear.Replaced(equipped, type)         -> the worn item an item of that type would replace (nil if a slot is free)
@@ -222,6 +223,30 @@ function Gear.SellValue(item)
 	return math.max(1, math.floor((Config.SellValue[item.Rarity] or 1) + Config.SellPerStage * item.Power))
 end
 
+-- Rarity weights for drops at this stage: linear blend between the two nearest anchors.
+function Gear.RarityWeights(stage)
+	local anchors, order = Config.Drop.Anchors, Config.Drop.Order
+	local lowA, highA = anchors[1], anchors[#anchors]
+	local from, to, t = lowA, lowA, 0
+	if stage >= highA.Stage then
+		from, to = highA, highA
+	elseif stage > lowA.Stage then
+		for index = 1, #anchors - 1 do
+			if stage >= anchors[index].Stage and stage <= anchors[index + 1].Stage then
+				from, to = anchors[index], anchors[index + 1]
+				t = (stage - from.Stage) / (to.Stage - from.Stage)
+				break
+			end
+		end
+	end
+	local weights = {}
+	for _, id in ipairs(order) do
+		local a, b = from.Weights[id] or 0, to.Weights[id] or 0
+		weights[id] = a + (b - a) * t
+	end
+	return weights
+end
+
 function Gear.RollDrop(stage, isFrontier, itemRarityBonus, rand)
 	local drop = Config.Drop
 	local isBoss = stage % StageConfig.BossEvery == 0
@@ -237,19 +262,35 @@ function Gear.RollDrop(stage, isFrontier, itemRarityBonus, rand)
 	if rand() < (if isBoss then Config.SetBossChance else Config.SetDropChance) then
 		return { Slot = slotFor(), Rarity = "Set", SetId = Zones.IndexForStage(stage) }
 	end
-	-- rarity roll: the ItemRarity bonus shifts weight from Common to Rare/Epic
-	local weights = table.clone(drop.Weights)
-	local shift = math.min(weights.Common - 1, (itemRarityBonus or 0) * 10 * drop.BonusShift / 6)
-	weights.Common -= shift
-	weights.Rare += shift * 0.75
-	weights.Epic += shift * 0.25
-	local total = weights.Common + weights.Rare + weights.Epic
+	-- rarity roll: weights come from the stage (blended between the anchors in Config.Drop); the
+	-- ItemRarity bonus shifts weight from the lowest tier you can find towards the tiers above it
+	local weights = Gear.RarityWeights(stage)
+	local order = drop.Order
+	local lowest
+	for index, id in ipairs(order) do
+		if weights[id] > 0 then
+			lowest = index
+			break
+		end
+	end
+	local shift = math.min(weights[order[lowest]] * 0.9, (itemRarityBonus or 0) * 10 * drop.BonusShift / 6)
+	weights[order[lowest]] -= shift
+	local up1, up2 = order[math.min(#order, lowest + 1)], order[math.min(#order, lowest + 2)]
+	weights[up1] += shift * 0.75
+	weights[up2] += shift * 0.25
+	local total = 0
+	for _, id in ipairs(order) do
+		total += weights[id]
+	end
 	local roll = rand() * total
-	local rarity = "Common"
-	if roll >= weights.Common + weights.Rare then
-		rarity = "Epic"
-	elseif roll >= weights.Common then
-		rarity = "Rare"
+	local rarity = order[#order]
+	local running = 0
+	for _, id in ipairs(order) do
+		running += weights[id]
+		if roll < running then
+			rarity = id
+			break
+		end
 	end
 	return { Slot = slotFor(), Rarity = rarity }
 end
@@ -437,7 +478,7 @@ end
 -- Sell many bagged items at once. "Common": every Common item. "Worse": every item that
 -- is no better than what is worn in its slot. Set pieces and upgraded items are never sold in bulk.
 function Gear.SellBulk(profile, mode)
-	local rarities = { Common = true, Rare = true, Epic = true, Legendary = true }
+	local rarities = { Common = true, Uncommon = true, Rare = true, Epic = true, Legendary = true }
 	if mode ~= "Worse" and not rarities[mode] then
 		return false, "BadMode"
 	end

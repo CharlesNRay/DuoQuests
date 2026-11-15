@@ -180,7 +180,16 @@ function call(action, ...)
 		warn("[DuoQuest] " .. action .. " failed: " .. tostring(data))
 		Kit.label({ Size = UDim2.new(1, 0, 0, 20), Position = UDim2.new(0, 0, 1, -20), Text = "Could not do that: " .. tostring(data), TextColor3 = Kit.Colors.Bad, Parent = body })
 	else
-		local fresh, newState = api:InvokeServer("GetState")
+		-- the server rate-limits back-to-back calls (0.1s), so a refresh sent right after an action can be
+		-- refused: retry shortly instead of leaving the screen stale
+		local fresh, newState
+		for attempt = 1, 4 do
+			fresh, newState = api:InvokeServer("GetState")
+			if fresh then
+				break
+			end
+			task.wait(0.12 * attempt)
+		end
 		if fresh then state = newState end
 		redraw()
 	end
@@ -261,6 +270,11 @@ extra.ShowBoard = function(categoryId)
 end
 hud.OnMap = function() open("Map", "World Map") end
 hud.OnAdvance = function() call("Advance") end
+hud.OnPartner = function()
+	extra.HeroTab = "Partner"
+	open("Hero", "Hero", true)
+end
+hud.OnParty = function() open("Party", "Party", true) end
 hud:AddButton("Hero", "dock", "🧙", "Hero", function() open("Hero", "Hero") end)
 hud:AddButton("Skills", "dock", "⚔️", "Skills", function() open("Skills", "Skills") end)
 hud:AddButton("Pets", "dock", "🐱", "Pets", function() open("Pets", "Pets") end)
