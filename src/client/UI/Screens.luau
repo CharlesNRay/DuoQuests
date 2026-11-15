@@ -247,7 +247,7 @@ function Screens.Bag(container, state, call, extra)
 		Icons.Item(r, item, { Size = UDim2.fromOffset(40, 40), Position = UDim2.fromOffset(8, 6) })
 		Kit.Hover(r, function() return Tips.Item(item, gear) end)
 		local arrow = if cmp.Verdict == "Up" then "  ▲" elseif cmp.Verdict == "Down" then "  ▼" else ""
-		Kit.label({ Size = UDim2.new(1, -230, 1, 0), Position = UDim2.fromOffset(58, 0), Text = ("%s%s\n%s +%s %s  (stage %d)"):format(item.Name, arrow, item.Slot, Tips.Num(item.Value), item.Stat, item.Power), TextColor3 = Kit.rarityColor(if item.SetId then "Set" else item.Rarity), Parent = r })
+		Kit.label({ Size = UDim2.new(1, -230, 1, 0), Position = UDim2.fromOffset(58, 0), Text = ("%s%s\n%s +%s %s  (stage %d)"):format(item.Name, arrow, item.Slot, Tips.Num(item.Value), item.Stat, item.Power), TextColor3 = C.Text, Parent = r })
 		Kit.button({ Size = UDim2.fromOffset(80, 40), Position = UDim2.new(1, -176, 0.5, -20), Text = "Equip", Parent = r }, function()
 			call("EquipGear", item.Id)
 		end)

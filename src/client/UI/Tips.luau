@@ -22,9 +22,6 @@ function Tips.Skill(def, level)
 	table.insert(lines, ("<b>%s</b>%s"):format(Kit.tint(def.DisplayName, Kit.rarityColor(def.Rarity)), level and ("   Lv " .. level) or ""))
 	local kind = Icons.SkillKind(def)
 	local meta = KIND_NAMES[kind] .. "  -  " .. (def.Rarity or "Common")
-	if def.Cooldown then
-		meta ..= ("  -  cooldown %.1fs"):format(AbilityStats.Cooldown(def, level or 1))
-	end
 	table.insert(lines, dim(meta))
 	if def.Description and def.Description ~= "" then
 		table.insert(lines, def.Description)

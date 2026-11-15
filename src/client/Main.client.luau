@@ -47,7 +47,7 @@ local function standInFront()
 		return
 	end
 	local origin = arenas:OriginOf(mine)
-	local spot = origin + Vector3.new(0, 4, 32)
+	local spot = origin + Vector3.new(0, 4, 40)
 	character:PivotTo(CFrame.lookAt(spot, Vector3.new(origin.X, spot.Y, origin.Z)))
 end
 
@@ -55,12 +55,18 @@ end
 -- camera at ours. The first time we know our slot we place the character.
 local placed = false
 local lastWorld
+local homeSlot = nil
+local homeHandlers = {}
 local function applyWorld(snapshot)
 	lastWorld = snapshot
 	arenas:Apply(snapshot)
 	local mine = arenas:MySlot()
 	if mine then
 		BattleCamera.SetTarget(arenas:OriginOf(mine))
+		if homeSlot ~= mine then
+			homeSlot = mine
+			Hub.Build(homeHandlers, arenas:OriginOf(mine)) -- map, rankings and daily chest in front of your arena
+		end
 		if not placed then
 			placed = true
 			standInFront()
@@ -194,7 +200,7 @@ extra.ShowBoard = function(categoryId)
 end
 hud:AddButton("Skills", "left", "⚔️", "Skills", function() open("Skills", "Skills") end)
 hud:AddButton("Passives", "left", "📜", "Passives", function() open("Passives", "Passives") end)
-hud:AddButton("Pets", "left", "🐾", "Pets", function() open("Pets", "Pets") end)
+hud:AddButton("Pets", "left", "🐱", "Pets", function() open("Pets", "Pets") end)
 hud:AddButton("Party", "left", "👥", "Party", function() open("Party", "Party") end)
 
 hud:AddButton("Map", "right", "🗺️", "Map", function() open("Map", "World Map") end)
@@ -203,14 +209,10 @@ hud:AddButton("Bag", "right", "🎒", "Bag", function() open("Bag", "Bag") end)
 hud:AddButton("Daily", "right", "🎁", "Daily", function() open("Daily", "Daily Login") end)
 hud:AddButton("Ranks", "right", "🏆", "Ranks", function() showBoard(extra.BoardCategory or "Stage") end)
 
+homeHandlers.Map = function() open("Map", "World Map") end
+homeHandlers.Ranks = function() showBoard(extra.BoardCategory or "Stage") end
+homeHandlers.Daily = function() open("Daily", "Daily Login") end
 hud:AddButton("Log", "corner", "📋", "Fight log", function() open("Log", "Last Fight") end)
-
--- the same menus as props in the hub
-Hub.Build({
-	Map = function() open("Map", "World Map") end,
-	Ranks = function() showBoard(extra.BoardCategory or "Stage") end,
-	Daily = function() open("Daily", "Daily Login") end,
-})
 
 push.OnClientEvent:Connect(function(kind, info)
 	if kind == "World" then

@@ -89,7 +89,7 @@ local function makePad(origin)
 	pad.CanCollide = false
 	pad.Shape = Enum.PartType.Cylinder
 	pad.Size = Vector3.new(0.4, 5, 5)
-	pad.CFrame = CFrame.new(origin + Vector3.new(0, 0.2, 26)) * CFrame.Angles(0, 0, math.rad(90))
+	pad.CFrame = CFrame.new(origin + Vector3.new(0, 0.2, 27)) * CFrame.Angles(0, 0, math.rad(90))
 	pad.Color = Color3.fromRGB(255, 196, 70)
 	pad.Material = Enum.Material.Neon
 	pad.Transparency = 0.25
@@ -99,7 +99,7 @@ local function makePad(origin)
 	prompt.ActionText = "Watch battle"
 	prompt.ObjectText = ""
 	prompt.HoldDuration = 0
-	prompt.MaxActivationDistance = 14
+	prompt.MaxActivationDistance = 8
 	prompt.RequiresLineOfSight = false
 	prompt.KeyboardKeyCode = Enum.KeyCode.E
 	prompt.Parent = pad

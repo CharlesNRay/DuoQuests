@@ -44,7 +44,7 @@ local function pill(parent, props)
 end
 
 function Hud.new(root)
-	local self = { Buttons = {}, Charge = { Points = nil, StartedAt = 0, Needed = UltCfg.ChargeNeeded or 100, Rate = UltCfg.ChargePerSecond or 1.5 } }
+	local self = { Buttons = {}, Dots = {}, Charge = { Points = nil, StartedAt = 0, Needed = UltCfg.ChargeNeeded or 100, Rate = UltCfg.ChargePerSecond or 1.5 } }
 	local gui = Kit.frame({ Name = "Hud", Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1, NoCorner = true, Parent = root })
 	self.Gui = gui
 
@@ -118,15 +118,15 @@ function Hud.new(root)
 		Kit.label({ Size = UDim2.new(1, 0, 0, 14), Position = UDim2.fromOffset(0, 29), Text = label, TextSize = 10, TextColor3 = C.Dim, TextXAlignment = Enum.TextXAlignment.Center, TextWrapped = false, TextStrokeTransparency = 1, Parent = button })
 		local dot = Kit.frame({ Size = UDim2.fromOffset(12, 12), Position = UDim2.new(1, -9, 0, -3), BackgroundColor3 = C.Bad, Visible = false, ZIndex = 3, Parent = button })
 		Kit.corner(6).Parent = dot
-		button.Dot = dot
+		self.Dots[key] = dot
 		self.Buttons[key] = button
 		return button
 	end
 
 	function self:SetBadge(key, on)
-		local button = self.Buttons[key]
-		if button then
-			button.Dot.Visible = on == true
+		local dot = self.Dots[key]
+		if dot then
+			dot.Visible = on == true
 		end
 	end
 

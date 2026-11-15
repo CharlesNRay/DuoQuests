@@ -20,8 +20,8 @@ Kit.Colors = {
 	Rare = Color3.fromRGB(90, 160, 255),
 	Epic = Color3.fromRGB(190, 110, 255),
 	Set = Color3.fromRGB(255, 150, 60),
-	Up = Color3.fromRGB(70, 150, 90),
-	Down = Color3.fromRGB(170, 66, 66),
+	Up = Color3.fromRGB(36, 84, 52),
+	Down = Color3.fromRGB(98, 40, 44),
 	Warrior = Color3.fromRGB(220, 110, 80),
 	Cleric = Color3.fromRGB(240, 220, 130),
 }

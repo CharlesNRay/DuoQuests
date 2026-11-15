@@ -8,6 +8,7 @@
 	  Icons.Ultimate(parent, def, props)    -> same look for a party ultimate
 	  Icons.Item(parent, item, props)       -> tile for a gear piece (slot glyph, rarity/set border)
 ]]
+local Statuses = require(game:GetService("ReplicatedStorage"):WaitForChild("Shared").Config.Statuses)
 local Kit = require(script.Parent.Kit)
 
 local Icons = {}
@@ -22,8 +23,8 @@ local KIND_COLORS = {
 	Buff = Color3.fromRGB(160, 130, 48),
 	Ultimate = Color3.fromRGB(120, 70, 190),
 }
-local KIND_GLYPHS = { Damage = "⚔", AoE = "✹", Heal = "✚", Shield = "⛨", Revive = "✦", Taunt = "!", Buff = "▲", Ultimate = "★" }
-local SLOT_GLYPHS = { Weapon = "⚔", Armor = "⛨", Trinket = "✦" }
+local KIND_GLYPHS = { Damage = "⚔", AoE = "💥", Heal = "💚", Shield = "🛡", Revive = "✨", Taunt = "📣", Buff = "▲", Ultimate = "★" }
+local SLOT_GLYPHS = { Weapon = "⚔", Armor = "🛡", Trinket = "💎" }
 
 function Icons.SkillKind(def)
 	local first = def.Effects and def.Effects[1]
@@ -40,7 +41,16 @@ function Icons.SkillKind(def)
 	elseif kind == "Revive" then
 		return "Revive"
 	elseif kind == "ApplyStatus" then
-		return if first.Status == "Taunt" then "Taunt" else "Buff"
+		local status = Statuses[first.Status]
+		if status and status.Flags and status.Flags.Taunting then
+			return "Taunt"
+		end
+		for _, mod in ipairs(status and status.Mods or {}) do
+			if mod.Stat == "Defense" or mod.Stat == "DamageTaken" or mod.Stat == "MaxHealth" then
+				return "Shield"
+			end
+		end
+		return "Buff"
 	end
 	return "Buff"
 end
