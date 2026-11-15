@@ -20,7 +20,10 @@ return {
 	-- with the level and with the stage the item dropped at. Gold is the only cost.
 	Upgrade = { MaxLevel = 10, ValuePerLevel = 0.06, BaseCost = 20, CostGrowth = 1.42, PowerCost = 1.2 },
 
-	InventoryCap = 30, -- a full bag sells new drops automatically
+	InventoryCap = 30, -- starting bag size; a full bag sells new drops automatically
+	BagStep = 5, -- slots added by each bag upgrade (bought at the Merchant)
+	BagMaxUpgrades = 14, -- 30 -> 100 slots
+	BagCost = { Base = 150, Growth = 1.32 }, -- gold for upgrade n (0-based): Base * Growth^n
 
 	-- Item TYPES. Each gives one stat: (Base + PerStage * stage) * rarity * upgrades.
 	Slots = {

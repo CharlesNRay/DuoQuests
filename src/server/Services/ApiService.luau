@@ -418,6 +418,17 @@ function handlers.SellBulk(player, profile, mode)
 	return ok, if ok then { Count = count, Gold = gold } else count
 end
 
+function handlers.UpgradeBag(player, profile)
+	if not nearShop(player, "Merchant") then
+		return false, "TooFar"
+	end
+	local ok, data = Gear.UpgradeBag(profile)
+	if ok then
+		afterBuildChange(player)
+	end
+	return ok, data
+end
+
 function handlers.UpgradeGear(player, profile, itemId)
 	if type(itemId) ~= "string" then
 		return false, "BadArgs"

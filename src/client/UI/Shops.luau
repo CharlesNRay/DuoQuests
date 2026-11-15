@@ -50,11 +50,28 @@ function Shops.Merchant(container, state, call, extra)
 	local gear = state.Player.Gear
 	local scroll = list(container, if tab == "Sell" then 78 else 44)
 	Kit.label({ Size = UDim2.new(0.3, 0, 0, 40), Text = ("Gold: %d\nBag %d/%d"):format(gold(state), #gear.Inventory, gear.Cap), TextColor3 = C.Accent, TextSize = 13, Parent = container })
-	for index, name in ipairs({ "Sell", "Supplies" }) do
-		Kit.button({ Size = UDim2.fromOffset(78, 38), Position = UDim2.new(0.3, (index - 1) * 82, 0, 0), Text = name, BackgroundColor3 = if tab == name then C.Accent else C.Panel, TextColor3 = if tab == name then C.Bg else C.Text, Parent = container }, function()
+	for index, name in ipairs({ "Sell", "Supplies", "Bag" }) do
+		Kit.button({ Size = UDim2.fromOffset(62, 38), Position = UDim2.new(0.3, (index - 1) * 66, 0, 0), Text = name, BackgroundColor3 = if tab == name then C.Accent else C.Panel, TextColor3 = if tab == name then C.Bg else C.Text, Parent = container }, function()
 			extra.MerchantTab = name
 			Shops.Merchant(container, state, call, extra)
 		end)
+	end
+
+	if tab == "Bag" then
+		local cost = gear.BagCost
+		Kit.label({ Size = UDim2.new(1, 0, 0, 44), Text = ("Your bag holds %d pieces of gear (%d in use).\nEach upgrade adds %d slots."):format(gear.Cap, #gear.Inventory, gear.BagStep or 5), TextColor3 = C.Text, TextSize = 14, TextWrapped = true, Parent = scroll })
+		if cost then
+			local can = gold(state) >= cost
+			local b = Kit.button({ Size = UDim2.new(1, -8, 0, 46), Text = ("Upgrade bag  (+%d slots)  -  %d gold"):format(gear.BagStep or 5, cost), TextSize = 15, BackgroundColor3 = if can then C.Up else C.Panel, TextColor3 = if can then C.Text else C.Dim, Parent = scroll }, function()
+				if can then
+					call("UpgradeBag")
+				end
+			end)
+			b.Active = can
+		else
+			Kit.label({ Size = UDim2.new(1, 0, 0, 30), Text = "Your bag is as big as it gets.", TextColor3 = C.Good, TextSize = 14, Parent = scroll })
+		end
+		return
 	end
 
 	if tab == "Supplies" then
@@ -91,7 +108,7 @@ function Shops.Merchant(container, state, call, extra)
 		end
 	end
 	local can = count > 0
-	local sellButton = Kit.button({ Size = UDim2.new(0.38, -4, 0, 38), Position = UDim2.new(0.62, 0, 0, 0), Text = if can then ("Sell selected  (%d items, +%dg)"):format(count, goldTotal) else "Sell selected  (nothing ticked)", TextSize = 13, BackgroundColor3 = if can then C.Accent else C.Panel, TextColor3 = if can then C.Bg else C.Dim, Parent = container }, function()
+	local sellButton = Kit.button({ Size = UDim2.new(0.32, -4, 0, 38), Position = UDim2.new(0.68, 0, 0, 0), Text = if can then ("Sell (%d items)\n+%dg"):format(count, goldTotal) else "Sell\n(none ticked)", TextSize = 12, BackgroundColor3 = if can then C.Accent else C.Panel, TextColor3 = if can then C.Bg else C.Dim, Parent = container }, function()
 		if can then
 			call("SellBulk", picked)
 		end

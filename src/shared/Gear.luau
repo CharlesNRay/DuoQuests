@@ -16,6 +16,7 @@
 	  Gear.Name(item)                       -> display name
 	  Gear.Mods(equipped)                   -> list of { Stat, Mode = "Add", Value } for StatCalc
 	  Gear.RollDrop(stage, isFrontier, itemRarityBonus, rand)  -> { Slot, Rarity } or nil
+	  Gear.Cap(profile) / Gear.BagUpgradeCost(profile) / Gear.UpgradeBag(profile)   bag size and its Merchant upgrade
 	  Gear.RarityWeights(stage)             -> { Common=, Uncommon=, Rare=, Epic=, Legendary= } drop weights at that stage
 	  Gear.Grant(profile, stage, drop)      -> item, soldFor  (bag full: sold for gold)
 	  Gear.Equip(profile, itemId, wornSlot?)  reasons: "NotFound", "BadSlot"; a Ring goes to a free ring slot, else replaces the weaker
@@ -47,6 +48,34 @@ local function bag(profile)
 	equipment.Equipped = equipment.Equipped or {}
 	equipment.Inventory = equipment.Inventory or {}
 	return equipment
+end
+
+-- Bag size: the starting cap plus Merchant upgrades.
+function Gear.Cap(profile)
+	return Config.InventoryCap + (bag(profile).BagUpgrades or 0) * Config.BagStep
+end
+
+function Gear.BagUpgradeCost(profile)
+	local done = bag(profile).BagUpgrades or 0
+	if done >= Config.BagMaxUpgrades then
+		return nil
+	end
+	return math.floor(Config.BagCost.Base * Config.BagCost.Growth ^ done)
+end
+
+function Gear.UpgradeBag(profile)
+	local cost = Gear.BagUpgradeCost(profile)
+	if not cost then
+		return false, "MaxBag"
+	end
+	local currencies = profile.Season.Currencies
+	if currencies.Gold < cost then
+		return false, "NotEnough"
+	end
+	currencies.Gold -= cost
+	local equipment = bag(profile)
+	equipment.BagUpgrades = (equipment.BagUpgrades or 0) + 1
+	return true, Gear.Cap(profile)
 end
 
 Gear.WornSlots = Config.SlotOrder
@@ -300,7 +329,7 @@ function Gear.Grant(profile, stage, drop)
 	local equipment = bag(profile)
 	equipment.NextId = (equipment.NextId or 0) + 1
 	local item = { Id = "g" .. equipment.NextId, Slot = drop.Slot, Rarity = drop.Rarity, Power = stage, SetId = drop.SetId }
-	if #equipment.Inventory >= Config.InventoryCap then
+	if #equipment.Inventory >= Gear.Cap(profile) then
 		local gold = Gear.SellValue(item)
 		profile.Season.Currencies.Gold += gold
 		return item, gold
@@ -369,7 +398,7 @@ function Gear.Unequip(profile, slotName)
 	if not item then
 		return false, "Empty"
 	end
-	if #equipment.Inventory >= Config.InventoryCap then
+	if #equipment.Inventory >= Gear.Cap(profile) then
 		return false, "BagFull"
 	end
 	equipment.Equipped[slotName] = nil
@@ -527,7 +556,7 @@ end
 
 function Gear.List(profile)
 	local equipment = bag(profile)
-	local result = { Equipped = {}, Inventory = {}, Cap = Config.InventoryCap, Sets = Gear.Sets(profile) }
+	local result = { Equipped = {}, Inventory = {}, Cap = Gear.Cap(profile), BagCost = Gear.BagUpgradeCost(profile), BagStep = Config.BagStep, Sets = Gear.Sets(profile) }
 	for slotName, item in pairs(equipment.Equipped) do
 		result.Equipped[slotName] = row(item)
 	end
