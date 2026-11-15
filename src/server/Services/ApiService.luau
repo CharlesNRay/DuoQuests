@@ -19,6 +19,7 @@
 	  SetUltimate(ultimateId)           the party's ultimate (either member)
 	  GetLeaderboard(categoryId)        top rows + your own score, "Stage" or "Level"
 	  Inspect(userId)                   public card of a party member on this server
+	  ChooseSubclass(subclassId)        pick a subclass path (once per season)
 	  EquipGear(itemId) / UnequipGear(slot) / SellGear(itemId)   equipment
 	  ClaimDaily()                      today's login reward
 	  EquipPet(petId) / LevelPet(petId) the companion that follows you and its bonus
@@ -43,6 +44,8 @@ local Party = require(Shared.Party)
 local Pets = require(Shared.Pets)
 local Gear = require(Shared.Gear)
 local Daily = require(Shared.Daily)
+local Subclasses = require(Shared.Subclasses)
+local Abilities = require(Shared.Config.Abilities)
 
 local DataService = require(script.Parent.DataService)
 local PartyService = require(script.Parent.PartyService)
@@ -65,6 +68,18 @@ local function isList(value, maxLength)
 		end
 	end
 	return true
+end
+
+local function subclassChoices(profile, classId)
+	local list = {}
+	for _, def in ipairs(Subclasses.Available(profile, classId)) do
+		local names = {}
+		for _, skillId in ipairs(def.Skills) do
+			table.insert(names, Abilities[skillId].DisplayName)
+		end
+		table.insert(list, { Id = def.Id, Name = def.DisplayName, Description = def.Description, Summary = Subclasses.Describe(def.Id), SkillNames = names })
+	end
+	return list
 end
 
 local function buildState(player)
@@ -95,6 +110,9 @@ local function buildState(player)
 			PassiveSlots = Passives.SlotsAt(season.HighestStage),
 			Pets = Pets.List(profile),
 			ActivePet = (Pets.Active(profile)),
+			SubclassId = Subclasses.Current(profile, classId),
+			SubclassChoices = subclassChoices(profile, classId),
+			SubclassUnlockStage = (Subclasses.Choices(classId, Subclasses.Current(profile, classId))[1] or {}).UnlockStage,
 			Gear = Gear.List(profile),
 			Daily = Daily.Status(profile, os.time()),
 		},
@@ -263,6 +281,17 @@ end
 
 function handlers.ClaimDaily(_, profile)
 	return Daily.Claim(profile, os.time())
+end
+
+function handlers.ChooseSubclass(player, profile, subclassId)
+	if type(subclassId) ~= "string" then
+		return false, "BadArgs"
+	end
+	local ok, reason = Subclasses.Choose(profile, profile.Season.ClassId, subclassId)
+	if ok then
+		afterBuildChange(player)
+	end
+	return ok, reason
 end
 
 function handlers.SetStage(player, _, stage)

@@ -438,4 +438,209 @@ return {
 			{ Type = "ApplyStatus", Target = "Self", Status = "ArcaneSurge", Duration = 6 },
 		},
 	},
+
+	-- Subclass skills ----------------------------------------------------------------
+	-- Each has Subclass = <Config/Subclasses id>. The FIRST skill of a subclass is
+	-- granted free when you choose the path; the others are bought with shards.
+
+	-- Warrior: Berserker
+	BloodFrenzy = {
+		Id = "BloodFrenzy",
+		DisplayName = "Blood Frenzy",
+		Description = "Whips the Berserker into a frenzy: attack and attack speed soar.",
+		Class = "Warrior",
+		Subclass = "Berserker",
+		Rarity = "Epic",
+		Cooldown = 18,
+		CooldownPerLevel = -0.3,
+		MinCooldown = 10,
+		Conditions = { SelfLacksStatus = "Frenzied" },
+		Effects = {
+			{ Type = "ApplyStatus", Target = "Self", Status = "Frenzied", Duration = 8, PerLevel = { Duration = 0.3, Strength = 0.03 } },
+		},
+	},
+
+	Cleave = {
+		Id = "Cleave",
+		DisplayName = "Cleave",
+		Description = "A wide swing that hits every enemy hard.",
+		Class = "Warrior",
+		Subclass = "Berserker",
+		Rarity = "Rare",
+		Cooldown = 7,
+		CooldownPerLevel = -0.12,
+		MinCooldown = 4,
+		Conditions = { MinEnemies = 2 },
+		Effects = {
+			{ Type = "Damage", Target = "AllEnemies", Multiplier = 1.6, PerLevel = { Multiplier = 0.12 } },
+		},
+	},
+
+	ExecutionerStrike = {
+		Id = "ExecutionerStrike",
+		DisplayName = "Executioner Strike",
+		Description = "A devastating blow on a single enemy.",
+		Class = "Warrior",
+		Subclass = "Berserker",
+		Rarity = "Epic",
+		Cooldown = 14,
+		CooldownPerLevel = -0.25,
+		MinCooldown = 8,
+		Effects = {
+			{ Type = "Damage", Target = "Primary", Multiplier = 4.2, PerLevel = { Multiplier = 0.3 } },
+		},
+	},
+
+	-- Warrior: Guardian
+	Bulwark = {
+		Id = "Bulwark",
+		DisplayName = "Bulwark",
+		Description = "Shields the whole party and draws every enemy's attention.",
+		Class = "Warrior",
+		Subclass = "Guardian",
+		Rarity = "Epic",
+		Cooldown = 22,
+		CooldownPerLevel = -0.4,
+		MinCooldown = 12,
+		Effects = {
+			{ Type = "Shield", Target = "AllAllies", PercentMaxHealth = 0.25, Duration = 8, PerLevel = { PercentMaxHealth = 0.012, Duration = 0.2 } },
+			{ Type = "ApplyStatus", Target = "Self", Status = "Taunting", Duration = 8, PerLevel = { Duration = 0.3 } },
+		},
+	},
+
+	Retribution = {
+		Id = "Retribution",
+		DisplayName = "Retribution",
+		Description = "Strikes back and recovers some health.",
+		Class = "Warrior",
+		Subclass = "Guardian",
+		Rarity = "Rare",
+		Cooldown = 8,
+		CooldownPerLevel = -0.15,
+		MinCooldown = 4,
+		Effects = {
+			{ Type = "Damage", Target = "Primary", Multiplier = 1.8, PerLevel = { Multiplier = 0.14 } },
+			{ Type = "Heal", Target = "Self", Multiplier = 0, PercentMaxHealth = 0.08, PerLevel = { PercentMaxHealth = 0.004 } },
+		},
+	},
+
+	UnbreakableVow = {
+		Id = "UnbreakableVow",
+		DisplayName = "Unbreakable Vow",
+		Description = "When hurt, the Guardian's defense more than doubles.",
+		Class = "Warrior",
+		Subclass = "Guardian",
+		Rarity = "Epic",
+		Cooldown = 24,
+		CooldownPerLevel = -0.4,
+		MinCooldown = 12,
+		Conditions = { SelfHealthBelow = 0.6, SelfLacksStatus = "Unbreakable" },
+		Effects = {
+			{ Type = "ApplyStatus", Target = "Self", Status = "Unbreakable", Duration = 6, PerLevel = { Duration = 0.25, Strength = 0.04 } },
+		},
+	},
+
+	-- Cleric: Priest
+	Sanctuary = {
+		Id = "Sanctuary",
+		DisplayName = "Sanctuary",
+		Description = "Heals and shields the whole party when they are hurt.",
+		Class = "Cleric",
+		Subclass = "Priest",
+		Rarity = "Epic",
+		Cooldown = 18,
+		CooldownPerLevel = -0.3,
+		MinCooldown = 10,
+		Element = "Holy",
+		Conditions = { AllyHealthBelow = 0.6 },
+		Effects = {
+			{ Type = "Heal", Target = "AllAllies", Multiplier = 1.4, PerLevel = { Multiplier = 0.12 } },
+			{ Type = "Shield", Target = "AllAllies", PercentMaxHealth = 0.15, Duration = 6, PerLevel = { PercentMaxHealth = 0.008, Duration = 0.2 } },
+		},
+	},
+
+	Renewal = {
+		Id = "Renewal",
+		DisplayName = "Renewal",
+		Description = "A powerful heal for a badly wounded ally.",
+		Class = "Cleric",
+		Subclass = "Priest",
+		Rarity = "Rare",
+		Cooldown = 7,
+		CooldownPerLevel = -0.12,
+		MinCooldown = 3.5,
+		Element = "Holy",
+		Conditions = { AllyHealthBelow = 0.5 },
+		Effects = {
+			{ Type = "Heal", Target = "LowestAlly", Multiplier = 4, PerLevel = { Multiplier = 0.3 } },
+		},
+	},
+
+	HolyAegis = {
+		Id = "HolyAegis",
+		DisplayName = "Holy Aegis",
+		Description = "A holy ward raises the whole party's defense and heals them.",
+		Class = "Cleric",
+		Subclass = "Priest",
+		Rarity = "Epic",
+		Cooldown = 24,
+		CooldownPerLevel = -0.4,
+		MinCooldown = 12,
+		Element = "Holy",
+		Conditions = { SelfLacksStatus = "Aegis" },
+		Effects = {
+			{ Type = "ApplyStatus", Target = "AllAllies", Status = "Aegis", Duration = 10, PerLevel = { Duration = 0.3, Strength = 0.04 } },
+			{ Type = "Heal", Target = "AllAllies", Multiplier = 0.8, PerLevel = { Multiplier = 0.07 } },
+		},
+	},
+
+	-- Cleric: Templar
+	HolyWrath = {
+		Id = "HolyWrath",
+		DisplayName = "Holy Wrath",
+		Description = "Smites every enemy and blesses the party with greater attack.",
+		Class = "Cleric",
+		Subclass = "Templar",
+		Rarity = "Epic",
+		Cooldown = 16,
+		CooldownPerLevel = -0.3,
+		MinCooldown = 9,
+		Element = "Holy",
+		Effects = {
+			{ Type = "Damage", Target = "AllEnemies", Multiplier = 2.2, DamageType = "Magical", PerLevel = { Multiplier = 0.16 } },
+			{ Type = "ApplyStatus", Target = "AllAllies", Status = "Blessed", Duration = 8, PerLevel = { Duration = 0.3, Strength = 0.03 } },
+		},
+	},
+
+	Judgment = {
+		Id = "Judgment",
+		DisplayName = "Judgment",
+		Description = "Holy damage on a single enemy.",
+		Class = "Cleric",
+		Subclass = "Templar",
+		Rarity = "Rare",
+		Cooldown = 9,
+		CooldownPerLevel = -0.15,
+		MinCooldown = 5,
+		Element = "Holy",
+		Effects = {
+			{ Type = "Damage", Target = "Primary", Multiplier = 3.2, DamageType = "Magical", PerLevel = { Multiplier = 0.24 } },
+		},
+	},
+
+	DivineSmite = {
+		Id = "DivineSmite",
+		DisplayName = "Divine Smite",
+		Description = "A massive burst of holy power on one enemy.",
+		Class = "Cleric",
+		Subclass = "Templar",
+		Rarity = "Epic",
+		Cooldown = 18,
+		CooldownPerLevel = -0.3,
+		MinCooldown = 10,
+		Element = "Holy",
+		Effects = {
+			{ Type = "Damage", Target = "Primary", Multiplier = 5, DamageType = "Magical", PerLevel = { Multiplier = 0.35 } },
+		},
+	},
 }

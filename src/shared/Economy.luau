@@ -27,6 +27,7 @@ local Classes = require(script.Parent.Config.Classes)
 local Config = require(script.Parent.Config.Economy)
 local Skills = require(script.Parent.Skills)
 local Passives = require(script.Parent.Passives)
+local Subclasses = require(script.Parent.Subclasses)
 
 local Economy = {}
 
@@ -50,7 +51,10 @@ local function checkUnlock(profile, classId, abilityId)
 	if not profile.Permanent.UnlockedClasses[classId] then
 		return false, "ClassLocked"
 	end
-	if type(abilityId) ~= "string" or not table.find(Classes[classId].AbilityPool, abilityId) then
+	local allowed = type(abilityId) == "string"
+		and (table.find(Classes[classId].AbilityPool, abilityId) ~= nil
+			or table.find(Subclasses.SkillIds(Subclasses.Current(profile, classId)), abilityId) ~= nil)
+	if not allowed then
 		return false, "NotInPool"
 	end
 	if profile.Season.OwnedAbilities[abilityId] then

@@ -20,7 +20,7 @@
 	UltimateId   optional: the pair's chosen ultimate (Party.SetUltimate)
 
 	Snapshot (a member's saved build, used as their ghost while offline)
-	  UserId, Name, ClassId, PetId?, PetLevel?, Gear (equipped items), Level, Frontier, SlotLevels, Owned, GhostLoadout,
+	  UserId, Name, ClassId, SubclassId?, PetId?, PetLevel?, Gear (equipped items), Level, Frontier, SlotLevels, Owned, GhostLoadout,
 	  History, SavedAt
 	  GhostLoadout is separate from the player's own loadout. Either party member
 	  can edit it (SetGhostLoadout), so partners never have to be online together
@@ -176,7 +176,7 @@ function Party.MakeSnapshot(profile, userId, name, previous, now)
 	local classId = season.ClassId
 
 	local owned = {}
-	for _, abilityId in ipairs(Classes[classId].AbilityPool) do
+	for _, abilityId in ipairs(Skills.AllSkills(classId)) do
 		if season.OwnedAbilities[abilityId] then
 			owned[abilityId] = true
 		end
@@ -201,6 +201,7 @@ function Party.MakeSnapshot(profile, userId, name, previous, now)
 		ClassId = classId,
 		PetId = petId,
 		PetLevel = petLevel,
+		SubclassId = season.Subclasses and season.Subclasses[classId] or nil,
 		Gear = TableUtil.DeepCopy((season.Equipment and season.Equipment.Equipped) or {}),
 		Level = season.Level,
 		Frontier = season.HighestStage,

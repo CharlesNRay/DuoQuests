@@ -13,6 +13,7 @@ local Skills = require(script.Parent.Parent.Skills)
 local Passives = require(script.Parent.Parent.Passives)
 local Pets = require(script.Parent.Parent.Pets)
 local Gear = require(script.Parent.Parent.Gear)
+local Subclasses = require(script.Parent.Parent.Subclasses)
 local Entity = require(script.Parent.Entity)
 
 local StatCalc = {}
@@ -72,7 +73,7 @@ local function applyPassives(stats, classId, passiveIds, passiveLevels)
 end
 
 -- options (all optional): AbilityIds, SlotLevels, PassiveIds, PassiveLevels, PetId, PetLevel,
--- Equipped (gear: { [slot] = item })
+-- Equipped (gear: { [slot] = item }), SubclassId
 function StatCalc.NewPartyMember(id, name, classId, level, options)
 	local class = Classes[classId]
 	assert(class ~= nil, "Unknown class: " .. tostring(classId))
@@ -80,6 +81,9 @@ function StatCalc.NewPartyMember(id, name, classId, level, options)
 
 	local stats = StatCalc.ClassStats(classId, level)
 	applyPassives(stats, classId, options.PassiveIds, options.PassiveLevels)
+	if options.SubclassId then
+		applyMods(stats, Subclasses.Mods(options.SubclassId))
+	end
 	if options.Equipped then
 		applyMods(stats, Gear.Mods(options.Equipped))
 	end

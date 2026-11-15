@@ -88,6 +88,28 @@ return {
 		Mods = { { Stat = "MagicalDamageDealt", Mode = "Mult", Value = 1.5 } },
 	},
 
+	-- Subclass buffs --------------------------------------------------------------
+	Frenzied = {
+		Id = "Frenzied",
+		DisplayName = "Frenzied",
+		Description = "Attack and attack speed greatly increased.",
+		Mods = { { Stat = "Attack", Mode = "Mult", Value = 1.35 }, { Stat = "AttackSpeed", Mode = "Mult", Value = 1.3 } },
+	},
+
+	Unbreakable = {
+		Id = "Unbreakable",
+		DisplayName = "Unbreakable",
+		Description = "Defense more than doubled.",
+		Mods = { { Stat = "Defense", Mode = "Mult", Value = 2.2 } },
+	},
+
+	Aegis = {
+		Id = "Aegis",
+		DisplayName = "Aegis",
+		Description = "Defense increased by a holy ward.",
+		Mods = { { Stat = "Defense", Mode = "Mult", Value = 1.6 } },
+	},
+
 	-- Debuffs --------------------------------------------------------------------
 	Chilled = {
 		Id = "Chilled",

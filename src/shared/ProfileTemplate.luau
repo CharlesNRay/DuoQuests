@@ -71,6 +71,7 @@ function ProfileTemplate.NewSeasonData(seasonId)
 		PassiveLoadouts = {}, -- [classId] = equipped passive ids (see Passives)
 		PassiveSlotLevels = {}, -- [classId] = level per passive slot
 		PetLevels = {}, -- [petId] = level (pet OWNERSHIP is permanent)
+		Subclasses = {}, -- [classId] = chosen subclass id (see Subclasses)
 
 		HighestStage = 1, -- the frontier: furthest stage unlocked, never lowered
 		StageRewardsClaimed = {}, -- [stage] = true, one-time milestone ledger

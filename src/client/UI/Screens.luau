@@ -68,8 +68,27 @@ function Screens.Skills(container, state, call)
 		end)
 	end
 
+	-- subclass: pick a path when one is offered, otherwise show the chosen one
+	local SubclassRules = require(Shared.Subclasses)
+	if #(me.SubclassChoices or {}) > 0 then
+		Kit.label({ Size = UDim2.new(1, 0, 0, 22), Text = "Choose your path! This is permanent for the season.", TextColor3 = C.Accent, Font = Enum.Font.GothamBold, Parent = scroll })
+		for _, choice in ipairs(me.SubclassChoices) do
+			local r = row(scroll, 92)
+			Kit.label({ Size = UDim2.new(1, -130, 0, 20), Position = UDim2.fromOffset(8, 4), Text = choice.Name, Font = Enum.Font.GothamBold, TextColor3 = C.Accent, Parent = r })
+			Kit.label({ Size = UDim2.new(1, -130, 0, 64), Position = UDim2.fromOffset(8, 24), Text = choice.Description .. "\n" .. choice.Summary .. "\nNew skills: " .. table.concat(choice.SkillNames, ", "), TextSize = 12, TextColor3 = C.Dim, Parent = r })
+			Kit.button({ Size = UDim2.fromOffset(110, 44), Position = UDim2.new(1, -118, 0.5, -22), Text = "Choose", BackgroundColor3 = C.Accent, Parent = r }, function()
+				call("ChooseSubclass", choice.Id)
+			end)
+		end
+	elseif me.SubclassId then
+		local def = SubclassRules.Defs[me.SubclassId]
+		Kit.label({ Size = UDim2.new(1, 0, 0, 22), Text = ("Path: %s  (%s)"):format(def.DisplayName, SubclassRules.Describe(me.SubclassId)), TextColor3 = C.Accent, TextSize = 13, Parent = scroll })
+	elseif me.SubclassUnlockStage then
+		Kit.label({ Size = UDim2.new(1, 0, 0, 22), Text = ("Reach stage %d to choose a subclass path."):format(me.SubclassUnlockStage), TextColor3 = C.Dim, TextSize = 13, Parent = scroll })
+	end
+
 	Kit.label({ Size = UDim2.new(1, 0, 0, 22), Text = "Your skills", TextColor3 = C.Dim, Parent = scroll })
-	for _, id in ipairs(Skills.Pool(me.ClassId)) do
+	for _, id in ipairs(Skills.Pool(me.ClassId, me.SubclassId)) do
 		local def = Abilities[id]
 		local isOwned = me.Owned[id] == true
 		local isEquipped = table.find(equipped, id) ~= nil
