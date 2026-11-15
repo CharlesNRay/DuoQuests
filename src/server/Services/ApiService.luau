@@ -23,7 +23,7 @@
 	  EquipGear(itemId, wornSlot?) / UnequipGear(slot) / SellGear(itemId)   equipment (8 worn slots)
 	  UseConsumable(id, petId?) / BuyConsumable(id, count)   the Stash: boosts, pet food, Merchant supplies
 	  ClaimDaily()                      today's login reward
-	  ClaimQuest(index) / ClaimQuestBonus() / ClaimPass(level|"All")   daily quests and the season pass
+	  ClaimQuest(index) / ClaimQuestBonus() / ClaimWeeklyQuest(index) / ClaimWeeklyBonus() / ClaimPass(level|"All")   daily quests and the season pass
 	  EquipPet(petId)  the companion that follows you and its bonus
 	  SetStage(stage)                   pick any unlocked stage from the map (either member)
 	  Advance()                         step up one stage after a loss held the party back
@@ -173,6 +173,7 @@ local function buildState(player)
 			Sheet = heroSheetOf(profile),
 			Daily = Daily.Status(profile, os.time()),
 			Quests = Quests.Daily(profile, os.time()),
+			WeeklyQuests = Quests.Weekly(profile, os.time()),
 			Pass = Quests.Pass(profile),
 		},
 	}
@@ -524,6 +525,17 @@ end
 
 function handlers.ClaimQuestBonus(_, profile)
 	return Quests.ClaimBonus(profile, os.time())
+end
+
+function handlers.ClaimWeeklyQuest(_, profile, index)
+	if type(index) ~= "number" then
+		return false, "BadArgs"
+	end
+	return Quests.ClaimWeekly(profile, index, os.time())
+end
+
+function handlers.ClaimWeeklyBonus(_, profile)
+	return Quests.ClaimWeeklyBonus(profile, os.time())
 end
 
 function handlers.ClaimPass(_, profile, level)

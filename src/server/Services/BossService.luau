@@ -24,6 +24,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Bosses = require(Shared.Bosses)
+local Quests = require(Shared.Quests)
 local Cfg = require(Shared.Config.Bosses)
 local SeasonConfig = require(Shared.Config.Seasons)
 
@@ -343,6 +344,7 @@ function BossService.Strike(player, profile, which, partner)
 		world.LastStrike[userId] = os.clock()
 		world.Strikes[userId] = (world.Strikes[userId] or 0) + 1
 		local damage, fight = runFight(profile, player, WORLD, frontier, partner)
+		Quests.Record(profile, "Strike", 1)
 		world.Totals[userId] = (world.Totals[userId] or 0) + damage
 		return true, { Damage = damage, Total = world.Totals[userId], Reached = #Bosses.TiersReached(WORLD, world.Totals[userId], frontier), Fight = fight, Label = WORLD.Name }
 	elseif which == "Season" then
@@ -358,6 +360,7 @@ function BossService.Strike(player, profile, which, partner)
 		local damage, fight = runFight(profile, player, SEASON, frontier, partner)
 		-- the season boss is much tougher, so a strike is worth a lot more of its health bar
 		damage = math.floor(damage * (SEASON.DamageMult or 1))
+		Quests.Record(profile, "Strike", 1)
 		local record = Bosses.Record(profile, seasonId)
 		record.Damage += damage
 		record.Strikes += 1

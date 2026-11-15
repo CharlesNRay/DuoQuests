@@ -7,7 +7,8 @@
 
 	  Pool entry   { Id, Event, Goal, Text }   Event is one of:
 	               Clear (any won fight), Frontier (a first clear of a stage), Boss (a boss stage won),
-	               Wish (wishes made at the Tree, a ten-pull counts as ten), Feed (pet food given), Gear (gear found)
+	               Wish (wishes made at the Tree, a ten-pull counts as ten), Feed (pet food given), Gear (gear found),
+	               Strike (a boss strike, world or season)
 	  QuestReward  per quest   { GoldClears (gold = this many frontier clears), Wishstones, PassXP }
 	  BonusReward  all three claimed { Wishstones, PassXP, Tickets = { PetWish = n } }
 
@@ -61,10 +62,28 @@ return {
 		{ Id = "Wish5", Event = "Wish", Goal = 5, Text = "Make 5 wishes at the Wishing Tree" },
 		{ Id = "Feed2", Event = "Feed", Goal = 2, Text = "Feed your pet 2 times" },
 		{ Id = "Gear3", Event = "Gear", Goal = 3, Text = "Find 3 pieces of gear" },
+		{ Id = "Strike1", Event = "Strike", Goal = 1, Text = "Strike a boss once" },
 	},
 	QuestsPerDay = 3,
 	QuestReward = { GoldClears = 6, Wishstones = 2, PassXP = 40 },
 	BonusReward = { Wishstones = 5, PassXP = 60, Tickets = { PetWish = 1, SkillWish = 1 } },
+
+	-- WEEKLY QUESTS: every Monday (UTC) four bigger quests are drawn (one per event kind). Each pays Wishstones, Pass XP
+	-- and an item; finishing all four unlocks the weekly bonus (both wish tickets). Never gold.
+	Weekly = {
+		Pool = {
+			{ Id = "WClear150", Event = "Clear", Goal = 150, Text = "Win 150 fights" },
+			{ Id = "WFrontier20", Event = "Frontier", Goal = 20, Text = "Clear 20 new stages" },
+			{ Id = "WBoss5", Event = "Boss", Goal = 5, Text = "Defeat 5 boss stages" },
+			{ Id = "WWish15", Event = "Wish", Goal = 15, Text = "Make 15 wishes at the Wishing Tree" },
+			{ Id = "WFeed10", Event = "Feed", Goal = 10, Text = "Feed your pet 10 times" },
+			{ Id = "WGear20", Event = "Gear", Goal = 20, Text = "Find 20 pieces of gear" },
+			{ Id = "WStrike4", Event = "Strike", Goal = 4, Text = "Strike a boss 4 times" },
+		},
+		QuestsPerWeek = 4,
+		QuestReward = { Wishstones = 6, PassXP = 120, Items = { GrandPetFood = 1 } },
+		BonusReward = { Wishstones = 12, PassXP = 250, Tickets = { PetWish = 1, SkillWish = 1 } },
+	},
 
 	Pass = {
 		MaxLevel = 30,

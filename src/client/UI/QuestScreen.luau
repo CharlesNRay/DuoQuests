@@ -28,14 +28,16 @@ local function bar(parent, fraction, position, size, color)
 	return back
 end
 
-local function dailyTab(area, state, call, extra, redraw)
-	local daily = state.Player.Quests
+-- one list of quests with a bonus row: the daily and the weekly tabs share it
+-- opts = { Data, Intro, BonusTitle, ClaimQuest, ClaimBonus, BonusButton }
+local function periodTab(area, opts, call)
+	local daily = opts.Data
 	if not daily then
 		return
 	end
 	local scroll = Kit.new("ScrollingFrame", { Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1, BorderSizePixel = 0, CanvasSize = UDim2.new(), AutomaticCanvasSize = Enum.AutomaticSize.Y, ScrollBarThickness = 4, Parent = area })
 	Kit.new("UIListLayout", { Padding = UDim.new(0, 6), Parent = scroll })
-	Kit.label({ Size = UDim2.new(1, -8, 0, 18), Text = "New quests every day. Finish all three for a bonus.", TextSize = 12, TextColor3 = C.Dim, Parent = scroll })
+	Kit.label({ Size = UDim2.new(1, -8, 0, 18), Text = opts.Intro, TextSize = 12, TextColor3 = C.Dim, Parent = scroll })
 	for _, quest in ipairs(daily.Quests) do
 		local row = Kit.frame({ Size = UDim2.new(1, -8, 0, 62), BackgroundColor3 = C.PanelLight, Parent = scroll })
 		Kit.label({ Size = UDim2.new(1, -150, 0, 20), Position = UDim2.fromOffset(10, 4), Text = quest.Text, TextSize = 14, Font = Enum.Font.GothamBold, Parent = row })
@@ -46,23 +48,31 @@ local function dailyTab(area, state, call, extra, redraw)
 		else
 			Kit.button({ Size = UDim2.fromOffset(110, 40), Position = UDim2.new(1, -120, 0.5, -20), Text = if quest.Done then "Claim" else "In progress", BackgroundColor3 = if quest.Done then C.Up else C.Panel, Parent = row }, function()
 				if quest.Done then
-					call("ClaimQuest", quest.Index)
+					call(opts.ClaimQuest, quest.Index)
 				end
 			end)
 		end
 	end
 	local bonus = Kit.frame({ Size = UDim2.new(1, -8, 0, 56), BackgroundColor3 = C.PanelLight, Parent = scroll })
-	Kit.label({ Size = UDim2.new(1, -150, 0, 20), Position = UDim2.fromOffset(10, 6), Text = "Daily bonus", TextSize = 14, Font = Enum.Font.GothamBold, TextColor3 = C.Accent, Parent = bonus })
+	Kit.label({ Size = UDim2.new(1, -150, 0, 20), Position = UDim2.fromOffset(10, 6), Text = opts.BonusTitle, TextSize = 14, Font = Enum.Font.GothamBold, TextColor3 = C.Accent, Parent = bonus })
 	Kit.label({ Size = UDim2.new(1, -150, 0, 18), Position = UDim2.fromOffset(10, 30), Text = "Reward: " .. rewardText(daily.Bonus), TextSize = 11, TextColor3 = C.Dim, Parent = bonus })
 	if daily.BonusClaimed then
 		Kit.label({ Size = UDim2.fromOffset(110, 40), Position = UDim2.new(1, -120, 0.5, -20), Text = "Claimed ✓", TextSize = 13, TextXAlignment = Enum.TextXAlignment.Center, TextColor3 = C.Up, Parent = bonus })
 	else
-		Kit.button({ Size = UDim2.fromOffset(110, 40), Position = UDim2.new(1, -120, 0.5, -20), Text = if daily.BonusReady then "Claim" else "Finish all 3", BackgroundColor3 = if daily.BonusReady then C.Up else C.Panel, Parent = bonus }, function()
+		Kit.button({ Size = UDim2.fromOffset(110, 40), Position = UDim2.new(1, -120, 0.5, -20), Text = if daily.BonusReady then "Claim" else opts.BonusButton, BackgroundColor3 = if daily.BonusReady then C.Up else C.Panel, Parent = bonus }, function()
 			if daily.BonusReady then
-				call("ClaimQuestBonus")
+				call(opts.ClaimBonus)
 			end
 		end)
 	end
+end
+
+local function timeLeft(seconds)
+	local days, hours = seconds // 86400, (seconds % 86400) // 3600
+	if days > 0 then
+		return ("%dd %dh"):format(days, hours)
+	end
+	return ("%dh %dm"):format(hours, (seconds % 3600) // 60)
 end
 
 local function passTab(area, state, call, extra, redraw)
@@ -108,15 +118,18 @@ function QuestScreen.Quests(container, state, call, extra)
 	local function redraw()
 		QuestScreen.Quests(container, extra.State or state, call, extra)
 	end
-	for index, name in ipairs({ "Daily", "Pass" }) do
-		Kit.button({ Size = UDim2.fromOffset(150, 28), Position = UDim2.fromOffset((index - 1) * 156, 0), Text = if name == "Daily" then "Daily quests" else "Season pass", TextSize = 13, BackgroundColor3 = if name == tab then C.Accent else C.Panel, TextColor3 = if name == tab then Color3.fromRGB(30, 24, 10) else C.Text, Parent = container }, function()
+	for index, name in ipairs({ "Daily", "Weekly", "Pass" }) do
+		Kit.button({ Size = UDim2.fromOffset(150, 28), Position = UDim2.fromOffset((index - 1) * 156, 0), Text = if name == "Daily" then "Daily quests" elseif name == "Weekly" then "Weekly quests" else "Season pass", TextSize = 13, BackgroundColor3 = if name == tab then C.Accent else C.Panel, TextColor3 = if name == tab then Color3.fromRGB(30, 24, 10) else C.Text, Parent = container }, function()
 			extra.QuestTab = name
 			redraw()
 		end)
 	end
 	local area = Kit.frame({ Size = UDim2.new(1, 0, 1, -34), Position = UDim2.fromOffset(0, 34), BackgroundTransparency = 1, NoCorner = true, Parent = container })
 	if tab == "Daily" then
-		dailyTab(area, state, call, extra, redraw)
+		periodTab(area, { Data = state.Player.Quests, Intro = "New quests every day. Finish all three for a bonus.", BonusTitle = "Daily bonus", ClaimQuest = "ClaimQuest", ClaimBonus = "ClaimQuestBonus", BonusButton = "Finish all 3" }, call)
+	elseif tab == "Weekly" then
+		local weekly = state.Player.WeeklyQuests
+		periodTab(area, { Data = weekly, Intro = weekly and ("Bigger quests that reset every Monday (%s left). Finish all four for a bonus."):format(timeLeft(weekly.SecondsLeft)) or "", BonusTitle = "Weekly bonus", ClaimQuest = "ClaimWeeklyQuest", ClaimBonus = "ClaimWeeklyBonus", BonusButton = "Finish all 4" }, call)
 	else
 		passTab(area, state, call, extra, redraw)
 	end

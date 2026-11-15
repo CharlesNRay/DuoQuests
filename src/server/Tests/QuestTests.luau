@@ -120,5 +120,41 @@ return function(modulesOverride)
 	check("Claiming the whole pass leaves gold alone", pp.Season.Currencies.Gold == goldBefore)
 	check("Claiming the pass fills the stash with tickets", Consumables.Count(pp, "SkillWish") >= 3 and Consumables.Count(pp, "PetWish") >= 3)
 
+	-- weekly quests: four per week, a Monday-to-Sunday window, bigger goals, a bonus with both tickets
+	local monday = 86400 * 20000 + 0
+	while ((monday // 86400) + 3) % 7 ~= 0 do monday += 86400 end -- a day that starts a week
+	local pw = ProfileTemplate.New()
+	local week = Quests.Weekly(pw, monday + 100)
+	check("Four weekly quests of different kinds", #week.Quests == 4 and week.Quests[1].Id ~= week.Quests[2].Id)
+	check("The same week gives the same quests", Quests.Weekly(ProfileTemplate.New(), monday + 5 * 86400).Quests[1].Id == week.Quests[1].Id)
+	check("A new week gives a new window", Quests.Weekly(pw, monday + 7 * 86400).Week == week.Week + 1)
+	check("The weekly timer counts down to the next Monday", week.SecondsLeft == 7 * 86400 - 100)
+	check("A weekly quest cannot be claimed early", select(2, Quests.ClaimWeekly(pw, 1, monday)) == "NotDone")
+	for _, q in ipairs(week.Quests) do
+		local def
+		for _, d in ipairs(QuestConfig.Weekly.Pool) do if d.Id == q.Id then def = d end end
+		Quests.Record(pw, def.Event, def.Goal + 3, monday + 200)
+	end
+	local done = Quests.Weekly(pw, monday + 300)
+	check("Weekly quests complete and cap at their goal", done.Quests[1].Done and done.Quests[4].Done and done.Quests[1].Progress == done.Quests[1].Goal)
+	check("The weekly bonus waits for all four claims", select(2, Quests.ClaimWeeklyBonus(pw, monday)) == "NotReady")
+	local stonesBefore, goldNow = pw.Season.Currencies.Wishstones or 0, pw.Season.Currencies.Gold
+	for i = 1, 4 do
+		check("Weekly quest " .. i .. " claims", Quests.ClaimWeekly(pw, i, monday))
+	end
+	check("A weekly quest claims once", select(2, Quests.ClaimWeekly(pw, 1, monday)) == "AlreadyClaimed")
+	check("Weekly quests pay Wishstones and a consumable, never gold", (pw.Season.Currencies.Wishstones or 0) == stonesBefore + 4 * QuestConfig.Weekly.QuestReward.Wishstones and pw.Season.Currencies.Gold == goldNow and Consumables.Count(pw, "GrandPetFood") >= 4)
+	check("The weekly bonus is ready", Quests.Weekly(pw, monday).BonusReady)
+	local okB = Quests.ClaimWeeklyBonus(pw, monday)
+	check("The weekly bonus gives both wish tickets", okB and Consumables.Count(pw, "SkillWish") == 1 and Consumables.Count(pw, "PetWish") == 1)
+	check("The weekly bonus claims once", select(2, Quests.ClaimWeeklyBonus(pw, monday)) == "AlreadyClaimed")
+	local reset = Quests.Weekly(pw, monday + 7 * 86400)
+	check("Next week starts fresh", reset.Quests[1].Progress == 0 and not reset.BonusClaimed)
+	local ps = ProfileTemplate.New()
+	Quests.Record(ps, "Strike", 1, monday)
+	local dstrike
+	for _, q in ipairs(Quests.Weekly(ps, monday).Quests) do if q.Id == "WStrike4" then dstrike = q end end
+	check("A boss strike counts toward the weekly strike quest when drawn", dstrike == nil or dstrike.Progress == 1)
+
 	print(("QuestTests done: %d passed, %d failed"):format(passed, failed))
 end

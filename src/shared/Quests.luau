@@ -5,10 +5,12 @@
 	Daily quests and the season pass. Pure functions; `now` (os.time()) is passed in so tests can move the clock.
 
 	  Quests.Record(profile, event, amount, now)   count progress for today's quests and add pass XP for stage clears.
-	                                               events: "Clear", "Frontier", "Boss", "Wish", "Feed", "Gear"
+	                                               events: "Clear", "Frontier", "Boss", "Wish", "Feed", "Gear", "Strike"
 	  Quests.Daily(profile, now)                   -> { Day, Quests = { { Index, Id, Text, Goal, Progress, Done, Claimed } }, BonusClaimed, BonusReady, Reward, Bonus }
 	  Quests.ClaimQuest(profile, index, now)       -> true, reward | false, "BadQuest" | "NotDone" | "AlreadyClaimed"
 	  Quests.ClaimBonus(profile, now)              -> true, reward | false, "NotReady" | "AlreadyClaimed"
+	  Quests.Weekly(profile, now)                  -> like Daily but for the Monday-to-Sunday week, plus SecondsLeft
+	  Quests.ClaimWeekly(profile, index, now) / Quests.ClaimWeeklyBonus(profile, now)   like the daily ones
 	  Quests.Pass(profile)                         -> { Level, XP, XPInLevel, XPPerLevel, MaxLevel, Rows = { { Level, Reward, Reached, Claimed } } }
 	  Quests.AddPassXP(profile, amount)            -> levels gained
 	  Quests.ClaimPass(profile, level)             -> true, reward | false, "BadLevel" | "NotReached" | "AlreadyClaimed"
@@ -25,26 +27,48 @@ local function dayNumber(now)
 end
 
 -- today's quest ids: a deterministic shuffle of the pool seeded by the day, one quest per event kind first
-local function todaysPool(day)
+local function drawPool(sourcePool, count, key, salt)
 	-- a small deterministic generator (the same on every server and in tests)
-	local seed = (day * 7919 + 13) % 2147483647
+	local seed = (key * 7919 + 13 + salt) % 2147483647
 	local function nextInt(n)
 		seed = (seed * 48271) % 2147483647
 		return seed % n + 1
 	end
-	local pool = table.clone(Config.Pool)
+	local pool = table.clone(sourcePool)
 	for i = #pool, 2, -1 do
 		local j = nextInt(i)
 		pool[i], pool[j] = pool[j], pool[i]
 	end
 	local picked, kinds = {}, {}
 	for _, q in ipairs(pool) do
-		if not kinds[q.Event] and #picked < Config.QuestsPerDay then
+		if not kinds[q.Event] and #picked < count then
 			kinds[q.Event] = true
 			table.insert(picked, q)
 		end
 	end
 	return picked
+end
+
+local function todaysPool(day)
+	return drawPool(Config.Pool, Config.QuestsPerDay, day, 0)
+end
+
+local function weekNumber(now)
+	return (dayNumber(now) + 3) // 7 -- weeks start on Monday (day 0 was a Thursday)
+end
+
+local function weeksPool(week)
+	return drawPool(Config.Weekly.Pool, Config.Weekly.QuestsPerWeek, week, 101)
+end
+
+local function weekState(profile, now)
+	local week = weekNumber(now)
+	local w = profile.Permanent.WeeklyQuests
+	if w == nil or w.Week ~= week then
+		w = { Week = week, Progress = {}, Claimed = {}, BonusClaimed = false }
+		profile.Permanent.WeeklyQuests = w
+	end
+	return w
 end
 
 local function state(profile, now)
@@ -81,6 +105,12 @@ function Quests.Record(profile, event, amount, now)
 	for _, quest in ipairs(todaysPool(q.Day)) do
 		if quest.Event == event then
 			q.Progress[quest.Id] = math.min(quest.Goal, (q.Progress[quest.Id] or 0) + amount)
+		end
+	end
+	local w = weekState(profile, now)
+	for _, quest in ipairs(weeksPool(w.Week)) do
+		if quest.Event == event then
+			w.Progress[quest.Id] = math.min(quest.Goal, (w.Progress[quest.Id] or 0) + amount)
 		end
 	end
 	local pass = Config.Pass
@@ -150,6 +180,68 @@ function Quests.ClaimBonus(profile, now)
 	end
 	Quests.AddPassXP(profile, reward.PassXP)
 	return true, reward
+end
+
+-- Weekly quests ---------------------------------------------------------------------
+
+function Quests.Weekly(profile, now)
+	local w = weekState(profile, now)
+	local rows, claimed = {}, 0
+	for index, quest in ipairs(weeksPool(w.Week)) do
+		local progress = w.Progress[quest.Id] or 0
+		local isClaimed = w.Claimed[quest.Id] == true
+		if isClaimed then
+			claimed += 1
+		end
+		table.insert(rows, { Index = index, Id = quest.Id, Text = quest.Text, Goal = quest.Goal, Progress = progress, Done = progress >= quest.Goal, Claimed = isClaimed })
+	end
+	return {
+		Week = w.Week, Quests = rows, BonusClaimed = w.BonusClaimed == true, BonusReady = claimed >= #rows and not w.BonusClaimed,
+		Reward = Config.Weekly.QuestReward, Bonus = Config.Weekly.BonusReward,
+		SecondsLeft = ((w.Week + 1) * 7 - 3) * 86400 - now,
+	}
+end
+
+local function payWeekly(profile, reward)
+	local c = profile.Season.Currencies
+	c.Wishstones = (c.Wishstones or 0) + (reward.Wishstones or 0)
+	for id, count in pairs(reward.Items or {}) do
+		Consumables.Grant(profile, id, count)
+	end
+	for id, count in pairs(reward.Tickets or {}) do
+		Consumables.Grant(profile, id, count)
+	end
+	Quests.AddPassXP(profile, reward.PassXP or 0)
+end
+
+function Quests.ClaimWeekly(profile, index, now)
+	local w = weekState(profile, now)
+	local quest = weeksPool(w.Week)[index]
+	if quest == nil then
+		return false, "BadQuest"
+	end
+	if w.Claimed[quest.Id] then
+		return false, "AlreadyClaimed"
+	end
+	if (w.Progress[quest.Id] or 0) < quest.Goal then
+		return false, "NotDone"
+	end
+	w.Claimed[quest.Id] = true
+	payWeekly(profile, Config.Weekly.QuestReward)
+	return true, Config.Weekly.QuestReward
+end
+
+function Quests.ClaimWeeklyBonus(profile, now)
+	local w = weekState(profile, now)
+	if w.BonusClaimed then
+		return false, "AlreadyClaimed"
+	end
+	if not Quests.Weekly(profile, now).BonusReady then
+		return false, "NotReady"
+	end
+	w.BonusClaimed = true
+	payWeekly(profile, Config.Weekly.BonusReward)
+	return true, Config.Weekly.BonusReward
 end
 
 local function passState(profile)

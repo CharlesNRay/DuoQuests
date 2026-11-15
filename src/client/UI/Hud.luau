@@ -370,6 +370,10 @@ function Hud.new(root)
 		for _, q in ipairs(me.Quests and me.Quests.Quests or {}) do
 			waiting = waiting or (q.Done and not q.Claimed)
 		end
+		waiting = waiting or (me.WeeklyQuests ~= nil and me.WeeklyQuests.BonusReady == true)
+		for _, q in ipairs(me.WeeklyQuests and me.WeeklyQuests.Quests or {}) do
+			waiting = waiting or (q.Done and not q.Claimed)
+		end
 		for _, r in ipairs(me.Pass and me.Pass.Rows or {}) do
 			waiting = waiting or (r.Reached and not r.Claimed and not r.Premium)
 		end
