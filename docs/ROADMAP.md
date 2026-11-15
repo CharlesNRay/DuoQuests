@@ -88,3 +88,8 @@ Newest first.
 - [x] Boss mechanics: fixed-timer heavy attacks with telegraph warnings, minion summons, enrage; 3 bosses (Slime King, Goblin Warlord, Spore Mother)
 - [ ] Hand-check floor 40 (Slime King, stronger) and later bosses; add more boss types and a boss info card showing their attack timings
 - [ ] Simulator: smarter skill choice and a companion mode
+
+## 2026-11-15 (first Studio test)
+- [x] Played in Studio with Rojo: hub, HUD, Skills, Party (ghost Cleric loadout), Pets, Daily, Gear, boss floor 10 with the ghost Cleric all work; no errors in the output.
+- [x] Fixed: panels drew blank (UI layering mode), Map screen drew over the previous panel, gear stats showed +0.
+- [ ] Not yet seen in Studio: slimelet spawns on screen, Warlord/Spore Mother fights, subclass choice at level 30, leaderboards board, inspect click, world map on a second player.
