@@ -98,15 +98,17 @@ function Party.New(partyId, seasonId, userIdA, userIdB, now, frontierA, frontier
 end
 
 -- A party that so far has one member (waiting for a partner). The member can
--- play and progress alone; AddMember turns it into a pair.
-function Party.NewOpen(partyId, seasonId, userId, now)
+-- play and progress alone; AddMember turns it into a pair. It starts at `startStage` (the member's own
+-- frontier), so leaving a party never sends anyone back to stage 1.
+function Party.NewOpen(partyId, seasonId, userId, now, startStage)
+	local start = math.max(1, math.floor(startStage or 1))
 	return {
 		Version = Party.VERSION,
 		PartyId = partyId,
 		SeasonId = seasonId,
 		Members = { userId },
-		Stage = 1,
-		Frontier = 1,
+		Stage = start,
+		Frontier = start,
 		Snapshots = {},
 		Pending = {},
 		LastActiveAt = now,

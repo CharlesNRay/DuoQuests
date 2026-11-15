@@ -86,7 +86,7 @@ end
 -- A new open party for a player who has none. Sets profile.Permanent.PartyId.
 function PartyCore.CreateSolo(deps, userId, name, profile, seasonId)
 	local now = deps.Now()
-	local party = Party.NewOpen(deps.NewId(), seasonId, userId, now)
+	local party = Party.NewOpen(deps.NewId(), seasonId, userId, now, profile.Season.HighestStage) -- never below the player's own frontier
 	party.Rev = 1
 	Party.RefreshSnapshot(party, userId, name, profile, now)
 

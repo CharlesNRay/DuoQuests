@@ -148,6 +148,12 @@ return function(modulesOverride)
 	local okY, codeY = PartyCore.CreateCode(sameCode, partyY.PartyId, 2002)
 	check("A code that is already taken is not reused", okY and codeY ~= "AAAAAA")
 
+	-- leaving a party must never send you back to stage 1: a new solo party starts at your own frontier
+	local profL = player("Warrior")
+	profL.Season.HighestStage = 37
+	local _, partyL = PartyCore.CreateSolo(deps("serverL"), 3001, "Lea", profL, 1)
+	check("A new solo party starts at the player's frontier, not stage 1", partyL.Stage == 37 and partyL.Frontier == 37)
+
 	-- Join ----------------------------------------------------------------------------------
 	local profB = player("Cleric")
 	profB.Season.HighestStage = 3
