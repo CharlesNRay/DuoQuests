@@ -19,9 +19,9 @@ return {
 	InventoryCap = 30, -- a full bag sells new drops automatically
 
 	Slots = {
-		Weapon = { Stat = "Attack", Base = 2, PerStage = 0.5 },
-		Armor = { Stat = "MaxHealth", Base = 20, PerStage = 4 },
-		Trinket = { Stat = "Defense", Base = 1, PerStage = 0.3 },
+		Weapon = { Stat = "Attack", Base = 0.3, PerStage = 0.05 },
+		Armor = { Stat = "MaxHealth", Base = 3, PerStage = 0.5 },
+		Trinket = { Stat = "Defense", Base = 0.15, PerStage = 0.025 },
 	},
 	SlotOrder = { "Weapon", "Armor", "Trinket" },
 
@@ -32,8 +32,8 @@ return {
 	},
 
 	RarityMult = { Common = 1, Rare = 1.5, Epic = 2.2 },
-	SellValue = { Common = 5, Rare = 15, Epic = 40 }, -- gold per item (before stage scaling)
-	SellPerStage = 0.5, -- extra gold per stage of Power
+	SellValue = { Common = 2, Rare = 6, Epic = 15 }, -- gold per item (before stage scaling)
+	SellPerStage = 0.2, -- extra gold per stage of Power
 
 	Drop = {
 		Chance = 0.2, -- per won fight at the frontier

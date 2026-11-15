@@ -25,10 +25,11 @@
 local BalanceTool = {}
 
 local function spend(m, profile, classId)
+	local subclassId = m.Subclasses and m.Subclasses.Current(profile, classId)
 	local progressed = true
 	while progressed do
 		progressed = false
-		for _, abilityId in ipairs(m.Skills.Pool(classId)) do
+		for _, abilityId in ipairs(m.Skills.Pool(classId, subclassId)) do
 			if not profile.Season.OwnedAbilities[abilityId] and m.Economy.UnlockAbility(profile, classId, abilityId) then
 				progressed = true
 				break
@@ -48,7 +49,8 @@ end
 
 local function equipBest(m, profile, classId)
 	local owned = {}
-	for _, abilityId in ipairs(m.Skills.Pool(classId)) do
+	local subclassId = m.Subclasses and m.Subclasses.Current(profile, classId)
+	for _, abilityId in ipairs(m.Skills.Pool(classId, subclassId)) do
 		if profile.Season.OwnedAbilities[abilityId] then
 			table.insert(owned, abilityId)
 		end
@@ -81,8 +83,12 @@ local function equipGear(m, profile)
 		for _, item in ipairs(equipment.Inventory) do
 			local _, value = m.Gear.StatOf(item)
 			local worn = equipment.Equipped[item.Slot]
-			local _, wornValue = if worn then m.Gear.StatOf(worn) else nil, 0
-			if value > (wornValue or 0) then
+			local wornValue = 0
+			if worn then
+				local _, v = m.Gear.StatOf(worn)
+				wornValue = v
+			end
+			if value > wornValue then
 				m.Gear.Equip(profile, item.Id)
 				progressed = true
 				break
@@ -120,6 +126,12 @@ function BalanceTool.Run(m, options)
 		stage = outcome.NextStage
 		for _, member in ipairs(team) do
 			local classId = member.Profile.Season.ClassId
+			if options.Subclass and not m.Subclasses.Current(member.Profile, classId) then
+				local choices = m.Subclasses.Available(member.Profile, classId)
+				if choices and choices[1] then
+					m.Subclasses.Choose(member.Profile, classId, choices[1].Id or choices[1])
+				end
+			end
 			if options.Pets then
 				spendPets(m, member.Profile)
 			end

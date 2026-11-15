@@ -15,7 +15,7 @@ Branch: `claude/overnight-world-systems` (never pushed to main).
 - Pets give small bonuses (room for stronger pets later)
 
 ## Not done
-- Balance pass: the simulations were too slow to finish overnight, so no retuning was done. Subclass/pet/gear numbers are untested for pacing. Run BalanceTool in smaller pieces.
+- Balance pass: done later that morning, see docs/BALANCE.md.
 
 ## First checks in Studio
 Connect Rojo, Stop/wait/Play. Check hub, Ranks/Gear/Daily/Skills/Pets screens, the ghost Cleric in fights, phone nav width (10 buttons), live DataStores/leaderboards.

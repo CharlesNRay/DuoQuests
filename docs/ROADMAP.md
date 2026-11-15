@@ -79,5 +79,5 @@ Newest first.
 ## 2026-11-15 (overnight additions)
 - [x] Subclasses: Berserker/Guardian (Warrior), Priest/Templar (Cleric). Unlock at frontier stage 30, permanent per season, 3 skills each (first free, rest via shards). Tiered `Parent` links allow deeper branches later.
 - [x] Starter ghost companion: single-member parties get a ghost partner (Cleric, or Warrior for Cleric owners) that mirrors the owner's level, is editable via ghost loadout, and is replaced when a real partner joins.
-- [ ] Balance pass (2P + pets + gear + subclasses) - see morning notes.
+- [x] Balance pass 2026-11-15 (gear and subclass numbers cut, sim bug fixed) - see docs/BALANCE.md
 - Open questions: respec for subclasses, deeper branches, stronger pets, pets as combatants.
