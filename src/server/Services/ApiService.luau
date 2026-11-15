@@ -12,7 +12,7 @@
 	  GetState                          -> full UI state (see buildState)
 	  EquipSkills(ids)                  -> ok | false, reason
 	  LevelSlot(slotIndex)
-	  UnlockSkill(abilityId)            pay shards
+	  Wish(kind, tierId, method, count) the Wishing Tree (kind Pet|Skill; method Ticket|Currency; count 1|10)
 	  UnlockSkillWithPick(abilityId)    use a free pick
 	  EquipPassives(ids)
 	  LevelPassiveSlot(slotIndex)
@@ -46,6 +46,7 @@ local Party = require(Shared.Party)
 local Pets = require(Shared.Pets)
 local Gear = require(Shared.Gear)
 local Consumables = require(Shared.Consumables)
+local Wishing = require(Shared.Wishing)
 local Hero = require(Shared.Hero)
 local World = require(Shared.World)
 local Daily = require(Shared.Daily)
@@ -152,6 +153,7 @@ local function buildState(player)
 			PassiveLevels = table.clone(season.PassiveSlotLevels[classId]),
 			PassiveSlots = Passives.SlotsAt(season.HighestStage),
 			Pets = Pets.List(profile),
+			Wishing = { Pet = Wishing.Info(profile, "Pet"), Skill = Wishing.Info(profile, "Skill") },
 			ActivePet = (Pets.Active(profile)),
 			SubclassId = Subclasses.Current(profile, classId),
 			SubclassChoices = subclassChoices(profile, classId),
@@ -231,15 +233,19 @@ function handlers.LevelSlot(player, profile, slotIndex)
 	return ok, reason
 end
 
-function handlers.UnlockSkill(player, profile, abilityId)
-	if type(abilityId) ~= "string" then
+-- Wishing Tree: pet and skill wishes (the only way to get most pets; skills are unlocked by wishing or free picks).
+function handlers.Wish(player, profile, kind, tierId, method, count)
+	if type(kind) ~= "string" or type(tierId) ~= "string" or type(method) ~= "string" or type(count) ~= "number" then
 		return false, "BadArgs"
 	end
-	local ok, reason = Economy.UnlockAbility(profile, profile.Season.ClassId, abilityId)
+	if not nearShop(player, "Tree") then
+		return false, "TooFar"
+	end
+	local ok, data = Wishing.Wish(profile, kind, tierId, method, count)
 	if ok then
 		afterBuildChange(player)
 	end
-	return ok, reason
+	return ok, data
 end
 
 function handlers.UnlockSkillWithPick(player, profile, abilityId)
@@ -386,9 +392,9 @@ function handlers.DevGrant(player, profile)
 		return false, "Forbidden"
 	end
 	profile.Season.Currencies.Gold += 5000
-	profile.Season.Currencies.Shards += 100
+	profile.Season.Currencies.Shards += 600
 	for _, id in ipairs(Consumables.Order) do
-		Consumables.Grant(profile, id, 3)
+		Consumables.Grant(profile, id, if id == "PetWish" or id == "SkillWish" then 12 else 3)
 	end
 	for i = 1, 12 do
 		local t = Gear.Types[(i - 1) % #Gear.Types + 1]

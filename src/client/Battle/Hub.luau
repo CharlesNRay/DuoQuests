@@ -9,7 +9,7 @@
 	  Map board, Rankings board, Daily gift chest
 	  Roads running north between the player lots, and a marker on every lot nobody has taken
 
-	  Hub.Build(handlers)       handlers = { Map, Ranks, Daily, Merchant, Blacksmith } (all functions)
+	  Hub.Build(handlers)       handlers = { Map, Ranks, Daily, Merchant, Blacksmith, Tree } (all functions)
 	  Hub.SetDailyReady(bool)
 	  Hub.SetLots(taken)        taken = { [slot] = true }: lots without a party get an "Open lot" marker
 	  Hub.Update(dt)            animate the townsfolk and the fountain (called every frame by Main)
@@ -172,6 +172,56 @@ local function tree(position, scale)
 	part(folder, { Name = "Leaves", Shape = Enum.PartType.Ball, Size = Vector3.new(6 * scale, 6 * scale, 6 * scale), Position = position + Vector3.new(2 * scale, 11 * scale, 1 * scale), Color = Color3.fromRGB(86, 160, 80), Material = Enum.Material.Grass, CanCollide = false })
 end
 
+-- The Wishing Tree: a glowing tree on a little island with a spring around it.
+local function wishingTree(position, lookAt, handler)
+	local model = Instance.new("Model")
+	model.Name = "Wishing Tree"
+	model.Parent = folder
+	disc(model, position, 11, 0.5, 0.2, STONE_DARK)
+	disc(model, position, 9.4, 0.3, 0.7, Color3.fromRGB(90, 170, 230), Enum.Material.Glass)
+	disc(model, position, 4, 0.9, 0.7, Color3.fromRGB(90, 130, 80), Enum.Material.Grass)
+	local trunk = part(model, { Name = "Trunk", Size = Vector3.new(2.4, 9, 2.4), Position = position + Vector3.new(0, 5.2, 0), Color = Color3.fromRGB(110, 80, 70), Material = Enum.Material.Wood })
+	for index = 1, 3 do
+		local a = math.rad(index * 120)
+		part(model, { Name = "Root", Size = Vector3.new(0.9, 0.9, 4), CFrame = CFrame.new(position + Vector3.new(math.sin(a) * 2.2, 1.2, math.cos(a) * 2.2)) * CFrame.Angles(math.rad(-20), a, 0), Color = Color3.fromRGB(100, 74, 64), Material = Enum.Material.Wood })
+	end
+	local glow = Color3.fromRGB(70, 190, 230)
+	local pink = Color3.fromRGB(230, 110, 190)
+	local canopy = {
+		{ Vector3.new(0, 13, 0), 11, glow }, { Vector3.new(4, 11, 2), 7, pink }, { Vector3.new(-4, 11.5, -1), 7.5, glow },
+		{ Vector3.new(1, 16.5, -2), 6, pink }, { Vector3.new(-2, 10, 4), 5.5, pink },
+	}
+	local first
+	for _, c in ipairs(canopy) do
+		local ball = part(model, { Name = "Canopy", Shape = Enum.PartType.Ball, Size = Vector3.new(c[2], c[2] * 0.85, c[2]), Position = position + c[1], Color = c[3], Material = Enum.Material.SmoothPlastic, Transparency = 0.12, CanCollide = false })
+		first = first or ball
+	end
+	local light = Instance.new("PointLight")
+	light.Color = glow
+	light.Range = 30
+	light.Brightness = 0.5
+	light.Parent = first
+	local sparkles = Instance.new("ParticleEmitter")
+	sparkles.Rate = 14
+	sparkles.Lifetime = NumberRange.new(3, 5)
+	sparkles.Speed = NumberRange.new(1, 3)
+	sparkles.SpreadAngle = Vector2.new(180, 180)
+	sparkles.Size = NumberSequence.new({ NumberSequenceKeypoint.new(0, 0.5), NumberSequenceKeypoint.new(1, 0) })
+	sparkles.Color = ColorSequence.new(glow, pink)
+	sparkles.LightEmission = 1
+	sparkles.Acceleration = Vector3.new(0, 1.5, 0)
+	sparkles.Parent = first
+	-- little floating wish lanterns
+	for index = 1, 6 do
+		local a = math.rad(index * 60)
+		local lantern = part(model, { Name = "Lantern", Shape = Enum.PartType.Ball, Size = Vector3.new(1, 1.2, 1), Position = position + Vector3.new(math.sin(a) * 7, 6 + (index % 3), math.cos(a) * 7), Color = Color3.fromRGB(255, 220, 130), Material = Enum.Material.Neon, CanCollide = false })
+		lantern.Name = "Lantern"
+	end
+	nameTag(trunk, "WISHING TREE", "Wish for pets & skills", Color3.fromRGB(160, 235, 255), 11)
+	prompt(trunk, "Make a wish", "Wishing Tree", handler)
+	return model
+end
+
 local function bench(position, lookAt)
 	local m = Instance.new("Model")
 	m.Name = "Bench"
@@ -286,6 +336,8 @@ function Hub.Build(handlers)
 	fire.Color = Color3.fromRGB(255, 140, 60)
 	fire.Range = 16
 	fire.Parent = coals
+
+	wishingTree(pointOf("Tree"), centre, handlers.Tree)
 
 	-- boards and the daily chest
 	board(pointOf("Map"), centre, "WORLD MAP", Color3.fromRGB(40, 90, 150), "Open map", handlers.Map)

@@ -98,6 +98,16 @@ function Icons.Passive(parent, def, props)
 	return tile(parent, look[1], look[2], if def then Color3.fromRGB(235, 225, 190) else Color3.fromRGB(110, 116, 140), props)
 end
 
+-- Pets: a tile tinted by the pet's colour with a glyph for its shape; border = rarity.
+local PET_GLYPHS = { Ball = "●", Cat = "🦊", Wisp = "✦", Bunny = "🐰", Bird = "🐦", Turtle = "🐢", Drake = "🐉" }
+function Icons.Pet(parent, petId, props)
+	local PetConfig = require(game:GetService("ReplicatedStorage"):WaitForChild("Shared").Config.Pets)
+	local def = PetConfig.Defs[petId]
+	local look = def and def.Look or { Shape = "Ball", Color = { 120, 120, 130 } }
+	local color = Color3.fromRGB(look.Color[1], look.Color[2], look.Color[3])
+	return tile(parent, color, PET_GLYPHS[look.Shape] or "●", Kit.rarityColor(def and def.Rarity), props)
+end
+
 function Icons.Ultimate(parent, def, props)
 	return tile(parent, KIND_COLORS.Ultimate, KIND_GLYPHS.Ultimate, Kit.rarityColor(def and def.Rarity or "Epic"), props)
 end

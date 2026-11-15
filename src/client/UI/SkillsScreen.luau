@@ -452,10 +452,7 @@ function SkillsScreen.Skills(container, state, call, extra)
 		actionButton(right, ("Unlock with a pick  (%d)"):format(picks), 0, C.Up, function()
 			call("UnlockSkillWithPick", selectedId)
 		end).Position = UDim2.new(0, 8, 1, -98)
-		actionButton(right, "Unlock with shards", 0, C.PanelLight, function()
-			call("UnlockSkill", selectedId)
-		end).Position = UDim2.new(0, 8, 1, -64)
-		note(right, ("You have %d shards."):format(me.Shards or 0), -32)
+		note(right, ("Win it at the Wishing Tree in the plaza (you have %d shards, %d skill tickets)."):format(me.Shards or 0, ((state.Player.Wishing and state.Player.Wishing.Skill) or {}).Tickets or 0), -64, 56)
 	end
 end
 

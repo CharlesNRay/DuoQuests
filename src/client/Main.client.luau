@@ -133,9 +133,9 @@ end
 local PANEL_DEFAULT = Vector2.new(500, 286)
 local PANEL_SIZES = {
 	Map = Vector2.new(640, 298), Hero = Vector2.new(640, 298), Skills = Vector2.new(660, 344),
-	Merchant = Vector2.new(540, 292), Blacksmith = Vector2.new(540, 292),
+	Merchant = Vector2.new(540, 292), Blacksmith = Vector2.new(540, 292), Wish = Vector2.new(640, 310),
 }
-local SHOP_NPC = { Merchant = "Merchant", Blacksmith = "Blacksmith" }
+local SHOP_NPC = { Merchant = "Merchant", Blacksmith = "Blacksmith", Wish = "Tree" }
 local panel = Kit.frame({ Name = "Panel", Size = UDim2.new(0, 500, 0, 286), Position = UDim2.new(0.5, -250, 0, 42), BackgroundColor3 = Kit.Colors.Bg, Visible = false, ZIndex = 5, Parent = root })
 body = Kit.new("Frame", { Size = UDim2.new(1, -16, 1, -62), Position = UDim2.fromOffset(8, 50), BackgroundTransparency = 1, Parent = panel })
 local title = Kit.label({ Size = UDim2.new(1, -70, 0, 36), Position = UDim2.fromOffset(12, 6), Text = "", TextSize = 20, Font = Enum.Font.GothamBold, Parent = panel })
@@ -147,6 +147,7 @@ end)
 
 local function redraw()
 	if not state then return end
+	extra.State = state
 	hud:Render(state)
 	Hub.SetDailyReady(state.Player.Daily ~= nil and state.Player.Daily.CanClaim == true)
 	syncWorld()
@@ -269,6 +270,7 @@ Hub.Build({
 	Daily = function() open("Daily", "Daily Login", true) end,
 	Merchant = function() shopOpen("Merchant", "Merchant - sell gear") end,
 	Blacksmith = function() shopOpen("Blacksmith", "Blacksmith - upgrade gear") end,
+	Tree = function() open("Wish", "Wishing Tree", true) end,
 })
 hud:AddButton("Plaza", "mini", "⛲", "Plaza", goPlaza)
 hud:AddButton("Home", "mini", "🏠", "Home", goHome)

@@ -62,7 +62,7 @@ return function(modulesOverride)
 	for stage = 2, 25 do
 		Progression.ApplyClear(profile, stage)
 	end
-	check("Later stages give the other pets", profile.Permanent.Pets.Foxling and profile.Permanent.Pets.Mossback and profile.Permanent.Pets.Wisp)
+	check("Stage 5 gives Foxling; wish-only pets are not handed out", profile.Permanent.Pets.Foxling and not profile.Permanent.Pets.Mossback and not profile.Permanent.Pets.Wisp)
 	check("Equipping a pet changes the active pet", Pets.Equip(profile, "Foxling") and Pets.Active(profile) == "Foxling")
 
 	-- a new season keeps ownership but resets equip and levels

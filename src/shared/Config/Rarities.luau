@@ -42,4 +42,12 @@ return {
 		PowerPerLevel = 0.12,
 		Color = { 170, 90, 230 }, -- RGB
 	},
+
+	Legendary = {
+		Id = "Legendary",
+		DisplayName = "Legendary",
+		Order = 4,
+		PowerPerLevel = 0.14,
+		Color = { 255, 176, 48 }, -- RGB
+	},
 }

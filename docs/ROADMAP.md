@@ -137,3 +137,8 @@ Newest first.
 - Hero screen frames the body only so the character is centred; UI reference size enlarged so everything reads smaller.
 - Skills screen rebuilt: You / Partner tabs, drag to reorder cast order, drag pool skills onto slots, scrolling pool, partner ghost skills editable.
 - TODO next: worn sets visible on character, pet wishing + pet food, Wishing Tree (pet + skill wishes; then remove shard/gold unlocks on Skills/Pets pages), world boss.
+
+## Wishing Tree (Nov 15)
+- Wishing Tree in the plaza (glowing tree + spring). Pet wishes (tickets or gold) and Skill wishes (tickets or shards); three tiers unlocked at stages 1/15/40 with better odds; 10-pulls; pity (Rare+ every 10, Epic+ every 40, pet Legendary every 90); duplicate pets become pet XP.
+- 15 pets, 13 wish-only, each with its own look (new shapes: Bunny, Bird, Turtle, Drake) and stat; new Legendary rarity.
+- Shard-unlock button removed from the Skills page; skills come from wishes or boss free picks. Pets page now shows pet icons and how to get each pet.

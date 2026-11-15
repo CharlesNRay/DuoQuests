@@ -30,7 +30,7 @@ Pets.MaxLevel = Config.MaxLevel
 Pets.Defs = Config.Defs
 Pets.Order = Config.Order
 
-local STAT_LABELS = { MaxHealth = "Max Health", Attack = "Attack", Defense = "Defense", CritChance = "Crit Chance" }
+local STAT_LABELS = { MaxHealth = "Max Health", Attack = "Attack", Defense = "Defense", CritChance = "Crit Chance", AttackSpeed = "Attack Speed", CritMultiplier = "Crit Damage" }
 
 function Pets.Level(profile, petId)
 	local levels = profile.Season.PetLevels or {}
@@ -78,7 +78,7 @@ function Pets.Describe(petId, level)
 	end
 	local value = valueAt(def.Bonus, math.clamp(level or 1, 1, Config.MaxLevel))
 	local label = STAT_LABELS[def.Bonus.Stat] or def.Bonus.Stat
-	if def.Bonus.Mode == "Mul" or def.Bonus.Stat == "CritChance" then
+	if def.Bonus.Mode == "Mul" or def.Bonus.Stat == "CritChance" or def.Bonus.Stat == "CritMultiplier" then
 		return ("+%d%% %s"):format(math.floor(value * 100 + 0.5), label)
 	end
 	return ("+%d %s"):format(math.floor(value + 0.5), label)
@@ -89,7 +89,7 @@ function Pets.GrantForClear(profile, stage)
 	local gained = {}
 	for _, petId in ipairs(Config.Order) do
 		local def = Config.Defs[petId]
-		if stage >= def.UnlockStage and not profile.Permanent.Pets[petId] then
+		if def.UnlockStage ~= nil and stage >= def.UnlockStage and not profile.Permanent.Pets[petId] then
 			profile.Permanent.Pets[petId] = true
 			table.insert(gained, petId)
 		end
@@ -176,6 +176,8 @@ function Pets.List(profile)
 			Rarity = def.Rarity,
 			Owned = owned(profile, petId),
 			UnlockStage = def.UnlockStage,
+			Wish = def.Wish == true,
+			Look = def.Look,
 			Level = level,
 			MaxLevel = Config.MaxLevel,
 			Active = petId == activeId,

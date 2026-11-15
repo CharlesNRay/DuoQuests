@@ -45,6 +45,7 @@ World.PlazaSpots = {
 	Map = { Angle = -100, Radius = 33 },
 	Rankings = { Angle = 100, Radius = 33 },
 	Daily = { Angle = 150, Radius = 31 },
+	Tree = { Angle = -150, Radius = 30 },
 }
 
 function World.PlazaPoint(name)
@@ -53,7 +54,7 @@ function World.PlazaPoint(name)
 	return World.PLAZA.X + math.sin(a) * spot.Radius, World.PLAZA.Z - math.cos(a) * spot.Radius
 end
 
--- Is a world position within range of a shop ("Merchant" | "Blacksmith")?
+-- Is a world position within range of a shop ("Merchant" | "Blacksmith" | "Tree")?
 function World.NearShop(x, z, name)
 	local sx, sz = World.PlazaPoint(name)
 	return (x - sx) ^ 2 + (z - sz) ^ 2 <= World.SHOP_RANGE ^ 2

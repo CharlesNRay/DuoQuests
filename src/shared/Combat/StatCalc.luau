@@ -58,7 +58,7 @@ local function applyMods(stats, mods)
 	for _, mod in ipairs(mods) do
 		local current = stats[mod.Stat]
 		if current == nil then
-			current = if MULTIPLIER_STATS[mod.Stat] then 1 else 0
+			current = if MULTIPLIER_STATS[mod.Stat] then 1 elseif mod.Stat == "CritMultiplier" then 1.5 else 0
 		end
 		if mod.Mode == "Add" then
 			stats[mod.Stat] = current + mod.Value
