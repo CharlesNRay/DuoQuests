@@ -251,7 +251,6 @@ function HeroScreen.Hero(container, state, _, extra)
 	end
 	section(scroll, "GEAR")
 	gearTiles(scroll, hero.Worn or {})
-	Kit.number(scroll)
 end
 
 return HeroScreen

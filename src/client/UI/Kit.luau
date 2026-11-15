@@ -30,8 +30,20 @@ Kit.Colors = {
 	Cleric = Color3.fromRGB(240, 220, 130),
 }
 
+-- Lists sort by LayoutOrder, which defaults to 0 for everything, so every GUI object we make gets an
+-- increasing LayoutOrder unless the caller sets one: lists then follow the order we wrote the code.
+local orderCounter = 0
+
 function Kit.new(className, props, children)
 	local inst = Instance.new(className)
+	if className == "UIListLayout" or className == "UIGridLayout" then
+		-- Instance.new defaults these to SortOrder.Name (alphabetical by class!), not LayoutOrder
+		inst.SortOrder = Enum.SortOrder.LayoutOrder
+	end
+	if inst:IsA("GuiObject") and (props == nil or props.LayoutOrder == nil) then
+		orderCounter += 1
+		inst.LayoutOrder = orderCounter
+	end
 	for key, value in pairs(props or {}) do
 		inst[key] = value
 	end
@@ -94,18 +106,6 @@ function Kit.button(props, onClick)
 		b.Activated:Connect(onClick)
 	end
 	return b
-end
-
--- Roblox does not promise creation order for list children with equal LayoutOrder (it can sort by
--- class/name), so screens that mix labels and frames call this once they are built.
-function Kit.number(parent)
-	local order = 0
-	for _, child in ipairs(parent:GetChildren()) do
-		if child:IsA("GuiObject") then
-			order += 1
-			child.LayoutOrder = order
-		end
-	end
 end
 
 function Kit.clear(parent)

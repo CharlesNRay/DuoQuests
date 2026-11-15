@@ -73,7 +73,6 @@ function Shops.Merchant(container, state, call)
 	else
 		Kit.label({ Size = UDim2.new(1, 0, 0, 34), Text = "Bulk sales keep set pieces and upgraded items.", TextColor3 = C.Dim, TextSize = 12, Parent = scroll })
 	end
-	Kit.number(scroll)
 end
 
 -- Blacksmith ---------------------------------------------------------------
@@ -129,7 +128,6 @@ function Shops.Blacksmith(container, state, call)
 	if not any then
 		Kit.label({ Size = UDim2.new(1, 0, 0, 50), Text = "\"Bring me something to work on.\"", TextColor3 = C.Dim, Parent = scroll })
 	end
-	Kit.number(scroll)
 end
 
 return Shops
