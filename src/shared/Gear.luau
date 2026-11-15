@@ -187,6 +187,31 @@ function Gear.SetFor(setId)
 	return def, (setId - 1) // #sets + 1
 end
 
+-- What the 3D hero should show for the worn gear: the rarity of the weapon / armour / helmet / boots
+-- and the strongest set (id + pieces worn, 2+). Pure data so it can ride along in a fight roster.
+function Gear.Look(equipped)
+	local look = {}
+	if equipped == nil then
+		return look
+	end
+	for key, slotName in pairs({ Weapon = "Weapon", Armor = "Armor", Helmet = "Helmet", Boots = "Boots", Amulet = "Amulet" }) do
+		local item = equipped[slotName]
+		if item then
+			look[key] = item.Rarity or "Common"
+		end
+	end
+	local bestId, bestCount
+	for setId, count in pairs(Gear.SetCounts(equipped)) do
+		if count >= 2 and (bestCount == nil or count > bestCount or (count == bestCount and setId < bestId)) then
+			bestId, bestCount = setId, count
+		end
+	end
+	if bestId then
+		look.SetId, look.SetCount = bestId, bestCount
+	end
+	return look
+end
+
 function Gear.SetCounts(equipped)
 	local counts = {}
 	for _, slotName in ipairs(Config.SlotOrder) do

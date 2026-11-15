@@ -47,6 +47,7 @@ local Stages = require(script.Parent.Stages)
 local Ultimates = require(script.Parent.Ultimates)
 local Pets = require(script.Parent.Pets)
 local Consumables = require(script.Parent.Consumables)
+local Gear = require(script.Parent.Gear)
 
 local StageRunner = {}
 
@@ -128,10 +129,18 @@ function StageRunner.Run(members, stage, seed, ultimate, record)
 	if record then
 		roster = {}
 		local ghosts = {}
+		local looks = {}
 		for _, member in ipairs(members) do
 			if member.Profile == nil then
 				ghosts[member.Id] = true
 			end
+			local worn
+			if member.Profile then
+				worn = member.Profile.Season.Equipment and member.Profile.Season.Equipment.Equipped
+			else
+				worn = member.Snapshot.Gear
+			end
+			looks[member.Id] = Gear.Look(worn)
 		end
 		for _, team in ipairs({ sim.Party, sim.Enemies }) do
 			for _, entity in ipairs(team) do
@@ -142,6 +151,7 @@ function StageRunner.Run(members, stage, seed, ultimate, record)
 					DefId = entity.DefId,
 					PetId = entity.PetId,
 					Ghost = ghosts[entity.Id] or nil,
+					Look = looks[entity.Id],
 					MaxHealth = entity.Stats.MaxHealth,
 					UserId = if entity.Team == "Party" then tonumber(entity.Id) else nil,
 				})

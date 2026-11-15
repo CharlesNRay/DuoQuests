@@ -291,5 +291,15 @@ return function(modulesOverride)
 	check("Enough pet food raises the pet level", (fed.Season.PetLevels.Slimey or 1) >= 2)
 	check("Pet food needs a pet you own", select(2, C.Use(ProfileTemplate.New(), "PetFood", now, "Slimey")) == "NoneLeft")
 
+	local lookGear = require(game:GetService("ReplicatedStorage").Shared.Gear)
+	local look = lookGear.Look({
+		Weapon = { Slot = "Weapon", Rarity = "Epic", SetId = 3 },
+		Armor = { Slot = "Armor", Rarity = "Rare", SetId = 3 },
+		Boots = { Slot = "Boots", Rarity = "Common" },
+	})
+	check("Gear.Look reports worn rarities", look.Weapon == "Epic" and look.Armor == "Rare" and look.Boots == "Common" and look.Helmet == nil)
+	check("Gear.Look reports a set at 2 pieces", look.SetId == 3 and look.SetCount == 2)
+	check("Gear.Look with nothing worn is empty", next(lookGear.Look({})) == nil and next(lookGear.Look(nil)) == nil)
+
 	print(("GearDailyTests done: %d passed, %d failed"):format(passed, failed))
 end

@@ -13,6 +13,7 @@
 	  actor:Destroy()
 ]]
 local RunService = game:GetService("RunService")
+local GearVisuals = require(script.Parent.GearVisuals)
 
 local Actor = {}
 Actor.__index = Actor
@@ -103,10 +104,24 @@ function Actor:SetGhost(on)
 	applyGhost(self.Model, self.Ghost)
 end
 
+-- worn-gear look (Gear.Look data from the fight roster); redrawn whenever the body is swapped
+function Actor:SetLook(look)
+	self.Look = look
+	GearVisuals.Apply(self.Model, look)
+	for _, d in ipairs(self.Model:GetDescendants()) do
+		if d.Name == "GearVisual" and d:IsA("BasePart") then
+			d.Anchored = true
+		end
+	end
+end
+
 function Actor:SetModel(model)
 	local old = self.Model
 	local height, top = measure(model)
 	self.Height = height
+	if self.Look then
+		GearVisuals.Apply(model, self.Look)
+	end
 	for _, d in ipairs(model:GetDescendants()) do
 		if d:IsA("BasePart") then
 			d.Anchored = true

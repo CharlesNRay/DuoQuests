@@ -131,6 +131,9 @@ function Replay:_hero(entry, index)
 			end)
 		end
 	end
+	if hero.Look ~= entry.Look then
+		hero:SetLook(entry.Look)
+	end
 	if hero.Ghost ~= (entry.Ghost == true) then
 		hero:SetGhost(entry.Ghost == true)
 	end

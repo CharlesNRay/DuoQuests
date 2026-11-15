@@ -55,11 +55,13 @@ function Bosses.Strike(members, cfg, frontier, seed, record)
 	local damage = math.floor(HUGE - boss.Health + 0.5)
 	local fight
 	if record then
-		local ghosts = {}
+		local ghosts, looks = {}, {}
 		for _, member in ipairs(members) do
 			if member.Profile == nil then
 				ghosts[member.Id] = true
 			end
+			local worn = if member.Profile then (member.Profile.Season.Equipment and member.Profile.Season.Equipment.Equipped) else member.Snapshot.Gear
+			looks[member.Id] = Gear.Look(worn)
 		end
 		local roster = {}
 		for _, team in ipairs({ sim.Party, sim.Enemies }) do
@@ -71,7 +73,7 @@ function Bosses.Strike(members, cfg, frontier, seed, record)
 				end
 				table.insert(roster, {
 					Id = entity.Id, Name = entity.Name, Team = entity.Team, DefId = entity.DefId, PetId = entity.PetId,
-					Ghost = ghosts[entity.Id] or nil, MaxHealth = maxHealth,
+					Ghost = ghosts[entity.Id] or nil, Look = looks[entity.Id], MaxHealth = maxHealth,
 					UserId = if entity.Team == "Party" then tonumber(entity.Id) else nil,
 				})
 			end
