@@ -85,7 +85,10 @@ local function passTab(area, state, call, extra, redraw)
 	Kit.label({ Size = UDim2.new(1, -160, 0, 14), Position = UDim2.fromOffset(0, 38), Text = ("%d / %d XP to the next level - earn Pass XP from quests and clearing stages"):format(pass.XPInLevel, pass.XPPerLevel), TextSize = 10, TextColor3 = C.Dim, Parent = area })
 	local claimable = 0
 	for _, r in ipairs(pass.Rows) do
-		if r.Reached and not r.Claimed and not r.Premium then
+		if r.Reached and not r.Claimed then
+			claimable += 1
+		end
+		if r.Reached and pass.Premium and not r.PremiumClaimed then
 			claimable += 1
 		end
 	end
@@ -94,20 +97,34 @@ local function passTab(area, state, call, extra, redraw)
 			call("ClaimPass", "All")
 		end
 	end)
-	local scroll = Kit.new("ScrollingFrame", { Size = UDim2.new(1, 0, 1, -58), Position = UDim2.fromOffset(0, 58), BackgroundTransparency = 1, BorderSizePixel = 0, CanvasSize = UDim2.new(), AutomaticCanvasSize = Enum.AutomaticSize.Y, ScrollBarThickness = 4, Parent = area })
+	-- column headers
+	Kit.label({ Size = UDim2.fromOffset(100, 14), Position = UDim2.fromOffset(70, 56), Text = "FREE", TextSize = 10, Font = Enum.Font.GothamBold, TextColor3 = C.Dim, Parent = area })
+	Kit.label({ Size = UDim2.fromOffset(200, 14), Position = UDim2.new(0.5, 4, 0, 56), Text = if pass.Premium then "PREMIUM ★" else "PREMIUM ★ (locked)", TextSize = 10, Font = Enum.Font.GothamBold, TextColor3 = Color3.fromRGB(255, 200, 90), Parent = area })
+	local scroll = Kit.new("ScrollingFrame", { Size = UDim2.new(1, 0, 1, -74), Position = UDim2.fromOffset(0, 74), BackgroundTransparency = 1, BorderSizePixel = 0, CanvasSize = UDim2.new(), AutomaticCanvasSize = Enum.AutomaticSize.Y, ScrollBarThickness = 4, Parent = area })
 	Kit.new("UIListLayout", { Padding = UDim.new(0, 4), Parent = scroll })
+	local gold = Color3.fromRGB(255, 200, 90)
 	for _, r in ipairs(pass.Rows) do
-		local row = Kit.frame({ Size = UDim2.new(1, -8, 0, 38), BackgroundColor3 = if r.Reached then C.PanelLight else C.Panel, Parent = scroll })
-		Kit.label({ Size = UDim2.fromOffset(60, 38), Position = UDim2.fromOffset(8, 0), Text = "Lv " .. r.Level, TextSize = 14, Font = Enum.Font.GothamBold, TextColor3 = if r.Reached then C.Accent else C.Dim, Parent = row })
-		Kit.label({ Size = UDim2.new(1, -200, 1, 0), Position = UDim2.fromOffset(70, 0), Text = rewardText(r.Reward), TextSize = 12, TextColor3 = if r.Reached then C.Text else C.Dim, Parent = row })
+		local row = Kit.frame({ Size = UDim2.new(1, -8, 0, 44), BackgroundColor3 = if r.Reached then C.PanelLight else C.Panel, Parent = scroll })
+		Kit.label({ Size = UDim2.fromOffset(60, 44), Position = UDim2.fromOffset(8, 0), Text = "Lv " .. r.Level, TextSize = 14, Font = Enum.Font.GothamBold, TextColor3 = if r.Reached then C.Accent else C.Dim, Parent = row })
+		-- free column
+		Kit.label({ Size = UDim2.new(0.5, -170, 1, 0), Position = UDim2.fromOffset(70, 0), Text = rewardText(r.Reward), TextSize = 11, TextWrapped = true, TextColor3 = if r.Reached then C.Text else C.Dim, Parent = row })
 		if r.Claimed then
-			Kit.label({ Size = UDim2.fromOffset(100, 38), Position = UDim2.new(1, -108, 0, 0), Text = "Claimed ✓", TextSize = 12, TextXAlignment = Enum.TextXAlignment.Center, TextColor3 = C.Up, Parent = row })
-		elseif r.Reached and not r.Premium then
-			Kit.button({ Size = UDim2.fromOffset(100, 28), Position = UDim2.new(1, -108, 0.5, -14), Text = "Claim", TextSize = 12, BackgroundColor3 = C.Up, Parent = row }, function()
-				call("ClaimPass", r.Level)
+			Kit.label({ Size = UDim2.fromOffset(70, 44), Position = UDim2.new(0.5, -96, 0, 0), Text = "Claimed ✓", TextSize = 11, TextXAlignment = Enum.TextXAlignment.Center, TextColor3 = C.Up, Parent = row })
+		elseif r.Reached then
+			Kit.button({ Size = UDim2.fromOffset(70, 26), Position = UDim2.new(0.5, -96, 0.5, -13), Text = "Claim", TextSize = 11, BackgroundColor3 = C.Up, Parent = row }, function()
+				call("ClaimPass", r.Level, "Free")
 			end)
-		else
-			Kit.label({ Size = UDim2.fromOffset(100, 38), Position = UDim2.new(1, -108, 0, 0), Text = if r.Premium then "Premium" else "Locked", TextSize = 12, TextXAlignment = Enum.TextXAlignment.Center, TextColor3 = C.Dim, Parent = row })
+		end
+		-- premium column
+		Kit.label({ Size = UDim2.new(0.5, -110, 1, 0), Position = UDim2.new(0.5, 4, 0, 0), Text = rewardText(r.PremiumReward), TextSize = 11, TextWrapped = true, TextColor3 = if pass.Premium and r.Reached then gold else C.Dim, Parent = row })
+		if r.PremiumClaimed then
+			Kit.label({ Size = UDim2.fromOffset(80, 44), Position = UDim2.new(1, -84, 0, 0), Text = "Claimed ✓", TextSize = 11, TextXAlignment = Enum.TextXAlignment.Center, TextColor3 = C.Up, Parent = row })
+		elseif not pass.Premium then
+			Kit.label({ Size = UDim2.fromOffset(80, 44), Position = UDim2.new(1, -84, 0, 0), Text = "🔒", TextSize = 16, TextXAlignment = Enum.TextXAlignment.Center, TextColor3 = C.Dim, Parent = row })
+		elseif r.Reached then
+			Kit.button({ Size = UDim2.fromOffset(80, 26), Position = UDim2.new(1, -84, 0.5, -13), Text = "Claim", TextSize = 11, BackgroundColor3 = gold, TextColor3 = Color3.fromRGB(30, 24, 10), Parent = row }, function()
+				call("ClaimPass", r.Level, "Premium")
+			end)
 		end
 	end
 end

@@ -156,5 +156,30 @@ return function(modulesOverride)
 	for _, q in ipairs(Quests.Weekly(ps, monday).Quests) do if q.Id == "WStrike4" then dstrike = q end end
 	check("A boss strike counts toward the weekly strike quest when drawn", dstrike == nil or dstrike.Progress == 1)
 
+	-- premium pass track: locked until owned, pays alongside the free track, never gold
+	local pr = ProfileTemplate.New()
+	Quests.AddPassXP(pr, QuestConfig.Pass.XPPerLevel * 30)
+	check("Premium rows exist for every level", #Quests.Pass(pr).Rows == 30 and Quests.Pass(pr).Rows[1].PremiumReward.Wishstones > 0)
+	check("Premium is locked by default", not Quests.Pass(pr).Premium and select(2, Quests.ClaimPass(pr, 1, "Premium")) == "PremiumOnly")
+	Quests.ClaimAllPass(pr)
+	check("Claim all without premium claims only the free track", Quests.Pass(pr).Rows[1].Claimed and not Quests.Pass(pr).Rows[1].PremiumClaimed)
+	Quests.SetPremium(pr, true)
+	check("Owning premium unlocks the track", Quests.Pass(pr).Premium)
+	local goldPrem, stonesPrem = pr.Season.Currencies.Gold, pr.Season.Currencies.Wishstones or 0
+	local nPrem = Quests.ClaimAllPass(pr)
+	check("Claim all now claims all 30 premium levels", nPrem == 30 and Quests.Pass(pr).Rows[30].PremiumClaimed)
+	check("Premium pays Wishstones and never gold", (pr.Season.Currencies.Wishstones or 0) > stonesPrem + 90 and pr.Season.Currencies.Gold == goldPrem)
+	check("Premium level claims once", select(2, Quests.ClaimPass(pr, 5, "Premium")) == "AlreadyClaimed")
+	local pet, skill = 0, 0
+	for l = 1, 30 do
+		local it = QuestConfig.Pass.PremiumRewards[l].Items
+		pet += it.PetWish or 0
+		skill += it.SkillWish or 0
+	end
+	check("Premium gives both ticket kinds", pet >= 3 and skill >= 3)
+	local pn = ProfileTemplate.New()
+	Quests.SetPremium(pn, true)
+	check("Premium levels still need the level reached", select(2, Quests.ClaimPass(pn, 3, "Premium")) == "NotReached")
+
 	print(("QuestTests done: %d passed, %d failed"):format(passed, failed))
 end

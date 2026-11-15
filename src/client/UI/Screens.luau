@@ -566,7 +566,11 @@ function Screens.Pets(container, state, call)
 	for _, pet in ipairs(rows) do
 		if pet.Owned then
 			local r = row(scroll, 92)
-			Icons.Pet(r, pet.Id, { Size = UDim2.fromOffset(44, 44), Position = UDim2.fromOffset(8, 24) })
+			Icons.Pet(r, pet.Id, { Size = UDim2.fromOffset(40, 40), Position = UDim2.fromOffset(10, 6) })
+			if pet.Skill then
+				local skillIcon = Icons.PetSkill(r, pet.Id, { Size = UDim2.fromOffset(32, 32), Position = UDim2.fromOffset(14, 52), Level = pet.Rank or 1 })
+				Kit.Hover(skillIcon, function() return ("<b>%s</b> (Lv %d)\n%s"):format(pet.Skill.Name, pet.Rank or 1, pet.Skill.Text) end)
+			end
 			local stars = string.rep("★", pet.Rank or 1) .. string.rep("☆", (pet.MaxRank or 1) - (pet.Rank or 1))
 			local title = ("%s  %s  Lv %d/%d  [%s]%s"):format(pet.Name, stars, pet.Level, pet.MaxLevel, pet.Rarity, pet.Active and "  (equipped)" or "")
 			local skill = if pet.Skill then ("\nSkill: %s (Lv %d) - %s"):format(pet.Skill.Name, pet.Rank or 1, pet.Skill.Text) else ""

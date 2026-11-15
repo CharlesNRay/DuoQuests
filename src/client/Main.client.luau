@@ -318,6 +318,7 @@ hud:AddButton("Party", "dock", "👥", "Party", function() open("Party", "Party"
 -- Studio only: a test button that grants gold, boosts and gear so every screen can be exercised.
 if RunService:IsStudio() then
 	hud:AddButton("Dev", "mini", "🧪", "Test items (Studio only)", function() call("DevGrant") end)
+	hud:AddButton("DevPremium", "mini", "★", "Toggle premium pass (Studio only)", function() call("DevPremium") end)
 end
 
 hud:AddButton("Bag", "dock", "🎒", "Bag", function() open("Bag", "Bag") end)

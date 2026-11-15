@@ -375,7 +375,7 @@ function Hud.new(root)
 			waiting = waiting or (q.Done and not q.Claimed)
 		end
 		for _, r in ipairs(me.Pass and me.Pass.Rows or {}) do
-			waiting = waiting or (r.Reached and not r.Claimed and not r.Premium)
+			waiting = waiting or (r.Reached and not r.Claimed) or (r.Reached and me.Pass.Premium == true and not r.PremiumClaimed)
 		end
 		self:SetBadge("Quests", waiting)
 

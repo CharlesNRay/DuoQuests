@@ -538,7 +538,7 @@ function handlers.ClaimWeeklyBonus(_, profile)
 	return Quests.ClaimWeeklyBonus(profile, os.time())
 end
 
-function handlers.ClaimPass(_, profile, level)
+function handlers.ClaimPass(_, profile, level, track)
 	if level == "All" then
 		local claimed = Quests.ClaimAllPass(profile)
 		return claimed > 0, if claimed > 0 then claimed else "NothingToClaim"
@@ -546,7 +546,17 @@ function handlers.ClaimPass(_, profile, level)
 	if type(level) ~= "number" then
 		return false, "BadArgs"
 	end
-	return Quests.ClaimPass(profile, level)
+	return Quests.ClaimPass(profile, level, if track == "Premium" then "Premium" else "Free")
+end
+
+-- Studio only: flips the premium pass track so it can be tried without a purchase.
+function handlers.DevPremium(_, profile)
+	if not game:GetService("RunService"):IsStudio() then
+		return false, "Forbidden"
+	end
+	local owned = not Quests.Pass(profile).Premium
+	Quests.SetPremium(profile, owned)
+	return true, owned
 end
 
 function handlers.ChooseSubclass(player, profile, subclassId)

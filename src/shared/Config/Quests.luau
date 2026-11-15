@@ -13,11 +13,11 @@
 	  BonusReward  all three claimed { Wishstones, PassXP, Tickets = { PetWish = n } }
 
 	SEASON PASS: gaining Pass XP (quests, clearing stages) raises the pass level; each level has a reward to claim.
-	It resets with the season. (Only the free track exists so far; Premium = true levels are shown locked.)
+	It resets with the season. Two tracks: Free (everyone) and Premium (owned with Season.Pass.Premium = true; the Robux purchase is not wired yet).
 
 	  Pass.MaxLevel, Pass.XPPerLevel
 	  Pass.PerClear / PerFrontier / PerBoss     Pass XP from stage clears (frontier and boss stack with the clear)
-	  Pass.Rewards   level -> { Wishstones?, SkillPicks?, Items = { [consumableId] = n }, Premium? }  (never gold)
+	  Pass.Rewards / Pass.PremiumRewards   level -> { Wishstones?, SkillPicks?, Items = { [consumableId] = n } }  (never gold)
 
 	Every number is a PLACEHOLDER to be tuned.
 ]]
@@ -49,6 +49,32 @@ for level = 1, 30 do
 		r.Wishstones = 20
 	end
 	Rewards[level] = r
+end
+
+-- The PREMIUM track pays alongside the free one at every level (same rule: never gold). It mirrors the free tickets:
+-- Pet Wish on 5/15/25, Skill Wish on 10/20/30, a free skill pick at 20, and a big Wishstone pile at 30.
+local PREMIUM_CYCLE = {
+	{ GrandPetFood = 1 }, { XPTonic = 2 }, { PowerElixir = 1, IronTonic = 1 }, { HasteDraught = 2 }, { PetFood = 3 },
+}
+local PremiumRewards = {}
+for level = 1, 30 do
+	local r = { Items = {} }
+	r.Wishstones = 3 + level // 10
+	for id, n in pairs(PREMIUM_CYCLE[(level - 1) % #PREMIUM_CYCLE + 1]) do
+		r.Items[id] = n + level // 15
+	end
+	if level % 10 == 5 then
+		r.Items.PetWish = 1 + level // 25
+	elseif level % 10 == 0 then
+		r.Items.SkillWish = if level == 30 then 2 else 1
+	end
+	if level == 20 then
+		r.SkillPicks = 1
+	end
+	if level == 30 then
+		r.Wishstones = 30
+	end
+	PremiumRewards[level] = r
 end
 
 return {
@@ -92,5 +118,6 @@ return {
 		PerFrontier = 6,
 		PerBoss = 25,
 		Rewards = Rewards,
+		PremiumRewards = PremiumRewards,
 	},
 }

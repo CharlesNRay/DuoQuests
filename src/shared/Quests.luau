@@ -13,7 +13,7 @@
 	  Quests.ClaimWeekly(profile, index, now) / Quests.ClaimWeeklyBonus(profile, now)   like the daily ones
 	  Quests.Pass(profile)                         -> { Level, XP, XPInLevel, XPPerLevel, MaxLevel, Rows = { { Level, Reward, Reached, Claimed } } }
 	  Quests.AddPassXP(profile, amount)            -> levels gained
-	  Quests.ClaimPass(profile, level)             -> true, reward | false, "BadLevel" | "NotReached" | "AlreadyClaimed"
+	  Quests.ClaimPass(profile, level, track)             -> true, reward | false, "BadLevel" | "NotReached" | "AlreadyClaimed"
 	  Quests.ClaimAllPass(profile)                 -> count claimed, totals
 ]]
 
@@ -247,7 +247,12 @@ end
 local function passState(profile)
 	profile.Season.Pass = profile.Season.Pass or { XP = 0, Claimed = {} }
 	profile.Season.Pass.Claimed = profile.Season.Pass.Claimed or {}
+	profile.Season.Pass.PremiumClaimed = profile.Season.Pass.PremiumClaimed or {}
 	return profile.Season.Pass
+end
+
+local function rewardRow(profile, r)
+	return { Gold = goldFor(profile, r.GoldClears or 0), Wishstones = r.Wishstones, Shards = r.Shards, SkillPicks = r.SkillPicks, Items = r.Items }
 end
 
 function Quests.Pass(profile)
@@ -256,31 +261,42 @@ function Quests.Pass(profile)
 	local level = math.min(Config.Pass.MaxLevel, pass.XP // per)
 	local rows = {}
 	for l = 1, Config.Pass.MaxLevel do
-		local r = Config.Pass.Rewards[l]
 		table.insert(rows, {
-			Level = l, Reached = level >= l, Claimed = pass.Claimed[l] == true, Premium = r.Premium == true,
-			Reward = { Gold = goldFor(profile, r.GoldClears or 0), Wishstones = r.Wishstones, Shards = r.Shards, SkillPicks = r.SkillPicks, Items = r.Items },
+			Level = l, Reached = level >= l, Claimed = pass.Claimed[l] == true,
+			Reward = rewardRow(profile, Config.Pass.Rewards[l]),
+			PremiumReward = rewardRow(profile, Config.Pass.PremiumRewards[l]), PremiumClaimed = pass.PremiumClaimed[l] == true,
 		})
 	end
-	return { Level = level, XP = pass.XP, XPInLevel = if level >= Config.Pass.MaxLevel then per else pass.XP % per, XPPerLevel = per, MaxLevel = Config.Pass.MaxLevel, Rows = rows }
+	return {
+		Level = level, XP = pass.XP, XPInLevel = if level >= Config.Pass.MaxLevel then per else pass.XP % per, XPPerLevel = per,
+		MaxLevel = Config.Pass.MaxLevel, Premium = pass.Premium == true, Rows = rows,
+	}
 end
 
-function Quests.ClaimPass(profile, level)
+-- Unlocks (or locks) the premium track. The real purchase calls this after a successful Robux purchase.
+function Quests.SetPremium(profile, owned)
+	passState(profile).Premium = owned == true
+end
+
+-- track: "Free" (default) or "Premium"
+function Quests.ClaimPass(profile, level, track)
 	local pass = passState(profile)
+	local premium = track == "Premium"
 	if type(level) ~= "number" or level ~= math.floor(level) or level < 1 or level > Config.Pass.MaxLevel then
 		return false, "BadLevel"
 	end
 	if pass.XP // Config.Pass.XPPerLevel < level then
 		return false, "NotReached"
 	end
-	if pass.Claimed[level] then
-		return false, "AlreadyClaimed"
-	end
-	local r = Config.Pass.Rewards[level]
-	if r.Premium then
+	if premium and not pass.Premium then
 		return false, "PremiumOnly"
 	end
-	pass.Claimed[level] = true
+	local claimed = if premium then pass.PremiumClaimed else pass.Claimed
+	if claimed[level] then
+		return false, "AlreadyClaimed"
+	end
+	local r = (if premium then Config.Pass.PremiumRewards else Config.Pass.Rewards)[level]
+	claimed[level] = true
 	local c = profile.Season.Currencies
 	local reward = { Gold = goldFor(profile, r.GoldClears or 0), Wishstones = r.Wishstones or 0, Shards = r.Shards or 0, SkillPicks = r.SkillPicks or 0, Items = r.Items }
 	c.Gold += reward.Gold
@@ -293,10 +309,14 @@ function Quests.ClaimPass(profile, level)
 	return true, reward
 end
 
+-- claims every free level that is ready, and every premium one when the premium track is owned
 function Quests.ClaimAllPass(profile)
 	local claimed = 0
 	for l = 1, Config.Pass.MaxLevel do
-		if Quests.ClaimPass(profile, l) then
+		if Quests.ClaimPass(profile, l, "Free") then
+			claimed += 1
+		end
+		if Quests.ClaimPass(profile, l, "Premium") then
 			claimed += 1
 		end
 	end

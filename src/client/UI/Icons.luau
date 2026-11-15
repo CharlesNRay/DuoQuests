@@ -5,6 +5,7 @@
 	  Icons.Skill(parent, def, props)       -> Frame: coloured tile + glyph, rarity border,
 	                                           optional level badge. props: Size, Position, Level, Tier (border colour = the tier you hold), Badge ("!" ready mark),
 	                                           Locked (greys it out)
+	  Icons.PetSkill(parent, petId, props)  -> tile for a pet's own skill (Level = the pet's rank)
 	  Icons.Ultimate(parent, def, props)    -> same look for a party ultimate
 	  Icons.Item(parent, item, props)       -> tile for a gear piece (slot glyph, rarity/set border)
 ]]
@@ -142,6 +143,22 @@ function Icons.Pet(parent, petId, props)
 	local look = def and def.Look or { Shape = "Ball", Color = { 120, 120, 130 } }
 	local color = Color3.fromRGB(look.Color[1], look.Color[2], look.Color[3])
 	return tile(parent, color, PET_GLYPHS[look.Shape] or "●", Kit.rarityColor(def and def.Rarity), props)
+end
+
+-- Pet skills: every one has its own glyph and colour, bordered by the pet's rarity, with the pet's rank as the level badge.
+local PET_SKILL_LOOK = {
+	["Goo Bubble"] = { rgb(100, 200, 120), "🫧" }, ["Fox Fire"] = { rgb(230, 120, 50), "🔥" }, ["Mossy Guard"] = { rgb(80, 150, 100), "🌿" },
+	Rockfall = { rgb(140, 130, 120), "🪨" }, ["Soft Landing"] = { rgb(190, 210, 235), "☁" }, ["Cheerful Song"] = { rgb(230, 180, 80), "🎵" },
+	Spark = { rgb(230, 220, 90), "⚡" }, ["Ember Claw"] = { rgb(200, 80, 50), "🐾" }, ["Tidal Shell"] = { rgb(70, 140, 200), "🐚" },
+	Tailwind = { rgb(120, 200, 190), "💨" }, ["Cold Snap"] = { rgb(120, 190, 235), "❄" }, ["Star Wish"] = { rgb(240, 220, 120), "🌠" },
+	["Thorn Armor"] = { rgb(90, 140, 70), "🌵" }, Dragonfire = { rgb(210, 70, 50), "🐲" }, ["Colossal Stomp"] = { rgb(150, 110, 80), "🦶" },
+	["Aurora Veil"] = { rgb(140, 200, 220), "🌈" },
+}
+function Icons.PetSkill(parent, petId, props)
+	local PetConfig = require(game:GetService("ReplicatedStorage"):WaitForChild("Shared").Config.Pets)
+	local def = PetConfig.Defs[petId]
+	local look = def and def.Skill and PET_SKILL_LOOK[def.Skill.Name]
+	return tile(parent, if look then look[1] else KIND_COLORS.Buff, if look then look[2] else KIND_GLYPHS.Buff, Kit.rarityColor(def and def.Rarity), props)
 end
 
 function Icons.Ultimate(parent, def, props)

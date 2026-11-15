@@ -164,7 +164,7 @@ Newest first.
 - Stash: boosts warn before wasting time over the 2-hour cap (server refuses unless forced).
 - Daily quests (3 per day + bonus) and a 30-level season pass (free track; Premium levels reserved). Quests window (HUD 📜). Pass XP from stage clears and quests.
 - Skills have unique icons; panels keep their scroll position on refresh; tree moved onto the grass; townsfolk are non-solid and walk away from you; arena backdrop wall removed; arena name cards show only up close; fight HUD shows the stage being fought (not the next one).
-- TODO: premium pass track, pet skill icons, verify all of this in Studio. (Boss strike quest and weekly quests: done, see below.)
+- TODO: wire the Robux purchase for the premium pass, mobile tooltips, verify all of this in Studio. (Boss strike quest, weekly quests, premium track and pet skill icons: done, see below.)
 
 ## Skill rarity, ranks and manual upgrades (Nov 15, afternoon)
 - Skills now have a TIER (Common/Rare/Epic/Legendary, the rarity you hold) and a RANK (1-10). Combat level = rank + tier levels above the skill's own base rarity (max 20). Config/SkillProgress, shared/SkillProgress; state in Season.SkillState (resets with the season).
@@ -186,3 +186,7 @@ Newest first.
 - New "Strike" quest event (world and season boss strikes both count): daily "Strike a boss once", weekly "Strike a boss 4 times".
 - Quests dock badge also lights for weekly claims. 44 quest tests.
 - Joining a real partner: pair starts at the lower frontier; each player's own furthest stage stays on their profile (never lowered) and is where they restart after leaving.
+
+## Premium pass track and pet skill icons (Nov 15, night)
+- Season pass has two tracks side by side: Free and Premium (locked until `Season.Pass.Premium`; `Quests.SetPremium(profile, true)` is what a Robux purchase will call). Premium pays Wishstones, consumables, Pet Wish on 5/15/25, Skill Wish on 10/20/30, a skill pick at 20 and 30 Wishstones at 30; never gold. Claim all takes both tracks. Studio-only HUD button (star) toggles premium for testing.
+- Pet skills have their own icons (Icons.PetSkill) on the Pets page with a hover tip; the pet's rank is the level badge.
