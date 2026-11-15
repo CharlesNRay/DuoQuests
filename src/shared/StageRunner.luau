@@ -7,7 +7,11 @@
 	this on a timer; the stage the party is on is stored by the party, not here.
 
 	  StageRunner.NewParty(members)          -> party combatants for Simulation
-	  StageRunner.Run(members, stage, seed)  -> outcome
+	  StageRunner.UltimateFor(members, frontier, chosenId)
+	                                         -> { Id, Level } or nil: the party
+	                                            ultimate for these two classes
+	  StageRunner.Run(members, stage, seed, ultimate)  -> outcome
+	                                         (ultimate optional, from UltimateFor)
 
 	members is a list of { Id, Name, Profile } for a player who is online, or
 	{ Id, Name, Snapshot } for a ghost (an offline partner's saved build, see
@@ -34,38 +38,68 @@ local Progression = require(script.Parent.Progression)
 local Simulation = require(script.Parent.Combat.Simulation)
 local StatCalc = require(script.Parent.Combat.StatCalc)
 local Stages = require(script.Parent.Stages)
+local Ultimates = require(script.Parent.Ultimates)
 
 local StageRunner = {}
 
 function StageRunner.NewParty(members)
 	local party = {}
 	for _, member in ipairs(members) do
-		local classId, level, loadout, slotLevels
+		local classId, level, loadout, slotLevels, passiveIds, passiveLevels
 		if member.Profile then
 			local season = member.Profile.Season
 			classId, level = season.ClassId, season.Level
 			loadout, slotLevels = season.Loadouts[classId], season.SlotLevels[classId]
+			passiveIds, passiveLevels = season.PassiveLoadouts[classId], season.PassiveSlotLevels[classId]
 		else
 			local snapshot = member.Snapshot
 			classId, level = snapshot.ClassId, snapshot.Level
 			loadout, slotLevels = snapshot.GhostLoadout, snapshot.SlotLevels
+			passiveIds, passiveLevels = snapshot.PassiveIds, snapshot.PassiveLevels
 		end
 		table.insert(
 			party,
 			StatCalc.NewPartyMember(member.Id, member.Name, classId, level, {
 				AbilityIds = loadout,
 				SlotLevels = slotLevels,
+				PassiveIds = passiveIds,
+				PassiveLevels = passiveLevels,
 			})
 		)
 	end
 	return party
 end
 
-function StageRunner.Run(members, stage, seed)
+-- Only a full pair has an ultimate. The level is the average slot level of the
+-- two members. `chosenId` is the party's pick (used when valid and unlocked).
+function StageRunner.UltimateFor(members, frontier, chosenId)
+	if #members ~= 2 then
+		return nil
+	end
+	local classes, levelLists = {}, {}
+	for index, member in ipairs(members) do
+		if member.Profile then
+			local season = member.Profile.Season
+			classes[index] = season.ClassId
+			levelLists[index] = season.SlotLevels[season.ClassId]
+		else
+			classes[index] = member.Snapshot.ClassId
+			levelLists[index] = member.Snapshot.SlotLevels
+		end
+	end
+	local id = Ultimates.Resolve(classes[1], classes[2], frontier, chosenId)
+	if id == nil then
+		return nil
+	end
+	return { Id = id, Level = Ultimates.PartyLevel(levelLists) }
+end
+
+function StageRunner.Run(members, stage, seed, ultimate)
 	local sim = Simulation.new({
 		Party = StageRunner.NewParty(members),
 		Enemies = Stages.NewEnemies(stage),
 		Seed = seed,
+		Ultimate = ultimate,
 		MaxSeconds = Stages.TimeLimit(stage),
 		RecordEvents = false,
 	})

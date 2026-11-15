@@ -27,6 +27,10 @@
 	  PartyService.JoinByCode(player, code)         -> true | false, reason
 	  PartyService.Leave(player)                    -> true | false, reason
 	  PartyService.RefreshSnapshot(player)          call after a player changes their build
+	  PartyService.SetUltimate(player, ultimateId)  -> true | false, reason (either member)
+	  PartyService.SetGhostLoadout(player, targetUserId, abilityIds)
+	                                                -> true | false, reason (skills only)
+	  PartyService.RevertGhostLoadout(player)       -> true | false, reason (owner undoes the last edit)
 	  PartyService.GetState(player)                 -> table for the UI, or nil
 	  PartyService.GetLastClaim(player)             -> what they were paid at login
 
@@ -406,6 +410,49 @@ function PartyService.RefreshSnapshot(player)
 	end
 end
 
+local function entryFor(player)
+	local partyId = partyOf[player.UserId]
+	return partyId and hosted[partyId]
+end
+
+function PartyService.SetUltimate(player, ultimateId)
+	local entry = entryFor(player)
+	if not entry then
+		return false, "NoParty"
+	end
+	local ok, reason = Party.SetUltimate(entry.Record, player.UserId, ultimateId)
+	if ok then
+		entry.Dirty = true
+	end
+	return ok, reason
+end
+
+-- Either member may edit the skills (and their order) of either member's ghost.
+-- Passives, pets and gear stay view only.
+function PartyService.SetGhostLoadout(player, targetUserId, abilityIds)
+	local entry = entryFor(player)
+	if not entry then
+		return false, "NoParty"
+	end
+	local ok, reason = Party.SetGhostLoadout(entry.Record, player.UserId, targetUserId, abilityIds, now())
+	if ok then
+		entry.Dirty = true
+	end
+	return ok, reason
+end
+
+function PartyService.RevertGhostLoadout(player)
+	local entry = entryFor(player)
+	if not entry then
+		return false, "NoParty"
+	end
+	local ok, reason = Party.RevertGhostLoadout(entry.Record, player.UserId)
+	if ok then
+		entry.Dirty = true
+	end
+	return ok, reason
+end
+
 function PartyService.GetLastClaim(player)
 	return lastClaim[player.UserId]
 end
@@ -427,6 +474,8 @@ function PartyService.GetState(player)
 		PartnerName = partnerSnapshot and partnerSnapshot.Name,
 		PartnerOnline = partnerId ~= nil and entry.Online[partnerId] ~= nil,
 		GhostLoadout = partnerSnapshot and table.clone(partnerSnapshot.GhostLoadout),
+		PartnerPassives = partnerSnapshot and table.clone(partnerSnapshot.PassiveIds or {}),
+		UltimateId = record.UltimateId,
 	}
 end
 

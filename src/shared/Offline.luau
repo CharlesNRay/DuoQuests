@@ -9,12 +9,12 @@
 	      Time away converted to "full rate" seconds using the reduced tiers
 	      (12 h away = 6 h of full-rate farming at the default tiers).
 
-	  Offline.FindFarmStage(members, startStage)
+	  Offline.FindFarmStage(members, startStage, ultimate)
 	      Walks down from startStage until the party can win. Returns the stage
 	      and how long that fight took. "The party stays on whatever stage it can
 	      clear."
 
-	  Offline.Estimate(members, startStage, elapsed)
+	  Offline.Estimate(members, startStage, elapsed, ultimate)
 	      -> nil if the gap is too short, otherwise
 	      { Stage, FightSeconds, Fights, EffectiveSeconds, Rewards = { [memberId] = { Gold, XP, Shards } } }
 
@@ -26,6 +26,7 @@
 
 local Config = require(script.Parent.Config.Offline)
 local Progression = require(script.Parent.Progression)
+local Passives = require(script.Parent.Passives)
 local Simulation = require(script.Parent.Combat.Simulation)
 local StageRunner = require(script.Parent.StageRunner)
 local Stages = require(script.Parent.Stages)
@@ -45,12 +46,14 @@ function Offline.EffectiveSeconds(elapsed)
 	return total
 end
 
-function Offline.FindFarmStage(members, startStage)
+-- `ultimate` is optional { Id, Level } (see StageRunner.UltimateFor).
+function Offline.FindFarmStage(members, startStage, ultimate)
 	for stage = math.max(1, startStage), 1, -1 do
 		local sim = Simulation.new({
 			Party = StageRunner.NewParty(members),
 			Enemies = Stages.NewEnemies(stage),
 			Seed = Config.ProbeSeed + stage,
+			Ultimate = ultimate,
 			MaxSeconds = Stages.TimeLimit(stage),
 			RecordEvents = false,
 		})
@@ -63,19 +66,21 @@ function Offline.FindFarmStage(members, startStage)
 	return 1, 60
 end
 
-function Offline.Estimate(members, startStage, elapsed)
+function Offline.Estimate(members, startStage, elapsed, ultimate)
 	if elapsed < Config.MinAwaySeconds then
 		return nil
 	end
 
-	local stage, fightSeconds = Offline.FindFarmStage(members, startStage)
+	local stage, fightSeconds = Offline.FindFarmStage(members, startStage, ultimate)
 	local effective = Offline.EffectiveSeconds(elapsed)
 	local fights = effective / (fightSeconds + Config.Intermission)
 
 	local rewards = {}
 	for _, member in ipairs(members) do
 		local frontier = member.Snapshot.Frontier or 1
-		local perClear = Progression.ClearRewards(stage, stage >= frontier)
+		local snapshot = member.Snapshot
+		local bonuses = Passives.Rewards(snapshot.ClassId, snapshot.PassiveIds, snapshot.PassiveLevels)
+		local perClear = Progression.ClearRewards(stage, stage >= frontier, bonuses)
 		rewards[member.Id] = {
 			Gold = math.floor(perClear.Gold * fights),
 			XP = math.floor(perClear.XP * fights),

@@ -21,9 +21,12 @@ src/
     Combat/                  pure combat simulation (no Roblox APIs)
       Simulation             fixed-tick, deterministic fight between two teams
       Hooks                  event hooks that seasonal mechanics plug into
-      Entity, StatCalc, Rng  combatants, stat building, seeded randomness
+      Entity, StatCalc, Rng  combatants, stat building (skills + passives), seeded randomness
+      AbilityStats           each skill's per-level numbers (used by combat and the UI)
     Util/                    helpers (TableUtil)
     Skills.luau              equipping rules and slot level cap (4 slots)
+    Passives.luau            passive slots, unlocks, equip rules, stat totals (3 slots)
+    Ultimates.luau           which party ultimates a class pair can use
     Stages.luau              what each stage contains (every 10th is a boss)
     Progression.luau         XP, levels, clear rewards, frontier, milestones
     Economy.luau             spending: unlock skills, level slots, equip
@@ -43,7 +46,10 @@ docs/
 
 ## How combat is extended
 
-- New ability: add an entry to `Config/Abilities` (cooldown, conditions, effects).
+- New ability: add an entry to `Config/Abilities` (cooldown, conditions, effects, and
+  a `PerLevel` table so it grows its own stats).
+- New passive: add an entry to `Config/Passives` and list it in the class's `PassivePool`.
+- New ultimate: add an entry to `Config/Ultimates` and list it under its class pair.
 - New status: add an entry to `Config/Statuses` (stat modifiers and/or flags).
 - New effect type or condition: register it with `Simulation.Effects` or
   `Simulation.Conditions`; no edits to the simulation itself.
@@ -71,5 +77,7 @@ require(game.ServerScriptService.Server.Tests.AbilityTests)()
 require(game.ServerScriptService.Server.Tests.StageTests)()
 require(game.ServerScriptService.Server.Tests.PartyTests)()
 require(game.ServerScriptService.Server.Tests.PartyCoreTests)()
+require(game.ServerScriptService.Server.Tests.SkillStatsTests)()
+require(game.ServerScriptService.Server.Tests.PassiveUltimateTests)()
 require(game.ServerScriptService.Server.Tests.PacingTests)()
 ```

@@ -36,4 +36,8 @@ return {
 
 	-- Levelling a slot (Gold): cost to go from level L to L+1 is SlotCostPerLevel * L
 	SlotCostPerLevel = 90,
+
+	-- Levelling a passive slot (Gold): cost to go from level L to L+1 is
+	-- PassiveCostPerLevel * L. Passives are unlocked by reaching stages.
+	PassiveCostPerLevel = 110,
 }

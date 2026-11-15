@@ -15,12 +15,15 @@
 
 	  Progression.XPToNext(level)
 	  Progression.AddXP(season, amount)            -> levels gained
-	  Progression.ClearRewards(stage, isFrontier)  -> { Gold, XP, Shards }
+	  Progression.ClearRewards(stage, isFrontier, bonuses)  -> { Gold, XP, Shards }
+	      bonuses is optional { GoldGain, XPGain } (fractions from passives);
+	      shards are not affected
 	  Progression.ApplyClear(profile, stage)       -> summary table
 ]]
 
 local Economy = require(script.Parent.Config.Economy)
 local Stages = require(script.Parent.Stages)
+local Passives = require(script.Parent.Passives)
 
 local Progression = {}
 
@@ -46,7 +49,9 @@ function Progression.AddXP(season, amount)
 	return gained
 end
 
-function Progression.ClearRewards(stage, isFrontier)
+function Progression.ClearRewards(stage, isFrontier, bonuses)
+	local goldFactor = 1 + (if bonuses then bonuses.GoldGain or 0 else 0)
+	local xpFactor = 1 + (if bonuses then bonuses.XPGain or 0 else 0)
 	local replay = if isFrontier then 1 else Economy.ReplayFactor
 	local factor = Economy.RewardScale * replay -- gold and XP
 	local shards = Economy.ShardsPerClear + stage // Economy.ShardStageStep
@@ -54,8 +59,8 @@ function Progression.ClearRewards(stage, isFrontier)
 		shards += Economy.BossShardBonus
 	end
 	return {
-		Gold = math.max(1, math.floor((Economy.GoldBase + Economy.GoldPerStage * stage) * factor)),
-		XP = math.max(1, math.floor((Economy.XPRewardBase + Economy.XPRewardPerStage * stage) * factor)),
+		Gold = math.max(1, math.floor((Economy.GoldBase + Economy.GoldPerStage * stage) * factor * goldFactor)),
+		XP = math.max(1, math.floor((Economy.XPRewardBase + Economy.XPRewardPerStage * stage) * factor * xpFactor)),
 		Shards = math.max(1, math.floor(shards * replay)), -- shards ignore RewardScale: unlock costs are tuned for them
 	}
 end
@@ -63,7 +68,9 @@ end
 function Progression.ApplyClear(profile, stage)
 	local season = profile.Season
 	local isFrontier = stage >= season.HighestStage
-	local rewards = Progression.ClearRewards(stage, isFrontier)
+	local classId = season.ClassId
+	local bonuses = Passives.Rewards(classId, season.PassiveLoadouts[classId], season.PassiveSlotLevels[classId])
+	local rewards = Progression.ClearRewards(stage, isFrontier, bonuses)
 
 	season.Currencies.Gold += rewards.Gold
 	season.Currencies.Shards += rewards.Shards

@@ -8,6 +8,8 @@
 	  BasicAttack      the one automatic attack. Presentation info for now
 	                   (Range "Melee"/"Ranged"); damage uses Attack and DamageType.
 	  AbilityPool      every skill the class can ever equip, in display order.
+	  PassivePool      every passive the class can ever equip (Config/Passives),
+	                   in display order. Passives are class specific.
 	  DefaultLoadout   four skills in PRIORITY order (slot 1 is checked first
 	                   each tick). Also the skills a new player starts owning.
 	  Subclasses       empty for now. Later each entry goes here as
@@ -51,6 +53,7 @@ return {
 			"LastStand",
 			"RallyingCry",
 		},
+		PassivePool = { "IronHide", "TreasureSense", "BruteForce", "Vitality", "QuickStudy", "FortuneSeeker" },
 		DefaultLoadout = { "Taunt", "IronSkin", "ShieldBash", "Whirlwind" },
 		Subclasses = {},
 	},
@@ -86,7 +89,9 @@ return {
 			"GroupHeal",
 			"GuardianAngel",
 			"Judgment",
+			"Resurrection",
 		},
+		PassivePool = { "HolyLight", "Tithe", "Devotion", "Warding", "Scholar", "Providence" },
 		DefaultLoadout = { "Heal", "Blessing", "RadiantBurst", "Smite" },
 		Subclasses = {},
 	},

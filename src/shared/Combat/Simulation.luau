@@ -13,6 +13,9 @@
 	      MaxSeconds = 180,         -- optional; fight ends as a Timeout
 	      RecordEvents = true,      -- optional; false saves memory on long runs
 	      OnEvent = function(e) end,-- optional; stream events (e.g. to clients)
+	      Ultimate = { Id = "SanctifiedCharge", Level = 5 },
+	                                -- optional party ultimate (Config/Ultimates); the
+	                                -- party shares a gauge and it fires automatically
 	      AbilityDefs = ...,        -- optional override of Config/Abilities
 	      StatusDefs = ...,         -- optional override of Config/Statuses
 	  })
@@ -39,6 +42,8 @@
 	  Status  { Target, Status, Duration, Amount, Source }  applied or refreshed
 	  StatusEnd { Target, Status, Reason? }       Reason "Broken" = shield used up
 	  Death   { Target }
+	  Revive  { Source, Target, TargetHealth }    a fallen ally returned (Resurrection)
+	  Ultimate { Source, Ability }                the party ultimate fired
 	  End     { Winner }
 
 	Hooks fired (ctx is a mutable table; handlers may change it):
@@ -53,6 +58,7 @@
 	  OnApplyStatus     { Target, Source, StatusId, Duration, Amount, Prevented }
 	  OnStatusExpired   { Entity, StatusId, Reason? }
 	  OnDeath           { Entity }
+	  OnRevive          { Source, Target }
 	  OnBattleEnd       the Result table
 
 	Extending without touching this file:
@@ -64,7 +70,8 @@ local Rng = require(script.Parent.Rng)
 local Hooks = require(script.Parent.Hooks)
 local Abilities = require(script.Parent.Parent.Config.Abilities)
 local Statuses = require(script.Parent.Parent.Config.Statuses)
-local Rarities = require(script.Parent.Parent.Config.Rarities)
+local Ultimates = require(script.Parent.Parent.Config.Ultimates)
+local AbilityStats = require(script.Parent.AbilityStats)
 
 local Simulation = {}
 Simulation.__index = Simulation
@@ -105,21 +112,13 @@ local function anyAlive(list)
 	return false
 end
 
--- Power multiplier for a skill's level: the skill's own LevelBonus, else its
--- rarity's PowerPerLevel, else 10% per level.
-local function levelFactor(castCtx)
-	local ability = castCtx.Ability
-	local rarity = Rarities[ability.Rarity]
-	local bonus = ability.LevelBonus or (rarity and rarity.PowerPerLevel) or 0.1
-	return 1 + bonus * (castCtx.Level - 1)
-end
-
--- Size of a Heal or Shield effect for one target.
+-- Size of a Heal or Shield effect for one target. Each skill grows its own
+-- fields per level (see AbilityStats).
 local function supportAmount(sim, castCtx, effect, target)
-	return ((effect.Multiplier or 0) * sim:GetStat(castCtx.Caster, "Attack") + (effect.PercentMaxHealth or 0) * sim:GetStat(
-		target,
-		"MaxHealth"
-	)) * levelFactor(castCtx)
+	local ability, level = castCtx.Ability, castCtx.Level
+	local flat = AbilityStats.Value(ability, effect, "Multiplier", level) or 0
+	local percent = AbilityStats.Value(ability, effect, "PercentMaxHealth", level) or 0
+	return flat * sim:GetStat(castCtx.Caster, "Attack") + percent * sim:GetStat(target, "MaxHealth")
 end
 
 -- Effect handlers ---------------------------------------------------------------
@@ -128,7 +127,7 @@ end
 Simulation.Effects = {
 	Damage = function(sim, castCtx, effect)
 		local caster = castCtx.Caster
-		local magnitude = effect.Multiplier * levelFactor(castCtx)
+		local magnitude = AbilityStats.Value(castCtx.Ability, effect, "Multiplier", castCtx.Level)
 		local damageType = effect.DamageType or castCtx.Ability.DamageType
 
 		for _, target in ipairs(sim:ResolveTargets(castCtx, effect.Target)) do
@@ -144,7 +143,14 @@ Simulation.Effects = {
 
 	ApplyStatus = function(sim, castCtx, effect)
 		for _, target in ipairs(sim:ResolveTargets(castCtx, effect.Target)) do
-			sim:ApplyStatus(target, effect.Status, effect.Duration, castCtx.Caster)
+			sim:ApplyStatus(
+				target,
+				effect.Status,
+				AbilityStats.Value(castCtx.Ability, effect, "Duration", castCtx.Level),
+				castCtx.Caster,
+				nil,
+				AbilityStats.Strength(castCtx.Ability, effect, castCtx.Level)
+			)
 		end
 	end,
 
@@ -162,10 +168,19 @@ Simulation.Effects = {
 			sim:ApplyStatus(
 				target,
 				effect.Status or "Shield",
-				effect.Duration,
+				AbilityStats.Value(castCtx.Ability, effect, "Duration", castCtx.Level),
 				castCtx.Caster,
 				supportAmount(sim, castCtx, effect, target)
 			)
+		end
+	end,
+
+	-- Brings a fallen ally back with a fraction of max health. Combine with
+	-- UsesPerCombat on the ability to limit it (Resurrection: once per fight).
+	Revive = function(sim, castCtx, effect)
+		local fraction = AbilityStats.Value(castCtx.Ability, effect, "HealthFraction", castCtx.Level)
+		for _, target in ipairs(sim:ResolveTargets(castCtx, effect.Target)) do
+			sim:Revive(castCtx.Caster, target, fraction)
 		end
 	end,
 }
@@ -184,6 +199,16 @@ Simulation.Conditions = {
 
 	SelfLacksStatus = function(sim, caster, statusId)
 		return not sim:HasStatus(caster, statusId)
+	end,
+
+	-- True when at least one ally has fallen (value = true).
+	AllyDead = function(sim, caster, value)
+		for _, ally in ipairs(sim:_alliesOf(caster)) do
+			if not ally.Alive then
+				return value
+			end
+		end
+		return not value
 	end,
 
 	-- True when any living ally (the caster included) is below the fraction.
@@ -221,6 +246,9 @@ function Simulation.new(options)
 		RecordEvents = options.RecordEvents ~= false,
 		OnEvent = options.OnEvent,
 		AbilityDefs = options.AbilityDefs or Abilities,
+		Ultimate = if options.Ultimate and Ultimates.Defs[options.Ultimate.Id]
+			then { Id = options.Ultimate.Id, Level = options.Ultimate.Level or 1, Charge = 0 }
+			else nil,
 		StatusDefs = options.StatusDefs or Statuses,
 
 		Ticks = 0,
@@ -288,10 +316,12 @@ function Simulation:GetStat(entity, statName)
 		if mods then
 			for _, mod in ipairs(mods) do
 				if mod.Stat == statName then
+					-- Strength scales how far a modifier moves the stat (1 = as written).
+					local strength = status.Strength or 1
 					if mod.Mode == "Add" then
-						add += mod.Value
+						add += mod.Value * strength
 					else
-						mult *= mod.Value
+						mult *= 1 + (mod.Value - 1) * strength
 					end
 				end
 			end
@@ -302,7 +332,7 @@ end
 
 -- Applies (or refreshes) a status. `amount` is the size of an Absorb shield.
 -- Returns true if it was applied.
-function Simulation:ApplyStatus(target, statusId, duration, source, amount)
+function Simulation:ApplyStatus(target, statusId, duration, source, amount, strength)
 	local def = self:_statusDef(statusId)
 	if target.Health <= 0 then
 		return false
@@ -314,6 +344,7 @@ function Simulation:ApplyStatus(target, statusId, duration, source, amount)
 		StatusId = statusId,
 		Duration = duration or def.Duration or 1,
 		Amount = if amount then math.floor(amount + 0.5) else nil,
+		Strength = strength or 1,
 		Prevented = false,
 	}
 	self.Hooks:Fire("OnApplyStatus", ctx)
@@ -331,6 +362,7 @@ function Simulation:ApplyStatus(target, statusId, duration, source, amount)
 	if existing then
 		existing.Remaining = ctx.Duration
 		existing.Source = if source then source.Id else nil
+		existing.Strength = math.max(existing.Strength or 1, ctx.Strength)
 		if ctx.Amount then
 			existing.Amount = math.max(existing.Amount or 0, ctx.Amount)
 		end
@@ -340,6 +372,7 @@ function Simulation:ApplyStatus(target, statusId, duration, source, amount)
 			Remaining = ctx.Duration,
 			Source = if source then source.Id else nil,
 			Amount = ctx.Amount,
+			Strength = ctx.Strength,
 		})
 	end
 
@@ -397,6 +430,13 @@ function Simulation:ResolveTargets(castCtx, mode)
 		return livingOf(self:_opponentsOf(caster))
 	elseif mode == "AllAllies" then
 		return livingOf(self:_alliesOf(caster))
+	elseif mode == "DeadAlly" then
+		for _, ally in ipairs(self:_alliesOf(caster)) do
+			if not ally.Alive then
+				return { ally }
+			end
+		end
+		return {}
 	elseif mode == "LowestAlly" then
 		-- The living ally (caster included) with the lowest health fraction.
 		local best, bestRatio = nil, nil
@@ -539,6 +579,21 @@ function Simulation:Heal(source, target, amount, info)
 	return final
 end
 
+-- Returns a fallen combatant to the fight with `fraction` of max health.
+-- Statuses are cleared; cooldowns carry on where they were.
+function Simulation:Revive(source, target, fraction)
+	if target.Alive then
+		return false
+	end
+	target.Alive = true
+	target.Statuses = {}
+	target.AttackTimer = 0
+	target.Health = math.max(1, math.floor(self:GetStat(target, "MaxHealth") * fraction + 0.5))
+	self:_record({ Type = "Revive", Source = source.Id, Target = target.Id, TargetHealth = target.Health })
+	self.Hooks:Fire("OnRevive", { Source = source, Target = target })
+	return true
+end
+
 function Simulation:_basicAttack(attacker)
 	local target = self:PickTarget(attacker)
 	if target then
@@ -563,7 +618,7 @@ end
 
 -- Casts one ability from a slot: spends the cooldown, then runs its effects.
 function Simulation:Cast(caster, slot)
-	local def = self.AbilityDefs[slot.Id]
+	local def = self.AbilityDefs[slot.Id] or Ultimates.Defs[slot.Id]
 	assert(def ~= nil, "Unknown ability: " .. tostring(slot.Id))
 
 	local needsPrimary = false
@@ -581,7 +636,7 @@ function Simulation:Cast(caster, slot)
 		end
 	end
 
-	slot.Timer = def.Cooldown
+	slot.Timer = AbilityStats.Cooldown(def, slot.Level)
 
 	local ctx = {
 		Caster = caster,
@@ -595,7 +650,11 @@ function Simulation:Cast(caster, slot)
 		return false
 	end
 
+	slot.Uses = (slot.Uses or 0) + 1
 	self:_record({ Type = "Cast", Source = caster.Id, Ability = def.Id, Level = slot.Level })
+	if caster.Team == "Party" and not slot.IsUltimate then
+		self:AddUltimateCharge(Ultimates.ChargePerCast)
+	end
 
 	for _, effect in ipairs(def.Effects) do
 		local handler = Simulation.Effects[effect.Type]
@@ -605,13 +664,43 @@ function Simulation:Cast(caster, slot)
 	return true
 end
 
+-- Party ultimate ----------------------------------------------------------------
+-- The party shares one gauge. It fills with time and with every ability the
+-- party casts, and the ultimate fires by itself when full (see Config/Ultimates).
+
+function Simulation:AddUltimateCharge(amount)
+	local ultimate = self.Ultimate
+	if ultimate and self.Result == nil then
+		ultimate.Charge = math.min(Ultimates.ChargeNeeded, ultimate.Charge + amount)
+	end
+end
+
+function Simulation:_tryUltimate()
+	local ultimate = self.Ultimate
+	if ultimate == nil or ultimate.Charge < Ultimates.ChargeNeeded - EPSILON then
+		return false
+	end
+	local caster = livingOf(self.Party)[1]
+	if caster == nil then
+		return false
+	end
+	local slot = { Id = ultimate.Id, Level = ultimate.Level, Timer = 0, Uses = 0, IsUltimate = true }
+	if self:Cast(caster, slot) then
+		ultimate.Charge = 0
+		self:_record({ Type = "Ultimate", Source = caster.Id, Ability = ultimate.Id })
+		return true
+	end
+	return false
+end
+
 -- Casts the first ready ability whose conditions are met (one per tick).
 function Simulation:_tryCast(caster)
 	for _, slot in ipairs(caster.Abilities) do
 		if slot.Timer <= EPSILON then
 			local def = self.AbilityDefs[slot.Id]
 			assert(def ~= nil, "Unknown ability: " .. tostring(slot.Id))
-			if self:_conditionsMet(caster, def) and self:Cast(caster, slot) then
+			local spent = def.UsesPerCombat ~= nil and (slot.Uses or 0) >= def.UsesPerCombat
+			if not spent and self:_conditionsMet(caster, def) and self:Cast(caster, slot) then
 				return true
 			end
 		end
@@ -687,6 +776,9 @@ function Simulation:Step()
 	for _, entity in ipairs(actors) do
 		self:_tickTimers(entity)
 	end
+
+	self:AddUltimateCharge(Ultimates.ChargePerSecond * Simulation.TICK)
+	self:_tryUltimate()
 
 	for _, entity in ipairs(actors) do
 		self:_tryCast(entity)

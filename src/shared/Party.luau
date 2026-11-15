@@ -16,6 +16,8 @@
 	  LastActiveAt os.time of the last moment any member was online
 	  History kept per snapshot lets the owner undo ghost loadout changes
 
+	UltimateId   optional: the pair's chosen ultimate (Party.SetUltimate)
+
 	Snapshot (a member's saved build, used as their ghost while offline)
 	  UserId, Name, ClassId, Level, Frontier, SlotLevels, Owned, GhostLoadout,
 	  History, SavedAt
@@ -46,6 +48,7 @@ local Offline = require(script.Parent.Offline)
 local Progression = require(script.Parent.Progression)
 local Skills = require(script.Parent.Skills)
 local StageRunner = require(script.Parent.StageRunner)
+local Ultimates = require(script.Parent.Ultimates)
 local Classes = require(script.Parent.Config.Classes)
 
 local Party = {}
@@ -83,6 +86,7 @@ function Party.New(partyId, seasonId, userIdA, userIdB, now, frontierA, frontier
 		Pending = {},
 		LastActiveAt = now,
 		CreatedAt = now,
+		-- UltimateId is added when the pair picks one (see SetUltimate)
 	}
 end
 
@@ -194,6 +198,8 @@ function Party.MakeSnapshot(profile, userId, name, previous, now)
 		Level = season.Level,
 		Frontier = season.HighestStage,
 		SlotLevels = copyList(season.SlotLevels[classId]),
+		PassiveIds = copyList(season.PassiveLoadouts[classId] or {}), -- view only for the partner
+		PassiveLevels = copyList(season.PassiveSlotLevels[classId] or {}),
 		Owned = owned,
 		GhostLoadout = ghostLoadout,
 		History = history,
@@ -248,6 +254,27 @@ function Party.RevertGhostLoadout(party, userId)
 	return true
 end
 
+-- Party ultimate ------------------------------------------------------------------
+
+-- The pair's ultimate options depend on both classes (Config/Ultimates). Either
+-- member may change which unlocked one the party uses. Returns true or
+-- false + reason: "NotMember", "NeedPair", "NoUltimate", "NotForPair", "Locked".
+function Party.SetUltimate(party, userId, ultimateId)
+	if not isMember(party, userId) then
+		return false, "NotMember"
+	end
+	local first, second = party.Snapshots[key(party.Members[1] or 0)], party.Snapshots[key(party.Members[2] or 0)]
+	if #party.Members ~= 2 or first == nil or second == nil then
+		return false, "NeedPair"
+	end
+	local ok, reason = Ultimates.Validate(first.ClassId, second.ClassId, party.Frontier, ultimateId)
+	if not ok then
+		return false, reason
+	end
+	party.UltimateId = ultimateId
+	return true
+end
+
 -- Sessions and AFK --------------------------------------------------------------
 
 local function ghostMembers(party)
@@ -293,7 +320,13 @@ function Party.OpenSession(party, seasonId, userId, name, profile, partnerOnline
 			end
 		end
 		if complete then
-			estimate = Offline.Estimate(ghostMembers(party), party.Stage, gap)
+			local ghosts = ghostMembers(party)
+			estimate = Offline.Estimate(
+				ghosts,
+				party.Stage,
+				gap,
+				StageRunner.UltimateFor(ghosts, party.Frontier, party.UltimateId)
+			)
 			if estimate then
 				party.Stage = estimate.Stage -- the party "stays on whatever stage it can clear"
 				for _, memberId in ipairs(party.Members) do
@@ -381,7 +414,7 @@ function Party.OnlineTick(party, online, seed, now)
 	end
 
 	local stage = party.Stage
-	local outcome = StageRunner.Run(members, stage, seed)
+	local outcome = StageRunner.Run(members, stage, seed, StageRunner.UltimateFor(members, party.Frontier, party.UltimateId))
 	if outcome.Won and stage >= party.Frontier then
 		party.Frontier = stage + 1
 	end

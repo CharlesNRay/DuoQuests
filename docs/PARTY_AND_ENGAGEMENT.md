@@ -124,6 +124,24 @@ ghost snapshot and queued AFK gains.
 Still to build: friend invites (SocialService invite prompt carrying the party
 code), random matchmaking, remotes for the client UI, an in-game party screen.
 
+## Partner loadout, passives and ultimate (decided)
+
+- Every party member has a **pet**, shown in the battle HUD for both players.
+- A **partner loadout popup** shows everything your partner has equipped:
+  skills, passives, pet and gear. Only the **skills and their order** can be
+  edited by the other member (the ghost loadout, logged and revertable by the
+  owner). Passives, pet and gear are view only.
+- The party shares one **ultimate**, chosen by the combination of the two
+  classes. Each pair has several, unlocked by the party frontier. The party
+  equips one and either member can swap it (`Party.SetUltimate`, stored as
+  `UltimateId` on the party record). It fires automatically when the shared
+  gauge is full.
+- A Cleric's **Resurrection** can be cast once per combat, and works for a
+  ghost partner too.
+- `PartyService` exposes `SetUltimate`, `SetGhostLoadout` and
+  `RevertGhostLoadout` for the UI remotes, and `GetState` now includes the
+  partner's passives and the chosen ultimate.
+
 ## Things to do on login (wish list, to prioritise)
 
 Free-to-build, profile-only (no backend):

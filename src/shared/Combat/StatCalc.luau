@@ -10,6 +10,7 @@
 local Classes = require(script.Parent.Parent.Config.Classes)
 local Enemies = require(script.Parent.Parent.Config.Enemies)
 local Skills = require(script.Parent.Parent.Skills)
+local Passives = require(script.Parent.Parent.Passives)
 local Entity = require(script.Parent.Entity)
 
 local StatCalc = {}
@@ -46,11 +47,33 @@ function StatCalc.ClassAbilities(classId, abilityIds, slotLevels)
 	return slots
 end
 
--- options (all optional): AbilityIds, SlotLevels
+-- Stats that default to 1 when a class does not list them (see Simulation).
+local MULTIPLIER_STATS = { DamageDealt = true, HealingDealt = true, DamageTaken = true }
+
+-- Folds equipped passives into base stats before the fight starts.
+local function applyPassives(stats, classId, passiveIds, passiveLevels)
+	local resolved = Passives.Resolve(classId, passiveIds, passiveLevels)
+	for _, mod in ipairs(resolved.Combat) do
+		local current = stats[mod.Stat]
+		if current == nil then
+			current = if MULTIPLIER_STATS[mod.Stat] then 1 else 0
+		end
+		if mod.Mode == "Add" then
+			stats[mod.Stat] = current + mod.Value
+		else
+			stats[mod.Stat] = current * (1 + mod.Value)
+		end
+	end
+end
+
+-- options (all optional): AbilityIds, SlotLevels, PassiveIds, PassiveLevels
 function StatCalc.NewPartyMember(id, name, classId, level, options)
 	local class = Classes[classId]
 	assert(class ~= nil, "Unknown class: " .. tostring(classId))
 	options = options or {}
+
+	local stats = StatCalc.ClassStats(classId, level)
+	applyPassives(stats, classId, options.PassiveIds, options.PassiveLevels)
 
 	return Entity.new({
 		Id = id,
@@ -59,7 +82,7 @@ function StatCalc.NewPartyMember(id, name, classId, level, options)
 		DefId = classId,
 		DamageType = class.DamageType,
 		BasicAttack = class.BasicAttack,
-		Stats = StatCalc.ClassStats(classId, level),
+		Stats = stats,
 		Abilities = StatCalc.ClassAbilities(classId, options.AbilityIds, options.SlotLevels),
 	})
 end

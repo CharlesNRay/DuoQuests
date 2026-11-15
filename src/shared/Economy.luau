@@ -13,6 +13,9 @@
 	  Economy.UnlockAbilityWithPick(profile, classId, abilityId)  use one free skill pick
 	  Economy.LevelSlot(profile, classId, slotIndex)      pay gold
 	  Economy.Equip(profile, classId, abilityIds)         set the loadout (exactly Skills.SLOTS)
+	  Economy.PassiveSlotLevelCost(level)                 -> gold
+	  Economy.LevelPassiveSlot(profile, classId, slot)    pay gold
+	  Economy.EquipPassives(profile, classId, passiveIds) up to the unlocked slots; may be empty
 
 	Reasons: "UnknownClass", "ClassLocked", "NotInPool", "AlreadyOwned",
 	"NotEnough", "BadSlot", "MaxLevel", "NotOwned" and the Skills.ValidateLoadout
@@ -23,6 +26,7 @@ local Abilities = require(script.Parent.Config.Abilities)
 local Classes = require(script.Parent.Config.Classes)
 local Config = require(script.Parent.Config.Economy)
 local Skills = require(script.Parent.Skills)
+local Passives = require(script.Parent.Passives)
 
 local Economy = {}
 
@@ -121,6 +125,48 @@ function Economy.Equip(profile, classId, abilityIds)
 		return false, "NeedFullLoadout"
 	end
 	profile.Season.Loadouts[classId] = table.clone(abilityIds)
+	return true
+end
+
+function Economy.PassiveSlotLevelCost(level)
+	return Config.PassiveCostPerLevel * level
+end
+
+function Economy.LevelPassiveSlot(profile, classId, slotIndex)
+	if type(classId) ~= "string" or Classes[classId] == nil then
+		return false, "UnknownClass"
+	end
+	if not profile.Permanent.UnlockedClasses[classId] then
+		return false, "ClassLocked"
+	end
+	local levels = profile.Season.PassiveSlotLevels[classId]
+	local slots = Passives.SlotsAt(profile.Season.HighestStage)
+	if levels == nil or type(slotIndex) ~= "number" or slotIndex ~= math.floor(slotIndex) or slotIndex < 1 or slotIndex > slots then
+		return false, "BadSlot"
+	end
+	local level = levels[slotIndex]
+	if level >= Skills.MAX_SLOT_LEVEL then
+		return false, "MaxLevel"
+	end
+	local cost = Economy.PassiveSlotLevelCost(level)
+	local currencies = profile.Season.Currencies
+	if currencies.Gold < cost then
+		return false, "NotEnough"
+	end
+	currencies.Gold -= cost
+	levels[slotIndex] = level + 1
+	return true
+end
+
+function Economy.EquipPassives(profile, classId, passiveIds)
+	if not profile.Permanent.UnlockedClasses[classId] then
+		return false, if Classes[classId] == nil then "UnknownClass" else "ClassLocked"
+	end
+	local ok, reason = Passives.ValidateLoadout(classId, passiveIds, profile.Season.HighestStage)
+	if not ok then
+		return false, reason
+	end
+	profile.Season.PassiveLoadouts[classId] = table.clone(passiveIds)
 	return true
 end
 

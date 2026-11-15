@@ -31,7 +31,7 @@ function Entity.new(def)
 	local abilities = {}
 	for _, slot in ipairs(def.Abilities or {}) do
 		assert(slot.Id ~= nil, "Ability slot needs an Id")
-		table.insert(abilities, { Id = slot.Id, Level = slot.Level or 1, Timer = 0 })
+		table.insert(abilities, { Id = slot.Id, Level = slot.Level or 1, Timer = 0, Uses = 0 })
 	end
 
 	return {

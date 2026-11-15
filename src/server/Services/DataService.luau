@@ -68,6 +68,13 @@ local Migrations = {
 		data.Season.SlotLevels = data.Season.SlotLevels or {}
 		ProfileTemplate.GrantStarterAbilities(data)
 	end,
+
+	-- v2 -> v3: passives. Every unlocked class gets its starter passive.
+	[3] = function(data)
+		data.Season.PassiveLoadouts = data.Season.PassiveLoadouts or {}
+		data.Season.PassiveSlotLevels = data.Season.PassiveSlotLevels or {}
+		ProfileTemplate.GrantStarterAbilities(data)
+	end,
 }
 
 local function keyFor(userId)

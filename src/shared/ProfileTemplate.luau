@@ -16,6 +16,8 @@
 	                 class, in priority order (validate with Skills.ValidateLoadout)
 	  SlotLevels     { [classId] = { n, n, n, n } }  level of each slot. LEVELS
 	                 BELONG TO THE SLOT, so swapping the skill in a slot keeps it.
+	  PassiveLoadouts / PassiveSlotLevels  the same idea for passives (up to 3
+	                 slots, unlocked by reaching stages; see Shared/Passives)
 
 	Rules:
 	  * Bump CURRENT_VERSION whenever you change the shape in a way that needs
@@ -32,14 +34,17 @@
 	  2  skills: OwnedAbilities, per-class Loadouts and SlotLevels replace
 	     AbilityLevels/EquippedAbilities; every unlocked class owns and equips
 	     its starter skills
+	  3  passives: PassiveLoadouts and PassiveSlotLevels per class; every
+	     unlocked class starts with its first passive equipped
 ]]
 
 local Seasons = require(script.Parent.Config.Seasons)
 local Skills = require(script.Parent.Skills)
+local Passives = require(script.Parent.Passives)
 
 local ProfileTemplate = {}
 
-ProfileTemplate.CURRENT_VERSION = 2
+ProfileTemplate.CURRENT_VERSION = 3
 
 -- A fresh seasonal section. Also used by the season reset later.
 function ProfileTemplate.NewSeasonData(seasonId)
@@ -63,6 +68,8 @@ function ProfileTemplate.NewSeasonData(seasonId)
 		OwnedAbilities = {}, -- [abilityId] = true
 		Loadouts = {}, -- [classId] = equipped ability ids, priority order
 		SlotLevels = {}, -- [classId] = level per slot position
+		PassiveLoadouts = {}, -- [classId] = equipped passive ids (see Passives)
+		PassiveSlotLevels = {}, -- [classId] = level per passive slot
 		PetLevels = {}, -- [petId] = level (pet OWNERSHIP is permanent)
 
 		HighestStage = 1, -- the frontier: furthest stage unlocked, never lowered
@@ -77,6 +84,20 @@ function ProfileTemplate.GrantClassStarters(season, classId)
 	season.OwnedAbilities = season.OwnedAbilities or {}
 	season.Loadouts = season.Loadouts or {}
 	season.SlotLevels = season.SlotLevels or {}
+	season.PassiveLoadouts = season.PassiveLoadouts or {}
+	season.PassiveSlotLevels = season.PassiveSlotLevels or {}
+
+	-- Passives: the class's first passive starts equipped in a level 1 slot.
+	if season.PassiveLoadouts[classId] == nil then
+		season.PassiveLoadouts[classId] = { Passives.Pool(classId)[1] }
+	end
+	if season.PassiveSlotLevels[classId] == nil then
+		local passiveLevels = {}
+		for index = 1, Passives.SLOTS do
+			passiveLevels[index] = 1
+		end
+		season.PassiveSlotLevels[classId] = passiveLevels
+	end
 
 	local starters = Skills.StarterAbilities(classId)
 	for _, abilityId in ipairs(starters) do
