@@ -481,10 +481,18 @@ function PartyService.GetPartner(player)
 	end
 	local partnerId = Party.Partner(entry.Record, player.UserId)
 	local snapshot = partnerId and entry.Record.Snapshots[tostring(partnerId)]
+	local isCompanion = false
+	if not snapshot and entry.Record.Companion then
+		-- no real partner yet: the starter ghost stands in
+		snapshot = entry.Record.Companion
+		partnerId = Party.COMPANION_ID
+		isCompanion = true
+	end
 	if not snapshot then
 		return nil
 	end
 	return {
+		IsCompanion = isCompanion,
 		UserId = partnerId,
 		Name = snapshot.Name,
 		ClassId = snapshot.ClassId,
@@ -497,7 +505,7 @@ function PartyService.GetPartner(player)
 		Owned = table.clone(snapshot.Owned),
 		PassiveIds = table.clone(snapshot.PassiveIds or {}),
 		PassiveLevels = table.clone(snapshot.PassiveLevels or {}),
-		CanRevert = #(snapshot.History or {}) > 0,
+		CanRevert = not isCompanion and #(snapshot.History or {}) > 0,
 	}
 end
 
@@ -596,6 +604,15 @@ function PartyService.GetHostedSummaries()
 					ClassId = (season and season.ClassId) or (snapshot and snapshot.ClassId) or "Warrior",
 					Level = (season and season.Level) or (snapshot and snapshot.Level) or 1,
 					Online = online ~= nil,
+				})
+			end
+			if #record.Members == 1 and record.Companion then
+				table.insert(members, {
+					UserId = Party.COMPANION_ID,
+					Name = record.Companion.Name,
+					ClassId = record.Companion.ClassId,
+					Level = record.Companion.Level,
+					Online = false,
 				})
 			end
 			table.insert(list, { PartyId = partyId, Stage = record.Stage, Frontier = record.Frontier, Members = members })

@@ -125,6 +125,9 @@ local function open(name, label)
 end
 
 local function inspect(userId)
+	if userId <= 0 then
+		return -- the starter ghost has no profile to show
+	end
 	if userId == Players.LocalPlayer.UserId then
 		open("Party", "Party")
 		return

@@ -115,7 +115,7 @@ function Replay:_hero(entry, index)
 		hero.Pet.Bar.Enabled = false
 		self.Heroes[entry.Id] = hero
 		-- the real avatar, when available
-		if entry.UserId then
+		if entry.UserId and entry.UserId > 0 then -- ghosts like the starter companion have no avatar
 			task.spawn(function()
 				local ok, rig = pcall(function()
 					return Players:CreateHumanoidModelFromUserId(entry.UserId)

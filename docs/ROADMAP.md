@@ -74,3 +74,10 @@ Newest first.
 - Pets, balance numbers and passive/ultimate values are placeholders.
 - Teleport and real DataStore paths are untested.
 - Docs: design decisions live in `docs/PRESENTATION.md`; setup in `README.md`.
+
+
+## 2026-11-15 (overnight additions)
+- [x] Subclasses: Berserker/Guardian (Warrior), Priest/Templar (Cleric). Unlock at frontier stage 30, permanent per season, 3 skills each (first free, rest via shards). Tiered `Parent` links allow deeper branches later.
+- [x] Starter ghost companion: single-member parties get a ghost partner (Cleric, or Warrior for Cleric owners) that mirrors the owner's level, is editable via ghost loadout, and is replaced when a real partner joins.
+- [ ] Balance pass (2P + pets + gear + subclasses) - see morning notes.
+- Open questions: respec for subclasses, deeper branches, stronger pets, pets as combatants.

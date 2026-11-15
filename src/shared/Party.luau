@@ -50,6 +50,8 @@ local Progression = require(script.Parent.Progression)
 local Skills = require(script.Parent.Skills)
 local StageRunner = require(script.Parent.StageRunner)
 local Pets = require(script.Parent.Pets)
+local ProfileTemplate = require(script.Parent.ProfileTemplate)
+local Subclasses = require(script.Parent.Subclasses)
 local TableUtil = require(script.Parent.Util.TableUtil)
 local Ultimates = require(script.Parent.Ultimates)
 local Classes = require(script.Parent.Config.Classes)
@@ -58,6 +60,7 @@ local Party = {}
 
 Party.VERSION = 1
 Party.HISTORY_LIMIT = 5
+Party.COMPANION_ID = -1 -- the starter ghost's id (real user ids are positive)
 
 local function key(userId)
 	return tostring(userId)
@@ -128,6 +131,7 @@ function Party.AddMember(party, userId, name, profile, now)
 	party.Stage = start
 	party.Frontier = start
 	party.Pending = {}
+	party.Companion = nil -- a real partner replaces the starter ghost
 	party.LastActiveAt = now
 end
 
@@ -164,6 +168,7 @@ function Party.EnsureSeason(party, seasonId)
 	party.Stage = 1
 	party.Frontier = 1
 	party.Pending = {}
+	party.Companion = nil
 	return true
 end
 
@@ -220,14 +225,85 @@ function Party.RefreshSnapshot(party, userId, name, profile, now)
 	party.Snapshots[key(userId)] = Party.MakeSnapshot(profile, userId, name, party.Snapshots[key(userId)], now)
 end
 
--- Either member may set the ghost loadout of either member. Only skills the
+-- Starter ghost companion ------------------------------------------------------
+-- A party with only one member gets a ghost partner so a new player can fight with
+-- a pair (and try the ghost features) before a real partner joins. It is a
+-- Cleric (a Warrior for a Cleric player) that keeps pace with its owner: same
+-- level and slot levels, and it takes a subclass path when the owner reaches the
+-- unlock stage. Its skills can be edited like any ghost's. It earns no rewards, and
+-- it disappears the moment a real partner joins.
+
+local COMPANION_NAMES = { Cleric = "Mira", Warrior = "Brom" }
+local COMPANION_PATHS = { Cleric = "Priest", Warrior = "Guardian" }
+
+local function averageSlotLevel(levels)
+	local total, count = 0, 0
+	for _, level in ipairs(levels or {}) do
+		total += level
+		count += 1
+	end
+	return if count > 0 then math.max(1, math.floor(total / count)) else 1
+end
+
+-- Bring the companion's level, slots and path up to its owner's.
+local function followOwner(companion, ownerProfile)
+	local season = ownerProfile.Season
+	local level = averageSlotLevel(season.SlotLevels[season.ClassId])
+	companion.Level = season.Level
+	companion.Frontier = season.HighestStage
+	for index = 1, Skills.SLOTS do
+		companion.SlotLevels[index] = level
+	end
+	local pathId = COMPANION_PATHS[companion.ClassId]
+	local def = Subclasses.Defs[pathId]
+	if def and season.HighestStage >= def.UnlockStage and companion.SubclassId == nil then
+		companion.SubclassId = pathId
+		companion.Owned[def.Skills[1]] = true
+	end
+end
+
+function Party.MakeCompanion(ownerProfile, now)
+	local classId = if ownerProfile.Season.ClassId == "Cleric" then "Warrior" else "Cleric"
+	local fresh = ProfileTemplate.New()
+	fresh.Season.ClassId = classId
+	local snapshot = Party.MakeSnapshot(fresh, Party.COMPANION_ID, COMPANION_NAMES[classId] or "Companion", nil, now)
+	snapshot.IsCompanion = true
+	followOwner(snapshot, ownerProfile)
+	return snapshot
+end
+
+-- Call on a one-member party whenever its member is online. Creates the companion
+-- if it is missing and keeps it level with its owner.
+function Party.SyncCompanion(party, ownerProfile, now)
+	if #party.Members ~= 1 then
+		party.Companion = nil
+		return nil
+	end
+	if party.Companion == nil then
+		party.Companion = Party.MakeCompanion(ownerProfile, now)
+	else
+		followOwner(party.Companion, ownerProfile)
+	end
+	return party.Companion
+end
+
+-- The fighters list with the companion added when the party is a single player.
+local function withCompanion(party, members)
+	if #members == 1 and party.Companion then
+		table.insert(members, { Id = key(Party.COMPANION_ID), Name = party.Companion.Name, Snapshot = party.Companion })
+	end
+	return members
+end
+
+-- Either member may set the ghost loadout of either member (or of the starter companion). Only skills the
 -- owner already owns can be used, and it must fill every slot. Nothing is
 -- spent or unlocked.
 function Party.SetGhostLoadout(party, editorUserId, targetUserId, abilityIds, now)
-	if not isMember(party, editorUserId) or not isMember(party, targetUserId) then
+	local isCompanion = party.Companion ~= nil and targetUserId == Party.COMPANION_ID
+	if not isMember(party, editorUserId) or not (isMember(party, targetUserId) or isCompanion) then
 		return false, "NotMember"
 	end
-	local snapshot = party.Snapshots[key(targetUserId)]
+	local snapshot = if isCompanion then party.Companion else party.Snapshots[key(targetUserId)]
 	if snapshot == nil then
 		return false, "NoSnapshot"
 	end
@@ -442,6 +518,11 @@ function Party.OnlineTick(party, online, seed, now)
 			table.insert(members, { Id = key(userId), Name = snapshot.Name, Snapshot = snapshot })
 		end
 	end
+
+	if #party.Members == 1 and online[1] then
+		Party.SyncCompanion(party, online[1].Profile, now)
+	end
+	withCompanion(party, members)
 
 	local stage = party.Stage
 	local outcome = StageRunner.Run(members, stage, seed, StageRunner.UltimateFor(members, party.Frontier, party.UltimateId), true)
