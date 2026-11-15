@@ -9,21 +9,37 @@
 	               achievements, Legacy Points and upgrades, season history)
 	  Season     - wiped at the start of every new season
 
+	Skills live in the Season section (skills are class-locked, and ownership,
+	loadouts and levels all reset each season):
+	  OwnedAbilities { [abilityId] = true }  skills the player has unlocked
+	  Loadouts       { [classId] = { id, id, id, id } }  equipped skills per
+	                 class, in priority order (validate with Skills.ValidateLoadout)
+	  SlotLevels     { [classId] = { n, n, n, n } }  level of each slot. LEVELS
+	                 BELONG TO THE SLOT, so swapping the skill in a slot keeps it.
+
 	Rules:
 	  * Bump CURRENT_VERSION whenever you change the shape in a way that needs
 	    converting old data, and add a migration in DataService.
 	  * Adding a brand-new field with a default needs no migration: loading
-	    fills missing fields from this template automatically.
+	    fills missing fields from Defaults() automatically.
 	  * DataStores cannot store nil, so optional fields (Permanent.PartyId,
 	    Season.SubclassId) are simply absent until they are set.
+	  * New() = Defaults() plus the starter skills. Only Defaults() is used to
+	    fill in missing fields on load, so starter skills are never re-granted.
+
+	Version history
+	  1  first schema
+	  2  skills: OwnedAbilities, per-class Loadouts and SlotLevels replace
+	     AbilityLevels/EquippedAbilities; every unlocked class owns and equips
+	     its starter skills
 ]]
 
-local Shared = script.Parent
-local Seasons = require(Shared.Config.Seasons)
+local Seasons = require(script.Parent.Config.Seasons)
+local Skills = require(script.Parent.Skills)
 
 local ProfileTemplate = {}
 
-ProfileTemplate.CURRENT_VERSION = 1
+ProfileTemplate.CURRENT_VERSION = 2
 
 -- A fresh seasonal section. Also used by the season reset later.
 function ProfileTemplate.NewSeasonData(seasonId)
@@ -35,23 +51,61 @@ function ProfileTemplate.NewSeasonData(seasonId)
 		XP = 0,
 
 		Currencies = {
-			Gold = 0,
+			Gold = 0, -- levels skill slots
+			Shards = 0, -- Skill Shards: unlock skills of your choice
+			SkillPicks = 0, -- free skill unlocks from first-clearing boss stages
 		},
 
 		Equipment = {
 			Equipped = {}, -- [slotName] = item
 			Inventory = {}, -- list of items
 		},
-		AbilityLevels = {}, -- [abilityId] = level
-		EquippedAbilities = {}, -- up to four ability IDs
+		OwnedAbilities = {}, -- [abilityId] = true
+		Loadouts = {}, -- [classId] = equipped ability ids, priority order
+		SlotLevels = {}, -- [classId] = level per slot position
 		PetLevels = {}, -- [petId] = level (pet OWNERSHIP is permanent)
 
-		HighestStage = 1, -- personal seasonal record, never lowered
-		StageRewardsClaimed = {}, -- [stage] = true, anti-duplication ledger
+		HighestStage = 1, -- the frontier: furthest stage unlocked, never lowered
+		StageRewardsClaimed = {}, -- [stage] = true, one-time milestone ledger
 	}
 end
 
-function ProfileTemplate.New()
+-- Gives one class its starter skills and equips them in level 1 slots.
+-- Skills already owned stay owned, and an existing loadout or slot levels are
+-- left alone.
+function ProfileTemplate.GrantClassStarters(season, classId)
+	season.OwnedAbilities = season.OwnedAbilities or {}
+	season.Loadouts = season.Loadouts or {}
+	season.SlotLevels = season.SlotLevels or {}
+
+	local starters = Skills.StarterAbilities(classId)
+	for _, abilityId in ipairs(starters) do
+		season.OwnedAbilities[abilityId] = true
+	end
+	if season.Loadouts[classId] == nil then
+		season.Loadouts[classId] = starters
+	end
+	if season.SlotLevels[classId] == nil then
+		local levels = {}
+		for index = 1, Skills.SLOTS do
+			levels[index] = 1
+		end
+		season.SlotLevels[classId] = levels
+	end
+end
+
+-- Starter skills for every class the player has unlocked.
+function ProfileTemplate.GrantStarterAbilities(profile)
+	for classId, unlocked in pairs(profile.Permanent.UnlockedClasses) do
+		if unlocked then
+			ProfileTemplate.GrantClassStarters(profile.Season, classId)
+		end
+	end
+end
+
+-- Structure with default values and NO starter skills. DataService uses this
+-- to fill in fields that older saved profiles are missing.
+function ProfileTemplate.Defaults()
 	return {
 		SchemaVersion = ProfileTemplate.CURRENT_VERSION,
 
@@ -62,7 +116,7 @@ function ProfileTemplate.New()
 		},
 
 		Permanent = {
-			UnlockedClasses = { Warrior = true, Mage = true },
+			UnlockedClasses = { Warrior = true, Cleric = true },
 			Pets = {}, -- [petId] = true
 			Cosmetics = {},
 			Titles = {},
@@ -75,6 +129,13 @@ function ProfileTemplate.New()
 
 		Season = ProfileTemplate.NewSeasonData(Seasons.CurrentSeasonId),
 	}
+end
+
+-- A brand-new player's profile.
+function ProfileTemplate.New()
+	local profile = ProfileTemplate.Defaults()
+	ProfileTemplate.GrantStarterAbilities(profile)
+	return profile
 end
 
 return ProfileTemplate

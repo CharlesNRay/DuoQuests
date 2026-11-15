@@ -11,21 +11,62 @@ Built with Luau and synced into Roblox Studio using Rojo.
 default.project.json         Rojo project file
 src/
   shared/                    -> ReplicatedStorage.Shared
-    Config/                  data-only modules (Classes, Seasons, ...)
+    Config/                  data-only modules
+      Classes, Enemies       combatant definitions (Warrior, Cleric; Mage later)
+      Abilities, Statuses    skills and the timed effects they apply
+      Rarities               Common/Rare/Epic: power gained per slot level
+      Seasons                current season
+      Stages, Economy        stage layout; every reward and cost number
+      Offline                AFK rate tiers (50% first 12 h, then less)
+    Combat/                  pure combat simulation (no Roblox APIs)
+      Simulation             fixed-tick, deterministic fight between two teams
+      Hooks                  event hooks that seasonal mechanics plug into
+      Entity, StatCalc, Rng  combatants, stat building, seeded randomness
     Util/                    helpers (TableUtil)
+    Skills.luau              equipping rules and slot level cap (4 slots)
+    Stages.luau              what each stage contains (every 10th is a boss)
+    Progression.luau         XP, levels, clear rewards, frontier, milestones
+    Economy.luau             spending: unlock skills, level slots, equip
+    StageRunner.luau         runs one stage fight and applies rewards
+    Party.luau               two-player party: ghosts, shared stage, claims, AFK
+    Offline.luau             estimates AFK gains from a saved party
     ProfileTemplate.luau     shape of a player profile
+docs/
+  SKILLS.md                  skill design decisions and open questions
   server/                    -> ServerScriptService.Server
     Main.server.luau         starts services, connects players
     Services/DataService     session-locked loading and saving
-    Tests/ProfileTests       run from the Studio command bar
+    Tests/                   run from the Studio command bar
 ```
+
+## How combat is extended
+
+- New ability: add an entry to `Config/Abilities` (cooldown, conditions, effects).
+- New status: add an entry to `Config/Statuses` (stat modifiers and/or flags).
+- New effect type or condition: register it with `Simulation.Effects` or
+  `Simulation.Conditions`; no edits to the simulation itself.
+- Seasonal mechanics: register handlers on the hooks listed at the top of
+  `Combat/Simulation.luau` (`OnCalculateDamage`, `OnAbilityCast`, ...).
 
 ## Working on it
 
 1. Install Rojo (VS Code extension + Studio plugin).
 2. Open this folder in VS Code, run **Rojo: Open Menu > Start server**.
 3. In Studio, open a Baseplate, click **Connect** in the Rojo plugin.
-4. After pulling new changes, the sync updates Studio automatically.
+4. Changes to files sync into Studio automatically.
 
 File naming: `Name.luau` = ModuleScript, `Name.server.luau` = Script,
 `Name.client.luau` = LocalScript.
+
+## Tests
+
+In Studio's Command Bar (View > Command Bar):
+
+```lua
+require(game.ServerScriptService.Server.Tests.ProfileTests)()
+require(game.ServerScriptService.Server.Tests.CombatTests)()
+require(game.ServerScriptService.Server.Tests.AbilityTests)()
+require(game.ServerScriptService.Server.Tests.StageTests)()
+require(game.ServerScriptService.Server.Tests.PartyTests)()
+require(game.ServerScriptService.Server.Tests.PacingTests)()
+```

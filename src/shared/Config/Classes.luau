@@ -4,13 +4,18 @@
 
 	Every number here is a PLACEHOLDER to be tuned during playtesting.
 
-	Subclasses: empty for now. When subclasses arrive, each entry goes here as
-	Subclasses = { Berserker = { ...stat tweaks, extra abilities... } } and a
-	player's chosen subclass is stored as Season.SubclassId (absent until chosen).
-	Nothing else needs restructuring.
+	Each class has:
+	  BasicAttack      the one automatic attack. Presentation info for now
+	                   (Range "Melee"/"Ranged"); damage uses Attack and DamageType.
+	  AbilityPool      every skill the class can ever equip, in display order.
+	  DefaultLoadout   four skills in PRIORITY order (slot 1 is checked first
+	                   each tick). Also the skills a new player starts owning.
+	  Subclasses       empty for now. Later each entry goes here as
+	                   Subclasses = { Berserker = { ...stat tweaks, extra skills... } }
+	                   with the choice stored as Season.SubclassId.
 
-	AbilityPool lists ability IDs by name. The matching ability definitions
-	(cooldowns, damage, effects) are added in the combat phase.
+	Prototype focus: Warrior (tank) and Cleric (healer). Mage is kept for
+	later and is not unlocked for new players.
 ]]
 
 return {
@@ -19,6 +24,7 @@ return {
 		DisplayName = "Warrior",
 		Role = "Tank",
 		DamageType = "Physical",
+		BasicAttack = { Id = "SwordSlash", DisplayName = "Sword Slash", Range = "Melee" },
 
 		BaseStats = {
 			MaxHealth = 200,
@@ -35,7 +41,53 @@ return {
 			CritChance = 0,
 		},
 
-		AbilityPool = { "ShieldBash", "Taunt", "Whirlwind", "LastStand" },
+		AbilityPool = {
+			"ShieldBash",
+			"Taunt",
+			"IronSkin",
+			"Whirlwind",
+			"ShieldWall",
+			"CrushingBlow",
+			"LastStand",
+			"RallyingCry",
+		},
+		DefaultLoadout = { "Taunt", "IronSkin", "ShieldBash", "Whirlwind" },
+		Subclasses = {},
+	},
+
+	Cleric = {
+		Id = "Cleric",
+		DisplayName = "Cleric",
+		Role = "Healer",
+		DamageType = "Magical",
+		BasicAttack = { Id = "HolyBolt", DisplayName = "Holy Bolt", Range = "Ranged" },
+
+		BaseStats = {
+			MaxHealth = 130,
+			Attack = 14,
+			Defense = 4,
+			AttackSpeed = 0.9,
+			CritChance = 0.05,
+		},
+		GrowthPerLevel = {
+			MaxHealth = 15,
+			Attack = 2.5,
+			Defense = 1,
+			AttackSpeed = 0,
+			CritChance = 0,
+		},
+
+		AbilityPool = {
+			"Smite",
+			"Heal",
+			"Blessing",
+			"RadiantBurst",
+			"DivineShield",
+			"GroupHeal",
+			"GuardianAngel",
+			"Judgment",
+		},
+		DefaultLoadout = { "Heal", "Blessing", "RadiantBurst", "Smite" },
 		Subclasses = {},
 	},
 
@@ -44,6 +96,7 @@ return {
 		DisplayName = "Mage",
 		Role = "Damage",
 		DamageType = "Magical",
+		BasicAttack = { Id = "ArcaneMissile", DisplayName = "Arcane Missile", Range = "Ranged" },
 
 		BaseStats = {
 			MaxHealth = 110,
@@ -61,6 +114,7 @@ return {
 		},
 
 		AbilityPool = { "Fireball", "Blizzard", "LightningBolt", "ArcaneSurge" },
+		DefaultLoadout = { "Fireball", "Blizzard", "LightningBolt", "ArcaneSurge" },
 		Subclasses = {},
 	},
 }

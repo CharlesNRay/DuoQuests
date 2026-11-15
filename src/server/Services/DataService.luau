@@ -57,7 +57,18 @@ local initialized = false
 
 -- Migrations convert old profiles one version at a time.
 -- Migrations[2] = function(data) ... end upgrades version 1 -> 2, and so on.
-local Migrations = {}
+local Migrations = {
+	-- v1 -> v2: skills. Equipped abilities moved to per-class Loadouts with
+	-- per-slot levels, and every unlocked class now owns its starter skills.
+	[2] = function(data)
+		data.Season.EquippedAbilities = nil
+		data.Season.AbilityLevels = nil
+		data.Season.OwnedAbilities = data.Season.OwnedAbilities or {}
+		data.Season.Loadouts = data.Season.Loadouts or {}
+		data.Season.SlotLevels = data.Season.SlotLevels or {}
+		ProfileTemplate.GrantStarterAbilities(data)
+	end,
+}
 
 local function keyFor(userId)
 	return "Player_" .. tostring(userId)
@@ -274,7 +285,7 @@ function DataService.LoadProfile(player)
 		-- Leave the lock to expire rather than risk saving over newer data.
 		return nil, "NewerSchema"
 	end
-	TableUtil.Reconcile(data, ProfileTemplate.New())
+	TableUtil.Reconcile(data, ProfileTemplate.Defaults())
 
 	-- Player may have left while we were loading.
 	if player.Parent == nil then
