@@ -652,6 +652,35 @@ function PartyService.GetHostedSummaries()
 	return list
 end
 
+-- The ghost snapshot of your partner (nil when solo), used when a boss fight needs a second fighter.
+function PartyService.GetPartnerSnapshot(player)
+	local partyId = partyOf[player.UserId]
+	local entry = partyId and hosted[partyId]
+	if not entry then
+		return nil
+	end
+	local record = entry.Record
+	local partnerId = Party.Partner(record, player.UserId)
+	if partnerId then
+		local snapshot = record.Snapshots[tostring(partnerId)]
+		return snapshot and { Id = tostring(partnerId), Name = snapshot.Name or "Partner", Snapshot = snapshot } or nil
+	end
+	-- solo: the starter ghost fights beside you, as in normal stages
+	if record.Companion then
+		return { Id = tostring(Party.COMPANION_ID), Name = record.Companion.Name, Snapshot = record.Companion }
+	end
+	return nil
+end
+
+-- A boss fight takes over your arena: pause the party's normal fights for a while.
+function PartyService.HoldFights(player, seconds)
+	local partyId = partyOf[player.UserId]
+	local entry = partyId and hosted[partyId]
+	if entry then
+		entry.NextFightAt = math.max(entry.NextFightAt, now() + seconds)
+	end
+end
+
 function PartyService.GetLastClaim(player)
 	return lastClaim[player.UserId]
 end

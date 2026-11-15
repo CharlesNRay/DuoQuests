@@ -10,7 +10,7 @@
 	  BossService.Claim(player, profile, id)      -> true, lines | false, reason
 	  BossService.Hatch(player, profile)          -> true, petId | false, reason
 
-	WORLD BOSS  a giant that wanders the plaza on a timer; everyone strikes it; at the end of its timer
+	WORLD BOSS  a giant that stands by the plaza on a timer; everyone strikes it; at the end of its timer
 	            players get every damage tier they reached (this server only).
 	SEASON BOSS shared by all servers: each server batches its players' damage and adds it to one
 	            DataStore counter every few seconds (UpdateAsync); the shared total is the boss's permanent
@@ -131,7 +131,7 @@ local function buildColossus()
 	local h = SEASON.Look.Height
 	local model = Instance.new("Model")
 	model.Name = "SeasonBoss"
-	local origin = Vector3.new(0, 0, 100)
+	local origin = Vector3.new(0, 0, 190)
 	local altar = glowPart(model, "Altar", Vector3.new(34, 3, 34), origin + Vector3.new(0, 1.5, 0), Color3.fromRGB(110, 110, 118))
 	local body = glowPart(model, "Body", Vector3.new(h * 0.45, h * 0.45, h * 0.3), origin + Vector3.new(0, 3 + h * 0.35, 0), color)
 	model.PrimaryPart = body
@@ -252,29 +252,6 @@ local function endWorldEvent()
 	push:FireAllClients("BossEvent", { Kind = "WorldGone" })
 end
 
-local function wanderStep(dt, state)
-	if not world.Active or not worldModel or not worldModel.PrimaryPart then
-		return
-	end
-	local root = worldModel.PrimaryPart
-	local h = WORLD.Look.Height
-	local position = root.Position
-	local target = state.Target
-	if target == nil or (Vector3.new(target.X, 0, target.Z) - Vector3.new(position.X, 0, position.Z)).Magnitude < 3 then
-		local angle, radius = rng:NextNumber(0, math.pi * 2), rng:NextNumber(25, 85)
-		state.Target = Vector3.new(math.cos(angle) * radius, h * 0.55, math.sin(angle) * radius * 0.7 - 20)
-		target = state.Target
-	end
-	local direction = (Vector3.new(target.X, position.Y, target.Z) - position)
-	if direction.Magnitude > 0.1 then
-		local step = direction.Unit * math.min(direction.Magnitude, 7 * dt)
-		local bob = math.sin(os.clock() * 3) * 0.4
-		local newPosition = Vector3.new(position.X + step.X, h * 0.55 + bob, position.Z + step.Z)
-		local faceAt = Vector3.new(target.X, newPosition.Y, target.Z)
-		worldModel:PivotTo(CFrame.lookAt(newPosition, faceAt))
-	end
-end
-
 -- API -----------------------------------------------------------------------------------------------
 
 local function describeTiers(profile)
@@ -341,11 +318,16 @@ function BossService.GetState(player, profile)
 	return { World = worldState, Season = seasonState }
 end
 
-local function runFight(profile, player, cfg, frontier)
-	return Bosses.Strike({ { Id = tostring(player.UserId), Name = player.Name, Profile = profile } }, cfg, frontier, rng:NextInteger(1, 1e9))
+local function runFight(profile, player, cfg, frontier, partner)
+	local members = { { Id = tostring(player.UserId), Name = player.Name, Profile = profile } }
+	if partner then
+		table.insert(members, { Id = partner.Id, Name = partner.Name, Snapshot = partner.Snapshot })
+	end
+	local damage, _, fight = Bosses.Strike(members, cfg, frontier, rng:NextInteger(1, 1e9), true)
+	return damage, fight
 end
 
-function BossService.Strike(player, profile, which)
+function BossService.Strike(player, profile, which, partner)
 	local frontier = profile.Season.HighestStage
 	if which == "World" then
 		if not world.Active then
@@ -360,9 +342,9 @@ function BossService.Strike(player, profile, which)
 		end
 		world.LastStrike[userId] = os.clock()
 		world.Strikes[userId] = (world.Strikes[userId] or 0) + 1
-		local damage = runFight(profile, player, WORLD, frontier)
+		local damage, fight = runFight(profile, player, WORLD, frontier, partner)
 		world.Totals[userId] = (world.Totals[userId] or 0) + damage
-		return true, { Damage = damage, Total = world.Totals[userId], Reached = #Bosses.TiersReached(WORLD, world.Totals[userId], frontier) }
+		return true, { Damage = damage, Total = world.Totals[userId], Reached = #Bosses.TiersReached(WORLD, world.Totals[userId], frontier), Fight = fight, Label = WORLD.Name }
 	elseif which == "Season" then
 		local _, fraction = seasonHealth()
 		if fraction <= 0 then
@@ -373,7 +355,7 @@ function BossService.Strike(player, profile, which)
 		if not ok then
 			return false, reason
 		end
-		local damage = runFight(profile, player, SEASON, frontier)
+		local damage, fight = runFight(profile, player, SEASON, frontier, partner)
 		-- the season boss is much tougher, so a strike is worth a lot more of its health bar
 		damage = math.floor(damage * (SEASON.DamageMult or 1))
 		local record = Bosses.Record(profile, seasonId)
@@ -382,7 +364,7 @@ function BossService.Strike(player, profile, which)
 		season.Pending += damage
 		refreshColossus()
 		local _, after = seasonHealth()
-		return true, { Damage = damage, Fraction = after }
+		return true, { Damage = damage, Fraction = after, Fight = fight, Label = SEASON.Name }
 	end
 	return false, "BadArgs"
 end
@@ -399,7 +381,7 @@ end
 function BossService.Init(pushRemote, profileGetter)
 	push, getProfile = pushRemote, profileGetter
 	worldModel = buildWorldBoss()
-	worldModel:PivotTo(CFrame.new(0, WORLD.Look.Height * 0.55, -20))
+	worldModel:PivotTo(CFrame.new(105, WORLD.Look.Height * 0.55, 150))
 	worldModel.Parent = nil
 	colossusModel = buildColossus()
 
@@ -438,11 +420,6 @@ function BossService.Init(pushRemote, profileGetter)
 				world.NextAt = os.time() + interval()
 			end
 		end
-	end)
-
-	local state = {}
-	RunService.Heartbeat:Connect(function(dt)
-		wanderStep(dt, state)
 	end)
 
 	game:BindToClose(function()

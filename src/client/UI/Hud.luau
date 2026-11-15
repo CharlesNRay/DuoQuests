@@ -142,12 +142,28 @@ function Hud.new(root)
 	self.NextOrder = 0
 
 	-- combat layer: stage pill, fight timer, toast, skill bar + ultimate -------------
-	local top = pill(combat, { Size = UDim2.fromOffset(260, 44), Position = UDim2.new(0.5, -130, 0, 44) })
-	self.Zone = Kit.label({ Size = UDim2.new(1, 0, 0, 16), Position = UDim2.fromOffset(0, 2), Text = "", TextSize = 12, TextColor3 = C.Dim, TextXAlignment = Enum.TextXAlignment.Center, Parent = top })
-	self.Stage = Kit.label({ Size = UDim2.new(1, 0, 0, 24), Position = UDim2.fromOffset(0, 16), Text = "Stage -", TextSize = 20, Font = Enum.Font.GothamBlack, TextXAlignment = Enum.TextXAlignment.Center, Parent = top })
-	self.Fight = Kit.frame({ Size = UDim2.fromOffset(180, 5), Position = UDim2.new(0.5, -90, 0, 92), BackgroundColor3 = Color3.fromRGB(16, 18, 30), Parent = combat })
+	-- the same card as the map corner, so a spectated battle shows where you are and lets you Advance
+	local card = Kit.frame({ Size = UDim2.fromOffset(220, 86), Position = UDim2.new(0.5, -110, 0, 44), BackgroundColor3 = Color3.fromRGB(70, 110, 70), Parent = combat })
+	Kit.new("UIStroke", { Color = Color3.fromRGB(240, 220, 160), Thickness = 2, Transparency = 0.2, Parent = card })
+	self.CombatCard = card
+	Kit.frame({ Size = UDim2.new(1, 0, 0.55, 0), Position = UDim2.fromScale(0, 0.45), BackgroundColor3 = Color3.fromRGB(12, 14, 24), BackgroundTransparency = 0.45, Parent = card })
+	self.CGlyph = Kit.label({ Size = UDim2.fromOffset(44, 44), Position = UDim2.fromOffset(6, 4), Text = "", TextSize = 34, TextXAlignment = Enum.TextXAlignment.Center, TextStrokeTransparency = 1, Parent = card })
+	self.Zone = Kit.label({ Size = UDim2.new(1, -54, 0, 18), Position = UDim2.fromOffset(52, 5), Text = "", TextSize = 13, Font = Enum.Font.GothamBold, TextWrapped = false, TextTruncate = Enum.TextTruncate.AtEnd, TextColor3 = Color3.new(1, 1, 1), Parent = card })
+	self.Stage = Kit.label({ Size = UDim2.new(1, -54, 0, 24), Position = UDim2.fromOffset(52, 22), Text = "Stage -", TextSize = 20, Font = Enum.Font.GothamBlack, TextWrapped = false, TextColor3 = Color3.new(1, 1, 1), Parent = card })
+	self.CPips = Kit.frame({ Size = UDim2.new(1, -12, 0, 8), Position = UDim2.fromOffset(6, 54), BackgroundTransparency = 1, NoCorner = true, Parent = card })
+	Kit.new("UIListLayout", { FillDirection = Enum.FillDirection.Horizontal, Padding = UDim.new(0, 3), Parent = self.CPips })
+	self.CNote = Kit.label({ Size = UDim2.new(1, -96, 0, 16), Position = UDim2.fromOffset(6, 66), Text = "", TextSize = 11, TextWrapped = false, TextTruncate = Enum.TextTruncate.AtEnd, TextColor3 = C.Accent, Parent = card })
+	self.CAdvance = Kit.button({ Size = UDim2.fromOffset(84, 20), Position = UDim2.new(1, -88, 1, -23), Text = "Advance ▶", TextSize = 11, BackgroundColor3 = C.Up, Visible = false, ZIndex = 3, Parent = card }, function()
+		if self.OnAdvance then
+			self.OnAdvance()
+		end
+	end)
+	Kit.Hover(self.CAdvance, function()
+		return "Try the next stage. You stay on this stage until you advance."
+	end)
+	self.Fight = Kit.frame({ Size = UDim2.fromOffset(180, 5), Position = UDim2.new(0.5, -90, 0, 136), BackgroundColor3 = Color3.fromRGB(16, 18, 30), Parent = combat })
 	self.FightFill = Kit.frame({ Size = UDim2.fromScale(0, 1), BackgroundColor3 = C.Accent, Parent = self.Fight })
-	self.Toast = Kit.label({ Size = UDim2.new(0, 400, 0, 20), Position = UDim2.new(0.5, -200, 0, 100), Text = "", TextSize = 14, TextXAlignment = Enum.TextXAlignment.Center, TextColor3 = C.Accent, Parent = combat })
+	self.Toast = Kit.label({ Size = UDim2.new(0, 400, 0, 20), Position = UDim2.new(0.5, -200, 0, 144), Text = "", TextSize = 14, TextXAlignment = Enum.TextXAlignment.Center, TextColor3 = C.Accent, Parent = combat })
 
 	self.Bar = pill(combat, { Size = UDim2.fromOffset(300, 56), Position = UDim2.new(0.5, -150, 1, -112) })
 	self.Slots = Kit.frame({ Size = UDim2.fromOffset(216, 48), Position = UDim2.fromOffset(6, 4), BackgroundTransparency = 1, NoCorner = true, Parent = self.Bar })
@@ -248,10 +264,6 @@ function Hud.new(root)
 		local party = state.Party
 		local stage = party and party.Stage or me.Frontier
 		local zone = Zones.ForStage(stage)
-		self.Zone.Text = ("%s  -  %d/%d"):format(zone.Name, Zones.StageInZone(stage), require(Shared.Config.Stages).BossEvery)
-		self.Stage.Text = ("Stage %d%s"):format(stage, Stages.IsBoss(stage) and "  BOSS" or "")
-		self.Stage.TextColor3 = if Stages.IsBoss(stage) then C.Bad else C.Text
-
 		-- the live map card
 		local theme = zone.Theme
 		local ground = Color3.fromRGB(theme.Ground[1], theme.Ground[2], theme.Ground[3])
@@ -274,6 +286,23 @@ function Hud.new(root)
 		self.AdvanceButton.Visible = holding
 		self.MapNote.Text = if holding then "Holding - tap Advance" elseif party then ("Furthest: %d"):format(frontier) else "No party yet"
 		self.MapNote.Size = UDim2.new(1, if holding then -90 else -12, 0, 16)
+
+		-- the card shown while spectating mirrors it
+		self.CombatCard.BackgroundColor3 = self.MapCard.BackgroundColor3
+		self.CGlyph.Text = self.MapGlyph.Text
+		self.Zone.Text = zone.Name
+		self.Stage.Text = self.MapStage.Text
+		Kit.clear(self.CPips)
+		for i = 0, 9 do
+			local s2 = first + i
+			local color = if s2 == stage then C.Accent elseif s2 < frontier then Color3.fromRGB(120, 220, 140) else Color3.fromRGB(70, 74, 90)
+			local pip = Kit.frame({ Size = UDim2.new(0.1, -3, 1, 0), BackgroundColor3 = color, Parent = self.CPips })
+			if Stages.IsBoss(s2) then
+				pip.BackgroundColor3 = if s2 == stage then C.Accent else Color3.fromRGB(200, 90, 90)
+			end
+		end
+		self.CAdvance.Visible = holding
+		self.CNote.Text = if holding then "Holding" elseif party then ("Furthest: %d"):format(frontier) else "No party yet"
 
 		self.LevelLabel.Text = tostring(me.Level)
 		self.Badge.BackgroundColor3 = C[me.ClassId] or C.Accent

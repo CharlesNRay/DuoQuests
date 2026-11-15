@@ -88,8 +88,8 @@ function WorldService.BuildHub()
 	local floor = Instance.new("Part")
 	floor.Name = "Ground"
 	floor.Anchored = true
-	floor.Size = Vector3.new(480, 2, 400)
-	floor.Position = Vector3.new(0, -1, -80)
+	floor.Size = Vector3.new(640, 2, 600)
+	floor.Position = Vector3.new(0, -1, -70)
 	floor.Color = Color3.fromRGB(96, 160, 84)
 	floor.Material = Enum.Material.Grass
 	floor.TopSurface = Enum.SurfaceType.Smooth

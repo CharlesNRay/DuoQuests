@@ -24,7 +24,7 @@
 	  Gear.Unequip(profile, slot)           reasons: "BadSlot", "Empty", "BagFull"
 	  Gear.Sell(profile, itemId)            -> true, gold   reasons: "NotFound"
 	  Gear.SellValue(item)                  -> gold
-	  Gear.SellBulk(profile, mode)          -> true, count, gold   mode "Common" | "Worse" (never set pieces)
+	  Gear.SellBulk(profile, mode)          -> true, count, gold   mode a rarity ("Common".."Legendary") (never set pieces)
 	  Gear.UpgradeCost(item)                -> gold for the next level (nil at max)
 	  Gear.Upgrade(profile, itemId)         -> true, newLevel   reasons: "NotFound", "MaxLevel", "NoGold"
 	                                           works on worn and bagged items
@@ -437,7 +437,8 @@ end
 -- Sell many bagged items at once. "Common": every Common item. "Worse": every item that
 -- is no better than what is worn in its slot. Set pieces and upgraded items are never sold in bulk.
 function Gear.SellBulk(profile, mode)
-	if mode ~= "Common" and mode ~= "Worse" then
+	local rarities = { Common = true, Rare = true, Epic = true, Legendary = true }
+	if mode ~= "Worse" and not rarities[mode] then
 		return false, "BadMode"
 	end
 	local equipment = bag(profile)
@@ -445,8 +446,8 @@ function Gear.SellBulk(profile, mode)
 	for _, item in ipairs(equipment.Inventory) do
 		local sell = false
 		if not item.SetId and (item.Upgrade or 0) == 0 then
-			if mode == "Common" then
-				sell = item.Rarity == "Common"
+			if mode ~= "Worse" then
+				sell = item.Rarity == mode
 			else
 				local worn = Gear.Replaced(equipment.Equipped, item.Slot)
 				if worn then

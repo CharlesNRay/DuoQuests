@@ -20,8 +20,8 @@ World.PER_ROW = 4
 World.ARENA_WIDTH = 64
 World.ARENA_DEPTH = 42
 World.SPACING_X = 84
-World.SPACING_Z = 70
-World.FIRST_ROW_Z = -55
+World.SPACING_Z = 76
+World.FIRST_ROW_Z = -95
 
 function World.ArenaOrigin(slot)
 	local index = slot - 1
@@ -34,18 +34,18 @@ end
 -- The plaza: a big circle in the middle with the shops, boards and the daily chest.
 -- Player lots (arenas) are in rows north of it. Everything is placed from here so the
 -- server (shop distance checks) and the clients (building it) agree.
-World.PLAZA = { X = 0, Z = 40, Radius = 44 }
+World.PLAZA = { X = 0, Z = 40, Radius = 70 }
 World.MAX_LOTS = 12
-World.SHOP_RANGE = 28 -- studs from a shop within which buying/selling/upgrading is allowed
+World.SHOP_RANGE = 30 -- studs from a shop within which buying/selling/upgrading is allowed
 
 -- Props on the plaza ring. Angle 0 = north (towards the lots), going clockwise; Radius from the centre.
 World.PlazaSpots = {
-	Merchant = { Angle = -38, Radius = 31 },
-	Blacksmith = { Angle = 38, Radius = 31 },
-	Map = { Angle = -100, Radius = 33 },
-	Rankings = { Angle = 100, Radius = 33 },
-	Daily = { Angle = 150, Radius = 31 },
-	Tree = { Angle = -150, Radius = 30 },
+	Merchant = { Angle = -38, Radius = 52 },
+	Blacksmith = { Angle = 38, Radius = 52 },
+	Map = { Angle = -100, Radius = 55 },
+	Rankings = { Angle = 100, Radius = 55 },
+	Daily = { Angle = 150, Radius = 52 },
+	Tree = { Angle = -150, Radius = 50 },
 }
 
 function World.PlazaPoint(name)
@@ -61,7 +61,7 @@ function World.NearShop(x, z, name)
 end
 
 function World.SpawnPosition()
-	return World.PLAZA.X, 3, World.PLAZA.Z + 24
+	return World.PLAZA.X, 3, World.PLAZA.Z + 38
 end
 
 return World

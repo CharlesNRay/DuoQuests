@@ -93,4 +93,18 @@ return {
 			{ Id = "Enrage", Level = 1 },
 		},
 	},
+
+	-- Event bosses (fought in your arena from the Boss window; stats are set by Shared/Bosses) ----
+	WorldOgre = {
+		Id = "WorldOgre", DisplayName = "Gloomhide Ogre",
+		Look = { Shape = "Biped", Color = { 120, 90, 150 }, Size = 10 },
+		IsBoss = true, DamageType = "Physical", EventOnly = true,
+		BaseStats = { MaxHealth = 1, Attack = 1, Defense = 1, AttackSpeed = 1, CritChance = 0 },
+	},
+	Colossus = {
+		Id = "Colossus", DisplayName = "Verdant Colossus",
+		Look = { Shape = "Biped", Color = { 70, 140, 90 }, Size = 13 },
+		IsBoss = true, DamageType = "Physical", EventOnly = true,
+		BaseStats = { MaxHealth = 1, Attack = 1, Defense = 1, AttackSpeed = 1, CritChance = 0 },
+	},
 }

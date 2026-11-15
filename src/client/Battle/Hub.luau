@@ -307,8 +307,8 @@ function Hub.Build(handlers)
 	disc(folder, centre, R + 1.5, 0.3, 0, STONE_DARK, Enum.Material.Slate).Name = "Rim"
 	disc(folder, centre, R, 0.4, 0, STONE)
 	disc(folder, centre, R - 3, 0.45, 0, Color3.fromRGB(184, 176, 160))
-	disc(folder, centre, 22, 0.5, 0, Color3.fromRGB(150, 140, 126))
-	disc(folder, centre, 20.5, 0.55, 0, Color3.fromRGB(196, 188, 170))
+	disc(folder, centre, 32, 0.5, 0, Color3.fromRGB(150, 140, 126))
+	disc(folder, centre, 30.5, 0.55, 0, Color3.fromRGB(196, 188, 170))
 
 	fountain(centre)
 
@@ -323,7 +323,7 @@ function Hub.Build(handlers)
 	end
 	for _, angle in ipairs({ 0, 72, 144, 216, 288 }) do
 		local a = math.rad(angle + 36)
-		bench(centre + Vector3.new(math.sin(a) * 15, 0.6, -math.cos(a) * 15), centre)
+		bench(centre + Vector3.new(math.sin(a) * 24, 0.6, -math.cos(a) * 24), centre)
 	end
 
 	-- shops

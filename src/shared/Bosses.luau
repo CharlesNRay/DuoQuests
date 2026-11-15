@@ -31,10 +31,10 @@ local Bosses = {}
 
 local HUGE = 1e12
 
-function Bosses.Strike(members, cfg, frontier, seed)
+function Bosses.Strike(members, cfg, frontier, seed, record)
 	local reference = Stages.NewEnemies(math.max(1, frontier))[1]
 	local boss = Entity.new({
-		Id = "boss", Name = cfg.Name or "Boss", Team = "Enemy", DefId = "Boss",
+		Id = "boss", Name = cfg.Name or "Boss", Team = "Enemy", DefId = cfg.DefId or "Boss",
 		Stats = {
 			MaxHealth = HUGE,
 			Attack = reference.Stats.Attack * cfg.AttackMult,
@@ -48,11 +48,44 @@ function Bosses.Strike(members, cfg, frontier, seed)
 		Enemies = { boss },
 		Seed = seed or 1,
 		MaxSeconds = cfg.FightSeconds,
-		RecordEvents = false,
+		RecordEvents = record == true,
 		SpawnEnemy = require(script.Parent.Combat.StatCalc).NewEnemy,
 	})
 	local result = sim:Run()
-	return math.floor(HUGE - boss.Health + 0.5), result.Duration
+	local damage = math.floor(HUGE - boss.Health + 0.5)
+	local fight
+	if record then
+		local ghosts = {}
+		for _, member in ipairs(members) do
+			if member.Profile == nil then
+				ghosts[member.Id] = true
+			end
+		end
+		local roster = {}
+		for _, team in ipairs({ sim.Party, sim.Enemies }) do
+			for _, entity in ipairs(team) do
+				-- the boss's bar is drawn against a few typical strikes so it visibly drains in one fight
+				local maxHealth = entity.Stats.MaxHealth
+				if entity.Team == "Enemy" then
+					maxHealth = math.max(1, math.floor(Bosses.DamageScale(frontier) * 3))
+				end
+				table.insert(roster, {
+					Id = entity.Id, Name = entity.Name, Team = entity.Team, DefId = entity.DefId, PetId = entity.PetId,
+					Ghost = ghosts[entity.Id] or nil, MaxHealth = maxHealth,
+					UserId = if entity.Team == "Party" then tonumber(entity.Id) else nil,
+				})
+			end
+		end
+		local displayMax = math.max(1, math.floor(Bosses.DamageScale(frontier) * 3))
+		for _, event in ipairs(sim.Events) do
+			local target = event.Target
+			if event.TargetHealth and (target == "boss" or (type(target) == "table" and target.Id == "boss")) then
+				event.TargetHealth = math.max(0, displayMax - (HUGE - event.TargetHealth))
+			end
+		end
+		fight = { Roster = roster, Events = sim.Events, Duration = result.Duration, Won = result.Winner == "Party" }
+	end
+	return damage, result.Duration, fight
 end
 
 -- one "typical strike" at this frontier (see Config.World.Tiers: thresholds are multiples of it)

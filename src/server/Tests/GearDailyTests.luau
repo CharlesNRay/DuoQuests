@@ -249,7 +249,7 @@ return function(modulesOverride)
 	p.Season.Currencies.Gold = 10
 	check("Supplies cost gold", select(2, C.Buy(p, "XPTonic", 1)) == "NotEnough" and select(2, C.Buy(p, "PetWish", 1)) == "NotSold")
 	p.Season.Currencies.Gold = 100000
-	check("Buying spends gold and fills the stash", C.Buy(p, "GoldCharm", 3) and C.Count(p, "GoldCharm") == 3 and p.Season.Currencies.Gold < 100000)
+	check("Buying spends gold and fills the stash", C.Buy(p, "XPTonic", 3) and C.Count(p, "XPTonic") == 3 and p.Season.Currencies.Gold < 100000)
 	local geared2 = StatCalc.NewPartyMember("z", "Z", "Warrior", 5, { ExtraMods = { { Stat = "DamageDealt", Mode = "Mul", Value = 0.25 } } })
 	local base2 = StatCalc.NewPartyMember("z", "Z", "Warrior", 5, {})
 	check("A damage boost raises damage dealt in combat", (geared2.Stats.DamageDealt or 1) > (base2.Stats.DamageDealt or 1))

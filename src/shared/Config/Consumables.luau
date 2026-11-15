@@ -21,19 +21,13 @@ return {
 	DropChance = 0.1, -- per won fight
 	BossDropChance = 0.6,
 
-	Order = { "XPTonic", "GoldCharm", "PowerElixir", "IronTonic", "HasteDraught", "PetFood", "GrandPetFood", "PetWish", "SkillWish" },
+	Order = { "XPTonic", "PowerElixir", "IronTonic", "HasteDraught", "PetFood", "GrandPetFood", "PetWish", "SkillWish" },
 
 	Defs = {
 		XPTonic = {
 			Id = "XPTonic", DisplayName = "XP Tonic", Kind = "Buff", Glyph = "✨", Rarity = "Common", Duration = 900,
 			Description = "+50% XP from fights for 15 minutes.",
 			Effects = { { Stat = "XPGain", Mode = "Add", Value = 0.5 } },
-			Price = { Base = 80, PerStage = 6 }, Drop = 30,
-		},
-		GoldCharm = {
-			Id = "GoldCharm", DisplayName = "Gold Charm", Kind = "Buff", Glyph = "💰", Rarity = "Common", Duration = 900,
-			Description = "+50% gold from fights for 15 minutes.",
-			Effects = { { Stat = "GoldGain", Mode = "Add", Value = 0.5 } },
 			Price = { Base = 80, PerStage = 6 }, Drop = 30,
 		},
 		PowerElixir = {

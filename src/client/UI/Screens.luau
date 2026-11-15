@@ -884,11 +884,11 @@ function Screens.Boss(container, state, call, extra)
 			local text = if w.Strikes >= w.MaxStrikes then "No strikes left" elseif wait > 0 then ("Ready in %ds"):format(math.ceil(wait)) else "Strike!"
 			local b = Kit.button({ Size = UDim2.new(1, -16, 0, 40), Position = UDim2.fromOffset(8, 110), Text = text, TextSize = 15, BackgroundColor3 = if can then C.Accent else C.Panel, TextColor3 = if can then Color3.fromRGB(30, 24, 10) else C.Text, Parent = left }, function()
 				local ok, data = call("BossStrike", "World")
-				extra.BossMsg = if ok then ("Hit for %d! Total %d."):format(data.Damage, data.Total) else ("Could not strike: " .. tostring(data))
+				extra.BossMsg = if ok then nil else ("Could not strike: " .. tostring(data))
 				refresh()
 			end)
 			b.Active = can
-			Kit.label({ Size = UDim2.new(1, -16, 0, 40), Position = UDim2.fromOffset(8, 156), Text = "Each strike is a 45 second fight with your build. Rewards arrive when the timer ends.", TextSize = 10, TextColor3 = C.Dim, TextWrapped = true, Parent = left })
+			Kit.label({ Size = UDim2.new(1, -16, 0, 40), Position = UDim2.fromOffset(8, 156), Text = "Each strike is a 45 second fight in your arena. Rewards arrive when the timer ends.", TextSize = 10, TextColor3 = C.Dim, TextWrapped = true, Parent = left })
 		else
 			Kit.label({ Size = UDim2.new(1, -16, 0, 60), Position = UDim2.fromOffset(8, 34), Text = ("Not here right now.\nNext one in about %s"):format(clock(w.NextIn - age)), TextSize = 13, TextColor3 = C.Dim, TextWrapped = true, Parent = left })
 		end
@@ -908,7 +908,7 @@ function Screens.Boss(container, state, call, extra)
 		local text = if s.Dead then "Defeated" elseif s.Charges > 0 then ("Strike  (%d / %d)"):format(s.Charges, s.MaxCharges) else ("Next charge in %s"):format(clock(s.NextChargeIn - age))
 		local b = Kit.button({ Size = UDim2.new(1, -16, 0, 36), Position = UDim2.fromOffset(8, 124), Text = text, TextSize = 14, BackgroundColor3 = if can then C.Accent else C.Panel, TextColor3 = if can then Color3.fromRGB(30, 24, 10) else C.Text, Parent = left }, function()
 			local ok, data = call("BossStrike", "Season")
-			extra.BossMsg = if ok then ("Hit for %d! It has %d%% left."):format(data.Damage, math.ceil(data.Fraction * 100)) else ("Could not strike: " .. tostring(data))
+			extra.BossMsg = if ok then nil else ("Could not strike: " .. tostring(data))
 			refresh()
 		end)
 		b.Active = can

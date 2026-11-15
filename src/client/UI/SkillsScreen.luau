@@ -43,7 +43,7 @@ local lastDragEnd = 0
 
 -- Makes an icon tile clickable and draggable. onDrop(pointer) is called with the pointer in screen
 -- space when a drag ends; a click (no real movement) calls onClick.
-local function attach(tile, def, selected, onClick, drag)
+local function attach(tile, def, selected, onClick, drag, makeGhost)
 	local stroke = tile:FindFirstChildOfClass("UIStroke")
 	if selected and stroke then
 		stroke.Color = Color3.new(1, 1, 1)
@@ -76,7 +76,7 @@ local function attach(tile, def, selected, onClick, drag)
 			end
 			local pointer = pointerOf(i)
 			if not ghost and root and (pointer - start).Magnitude > 8 then
-				ghost = Icons.Skill(root, def, { Size = UDim2.fromOffset(52, 52) })
+				ghost = if makeGhost then makeGhost(root) else Icons.Skill(root, def, { Size = UDim2.fromOffset(52, 52) })
 				ghost.ZIndex = 50
 				for _, d in ipairs(ghost:GetDescendants()) do
 					if d:IsA("GuiObject") then
@@ -186,6 +186,19 @@ function SkillsScreen.Skills(container, state, call, extra)
 	local main = Kit.frame({ Size = UDim2.new(0, MAIN_W, 1, 0), BackgroundTransparency = 1, NoCorner = true, Parent = area })
 	Kit.label({ Size = UDim2.fromOffset(230, 14), Text = "CAST ORDER  (drag to reorder)", TextSize = 11, TextColor3 = C.Dim, Font = Enum.Font.GothamBold, TextWrapped = false, Parent = main })
 	local slotTiles = {}
+	local passiveTiles = {}
+	local function dropOnPassive(pointer)
+		for slot, frame in pairs(passiveTiles) do
+			if inside(frame, pointer) then
+				return slot
+			end
+		end
+	end
+	local function ghostOf(pdef)
+		return function(root)
+			return Icons.Passive(root, pdef, { Size = UDim2.fromOffset(46, 46) })
+		end
+	end
 	local function dropOnSlot(pointer)
 		for slot, frame in pairs(slotTiles) do
 			if inside(frame, pointer) then
@@ -224,10 +237,18 @@ function SkillsScreen.Skills(container, state, call, extra)
 			if pdef then
 				Kit.Hover(tile, function() return Tips.Passive(pdef, (me.PassiveLevels or {})[slot] or 1) end)
 			end
+			passiveTiles[slot] = tile
 			attach(tile, nil, sel.PSlot == slot, function()
 				extra.SkillSel = { PSlot = slot }
 				redraw()
-			end)
+			end, if pdef then function(pointer)
+				local to = dropOnPassive(pointer)
+				if to and to ~= slot and to <= (me.PassiveSlots or 0) and to <= #pEquipped then
+					pEquipped[slot], pEquipped[to] = pEquipped[to], pEquipped[slot]
+					extra.SkillSel = { PSlot = to }
+					call("EquipPassives", pEquipped)
+				end
+			end else nil, if pdef then ghostOf(pdef) else nil)
 		end
 	else
 		Kit.label({ Size = UDim2.fromOffset(140, 50), Position = UDim2.fromOffset(244, 18), Text = "Edits here change how your partner's ghost fights. Level-ups happen on their side.", TextSize = 10, TextColor3 = C.Dim, Parent = main })
@@ -342,7 +363,15 @@ function SkillsScreen.Skills(container, state, call, extra)
 				attach(tile, nil, sel.PId == id, function()
 					extra.SkillSel = { PId = id, Target = sel.PSlot or sel.Target }
 					redraw()
-				end)
+				end, if open then function(pointer)
+					local to = dropOnPassive(pointer)
+					if to and to <= (me.PassiveSlots or 0) then
+						to = math.min(to, #pEquipped + 1)
+						pEquipped[to] = id
+						extra.SkillSel = { PSlot = to }
+						call("EquipPassives", pEquipped)
+					end
+				end else nil, ghostOf(pdef))
 			end
 		end
 		if not any then

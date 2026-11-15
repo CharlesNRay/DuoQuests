@@ -46,7 +46,7 @@ return {
 		IronHide = {
 			Id = "IronHide",
 			DisplayName = "Iron Hide",
-			Description = "Always on: more defense.",
+			Description = "More defense.",
 			Class = "Warrior",
 			Category = "Defense",
 			UnlockStage = 1,
@@ -55,7 +55,7 @@ return {
 		TreasureSense = {
 			Id = "TreasureSense",
 			DisplayName = "Treasure Sense",
-			Description = "Always on: enemies drop more gold.",
+			Description = "Enemies drop more gold.",
 			Class = "Warrior",
 			Category = "Gold",
 			UnlockStage = 10,
@@ -64,7 +64,7 @@ return {
 		BruteForce = {
 			Id = "BruteForce",
 			DisplayName = "Brute Force",
-			Description = "Always on: more damage dealt.",
+			Description = "More damage dealt.",
 			Class = "Warrior",
 			Category = "Damage",
 			UnlockStage = 20,
@@ -73,7 +73,7 @@ return {
 		Vitality = {
 			Id = "Vitality",
 			DisplayName = "Vitality",
-			Description = "Always on: more maximum health.",
+			Description = "More maximum health.",
 			Class = "Warrior",
 			Category = "Defense",
 			UnlockStage = 30,
@@ -82,7 +82,7 @@ return {
 		QuickStudy = {
 			Id = "QuickStudy",
 			DisplayName = "Quick Study",
-			Description = "Always on: earn more experience.",
+			Description = "Earn more experience.",
 			Class = "Warrior",
 			Category = "XP",
 			UnlockStage = 40,
@@ -91,7 +91,7 @@ return {
 		FortuneSeeker = {
 			Id = "FortuneSeeker",
 			DisplayName = "Fortune Seeker",
-			Description = "Always on: better item rarity from drops.",
+			Description = "Better item rarity from drops.",
 			Class = "Warrior",
 			Category = "Rarity",
 			UnlockStage = 60,
@@ -102,7 +102,7 @@ return {
 		HolyLight = {
 			Id = "HolyLight",
 			DisplayName = "Holy Light",
-			Description = "Always on: stronger healing.",
+			Description = "Stronger healing.",
 			Class = "Cleric",
 			Category = "Healing",
 			UnlockStage = 1,
@@ -111,7 +111,7 @@ return {
 		Tithe = {
 			Id = "Tithe",
 			DisplayName = "Tithe",
-			Description = "Always on: enemies drop more gold.",
+			Description = "Enemies drop more gold.",
 			Class = "Cleric",
 			Category = "Gold",
 			UnlockStage = 10,
@@ -120,7 +120,7 @@ return {
 		Devotion = {
 			Id = "Devotion",
 			DisplayName = "Devotion",
-			Description = "Always on: more attack.",
+			Description = "More attack.",
 			Class = "Cleric",
 			Category = "Damage",
 			UnlockStage = 20,
@@ -129,7 +129,7 @@ return {
 		Warding = {
 			Id = "Warding",
 			DisplayName = "Warding",
-			Description = "Always on: take less damage.",
+			Description = "Take less damage.",
 			Class = "Cleric",
 			Category = "Defense",
 			UnlockStage = 30,
@@ -138,7 +138,7 @@ return {
 		Scholar = {
 			Id = "Scholar",
 			DisplayName = "Scholar",
-			Description = "Always on: earn more experience.",
+			Description = "Earn more experience.",
 			Class = "Cleric",
 			Category = "XP",
 			UnlockStage = 40,
@@ -147,7 +147,7 @@ return {
 		Providence = {
 			Id = "Providence",
 			DisplayName = "Providence",
-			Description = "Always on: better item rarity from drops.",
+			Description = "Better item rarity from drops.",
 			Class = "Cleric",
 			Category = "Rarity",
 			UnlockStage = 60,

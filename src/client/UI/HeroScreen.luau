@@ -84,6 +84,8 @@ local function turntable(parent, info, size)
 	Kit.corner(10).Parent = viewport
 	local model = avatarFor(info)
 	model.Parent = viewport
+	-- the clone keeps the real character's world position and facing: bring it to the origin, facing the camera
+	model:PivotTo(CFrame.new(0, 0, 0))
 	-- frame the body only (accessories and tools can stretch the bounding box and push the hero away)
 	local minV, maxV
 	for _, d in ipairs(model:GetDescendants()) do
@@ -105,11 +107,11 @@ local function turntable(parent, info, size)
 		minV, maxV = cf0.Position - ext0 / 2, cf0.Position + ext0 / 2
 	end
 	local center = (minV + maxV) / 2
-	model:PivotTo(model:GetPivot() * CFrame.new(-center.X, -center.Y, -center.Z))
+	model:PivotTo(model:GetPivot() - center)
 	local height = math.clamp(maxV.Y - minV.Y, 2, 12)
 	local camera = Instance.new("Camera")
 	camera.FieldOfView = 40
-	camera.CFrame = CFrame.lookAt(Vector3.new(0, 0, -height * 1.45), Vector3.new(0, 0, 0))
+	camera.CFrame = CFrame.lookAt(Vector3.new(0, 0, -height * 2.1), Vector3.new(0, 0, 0))
 	camera.Parent = viewport
 	viewport.CurrentCamera = camera
 	local base = model:GetPivot()

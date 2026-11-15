@@ -271,7 +271,6 @@ if RunService:IsStudio() then
 	hud:AddButton("Dev", "mini", "🧪", "Test items (Studio only)", function() call("DevGrant") end)
 end
 
-hud:AddButton("Gear", "dock", "🛡️", "Gear", function() open("Gear", "Gear & Sets") end)
 hud:AddButton("Bag", "dock", "🎒", "Bag", function() open("Bag", "Bag") end)
 
 -- the plaza: boards, chest and the two shop NPCs open the same screens as the dock
@@ -313,6 +312,25 @@ push.OnClientEvent:Connect(function(kind, info)
 			if ok and fresh then state = fresh end
 			open("Boss", "Bosses", true)
 		end
+	elseif kind == "BossFight" then
+		task.spawn(function()
+			while fighting do
+				task.wait(0.2) -- let the party's current fight finish first
+			end
+			fighting = true
+			extra.WatchMine()
+			hud:Notify("⚔ " .. tostring(info.Label) .. "!")
+			liveLog:Play(info, 0.8)
+			arenas:Play(info.Slot, info, function()
+				fighting = false
+				hud:Notify(("You dealt %d damage to %s!"):format(info.Damage or 0, tostring(info.Label)))
+				local ok, fresh = api:InvokeServer("GetState")
+				if ok and fresh then state = fresh end
+				extra.Boss = nil
+				extra.RefreshBoss()
+				open("Boss", "Bosses", true)
+			end)
+		end)
 	elseif kind == "ArenaFight" then
 		arenas:Play(info.Slot, info)
 	elseif kind == "Fight" then
@@ -386,6 +404,12 @@ local function watch(slot, origin)
 	hud:SetButtonText("View", "🚶", "Walk")
 end
 arenas.OnWatch = watch
+function extra.WatchMine()
+	local mine = arenas:MySlot()
+	if mine then
+		watch(mine, arenas:OriginOf(mine))
+	end
+end
 
 hud:AddButton("View", "mini", "🎥", "Battle view", function()
 	if BattleCamera.IsBattleView() then

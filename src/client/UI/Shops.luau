@@ -75,12 +75,12 @@ function Shops.Merchant(container, state, call, extra)
 		return
 	end
 
-	Kit.button({ Size = UDim2.new(0.2, -4, 0, 38), Position = UDim2.new(0.6, 0, 0, 0), Text = "Sell Common", TextSize = 12, Parent = container }, function()
-		call("SellBulk", "Common")
-	end)
-	Kit.button({ Size = UDim2.new(0.2, -4, 0, 38), Position = UDim2.new(0.8, 0, 0, 0), Text = "Sell worse", TextSize = 12, Parent = container }, function()
-		call("SellBulk", "Worse")
-	end)
+	-- one button per rarity: sells every bagged piece of that rarity (set pieces and upgraded gear are kept)
+	for index, rarity in ipairs({ "Common", "Rare", "Epic", "Legendary" }) do
+		local b = Kit.button({ Size = UDim2.new(0.15, -4, 0, 38), Position = UDim2.new(0.4 + (index - 1) * 0.15, 0, 0, 0), Text = "Sell all\n" .. rarity, TextSize = 11, TextColor3 = Kit.rarityColor(rarity), Parent = container }, function()
+			call("SellBulk", rarity)
+		end)
+	end
 
 	local shown = 0
 	for _, item in ipairs(gear.Inventory) do

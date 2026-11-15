@@ -254,12 +254,44 @@ function handlers.BossState(player, profile)
 	return true, BossService.GetState(player, profile)
 end
 
+-- Only what the client needs to replay a fight as animation.
+local REPLAYED = { Damage = true, Heal = true, Cast = true, Death = true, Revive = true, Ultimate = true, End = true, Spawn = true, Telegraph = true, Status = true, StatusEnd = true }
+local pushRemote
+
+-- A boss strike is a real fight in YOUR arena: the party's normal fights pause, you (and anyone near) watch it.
+local function playBossFight(player, fight, label, damage)
+	local partyState = PartyService.GetState(player)
+	local slot = partyState and WorldService.SlotOf(partyState.PartyId)
+	if not slot then
+		return
+	end
+	local events = {}
+	for _, event in ipairs(fight.Events or {}) do
+		if REPLAYED[event.Type] then
+			table.insert(events, event)
+		end
+	end
+	PartyService.HoldFights(player, fight.Duration + 6)
+	local payload = { Slot = slot, PartyId = partyState.PartyId, Stage = partyState.Stage, Won = fight.Won, Duration = fight.Duration, Roster = fight.Roster, Events = events, Label = label, Damage = damage }
+	for _, other in ipairs(Players:GetPlayers()) do
+		if other ~= player then
+			pushRemote:FireClient(other, "ArenaFight", payload)
+		end
+	end
+	pushRemote:FireClient(player, "BossFight", payload)
+end
+
 function handlers.BossStrike(player, profile, which)
 	if which ~= "World" and which ~= "Season" then
 		return false, "BadArgs"
 	end
-	local ok, data = BossService.Strike(player, profile, which)
+	local ok, data = BossService.Strike(player, profile, which, PartyService.GetPartnerSnapshot(player))
 	if ok then
+		local fight = data.Fight
+		data.Fight = nil
+		if fight then
+			playBossFight(player, fight, data.Label, data.Damage)
+		end
 		afterBuildChange(player)
 	end
 	return ok, data
@@ -547,8 +579,7 @@ function ApiService.Init()
 		return result, extra
 	end
 
-	-- Only what the client needs to replay a fight as animation.
-	local REPLAYED = { Damage = true, Heal = true, Cast = true, Death = true, Revive = true, Ultimate = true, End = true, Spawn = true, Telegraph = true, Status = true, StatusEnd = true }
+	pushRemote = push
 	local function replayEvents(outcome)
 		local events = {}
 		for _, event in ipairs(outcome.Events or {}) do

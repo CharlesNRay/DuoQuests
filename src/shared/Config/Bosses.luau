@@ -21,16 +21,16 @@
 
 return {
 	World = {
-		Name = "Gloomhide Ogre",
+		Name = "Gloomhide Ogre", DefId = "WorldOgre",
 		Look = { Color = { 120, 90, 150 }, Height = 26 },
 		FirstSpawnSeconds = 120, -- after the server starts
 		IntervalSeconds = 1500, -- between the end of one boss and the next
-		DurationSeconds = 300,
+		DurationSeconds = 600,
 		StudioFirstSpawn = 25,
 		StudioInterval = 90,
-		StudioDuration = 180,
+		StudioDuration = 240,
 		FightSeconds = 45, -- length of one strike
-		StrikeCooldown = 20, -- real seconds between your strikes
+		StrikeCooldown = 52, -- seconds between your strikes (a strike is a 45s fight, then a short rest)
 		MaxStrikes = 10,
 		AttackMult = 1.6, -- of a stage-appropriate monster
 		DefenseMult = 1.5,
@@ -38,7 +38,7 @@ return {
 		-- thresholds are in "typical strikes": multiplied by the scale for your frontier
 		Tiers = {
 			{ Id = 1, Damage = 1, Name = "Scratched it", Rewards = { Gold = 150, Items = { PetFood = 2 } } },
-			{ Id = 2, Damage = 3, Name = "Bruised it", Rewards = { Gold = 250, Items = { XPTonic = 1, GoldCharm = 1 } } },
+			{ Id = 2, Damage = 3, Name = "Bruised it", Rewards = { Gold = 250, Items = { XPTonic = 2 } } },
 			{ Id = 3, Damage = 6, Name = "Hurt it", Rewards = { Items = { SkillWish = 1, PowerElixir = 1 } } },
 			{ Id = 4, Damage = 10, Name = "Staggered it", Rewards = { Items = { PetWish = 1, HasteDraught = 1, PetFood = 3 } } },
 			{ Id = 5, Damage = 16, Name = "Wounded it", Rewards = { Items = { PetWish = 2, XPTonic = 2, SkillWish = 1 } } },
@@ -47,7 +47,7 @@ return {
 	},
 
 	Season = {
-		Name = "Verdant Colossus",
+		Name = "Verdant Colossus", DefId = "Colossus",
 		Look = { Color = { 70, 140, 90 }, Height = 90 },
 		MaxHealth = 30000000,
 		-- the last FinaleShare of the season: the boss withers faster and faster, reaching 0 at the end
