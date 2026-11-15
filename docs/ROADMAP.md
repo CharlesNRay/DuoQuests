@@ -199,3 +199,4 @@ Newest first.
 - "Get Sunstones" tab: four Robux packs, first purchase of each doubles. Server: PremiumService.ProcessReceipt (idempotent by PurchaseId, saves before granting). Packs show "soon" until real Developer Product ids go into Config/Premium Packs[].ProductId.
 - Studio helpers: first Dev button grants test items, a star toggles the premium pass, "Studio only: add 1,000 Sunstones" in the Get Sunstones tab.
 - TODO: PolicyService check for the premium pass's wish tickets in restricted regions; cosmetics shop; gifting; real product ids; verify in Studio.
+- Verified in Studio: four currency pills (gold, shards, blue Wishstones, orange Sunstones), Premium shop list, Get Sunstones packs, test Sunstones, buying the Starter Pack (spends 120, sold out afterwards, skill picks arrive).

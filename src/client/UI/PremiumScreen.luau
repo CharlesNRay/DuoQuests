@@ -14,6 +14,8 @@ local C = Kit.Colors
 local ORANGE = Color3.fromRGB(255, 165, 70)
 local ORANGE_DARK = Color3.fromRGB(70, 44, 18)
 
+local GOOD = Color3.fromRGB(130, 235, 150) -- brighter than the plain green, so it reads on the dark rows
+
 local PremiumScreen = {}
 
 local function commas(n)
@@ -33,7 +35,7 @@ local function shopTab(area, state, call, extra, redraw)
 	local balance = me.Sunstones or 0
 	Kit.label({ Size = UDim2.new(1, -8, 0, 18), Text = ("You have 🔶 %s Sunstones. Everything here has fixed contents - nothing random."):format(commas(balance)), TextSize = 12, TextColor3 = ORANGE, Parent = scroll })
 	if extra.PremiumMsg then
-		Kit.label({ Size = UDim2.new(1, -8, 0, 18), Text = extra.PremiumMsg, TextSize = 12, TextColor3 = C.Up, Parent = scroll })
+		Kit.label({ Size = UDim2.new(1, -8, 0, 18), Text = extra.PremiumMsg, TextSize = 12, TextColor3 = GOOD, Parent = scroll })
 	end
 	for _, item in ipairs(me.PremiumShop or {}) do
 		if not item.Hidden then
@@ -70,7 +72,7 @@ local function packsTab(area, state, call, extra, redraw)
 	for _, pack in ipairs(me.SunstonePacks or {}) do
 		local row = Kit.frame({ Size = UDim2.new(1, -8, 0, 56), BackgroundColor3 = C.PanelLight, Parent = scroll })
 		Kit.label({ Size = UDim2.new(1, -170, 0, 20), Position = UDim2.fromOffset(10, 6), Text = ("🔶 %s  -  %s"):format(commas(pack.Sunstones), pack.Name), TextSize = 14, Font = Enum.Font.GothamBold, TextColor3 = ORANGE, Parent = row })
-		Kit.label({ Size = UDim2.new(1, -170, 0, 16), Position = UDim2.fromOffset(10, 30), Text = if pack.Bonus > 0 then ("First purchase bonus: +%s Sunstones"):format(commas(pack.Bonus)) else "Thank you!", TextSize = 11, TextColor3 = if pack.Bonus > 0 then C.Up else C.Dim, Parent = row })
+		Kit.label({ Size = UDim2.new(1, -170, 0, 16), Position = UDim2.fromOffset(10, 30), Text = if pack.Bonus > 0 then ("First purchase bonus: +%s Sunstones"):format(commas(pack.Bonus)) else "Thank you!", TextSize = 11, TextColor3 = if pack.Bonus > 0 then GOOD else C.Dim, Parent = row })
 		Kit.button({ Size = UDim2.fromOffset(140, 40), Position = UDim2.new(1, -150, 0.5, -20), Text = if pack.ProductId == 0 then ("R$ %d (soon)"):format(pack.Robux) else ("R$ %d"):format(pack.Robux), BackgroundColor3 = if pack.ProductId == 0 then ORANGE_DARK else ORANGE, TextColor3 = if pack.ProductId == 0 then C.Dim else Color3.fromRGB(40, 24, 6), Parent = row }, function()
 			if pack.ProductId ~= 0 then
 				MarketplaceService:PromptProductPurchase(Players.LocalPlayer, pack.ProductId)
