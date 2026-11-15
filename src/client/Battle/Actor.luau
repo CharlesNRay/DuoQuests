@@ -8,6 +8,7 @@
 	  actor:SetHealth(health)   updates the bar
 	  actor:Lunge(towardX) / Flinch() / Fall() / Rise() / Cheer() / FadeOut()
 	  actor:SetModel(model)     swap the body (e.g. the real avatar) keeping state
+	  actor:SetGhost(on)        see-through look for an offline partner's ghost
 	  actor:Pos()               world position of the chest, for effects
 	  actor:Destroy()
 ]]
@@ -79,6 +80,29 @@ function Actor.new(scene, model, info)
 	return self
 end
 
+local GHOST_FADE = 0.55
+
+local function applyGhost(model, on)
+	for _, d in ipairs(model:GetDescendants()) do
+		if d:IsA("BasePart") then
+			if on then
+				if d:GetAttribute("OrigTransparency") == nil then
+					d:SetAttribute("OrigTransparency", d.Transparency)
+				end
+				d.Transparency = math.max(d.Transparency, GHOST_FADE)
+			elseif d:GetAttribute("OrigTransparency") ~= nil then
+				d.Transparency = d:GetAttribute("OrigTransparency")
+				d:SetAttribute("OrigTransparency", nil)
+			end
+		end
+	end
+end
+
+function Actor:SetGhost(on)
+	self.Ghost = on == true
+	applyGhost(self.Model, self.Ghost)
+end
+
 function Actor:SetModel(model)
 	local old = self.Model
 	local height, top = measure(model)
@@ -92,6 +116,9 @@ function Actor:SetModel(model)
 	end
 	model.Parent = self.Scene.Folder
 	self.Model = model
+	if self.Ghost then
+		applyGhost(model, true)
+	end
 	if self.Bar then
 		self.Bar.Adornee = model.PrimaryPart
 	end

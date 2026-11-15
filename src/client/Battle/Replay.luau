@@ -131,6 +131,9 @@ function Replay:_hero(entry, index)
 			end)
 		end
 	end
+	if hero.Ghost ~= (entry.Ghost == true) then
+		hero:SetGhost(entry.Ghost == true)
+	end
 	if hero.PetId ~= entry.PetId then
 		hero.PetId = entry.PetId
 		hero.Pet:SetModel(Models.Pet(entry.PetId))

@@ -12,6 +12,8 @@
 	  arenas:Play(slot, info, onDone)   draw a fight in a slot
 	  arenas:MySlot()                   slot of the party you are in (or nil)
 	  arenas:OriginOf(slot)             Vector3
+	  arenas.OnBanner                   optional function(text, color) for YOUR arena's callouts
+	  arenas.OnInspect                  optional function(userId): a hero was clicked
 ]]
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
@@ -101,6 +103,7 @@ local function rosterOf(party)
 			Id = tostring(member.UserId),
 			Name = member.Online and member.Name or (member.Name .. " (ghost)"),
 			Team = "Party",
+			Ghost = not member.Online,
 			DefId = member.ClassId,
 			PetId = member.PetId,
 			MaxHealth = 100,
@@ -117,6 +120,23 @@ local function cardText(party, zone)
 		table.insert(lines, ("%s  Lv %d %s%s%s"):format(member.Name, member.Level, member.ClassId, pet and ("  + " .. pet.DisplayName) or "", member.Online and "" or "  (ghost)"))
 	end
 	return table.concat(lines, "\n")
+end
+
+-- Make every hero in an arena clickable (a click opens their inspect card).
+function Arenas:_wireClicks(arena)
+	for id, hero in pairs(arena.Replay.Heroes) do
+		local root = hero.Model and hero.Model.PrimaryPart
+		if root and root:FindFirstChildOfClass("ClickDetector") == nil then
+			local detector = Instance.new("ClickDetector")
+			detector.MaxActivationDistance = 400
+			detector.Parent = root
+			detector.MouseClick:Connect(function()
+				if self.OnInspect then
+					self.OnInspect(tonumber(id))
+				end
+			end)
+		end
+	end
 end
 
 function Arenas:Apply(snapshot)
@@ -149,6 +169,8 @@ function Arenas:Apply(snapshot)
 		if not arena.Fighting then
 			arena.Replay:Idle(rosterOf(party))
 		end
+		arena.Replay.OnBanner = if party.Slot == self.Mine then self.OnBanner else nil
+		self:_wireClicks(arena)
 	end
 end
 
@@ -162,12 +184,18 @@ function Arenas:Play(slot, info, onDone)
 		return
 	end
 	arena.Fighting = true
+	arena.Replay.OnBanner = if slot == self.Mine then self.OnBanner else nil
+	if slot == self.Mine and self.OnBanner and Stages.IsBoss(info.Stage) then
+		self.OnBanner("BOSS STAGE", Color3.fromRGB(255, 120, 90))
+	end
 	arena.Replay:Play(info, function()
+		self:_wireClicks(arena)
 		arena.Fighting = false
 		if onDone then
 			onDone()
 		end
 	end)
+	self:_wireClicks(arena)
 end
 
 return Arenas

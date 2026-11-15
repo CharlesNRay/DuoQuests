@@ -49,11 +49,11 @@ function Hud.new(root)
 	end
 
 	self.Gui = gui
-	self.Nav = Kit.frame({ Size = UDim2.new(0, 700, 0, 46), Position = UDim2.new(0.5, -350, 1, -54), BackgroundTransparency = 1, NoCorner = true, Parent = gui })
+	self.Nav = Kit.frame({ Size = UDim2.new(0, 800, 0, 46), Position = UDim2.new(0.5, -400, 1, -54), BackgroundTransparency = 1, NoCorner = true, Parent = gui })
 	Kit.new("UIListLayout", { FillDirection = Enum.FillDirection.Horizontal, Padding = UDim.new(0, 6), Parent = self.Nav })
 
 	function self:AddNav(text, onClick)
-		return Kit.button({ Size = UDim2.new(0, 78, 0, 46), Text = text, Parent = self.Nav }, onClick)
+		return Kit.button({ Size = UDim2.new(0, 76, 0, 46), Text = text, Parent = self.Nav }, onClick)
 	end
 
 	function self:Render(state)

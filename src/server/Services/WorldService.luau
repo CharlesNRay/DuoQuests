@@ -105,6 +105,45 @@ function WorldService.BuildHub()
 	spawn.Color = Color3.fromRGB(230, 200, 120)
 	spawn.Material = Enum.Material.WoodPlanks
 	spawn.Parent = hub
+
+	-- leaderboard sign beside the spawn, facing the players
+	local sign = Instance.new("Part")
+	sign.Name = "LeaderboardSign"
+	sign.Anchored = true
+	sign.Size = Vector3.new(26, 12, 1)
+	sign.Position = Vector3.new(-30, 7, 12)
+	sign.Color = Color3.fromRGB(30, 32, 48)
+	sign.Material = Enum.Material.SmoothPlastic
+	sign.Parent = hub
+	local gui = Instance.new("SurfaceGui")
+	gui.Name = "Board"
+	gui.Face = Enum.NormalId.Back -- the +Z side, towards the spawn
+	gui.SizingMode = Enum.SurfaceGuiSizingMode.PixelsPerStud
+	gui.PixelsPerStud = 40
+	gui.Parent = sign
+	local text = Instance.new("TextLabel")
+	text.Name = "Text"
+	text.Size = UDim2.fromScale(1, 1)
+	text.BackgroundTransparency = 1
+	text.TextColor3 = Color3.fromRGB(240, 240, 255)
+	text.Font = Enum.Font.GothamBold
+	text.TextScaled = true
+	text.Text = "Leaderboard\nloading..."
+	text.Parent = gui
+end
+
+-- Called by LeaderboardService after each refresh: textByCategory[id] = lines.
+function WorldService.SetBoardText(textByCategory)
+	local hub = workspace:FindFirstChild("DuoQuestHub")
+	local sign = hub and hub:FindFirstChild("LeaderboardSign")
+	local label = sign and sign:FindFirstChild("Board") and sign.Board:FindFirstChild("Text")
+	if label then
+		local parts = {}
+		for _, category in ipairs(require(ReplicatedStorage.Shared.Leaderboards).Categories) do
+			table.insert(parts, textByCategory[category.Id] or "")
+		end
+		label.Text = table.concat(parts, "\n\n")
+	end
 end
 
 function WorldService.Init(push)

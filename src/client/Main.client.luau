@@ -124,6 +124,58 @@ local function open(name, label)
 	redraw()
 end
 
+local function inspect(userId)
+	if userId == Players.LocalPlayer.UserId then
+		open("Party", "Party")
+		return
+	end
+	local ok, info = api:InvokeServer("Inspect", userId)
+	if ok and info then
+		extra.Inspect = info
+		open("Inspect", info.Name)
+	end
+end
+arenas.OnInspect = inspect
+arenas.OnBanner = function(text, color)
+	hud:ShowBanner(text, color)
+end
+
+-- other players' avatars can be clicked too
+local function wireCharacter(player, character)
+	if player == Players.LocalPlayer then
+		return
+	end
+	local root = character:WaitForChild("HumanoidRootPart", 10)
+	if root and root:FindFirstChildOfClass("ClickDetector") == nil then
+		local detector = Instance.new("ClickDetector")
+		detector.MaxActivationDistance = 60
+		detector.Parent = root
+		detector.MouseClick:Connect(function()
+			inspect(player.UserId)
+		end)
+	end
+end
+local function wirePlayer(player)
+	if player.Character then
+		task.spawn(wireCharacter, player, player.Character)
+	end
+	player.CharacterAdded:Connect(function(character)
+		wireCharacter(player, character)
+	end)
+end
+for _, player in ipairs(Players:GetPlayers()) do
+	wirePlayer(player)
+end
+Players.PlayerAdded:Connect(wirePlayer)
+
+local function showBoard(categoryId)
+	extra.BoardCategory = categoryId
+	local ok, data = api:InvokeServer("GetLeaderboard", categoryId)
+	extra.Board = if ok then data else nil
+	open("Ranks", "Leaderboards")
+end
+extra.ShowBoard = showBoard
+hud:AddNav("Ranks", function() showBoard(extra.BoardCategory or "Stage") end)
 hud:AddNav("Skills", function() open("Skills", "Skills") end)
 hud:AddNav("Passives", function() open("Passives", "Passives") end)
 hud:AddNav("Pets", function() open("Pets", "Pets") end)

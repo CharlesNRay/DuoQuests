@@ -502,6 +502,50 @@ function PartyService.GetPartner(player)
 end
 
 -- The member's own snapshot (used to offer "undo partner edits").
+-- Public view of any member of a party hosted on this server (online or ghost),
+-- for the inspect card. Returns nil for anyone else.
+function PartyService.GetInspect(userId)
+	local partyId = partyOf[userId]
+	local entry = partyId and hosted[partyId]
+	if not entry then
+		return nil
+	end
+	local record = entry.Record
+	local snapshot = record.Snapshots[tostring(userId)]
+	if not snapshot then
+		return nil
+	end
+	local online = entry.Online[userId]
+	local info = {
+		UserId = userId,
+		Name = snapshot.Name,
+		ClassId = snapshot.ClassId,
+		Level = snapshot.Level,
+		Online = online ~= nil,
+		Frontier = snapshot.Frontier,
+		PartyStage = record.Stage,
+		PartyFrontier = record.Frontier,
+		PassiveIds = table.clone(snapshot.PassiveIds or {}),
+		SlotLevels = table.clone(snapshot.SlotLevels or {}),
+		Loadout = table.clone(snapshot.GhostLoadout or {}),
+	}
+	if online then
+		local season = online.Profile.Season
+		info.Loadout = table.clone(season.Loadouts[season.ClassId] or info.Loadout)
+		info.PetId, info.PetLevel = Pets.Active(online.Profile)
+		info.Level = season.Level
+	else
+		info.PetId, info.PetLevel = snapshot.PetId, snapshot.PetLevel
+	end
+	for _, memberId in ipairs(record.Members) do
+		if memberId ~= userId then
+			local other = record.Snapshots[tostring(memberId)]
+			info.Partner = other and { UserId = memberId, Name = other.Name, ClassId = other.ClassId, Level = other.Level }
+		end
+	end
+	return info
+end
+
 function PartyService.GetMyGhostHistory(player)
 	local entry = entryFor(player)
 	local snapshot = entry and entry.Record.Snapshots[tostring(player.UserId)]

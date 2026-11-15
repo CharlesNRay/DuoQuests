@@ -17,6 +17,8 @@
 	  EquipPassives(ids)
 	  LevelPassiveSlot(slotIndex)
 	  SetUltimate(ultimateId)           the party's ultimate (either member)
+	  GetLeaderboard(categoryId)        top rows + your own score, "Stage" or "Level"
+	  Inspect(userId)                   public card of a party member on this server
 	  EquipPet(petId) / LevelPet(petId) the companion that follows you and its bonus
 	  SetStage(stage)                   pick any unlocked stage from the map (either member)
 	  SetGhostLoadout(ids)              edit the PARTNER's ghost skills
@@ -41,6 +43,8 @@ local Pets = require(Shared.Pets)
 local DataService = require(script.Parent.DataService)
 local PartyService = require(script.Parent.PartyService)
 local WorldService = require(script.Parent.WorldService)
+local LeaderboardService = require(script.Parent.LeaderboardService)
+local Leaderboards = require(Shared.Leaderboards)
 
 local ApiService = {}
 
@@ -110,6 +114,24 @@ local handlers = {}
 
 function handlers.GetWorld()
 	return true, WorldService.Snapshot()
+end
+
+function handlers.Inspect(_, _, userId)
+	if type(userId) ~= "number" then
+		return false, "BadArgs"
+	end
+	local info = PartyService.GetInspect(userId)
+	if not info then
+		return false, "NotHere"
+	end
+	return true, info
+end
+
+function handlers.GetLeaderboard(player, _, categoryId)
+	if type(categoryId) ~= "string" or not Leaderboards.IsCategory(categoryId) then
+		return false, "BadArgs"
+	end
+	return true, LeaderboardService.Get(categoryId, player.UserId)
 end
 
 function handlers.GetState(player)
@@ -248,7 +270,7 @@ function handlers.Leave(player)
 	return PartyService.Leave(player)
 end
 
-local PROFILE_FREE = { GetState = true, GetWorld = true, CreateCode = true, JoinByCode = true, Leave = true, RevertMyGhost = true }
+local PROFILE_FREE = { GetState = true, GetWorld = true, Inspect = true, GetLeaderboard = true, CreateCode = true, JoinByCode = true, Leave = true, RevertMyGhost = true }
 
 function ApiService.Init()
 	local folder = Instance.new("Folder")
@@ -276,8 +298,8 @@ function ApiService.Init()
 		if handler == nil then
 			return false, "UnknownAction"
 		end
-		if action == "GetState" or action == "GetWorld" then
-			return handler(player)
+		if action == "GetState" or action == "GetWorld" or action == "Inspect" or action == "GetLeaderboard" then
+			return handler(player, nil, ...)
 		end
 		local profile = DataService.GetProfile(player)
 		if not profile then

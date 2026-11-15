@@ -21,6 +21,7 @@ local function loadModules(override)
 		Enemies = require(Shared.Config.Enemies),
 		Stages = require(Shared.Stages),
 		StageRunner = require(Shared.StageRunner),
+		Party = require(Shared.Party),
 		ProfileTemplate = require(Shared.ProfileTemplate),
 	}
 end
@@ -111,6 +112,21 @@ return function(modulesOverride)
 	local plain = StageRunner.Run(newMembers(), 1, 7)
 	check("Without record there is no event log (cheap path)", plain.Events == nil and plain.Roster == nil)
 	check("Recording does not change the outcome", plain.Won == outcome.Won and plain.Duration == outcome.Duration)
+
+	-- a ghost partner is marked in the roster so clients can draw it see-through
+	local PT = m.ProfileTemplate
+	local live, offline = PT.New(), PT.New()
+	local ghostSnap = m.Party.MakeSnapshot(offline, 2002, "Ghosty", nil, 0)
+	local mixed = StageRunner.Run({ { Id = "1001", Name = "Live", Profile = live }, { Id = "2002", Name = "Ghosty", Snapshot = ghostSnap } }, 1, 3, nil, true)
+	local ghostFlag, liveFlag = false, false
+	for _, entry in ipairs(mixed.Roster) do
+		if entry.Id == "2002" then
+			ghostFlag = entry.Ghost == true
+		elseif entry.Id == "1001" then
+			liveFlag = entry.Ghost == true
+		end
+	end
+	check("An offline partner is marked as a ghost in the roster", ghostFlag and not liveFlag)
 
 	-- shared hub layout
 	local World = require(game:GetService("ReplicatedStorage"):WaitForChild("Shared"):WaitForChild("World"))

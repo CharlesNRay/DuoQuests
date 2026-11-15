@@ -128,6 +128,79 @@ function Screens.Passives(container, state, call)
 	end
 end
 
+-- Ranks --------------------------------------------------------------------
+-- extra.Board = reply of GetLeaderboard, extra.BoardCategory = "Stage"|"Level",
+-- extra.ShowBoard(categoryId) switches tabs.
+function Screens.Ranks(container, _, _, extra)
+	local Leaderboards = require(Shared.Leaderboards)
+	local scroll = list(container)
+	local tabs = row(scroll, 44)
+	for index, category in ipairs(Leaderboards.Categories) do
+		Kit.button({
+			Size = UDim2.fromOffset(150, 36), Position = UDim2.fromOffset(4 + (index - 1) * 158, 4), Text = category.Name,
+			BackgroundColor3 = if extra.BoardCategory == category.Id then C.Accent else C.Panel, Parent = tabs,
+		}, function()
+			if extra.ShowBoard then
+				extra.ShowBoard(category.Id)
+			end
+		end)
+	end
+	local board = extra.Board
+	if not board then
+		Kit.label({ Size = UDim2.new(1, 0, 0, 30), Text = "Loading...", TextColor3 = C.Dim, Parent = scroll })
+		return
+	end
+	if #board.Rows == 0 then
+		Kit.label({ Size = UDim2.new(1, 0, 0, 30), Text = "No scores yet. Check back in a minute.", TextColor3 = C.Dim, Parent = scroll })
+	end
+	for _, entry in ipairs(board.Rows) do
+		local r = row(scroll, 32)
+		local mine = entry.UserId == game:GetService("Players").LocalPlayer.UserId
+		Kit.label({ Size = UDim2.new(1, -16, 1, 0), Position = UDim2.fromOffset(8, 0), Text = ("%d.  %s   %s"):format(entry.Rank, entry.Name, Leaderboards.Format(extra.BoardCategory, entry.Value)), TextColor3 = mine and C.Accent or C.Text, Parent = r })
+	end
+	if board.Mine and board.Mine.Value then
+		Kit.label({ Size = UDim2.new(1, 0, 0, 22), Text = ("You: %s%s"):format(Leaderboards.Format(extra.BoardCategory, board.Mine.Value), board.Mine.Rank and ("  (rank " .. board.Mine.Rank .. ")") or "  (not in the top list yet)"), TextColor3 = C.Dim, Parent = scroll })
+	end
+end
+
+-- Inspect ------------------------------------------------------------------
+-- Public card for another player (state is not used; extra.Inspect is the reply
+-- of the server's Inspect action).
+function Screens.Inspect(container, _, _, extra)
+	local info = extra and extra.Inspect
+	local scroll = list(container)
+	if not info then
+		Kit.label({ Size = UDim2.new(1, 0, 0, 30), Text = "Nobody selected.", TextColor3 = C.Dim, Parent = scroll })
+		return
+	end
+	local PetConfig = require(Shared.Config.Pets)
+	local pet = info.PetId and PetConfig.Defs[info.PetId]
+	local zone = Zones.ForStage(info.PartyStage or 1)
+	local head = row(scroll, 92)
+	local lines = {
+		("%s  -  %s  Lv %d%s"):format(info.Name, info.ClassId, info.Level, info.Online and "" or "  (ghost)"),
+		("Pet: %s"):format(pet and ("%s  Lv %d  (%s)"):format(pet.DisplayName, info.PetLevel or 1, require(Shared.Pets).Describe(info.PetId, info.PetLevel)) or "none"),
+		("Party is on %s, stage %d (furthest %d)"):format(zone.Name, info.PartyStage or 1, info.PartyFrontier or 1),
+		info.Partner and ("Partner: %s (%s Lv %d)"):format(info.Partner.Name, info.Partner.ClassId, info.Partner.Level) or "Partner: none",
+	}
+	Kit.label({ Size = UDim2.new(1, -16, 1, -8), Position = UDim2.fromOffset(8, 4), Text = table.concat(lines, "\n"), Parent = head })
+	Kit.label({ Size = UDim2.new(1, 0, 0, 22), Text = "Skills", TextColor3 = C.Dim, Parent = scroll })
+	for slot, id in ipairs(info.Loadout or {}) do
+		local def = Abilities[id]
+		if def then
+			local r = row(scroll, 34)
+			Kit.label({ Size = UDim2.new(1, -16, 1, 0), Position = UDim2.fromOffset(8, 0), Text = ("%d. %s  Lv %d"):format(slot, def.DisplayName, info.SlotLevels[slot] or 1), TextColor3 = Kit.rarityColor(def.Rarity), Parent = r })
+		end
+	end
+	if #(info.PassiveIds or {}) > 0 then
+		local names = {}
+		for _, id in ipairs(info.PassiveIds) do
+			table.insert(names, PassiveCfg.Defs[id] and PassiveCfg.Defs[id].DisplayName or id)
+		end
+		Kit.label({ Size = UDim2.new(1, 0, 0, 22), Text = "Passives: " .. table.concat(names, ", "), TextColor3 = C.Dim, TextSize = 13, Parent = scroll })
+	end
+end
+
 -- Pets ---------------------------------------------------------------------
 function Screens.Pets(container, state, call)
 	local scroll = list(container)

@@ -12,10 +12,13 @@ local Services = script.Parent.Services
 local DataService = require(Services.DataService)
 local PartyService = require(Services.PartyService)
 local ApiService = require(Services.ApiService)
+local LeaderboardService = require(Services.LeaderboardService)
+local WorldService = require(Services.WorldService)
 
 DataService.Init()
 PartyService.Init()
 ApiService.Init()
+LeaderboardService.Init(WorldService.SetBoardText)
 
 local function onPlayerAdded(player)
 	local profile, reason = DataService.LoadProfile(player)

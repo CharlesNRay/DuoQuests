@@ -1,7 +1,7 @@
 # Duo Quest Roadmap
 
 > Living document. Updated whenever we finish or reprioritise something.
-> **Last updated:** 2026-11-14
+> **Last updated:** 2026-11-15
 
 **Jump to:** [Now](#now) · [Next up](#next-up) · [Later](#later) · [Done](#done) · [Open questions](#open-questions) · [Known gaps](#known-gaps)
 
@@ -22,11 +22,6 @@ What we are working on this week.
 ## Next up
 In rough order.
 
-- ⬜ **Pets** shown beside each hero (needs pet data in party snapshots)
-- ⬜ **Click a player** to inspect: level, class, skills, pet
-- ⬜ **Leaderboards**: furthest stage, season level, etc.
-- ⬜ **Ghost look**: see-through figure for an offline partner
-- ⬜ **Banners** (boss / ultimate callouts) back in the world view
 - ⬜ **Real assets** from free Studio sources: monsters, pets, scenery (replace placeholder shapes)
 
 ## Later
@@ -42,6 +37,13 @@ In rough order.
 
 ## Done
 Newest first.
+
+### 2026-11-15 (overnight, code only, not yet checked in Studio)
+- 🔨 Leaderboards: furthest stage and highest level per season (ordered DataStore), Ranks screen, and a sign in the hub (10 tests; live-server saving untested)
+- 🔨 Pets: 4 pets (Slimey, Foxling, Mossback, Spark Wisp) earned by clearing stages, kept every season, levelled with gold, small combat bonuses; shown beside heroes in the world and on arena cards; Pets screen; ghost partners fight with their pet (22 tests)
+- 🔨 Click-to-inspect on heroes and other players' avatars (class, level, pet, skills, passives, party stage)
+- 🔨 See-through ghost figure for an offline partner
+- 🔨 Boss-stage banner in your own arena
 
 ### 2026-11-14
 - ✅ Walk / Battle view camera toggle (confirmed working in Studio)

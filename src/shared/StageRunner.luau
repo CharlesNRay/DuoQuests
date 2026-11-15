@@ -30,7 +30,7 @@
 	  Result      the raw Simulation result
 	  Events      (only when record) the fight's event log, see Combat/Simulation
 	  Roster      (only when record) everyone in the fight:
-	              { { Id, Name, Team, DefId, MaxHealth, UserId?, PetId? } }
+	              { { Id, Name, Team, DefId, MaxHealth, UserId?, PetId?, Ghost? } }
 	              Party members' DefId is their class; UserId is set for them.
 	}
 
@@ -117,6 +117,12 @@ function StageRunner.Run(members, stage, seed, ultimate, record)
 	local roster
 	if record then
 		roster = {}
+		local ghosts = {}
+		for _, member in ipairs(members) do
+			if member.Profile == nil then
+				ghosts[member.Id] = true
+			end
+		end
 		for _, team in ipairs({ sim.Party, sim.Enemies }) do
 			for _, entity in ipairs(team) do
 				table.insert(roster, {
@@ -125,6 +131,7 @@ function StageRunner.Run(members, stage, seed, ultimate, record)
 					Team = entity.Team,
 					DefId = entity.DefId,
 					PetId = entity.PetId,
+					Ghost = ghosts[entity.Id] or nil,
 					MaxHealth = entity.Stats.MaxHealth,
 					UserId = if entity.Team == "Party" then tonumber(entity.Id) else nil,
 				})
