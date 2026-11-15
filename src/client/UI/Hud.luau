@@ -1,23 +1,26 @@
 --[[
-	Hud (ModuleScript): the always-visible overlay. It keeps clear of what Roblox draws on top
-	of every game: chat / menu top-left (we start below it on desktop), the touch thumbstick and
-	jump button in the bottom corners, and the system top bar (the ScreenGui starts below it).
+	Hud (ModuleScript): the always-visible overlay, drawn at SCALE of the panels so it stays out of the
+	way. It keeps clear of what Roblox draws on top of every game: chat / menu top-left (we start below
+	it on desktop), the touch thumbstick and jump button in the bottom corners, the system top bar.
 
-	  top-centre    zone + stage, fight timer, toast, "watching" bar
-	  left          portrait (level, name, XP) with gold / shards   (lower on desktop to clear chat)
-	  top-right     Fight log / Battle view / Home buttons, then the party cards
-	  bottom-centre skill bar (your four skills in cast order + the party ultimate gauge, which is
-	                NOT a button: it fires itself) above the menu dock
-	                (Hero Skills Passives Pets Party | Map Gear Bag Daily Ranks)
+	Two layers:
+	  Chrome  (always)  top-left portrait + partner card; top-right gold / shards, the live MAP CARD
+	                    (zone, stage, ten stage pips, Advance button while the party is holding) and
+	                    the small buttons (Plaza, Home, Fight log, Battle view); bottom-centre menu dock
+	                    (Hero Skills Passives Pets Party Gear Bag Ranks)
+	  Combat  (only while watching a battle) stage pill, fight timer, toast, your skill bar and the
+	                    party ultimate gauge. "Hide HUD" in the watching bar hides all of Chrome.
 
 	Everything is plain Frames (no art assets).
 
 	  hud:AddButton(key, group, glyph, label, onClick) -> button   group "dock" | "mini"
+	  hud.OnMap / hud.OnAdvance       callbacks for the map card and its Advance button
 	  hud:SetBadge(key, bool)         red dot on a button
 	  hud:Render(state)               refresh from the server state
 	  hud:OnFight(info)               own fight finished: toast, timer, ultimate gauge
-	  hud:SetWatching(text, onStop)   show/hide the "watching another battle" bar
-	  hud:ShowBanner(text, color)
+	  hud:SetWatching(text, onStop)   enter/leave the watching view (shows/hides the Combat layer)
+	  hud:SetHudHidden(bool)          hide/show Chrome while watching
+	  hud:ShowBanner(text, color)     battle callout (only while the Combat layer is showing)
 ]]
 local TweenService = game:GetService("TweenService")
 local RunService = game:GetService("RunService")
@@ -35,6 +38,10 @@ local C = Kit.Colors
 
 local Hud = {}
 
+local MAP_GLYPHS = {
+	Trees = "🌳", Pines = "🌲", Rocks = "⛰️", Crystals = "💎", Cacti = "🌵",
+	SnowPines = "❄️", LavaRocks = "🌋", DeadTrees = "🪦", Pillars = "🏛️", Clouds = "☁️",
+}
 local INTRO = 0.8 -- matches Battle/Replay: monsters run in before the first blow
 
 local function pill(parent, props)
@@ -43,64 +50,112 @@ local function pill(parent, props)
 	return f
 end
 
+local SCALE = if UserInputService.KeyboardEnabled then 0.8 else 0.9 -- the HUD is drawn a little smaller than panels
+
 function Hud.new(root)
 	local self = { Buttons = {}, Dots = {}, Charge = { Points = nil, StartedAt = 0, Needed = UltCfg.ChargeNeeded or 100, Rate = UltCfg.ChargePerSecond or 1.5 } }
-	local gui = Kit.frame({ Name = "Hud", Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1, NoCorner = true, Parent = root })
+	-- The HUD has its own scale. Its frame is 1/SCALE of the screen so that after scaling it fills it exactly.
+	local gui = Kit.frame({ Name = "Hud", Size = UDim2.fromScale(1 / SCALE, 1 / SCALE), BackgroundTransparency = 1, NoCorner = true, Parent = root })
+	Kit.new("UIScale", { Scale = SCALE, Parent = gui })
 	self.Gui = gui
 
-	-- top-left: portrait ---------------------------------------------------
-	local safeTop = if UserInputService.KeyboardEnabled then 120 else 58 -- the chat window sits top-left on desktop
-	local portrait = pill(gui, { Size = UDim2.fromOffset(232, 50), Position = UDim2.fromOffset(8, safeTop) })
-	self.Badge = Kit.frame({ Size = UDim2.fromOffset(42, 42), Position = UDim2.fromOffset(4, 4), BackgroundColor3 = C.Accent, Parent = portrait })
-	Kit.corner(21).Parent = self.Badge
-	self.LevelLabel = Kit.label({ Size = UDim2.fromScale(1, 1), Text = "1", TextSize = 18, Font = Enum.Font.GothamBlack, TextColor3 = C.Bg, TextStrokeTransparency = 1, TextXAlignment = Enum.TextXAlignment.Center, Parent = self.Badge })
-	self.NameLabel = Kit.label({ Size = UDim2.new(1, -50, 0, 18), Position = UDim2.fromOffset(54, 4), Text = "", TextSize = 16, Font = Enum.Font.GothamBold, TextWrapped = false, TextTruncate = Enum.TextTruncate.AtEnd, Parent = portrait })
-	local xpBack = Kit.frame({ Size = UDim2.new(1, -62, 0, 9), Position = UDim2.fromOffset(54, 33), BackgroundColor3 = Color3.fromRGB(40, 44, 64), Parent = portrait })
+	-- Two layers: Chrome (menus, portrait, map) and Combat (stage pill, fight timer, skill bar).
+	-- Combat only shows while you are watching a battle; Chrome can be hidden while spectating.
+	local chrome = Kit.frame({ Name = "Chrome", Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1, NoCorner = true, Parent = gui })
+	local combat = Kit.frame({ Name = "Combat", Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1, NoCorner = true, Visible = false, Parent = gui })
+	self.Chrome, self.Combat = chrome, combat
+
+	-- top-left: portrait + partner -----------------------------------------
+	local safeTop = if UserInputService.KeyboardEnabled then 110 else 52 -- the chat window sits top-left on desktop
+	local portrait = pill(chrome, { Size = UDim2.fromOffset(220, 46), Position = UDim2.fromOffset(8, safeTop) })
+	self.Badge = Kit.frame({ Size = UDim2.fromOffset(38, 38), Position = UDim2.fromOffset(4, 4), BackgroundColor3 = C.Accent, Parent = portrait })
+	Kit.corner(19).Parent = self.Badge
+	self.LevelLabel = Kit.label({ Size = UDim2.fromScale(1, 1), Text = "1", TextSize = 17, Font = Enum.Font.GothamBlack, TextColor3 = C.Bg, TextStrokeTransparency = 1, TextXAlignment = Enum.TextXAlignment.Center, Parent = self.Badge })
+	self.NameLabel = Kit.label({ Size = UDim2.new(1, -50, 0, 18), Position = UDim2.fromOffset(48, 3), Text = "", TextSize = 15, Font = Enum.Font.GothamBold, TextWrapped = false, TextTruncate = Enum.TextTruncate.AtEnd, Parent = portrait })
+	local xpBack = Kit.frame({ Size = UDim2.new(1, -58, 0, 8), Position = UDim2.fromOffset(48, 30), BackgroundColor3 = Color3.fromRGB(40, 44, 64), Parent = portrait })
 	self.XpFill = Kit.frame({ Size = UDim2.fromScale(0, 1), BackgroundColor3 = Color3.fromRGB(90, 180, 255), Parent = xpBack })
 	Kit.Hover(portrait, function()
 		return self.XpText
 	end)
+	self.Cards = Kit.frame({ Size = UDim2.fromOffset(220, 30), Position = UDim2.fromOffset(8, safeTop + 50), BackgroundTransparency = 1, NoCorner = true, Parent = chrome })
+	Kit.new("UIListLayout", { Padding = UDim.new(0, 3), Parent = self.Cards })
 
-	self.Gold = Kit.label({ Size = UDim2.fromOffset(100, 22), Position = UDim2.fromOffset(8, safeTop + 56), Text = "", TextSize = 15, Font = Enum.Font.GothamBold, TextColor3 = C.Accent, Parent = gui })
-	self.Shards = Kit.label({ Size = UDim2.fromOffset(100, 22), Position = UDim2.fromOffset(116, safeTop + 56), Text = "", TextSize = 15, Font = Enum.Font.GothamBold, TextColor3 = Color3.fromRGB(150, 210, 255), Parent = gui })
+	-- top-right: gold + shards, the live map card, small buttons ---------------------
+	local right = Kit.frame({ Size = UDim2.fromOffset(190, 10), AutomaticSize = Enum.AutomaticSize.Y, Position = UDim2.new(1, -8, 0, 6), AnchorPoint = Vector2.new(1, 0), BackgroundTransparency = 1, NoCorner = true, Parent = chrome })
+	Kit.new("UIListLayout", { Padding = UDim.new(0, 4), HorizontalAlignment = Enum.HorizontalAlignment.Right, Parent = right })
+	local money = Kit.frame({ Size = UDim2.new(1, 0, 0, 24), BackgroundTransparency = 1, NoCorner = true, Parent = right })
+	local goldPill = pill(money, { Size = UDim2.new(0.5, -2, 1, 0), Position = UDim2.fromOffset(0, 0) })
+	local shardPill = pill(money, { Size = UDim2.new(0.5, -2, 1, 0), Position = UDim2.new(0.5, 2, 0, 0) })
+	self.Gold = Kit.label({ Size = UDim2.new(1, -6, 1, 0), Position = UDim2.fromOffset(6, 0), Text = "", TextSize = 13, Font = Enum.Font.GothamBold, TextColor3 = C.Accent, TextWrapped = false, Parent = goldPill })
+	self.Shards = Kit.label({ Size = UDim2.new(1, -6, 1, 0), Position = UDim2.fromOffset(6, 0), Text = "", TextSize = 13, Font = Enum.Font.GothamBold, TextColor3 = Color3.fromRGB(150, 210, 255), TextWrapped = false, Parent = shardPill })
 
-	-- top-centre: zone, stage, fight timer ---------------------------------
-	local top = pill(gui, { Size = UDim2.fromOffset(300, 50), Position = UDim2.new(0.5, -150, 0, 6) })
-	self.Zone = Kit.label({ Size = UDim2.new(1, 0, 0, 18), Position = UDim2.fromOffset(0, 3), Text = "", TextSize = 14, TextColor3 = C.Dim, TextXAlignment = Enum.TextXAlignment.Center, Parent = top })
-	self.Stage = Kit.label({ Size = UDim2.new(1, 0, 0, 28), Position = UDim2.fromOffset(0, 19), Text = "Stage -", TextSize = 24, Font = Enum.Font.GothamBlack, TextXAlignment = Enum.TextXAlignment.Center, Parent = top })
-	self.Fight = Kit.frame({ Size = UDim2.fromOffset(200, 5), Position = UDim2.new(0.5, -100, 0, 60), BackgroundColor3 = Color3.fromRGB(16, 18, 30), Parent = gui })
-	self.FightFill = Kit.frame({ Size = UDim2.fromScale(0, 1), BackgroundColor3 = C.Accent, Parent = self.Fight })
-	self.Toast = Kit.label({ Size = UDim2.new(0, 400, 0, 20), Position = UDim2.new(0.5, -200, 0, 68), Text = "", TextSize = 15, TextXAlignment = Enum.TextXAlignment.Center, TextColor3 = C.Accent, Parent = gui })
+	-- the map card: a small live picture of where the party is. Tap it for the full map.
+	local mapCard = Kit.button({ Size = UDim2.new(1, 0, 0, 86), Text = "", BackgroundColor3 = Color3.fromRGB(70, 110, 70), Parent = right }, function()
+		if self.OnMap then
+			self.OnMap()
+		end
+	end)
+	Kit.new("UIStroke", { Color = Color3.fromRGB(240, 220, 160), Thickness = 2, Transparency = 0.2, Parent = mapCard })
+	self.MapCard = mapCard
+	self.MapShade = Kit.frame({ Size = UDim2.new(1, 0, 0.55, 0), Position = UDim2.fromScale(0, 0.45), BackgroundColor3 = Color3.fromRGB(12, 14, 24), BackgroundTransparency = 0.45, Parent = mapCard })
+	self.MapGlyph = Kit.label({ Size = UDim2.fromOffset(44, 44), Position = UDim2.fromOffset(6, 4), Text = "", TextSize = 34, TextXAlignment = Enum.TextXAlignment.Center, TextStrokeTransparency = 1, Parent = mapCard })
+	self.MapZone = Kit.label({ Size = UDim2.new(1, -54, 0, 18), Position = UDim2.fromOffset(52, 5), Text = "", TextSize = 13, Font = Enum.Font.GothamBold, TextWrapped = false, TextTruncate = Enum.TextTruncate.AtEnd, TextColor3 = Color3.new(1, 1, 1), Parent = mapCard })
+	self.MapStage = Kit.label({ Size = UDim2.new(1, -54, 0, 24), Position = UDim2.fromOffset(52, 22), Text = "", TextSize = 20, Font = Enum.Font.GothamBlack, TextWrapped = false, TextColor3 = Color3.new(1, 1, 1), Parent = mapCard })
+	self.MapPips = Kit.frame({ Size = UDim2.new(1, -12, 0, 8), Position = UDim2.fromOffset(6, 54), BackgroundTransparency = 1, NoCorner = true, Parent = mapCard })
+	Kit.new("UIListLayout", { FillDirection = Enum.FillDirection.Horizontal, Padding = UDim.new(0, 3), Parent = self.MapPips })
+	self.MapNote = Kit.label({ Size = UDim2.new(1, -90, 0, 16), Position = UDim2.fromOffset(6, 66), Text = "", TextSize = 11, TextWrapped = false, TextTruncate = Enum.TextTruncate.AtEnd, TextColor3 = C.Accent, Parent = mapCard })
+	self.AdvanceButton = Kit.button({ Size = UDim2.fromOffset(78, 20), Position = UDim2.new(1, -82, 1, -23), Text = "Advance ▶", TextSize = 11, BackgroundColor3 = C.Up, Visible = false, ZIndex = 3, Parent = mapCard }, function()
+		if self.OnAdvance then
+			self.OnAdvance()
+		end
+	end)
+	Kit.Hover(self.AdvanceButton, function()
+		return "Try the next stage. You stay on this stage until you advance."
+	end)
+	Kit.Hover(mapCard, function()
+		return "World map\n" .. Kit.tint("Click to open it", C.Dim)
+	end)
 
-	self.Watching = pill(gui, { Size = UDim2.fromOffset(300, 34), Position = UDim2.new(0.5, -150, 0, 92) })
-	self.Watching.Visible = false
-	self.WatchText = Kit.label({ Size = UDim2.new(1, -110, 1, 0), Position = UDim2.fromOffset(8, 0), Text = "", TextSize = 13, TextWrapped = false, TextTruncate = Enum.TextTruncate.AtEnd, Parent = self.Watching })
-	self.StopButton = Kit.button({ Size = UDim2.fromOffset(92, 28), Position = UDim2.new(1, -98, 0, 3), Text = "Stop", TextSize = 13, BackgroundColor3 = C.Bad, Parent = self.Watching })
-
-	-- menu dock (bottom-centre) and small buttons (top-right) ---------------------
-	local dock = Kit.frame({ Size = UDim2.fromOffset(10, 58), AutomaticSize = Enum.AutomaticSize.X, Position = UDim2.new(0.5, 0, 1, -6), AnchorPoint = Vector2.new(0.5, 1), BackgroundTransparency = 1, NoCorner = true, Parent = gui })
-	Kit.new("UIListLayout", { Padding = UDim.new(0, 4), FillDirection = Enum.FillDirection.Horizontal, SortOrder = Enum.SortOrder.LayoutOrder, HorizontalAlignment = Enum.HorizontalAlignment.Center, Parent = dock })
-	local mini = Kit.frame({ Size = UDim2.fromOffset(10, 54), AutomaticSize = Enum.AutomaticSize.X, Position = UDim2.new(1, -8, 0, 6), AnchorPoint = Vector2.new(1, 0), BackgroundTransparency = 1, NoCorner = true, Parent = gui })
+	local mini = Kit.frame({ Size = UDim2.new(1, 0, 0, 38), BackgroundTransparency = 1, NoCorner = true, Parent = right })
 	Kit.new("UIListLayout", { Padding = UDim.new(0, 4), FillDirection = Enum.FillDirection.Horizontal, SortOrder = Enum.SortOrder.LayoutOrder, HorizontalAlignment = Enum.HorizontalAlignment.Right, Parent = mini })
+
+	-- bottom-centre: the menu dock -----------------------------------------------
+	local dock = Kit.frame({ Size = UDim2.fromOffset(10, 48), AutomaticSize = Enum.AutomaticSize.X, Position = UDim2.new(0.5, 0, 1, -6), AnchorPoint = Vector2.new(0.5, 1), BackgroundTransparency = 1, NoCorner = true, Parent = chrome })
+	Kit.new("UIListLayout", { Padding = UDim.new(0, 4), FillDirection = Enum.FillDirection.Horizontal, SortOrder = Enum.SortOrder.LayoutOrder, HorizontalAlignment = Enum.HorizontalAlignment.Center, Parent = dock })
 	self.Rails = { dock = dock, mini = mini }
 	self.NextOrder = 0
 
-	-- party cards (top-right, under the small buttons)
-	self.Cards = Kit.frame({ Size = UDim2.fromOffset(190, 68), Position = UDim2.new(1, -8, 0, 66), AnchorPoint = Vector2.new(1, 0), BackgroundTransparency = 1, NoCorner = true, Parent = gui })
-	Kit.new("UIListLayout", { Padding = UDim.new(0, 3), Parent = self.Cards })
+	-- combat layer: stage pill, fight timer, toast, skill bar + ultimate -------------
+	local top = pill(combat, { Size = UDim2.fromOffset(260, 44), Position = UDim2.new(0.5, -130, 0, 44) })
+	self.Zone = Kit.label({ Size = UDim2.new(1, 0, 0, 16), Position = UDim2.fromOffset(0, 2), Text = "", TextSize = 12, TextColor3 = C.Dim, TextXAlignment = Enum.TextXAlignment.Center, Parent = top })
+	self.Stage = Kit.label({ Size = UDim2.new(1, 0, 0, 24), Position = UDim2.fromOffset(0, 16), Text = "Stage -", TextSize = 20, Font = Enum.Font.GothamBlack, TextXAlignment = Enum.TextXAlignment.Center, Parent = top })
+	self.Fight = Kit.frame({ Size = UDim2.fromOffset(180, 5), Position = UDim2.new(0.5, -90, 0, 92), BackgroundColor3 = Color3.fromRGB(16, 18, 30), Parent = combat })
+	self.FightFill = Kit.frame({ Size = UDim2.fromScale(0, 1), BackgroundColor3 = C.Accent, Parent = self.Fight })
+	self.Toast = Kit.label({ Size = UDim2.new(0, 400, 0, 20), Position = UDim2.new(0.5, -200, 0, 100), Text = "", TextSize = 14, TextXAlignment = Enum.TextXAlignment.Center, TextColor3 = C.Accent, Parent = combat })
 
-	-- bottom-centre: skill bar + ultimate gauge ----------------------------
-	self.Bar = pill(gui, { Size = UDim2.fromOffset(330, 62), Position = UDim2.new(0.5, -165, 1, -128) })
-	self.Slots = Kit.frame({ Size = UDim2.fromOffset(240, 54), Position = UDim2.fromOffset(6, 4), BackgroundTransparency = 1, NoCorner = true, Parent = self.Bar })
-	Kit.new("UIListLayout", { FillDirection = Enum.FillDirection.Horizontal, Padding = UDim.new(0, 5), VerticalAlignment = Enum.VerticalAlignment.Center, Parent = self.Slots })
-	self.UltSlot = Kit.frame({ Size = UDim2.fromOffset(70, 54), Position = UDim2.new(1, -76, 0, 4), BackgroundTransparency = 1, NoCorner = true, Parent = self.Bar })
+	self.Bar = pill(combat, { Size = UDim2.fromOffset(300, 56), Position = UDim2.new(0.5, -150, 1, -112) })
+	self.Slots = Kit.frame({ Size = UDim2.fromOffset(216, 48), Position = UDim2.fromOffset(6, 4), BackgroundTransparency = 1, NoCorner = true, Parent = self.Bar })
+	Kit.new("UIListLayout", { FillDirection = Enum.FillDirection.Horizontal, Padding = UDim.new(0, 4), VerticalAlignment = Enum.VerticalAlignment.Center, Parent = self.Slots })
+	self.UltSlot = Kit.frame({ Size = UDim2.fromOffset(66, 48), Position = UDim2.new(1, -70, 0, 4), BackgroundTransparency = 1, NoCorner = true, Parent = self.Bar })
 	self.UltIcon = nil
-	self.UltBack = Kit.frame({ Size = UDim2.fromOffset(56, 7), Position = UDim2.fromOffset(7, 46), BackgroundColor3 = Color3.fromRGB(40, 44, 64), Parent = self.UltSlot })
+	self.UltBack = Kit.frame({ Size = UDim2.fromOffset(52, 6), Position = UDim2.fromOffset(7, 41), BackgroundColor3 = Color3.fromRGB(40, 44, 64), Parent = self.UltSlot })
 	self.UltFill = Kit.frame({ Size = UDim2.fromScale(0, 1), BackgroundColor3 = Kit.Colors.Epic, Parent = self.UltBack })
 
+	-- the "watching" bar (top-centre): stop + hide-the-rest-of-the-HUD ---------------
+	self.Watching = pill(gui, { Size = UDim2.fromOffset(330, 32), Position = UDim2.new(0.5, -165, 0, 6) })
+	self.Watching.Visible = false
+	self.WatchText = Kit.label({ Size = UDim2.new(1, -190, 1, 0), Position = UDim2.fromOffset(8, 0), Text = "", TextSize = 12, TextWrapped = false, TextTruncate = Enum.TextTruncate.AtEnd, Parent = self.Watching })
+	self.HideButton = Kit.button({ Size = UDim2.fromOffset(86, 26), Position = UDim2.new(1, -182, 0, 3), Text = "Hide HUD", TextSize = 12, Parent = self.Watching }, function()
+		self:SetHudHidden(not self.HudHidden)
+	end)
+	self.StopButton = Kit.button({ Size = UDim2.fromOffset(86, 26), Position = UDim2.new(1, -92, 0, 3), Text = "Stop", TextSize = 12, BackgroundColor3 = C.Bad, Parent = self.Watching })
+
 	-- banner ------------------------------------------------------------------
-	self.BannerLabel = Kit.label({ Size = UDim2.new(1, 0, 0, 50), Position = UDim2.new(0, 0, 0.3, 0), Text = "", TextSize = 36, Font = Enum.Font.GothamBlack, TextXAlignment = Enum.TextXAlignment.Center, TextTransparency = 1, Parent = gui })
+	self.BannerLabel = Kit.label({ Size = UDim2.new(1, 0, 0, 50), Position = UDim2.new(0, 0, 0.3, 0), Text = "", TextSize = 34, Font = Enum.Font.GothamBlack, TextXAlignment = Enum.TextXAlignment.Center, TextTransparency = 1, Parent = gui })
 	function self:ShowBanner(text, color)
+		if not self.Combat.Visible then
+			return -- battle callouts belong to the combat view
+		end
 		self.BannerLabel.Text = text
 		self.BannerLabel.TextColor3 = color
 		self.BannerLabel.TextTransparency = 0
@@ -109,12 +164,18 @@ function Hud.new(root)
 
 	function self:AddButton(key, side, glyph, label, onClick)
 		self.NextOrder += 1
-		local button = Kit.button({ Size = UDim2.fromOffset(56, 54), Text = "", BackgroundColor3 = Color3.fromRGB(26, 30, 48), LayoutOrder = self.NextOrder, Parent = self.Rails[side] }, onClick)
+		local small = side == "mini"
+		local button = Kit.button({ Size = if small then UDim2.fromOffset(38, 38) else UDim2.fromOffset(50, 48), Text = "", BackgroundColor3 = Color3.fromRGB(26, 30, 48), LayoutOrder = self.NextOrder, Parent = self.Rails[side] }, onClick)
 		button.BackgroundTransparency = 0.15
 		Kit.new("UIStroke", { Color = Color3.fromRGB(110, 118, 150), Thickness = 1, Transparency = 0.5, Parent = button })
-		Kit.label({ Size = UDim2.new(1, 0, 0, 30), Position = UDim2.fromOffset(0, 3), Text = glyph, TextSize = 26, TextXAlignment = Enum.TextXAlignment.Center, TextStrokeTransparency = 1, Parent = button })
-		Kit.label({ Size = UDim2.new(1, 0, 0, 16), Position = UDim2.fromOffset(0, 35), Text = label, TextSize = 12, TextColor3 = C.Text, TextXAlignment = Enum.TextXAlignment.Center, TextWrapped = false, TextStrokeTransparency = 1, Parent = button })
-		local dot = Kit.frame({ Size = UDim2.fromOffset(12, 12), Position = UDim2.new(1, -9, 0, -3), BackgroundColor3 = C.Bad, Visible = false, ZIndex = 3, Parent = button })
+		if small then
+			Kit.label({ Size = UDim2.fromScale(1, 1), Text = glyph, TextSize = 20, TextXAlignment = Enum.TextXAlignment.Center, TextStrokeTransparency = 1, Parent = button })
+			Kit.Hover(button, function() return label end)
+		else
+			Kit.label({ Size = UDim2.new(1, 0, 0, 26), Position = UDim2.fromOffset(0, 3), Text = glyph, TextSize = 22, TextXAlignment = Enum.TextXAlignment.Center, TextStrokeTransparency = 1, Parent = button })
+			Kit.label({ Size = UDim2.new(1, 0, 0, 14), Position = UDim2.fromOffset(0, 31), Text = label, TextSize = 11, TextColor3 = C.Text, TextXAlignment = Enum.TextXAlignment.Center, TextWrapped = false, TextStrokeTransparency = 1, Parent = button })
+		end
+		local dot = Kit.frame({ Size = UDim2.fromOffset(11, 11), Position = UDim2.new(1, -8, 0, -3), BackgroundColor3 = C.Bad, Visible = false, ZIndex = 3, Parent = button })
 		Kit.corner(6).Parent = dot
 		self.Dots[key] = dot
 		self.Buttons[key] = button
@@ -128,24 +189,34 @@ function Hud.new(root)
 		end
 	end
 
+	-- label of a small (glyph-only) button, e.g. the camera toggle
 	function self:SetButtonText(key, glyph, label)
 		local button = self.Buttons[key]
 		if button then
-			local labels = {}
 			for _, child in ipairs(button:GetChildren()) do
-				if child:IsA("TextLabel") then
-					table.insert(labels, child)
+				if child:IsA("TextLabel") and glyph then
+					child.Text = glyph
+					break
 				end
 			end
-			table.sort(labels, function(a, b) return a.Position.Y.Offset < b.Position.Y.Offset end)
-			if labels[1] and glyph then labels[1].Text = glyph end
-			if labels[2] and label then labels[2].Text = label end
 		end
 	end
 
+	-- Hide / show everything that is not the battle itself (only meaningful while watching).
+	function self:SetHudHidden(hidden)
+		self.HudHidden = hidden
+		self.Chrome.Visible = not hidden
+		self.HideButton.Text = if hidden then "Show HUD" else "Hide HUD"
+	end
+
+	-- text = nil: not watching. The combat layer (skill bar, stage pill, timer) shows only while watching.
 	function self:SetWatching(text, onStop)
 		self.Watching.Visible = text ~= nil
+		self.Combat.Visible = text ~= nil
 		self.WatchText.Text = text or ""
+		if text == nil then
+			self:SetHudHidden(false)
+		end
 		if self.StopConn then
 			self.StopConn:Disconnect()
 			self.StopConn = nil
@@ -165,28 +236,49 @@ function Hud.new(root)
 		self.Stage.Text = ("Stage %d%s"):format(stage, Stages.IsBoss(stage) and "  BOSS" or "")
 		self.Stage.TextColor3 = if Stages.IsBoss(stage) then C.Bad else C.Text
 
+		-- the live map card
+		local theme = zone.Theme
+		local ground = Color3.fromRGB(theme.Ground[1], theme.Ground[2], theme.Ground[3])
+		self.MapCard.BackgroundColor3 = ground:Lerp(Color3.new(0, 0, 0), 0.25)
+		self.MapGlyph.Text = MAP_GLYPHS[theme.Scenery] or "🗺️"
+		self.MapZone.Text = zone.Name
+		self.MapStage.Text = ("Stage %d%s"):format(stage, Stages.IsBoss(stage) and "  👑" or "")
+		Kit.clear(self.MapPips)
+		local first = zone.FirstStage
+		local frontier = party and party.Frontier or me.Frontier
+		for i = 0, 9 do
+			local s = first + i
+			local color = if s == stage then C.Accent elseif s < frontier then Color3.fromRGB(120, 220, 140) else Color3.fromRGB(70, 74, 90)
+			local pip = Kit.frame({ Size = UDim2.new(0.1, -3, 1, 0), BackgroundColor3 = color, Parent = self.MapPips })
+			if Stages.IsBoss(s) then
+				pip.BackgroundColor3 = if s == stage then C.Accent else Color3.fromRGB(200, 90, 90)
+			end
+		end
+		local holding = party and party.Holding == true
+		self.AdvanceButton.Visible = holding
+		self.MapNote.Text = if holding then "Holding - tap Advance" elseif party then ("Furthest: %d"):format(frontier) else "No party yet"
+		self.MapNote.Size = UDim2.new(1, if holding then -90 else -12, 0, 16)
+
 		self.LevelLabel.Text = tostring(me.Level)
 		self.Badge.BackgroundColor3 = C[me.ClassId] or C.Accent
 		self.NameLabel.Text = me.Name .. "  -  " .. me.ClassId
 		local frac = if me.XPNeeded and me.XPNeeded > 0 then math.clamp((me.XP or 0) / me.XPNeeded, 0, 1) else 0
 		self.XpFill.Size = UDim2.fromScale(frac, 1)
 		self.XpText = ("Level %d\nXP %d / %d"):format(me.Level, me.XP or 0, me.XPNeeded or 0)
-		self.Gold.Text = "Gold  " .. me.Gold
-		self.Shards.Text = "Shards  " .. me.Shards
+		self.Gold.Text = "💰 " .. me.Gold
+		self.Shards.Text = "💠 " .. me.Shards
 
 		self:SetBadge("Skills", (me.SkillPicks or 0) > 0 or #(me.SubclassChoices or {}) > 0)
-		self:SetBadge("Daily", me.Daily ~= nil and me.Daily.CanClaim == true)
 		self:SetBadge("Party", party == nil)
 
 		-- party cards
 		Kit.clear(self.Cards)
 		local function card(name, classId, level, note)
-			local f = pill(self.Cards, { Size = UDim2.fromOffset(190, 32), Position = UDim2.new() })
-			local dot = Kit.frame({ Size = UDim2.fromOffset(20, 20), Position = UDim2.fromOffset(6, 6), BackgroundColor3 = C[classId] or C.Accent, Parent = f })
+			local f = pill(self.Cards, { Size = UDim2.fromOffset(220, 28), Position = UDim2.new() })
+			local dot = Kit.frame({ Size = UDim2.fromOffset(18, 18), Position = UDim2.fromOffset(6, 5), BackgroundColor3 = C[classId] or C.Accent, Parent = f })
 			Kit.corner(10).Parent = dot
-			Kit.label({ Size = UDim2.new(1, -32, 1, 0), Position = UDim2.fromOffset(32, 0), Text = ("%s  Lv %d%s"):format(name, level, note or ""), TextSize = 14, TextWrapped = false, TextTruncate = Enum.TextTruncate.AtEnd, Parent = f })
+			Kit.label({ Size = UDim2.new(1, -32, 1, 0), Position = UDim2.fromOffset(32, 0), Text = ("%s  Lv %d%s"):format(name, level, note or ""), TextSize = 13, TextWrapped = false, TextTruncate = Enum.TextTruncate.AtEnd, Parent = f })
 		end
-		card(me.Name, me.ClassId, me.Level)
 		if party and party.Partner then
 			local p = party.Partner
 			card(p.Name, p.ClassId, p.Level, p.Online and "" or "  (ghost)")
@@ -224,7 +316,7 @@ function Hud.new(root)
 
 	-- A fight just ended: toast, timer bar, and replay the ultimate gauge.
 	function self:OnFight(info)
-		local text = info.Won and ("Stage " .. info.Stage .. " cleared!") or (info.TimedOut and "Time ran out - back a stage" or "Defeated - back a stage")
+		local text = info.Won and ("Stage " .. info.Stage .. " cleared!") or (info.TimedOut and "Time ran out - holding on the stage before" or "Defeated - holding on the stage before")
 		if info.Reward then
 			text ..= string.format("  +%d gold  +%d xp", info.Reward.Gold or 0, info.Reward.XP or 0)
 			if info.Reward.Item then

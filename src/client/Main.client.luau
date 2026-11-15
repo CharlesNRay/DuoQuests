@@ -17,6 +17,8 @@ local Screens = require(script.Parent.UI.Screens)
 local Shops = require(script.Parent.UI.Shops)
 local HeroScreen = require(script.Parent.UI.HeroScreen)
 local MapScreen = require(script.Parent.UI.MapScreen)
+local SkillsScreen = require(script.Parent.UI.SkillsScreen)
+Screens.Skills = SkillsScreen.Skills
 Screens.Merchant = Shops.Merchant
 Screens.Blacksmith = Shops.Blacksmith
 Screens.Hero = HeroScreen.Hero
@@ -128,7 +130,7 @@ end
 -- every screen can pick its own panel size (reference units); the rest use the default
 local PANEL_DEFAULT = Vector2.new(500, 286)
 local PANEL_SIZES = {
-	Map = Vector2.new(640, 304), Hero = Vector2.new(640, 304),
+	Map = Vector2.new(640, 304), Hero = Vector2.new(640, 304), Skills = Vector2.new(640, 304),
 	Merchant = Vector2.new(540, 296), Blacksmith = Vector2.new(540, 296),
 }
 local SHOP_NPC = { Merchant = "Merchant", Blacksmith = "Blacksmith" }
@@ -239,16 +241,16 @@ end
 extra.ShowBoard = function(categoryId)
 	showBoard(categoryId, true)
 end
+hud.OnMap = function() open("Map", "World Map") end
+hud.OnAdvance = function() call("Advance") end
 hud:AddButton("Hero", "dock", "🧙", "Hero", function() open("Hero", "Hero") end)
 hud:AddButton("Skills", "dock", "⚔️", "Skills", function() open("Skills", "Skills") end)
 hud:AddButton("Passives", "dock", "📜", "Passives", function() open("Passives", "Passives") end)
 hud:AddButton("Pets", "dock", "🐱", "Pets", function() open("Pets", "Pets") end)
 hud:AddButton("Party", "dock", "👥", "Party", function() open("Party", "Party") end)
 
-hud:AddButton("Map", "dock", "🗺️", "Map", function() open("Map", "World Map") end)
 hud:AddButton("Gear", "dock", "🛡️", "Gear", function() open("Gear", "Gear & Sets") end)
 hud:AddButton("Bag", "dock", "🎒", "Bag", function() open("Bag", "Bag") end)
-hud:AddButton("Daily", "dock", "🎁", "Daily", function() open("Daily", "Daily Login") end)
 hud:AddButton("Ranks", "dock", "🏆", "Ranks", function() showBoard(extra.BoardCategory or "Stage") end)
 
 -- the plaza: boards, chest and the two shop NPCs open the same screens as the dock
@@ -324,6 +326,9 @@ end
 local function watch(slot, origin)
 	local mine = arenas:MySlot()
 	watchingSlot = slot
+	current = nil -- close any open panel; it would cover the fight
+	panel.Visible = false
+	Kit.HideTip()
 	BattleCamera.SetTarget(origin)
 	BattleCamera.SetBattleView(true)
 	local label = "Your battle"

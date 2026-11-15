@@ -431,6 +431,19 @@ function PartyService.SetStage(player, stage)
 	return ok, reason
 end
 
+function PartyService.Advance(player)
+	local entry = entryFor(player)
+	if not entry then
+		return false, "NoParty"
+	end
+	local ok, reason = Party.Advance(entry.Record, player.UserId)
+	if ok then
+		entry.Dirty = true
+		entry.NextFightAt = 0
+	end
+	return ok, reason
+end
+
 function PartyService.SetUltimate(player, ultimateId)
 	local entry = entryFor(player)
 	if not entry then
@@ -656,6 +669,7 @@ function PartyService.GetState(player)
 		PartyId = partyId,
 		Stage = record.Stage,
 		Frontier = record.Frontier,
+		Holding = record.Farm == true and record.Stage < record.Frontier,
 		IsOpen = Party.IsOpen(record),
 		PartnerName = partnerSnapshot and partnerSnapshot.Name,
 		PartnerOnline = partnerId ~= nil and entry.Online[partnerId] ~= nil,

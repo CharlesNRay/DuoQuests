@@ -363,8 +363,8 @@ end
 
 -- Either member picks any stage the party has already unlocked (1..Frontier) from
 -- the world map. Picking an earlier stage means "farm it": the party keeps fighting
--- that stage after each win until someone picks another one. Losses still step back
--- one stage, as usual. Picking the Frontier goes back to normal progression.
+-- that stage after each win until someone picks another one. A loss steps back one
+-- stage and holds there the same way (see OnTick). Picking the Frontier goes back to normal progression.
 -- Returns true or false + reason: "NotMember", "BadStage", "Locked".
 function Party.SetStage(party, userId, stage)
 	if not isMember(party, userId) then
@@ -379,6 +379,11 @@ function Party.SetStage(party, userId, stage)
 	party.Stage = stage
 	party.Farm = if stage < party.Frontier then true else nil
 	return true
+end
+
+-- Move one stage up from where the party is holding (never past the Frontier).
+function Party.Advance(party, userId)
+	return Party.SetStage(party, userId, party.Stage + 1)
 end
 
 -- Sessions and AFK --------------------------------------------------------------
@@ -528,6 +533,11 @@ function Party.OnlineTick(party, online, seed, now)
 	local outcome = StageRunner.Run(members, stage, seed, StageRunner.UltimateFor(members, party.Frontier, party.UltimateId), true)
 	if outcome.Won and stage >= party.Frontier then
 		party.Frontier = stage + 1
+	end
+	-- A loss steps back one stage and HOLDS there: the party keeps farming that stage until a
+	-- member chooses to advance (map or Advance button), so it never grinds on a stage it cannot beat.
+	if not outcome.Won and stage > 1 then
+		party.Farm = true
 	end
 	local farming = party.Farm == true and outcome.Won and stage < party.Frontier
 	party.Stage = if farming then stage else outcome.NextStage

@@ -236,5 +236,17 @@ return function(modulesOverride)
 	Party.SetStage(fp, WARRIOR_ID, 5)
 	check("Picking the frontier ends farming", fp.Farm == nil and fp.Stage == 5)
 
+	-- a loss holds on the prior stage until the players advance
+	local hold = newParty(strong, weak, 1000)
+	hold.Frontier = 60
+	hold.Stage = 60
+	local lost = Party.OnlineTick(hold, { { UserId = WARRIOR_ID, Name = "Strong", Profile = strong } }, 3, 3000)
+	check("A loss steps back one stage and holds", not lost.Won and hold.Stage == 59 and hold.Farm == true)
+	local still = Party.OnlineTick(hold, { { UserId = WARRIOR_ID, Name = "Strong", Profile = strong } }, 3, 4000)
+	check("A held party does not climb back on its own", hold.Stage <= 59)
+	hold.Stage = 59
+	check("Advance moves one stage up", Party.Advance(hold, WARRIOR_ID) and hold.Stage == 60)
+	check("Advance stops at the frontier", select(2, Party.Advance(hold, WARRIOR_ID)) == "Locked")
+
 	print(("PartyTests done: %d passed, %d failed"):format(passed, failed))
 end

@@ -24,6 +24,7 @@
 	  ClaimDaily()                      today's login reward
 	  EquipPet(petId) / LevelPet(petId) the companion that follows you and its bonus
 	  SetStage(stage)                   pick any unlocked stage from the map (either member)
+	  Advance()                         step up one stage after a loss held the party back
 	  SetGhostLoadout(ids)              edit the PARTNER's ghost skills
 	  RevertMyGhost()                   undo the latest edit to MY ghost
 	  CreateCode() / JoinByCode(code) / Leave()
@@ -353,6 +354,10 @@ function handlers.ChooseSubclass(player, profile, subclassId)
 		afterBuildChange(player)
 	end
 	return ok, reason
+end
+
+function handlers.Advance(player, _)
+	return PartyService.Advance(player)
 end
 
 function handlers.SetStage(player, _, stage)

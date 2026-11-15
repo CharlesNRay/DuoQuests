@@ -115,3 +115,9 @@ Newest first.
 - World map redrawn as a parchment road with zone nodes and player portrait pins (live from the World snapshot).
 - HUD: full-screen anchors, menu dock bottom-centre, top-left kept clear of Roblox chat.
 - Tests: GearDailyTests +15 (upgrade, bulk sell, plaza geometry, hero sheet).
+
+## 2026-11-15 HUD pass
+- HUD scaled down (0.8 desktop / 0.9 touch); combat HUD only shows while watching a battle; "Hide HUD" in the watching bar hides everything non-combat.
+- Daily button removed (use the plaza gift); gold/shards top-right; live Map card (stage, zone, pips) top-right opens the world map.
+- Skills screen revamp: icon-only equipped row + unlocked pool, detail side panel on the right, party on the left.
+- Failed stage now steps the party back one stage and holds (Farm) until the player presses Advance (`Advance` API, `Party.Advance`).
