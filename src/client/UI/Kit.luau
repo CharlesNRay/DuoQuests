@@ -1,11 +1,15 @@
 --[[
 	Kit (ModuleScript) - tiny helpers for building UI in code, plain Roblox
-	parts only (no image assets). Reference frame is 844x390; Main scales it.
+	parts only (no image assets). Reference size is Kit.RefW x Kit.RefH; Main scales it and stretches the root to fill the screen.
 ]]
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 
 local Kit = {}
+
+-- Design size the UI is laid out for; the real screen is filled by stretching the root (see Main).
+Kit.RefW = 760
+Kit.RefH = 340
 
 Kit.Colors = {
 	Bg = Color3.fromRGB(24, 26, 38),
@@ -92,6 +96,18 @@ function Kit.button(props, onClick)
 	return b
 end
 
+-- Roblox does not promise creation order for list children with equal LayoutOrder (it can sort by
+-- class/name), so screens that mix labels and frames call this once they are built.
+function Kit.number(parent)
+	local order = 0
+	for _, child in ipairs(parent:GetChildren()) do
+		if child:IsA("GuiObject") then
+			order += 1
+			child.LayoutOrder = order
+		end
+	end
+end
+
 function Kit.clear(parent)
 	for _, child in ipairs(parent:GetChildren()) do
 		if not child:IsA("UIListLayout") and not child:IsA("UIGridLayout") and not child:IsA("UIPadding") then
@@ -139,9 +155,10 @@ function Kit.SetupTooltips(root, uiScale)
 			anchor = (UserInputService:GetMouseLocation() - root.AbsolutePosition) / s + Vector2.new(14, 16)
 		end
 		local size = tip.Frame.AbsoluteSize / s
-		local x = math.clamp(anchor.X, 4, 844 - size.X - 4)
+		local rootSize = root.AbsoluteSize / s
+		local x = math.clamp(anchor.X, 4, math.max(4, rootSize.X - size.X - 4))
 		local y = anchor.Y
-		if y + size.Y > 386 then
+		if y + size.Y > rootSize.Y - 4 then
 			y = math.max(4, anchor.Y - size.Y - 28)
 		end
 		tip.Frame.Position = UDim2.fromOffset(x, y)

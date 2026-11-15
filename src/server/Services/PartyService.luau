@@ -48,6 +48,7 @@ local TeleportService = game:GetService("TeleportService")
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Party = require(Shared.Party)
 local Pets = require(Shared.Pets)
+local Hero = require(Shared.Hero)
 local OfflineConfig = require(Shared.Config.Offline)
 local Seasons = require(Shared.Config.Seasons)
 local TableUtil = require(Shared.Util.TableUtil)
@@ -474,6 +475,19 @@ function PartyService.SetFightListener(fn)
 end
 
 -- The partner's saved build (their ghost), for the partner loadout popup.
+local function sheetOfSnapshot(snapshot)
+	return Hero.Sheet({
+		ClassId = snapshot.ClassId,
+		Level = snapshot.Level,
+		PassiveIds = snapshot.PassiveIds,
+		PassiveLevels = snapshot.PassiveLevels,
+		SubclassId = snapshot.SubclassId,
+		Gear = snapshot.Gear or {},
+		PetId = snapshot.PetId,
+		PetLevel = snapshot.PetLevel,
+	})
+end
+
 function PartyService.GetPartner(player)
 	local entry = entryFor(player)
 	if not entry then
@@ -506,6 +520,8 @@ function PartyService.GetPartner(player)
 		PassiveIds = table.clone(snapshot.PassiveIds or {}),
 		PassiveLevels = table.clone(snapshot.PassiveLevels or {}),
 		CanRevert = not isCompanion and #(snapshot.History or {}) > 0,
+		SubclassId = snapshot.SubclassId,
+		Sheet = sheetOfSnapshot(snapshot),
 	}
 end
 
@@ -536,6 +552,8 @@ function PartyService.GetInspect(userId)
 		PassiveIds = table.clone(snapshot.PassiveIds or {}),
 		SlotLevels = table.clone(snapshot.SlotLevels or {}),
 		Loadout = table.clone(snapshot.GhostLoadout or {}),
+		SubclassId = snapshot.SubclassId,
+		Sheet = sheetOfSnapshot(snapshot),
 	}
 	if online then
 		local season = online.Profile.Season

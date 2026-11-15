@@ -106,3 +106,12 @@ Newest first.
 - [x] Bug found and fixed: the server was not sending Spawn/Telegraph/Status events, so minions and boss warnings never reached the client.
 - [ ] Not yet checked: Sunken Ruins / Cloud Spire scenery, touch devices (tooltips are written for tap), two real players watching each other, set-bonus hover text on a real set piece.
 - [ ] Owner's "more" list is still to come.
+
+## 2026-11-15 (world life: plaza, shops, hero, map; checked in Studio)
+- Central plaza (World.PLAZA): fountain, lamps, trees, benches, wandering townsfolk; Merchant + Blacksmith NPC stalls, Map/Rankings boards, Daily chest. Players spawn here; Plaza/Home buttons teleport.
+- Player lots: roads between lot columns, "open lot" markers for up to World.MAX_LOTS.
+- Selling moved to the Merchant (single + "Sell all Common" / "Sell worse gear"); gear upgrades at the Blacksmith (10 levels, +6%/level, gold). Server enforces World.SHOP_RANGE. Bag is view/equip only.
+- Hero screen (You | Partner): turntable avatar, stats (shared/Hero.luau), skills, passives, gear.
+- World map redrawn as a parchment road with zone nodes and player portrait pins (live from the World snapshot).
+- HUD: full-screen anchors, menu dock bottom-centre, top-left kept clear of Roblox chat.
+- Tests: GearDailyTests +15 (upgrade, bulk sell, plaza geometry, hero sheet).

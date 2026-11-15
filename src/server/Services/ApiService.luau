@@ -43,6 +43,8 @@ local Skills = require(Shared.Skills)
 local Party = require(Shared.Party)
 local Pets = require(Shared.Pets)
 local Gear = require(Shared.Gear)
+local Hero = require(Shared.Hero)
+local World = require(Shared.World)
 local Daily = require(Shared.Daily)
 local Subclasses = require(Shared.Subclasses)
 local Abilities = require(Shared.Config.Abilities)
@@ -82,6 +84,32 @@ local function subclassChoices(profile, classId)
 	return list
 end
 
+-- Shops only work when the player's character is standing at them.
+local function nearShop(player, shop)
+	local character = player.Character
+	local root = character and character:FindFirstChild("HumanoidRootPart")
+	if not root then
+		return false
+	end
+	return World.NearShop(root.Position.X, root.Position.Z, shop)
+end
+
+local function heroSheetOf(profile)
+	local season = profile.Season
+	local classId = season.ClassId
+	local petId, petLevel = Pets.Active(profile)
+	return Hero.Sheet({
+		ClassId = classId,
+		Level = season.Level,
+		PassiveIds = season.PassiveLoadouts[classId],
+		PassiveLevels = season.PassiveSlotLevels[classId],
+		SubclassId = Subclasses.Current(profile, classId),
+		Gear = (season.Equipment and season.Equipment.Equipped) or {},
+		PetId = petId,
+		PetLevel = petLevel,
+	})
+end
+
 local function buildState(player)
 	local profile = DataService.GetProfile(player)
 	if not profile then
@@ -114,6 +142,7 @@ local function buildState(player)
 			SubclassChoices = subclassChoices(profile, classId),
 			SubclassUnlockLevel = (Subclasses.Choices(classId, Subclasses.Current(profile, classId))[1] or {}).UnlockLevel,
 			Gear = Gear.List(profile),
+			Sheet = heroSheetOf(profile),
 			Daily = Daily.Status(profile, os.time()),
 		},
 	}
@@ -272,11 +301,43 @@ function handlers.UnequipGear(player, profile, slotName)
 	return ok, reason
 end
 
-function handlers.SellGear(_, profile, itemId)
+-- Selling and upgrading only happen at the Merchant and the Blacksmith in the plaza.
+function handlers.SellGear(player, profile, itemId)
 	if type(itemId) ~= "string" then
 		return false, "BadArgs"
 	end
+	if not nearShop(player, "Merchant") then
+		return false, "TooFar"
+	end
 	return Gear.Sell(profile, itemId)
+end
+
+function handlers.SellBulk(player, profile, mode)
+	if type(mode) ~= "string" then
+		return false, "BadArgs"
+	end
+	if not nearShop(player, "Merchant") then
+		return false, "TooFar"
+	end
+	local ok, count, gold = Gear.SellBulk(profile, mode)
+	if ok then
+		afterBuildChange(player)
+	end
+	return ok, if ok then { Count = count, Gold = gold } else count
+end
+
+function handlers.UpgradeGear(player, profile, itemId)
+	if type(itemId) ~= "string" then
+		return false, "BadArgs"
+	end
+	if not nearShop(player, "Blacksmith") then
+		return false, "TooFar"
+	end
+	local ok, result = Gear.Upgrade(profile, itemId)
+	if ok then
+		afterBuildChange(player)
+	end
+	return ok, result
 end
 
 function handlers.ClaimDaily(_, profile)

@@ -1,19 +1,18 @@
 --[[
-	Hud (ModuleScript): the always-visible overlay, laid out like a Roblox game
-	rather than one crowded block:
+	Hud (ModuleScript): the always-visible overlay. It keeps clear of what Roblox draws on top
+	of every game: chat / menu top-left (we start below it on desktop), the touch thumbstick and
+	jump button in the bottom corners, and the system top bar (the ScreenGui starts below it).
 
-	  top-left     portrait (level, name, XP) with gold / shards pills under it
-	  top-centre   zone + stage, fight timer, toast, "watching" bar
-	  left rail    character buttons (Skills, Passives, Pets, Party)
-	  right rail   world buttons (Map, Gear, Bag, Daily, Ranks)
-	  bottom-right Log and Battle view
-	  bottom-left  party cards
-	  bottom-centre skill bar: your four skills in cast order plus the party
-	               ultimate gauge. The ultimate is NOT a button: it fires itself.
+	  top-centre    zone + stage, fight timer, toast, "watching" bar
+	  left          portrait (level, name, XP) with gold / shards   (lower on desktop to clear chat)
+	  top-right     Fight log / Battle view / Home buttons, then the party cards
+	  bottom-centre skill bar (your four skills in cast order + the party ultimate gauge, which is
+	                NOT a button: it fires itself) above the menu dock
+	                (Hero Skills Passives Pets Party | Map Gear Bag Daily Ranks)
 
 	Everything is plain Frames (no art assets).
 
-	  hud:AddButton(key, side, glyph, label, onClick) -> button  ("left"|"right"|"corner")
+	  hud:AddButton(key, group, glyph, label, onClick) -> button   group "dock" | "mini"
 	  hud:SetBadge(key, bool)         red dot on a button
 	  hud:Render(state)               refresh from the server state
 	  hud:OnFight(info)               own fight finished: toast, timer, ultimate gauge
@@ -22,6 +21,7 @@
 ]]
 local TweenService = game:GetService("TweenService")
 local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Zones = require(Shared.Zones)
@@ -49,56 +49,53 @@ function Hud.new(root)
 	self.Gui = gui
 
 	-- top-left: portrait ---------------------------------------------------
-	local portrait = pill(gui, { Size = UDim2.fromOffset(212, 46), Position = UDim2.fromOffset(8, 6) })
-	self.Badge = Kit.frame({ Size = UDim2.fromOffset(38, 38), Position = UDim2.fromOffset(4, 4), BackgroundColor3 = C.Accent, Parent = portrait })
-	Kit.corner(19).Parent = self.Badge
+	local safeTop = if UserInputService.KeyboardEnabled then 120 else 58 -- the chat window sits top-left on desktop
+	local portrait = pill(gui, { Size = UDim2.fromOffset(232, 50), Position = UDim2.fromOffset(8, safeTop) })
+	self.Badge = Kit.frame({ Size = UDim2.fromOffset(42, 42), Position = UDim2.fromOffset(4, 4), BackgroundColor3 = C.Accent, Parent = portrait })
+	Kit.corner(21).Parent = self.Badge
 	self.LevelLabel = Kit.label({ Size = UDim2.fromScale(1, 1), Text = "1", TextSize = 18, Font = Enum.Font.GothamBlack, TextColor3 = C.Bg, TextStrokeTransparency = 1, TextXAlignment = Enum.TextXAlignment.Center, Parent = self.Badge })
-	self.NameLabel = Kit.label({ Size = UDim2.new(1, -50, 0, 18), Position = UDim2.fromOffset(48, 4), Text = "", TextSize = 14, Font = Enum.Font.GothamBold, TextWrapped = false, TextTruncate = Enum.TextTruncate.AtEnd, Parent = portrait })
-	local xpBack = Kit.frame({ Size = UDim2.new(1, -56, 0, 8), Position = UDim2.fromOffset(48, 28), BackgroundColor3 = Color3.fromRGB(40, 44, 64), Parent = portrait })
+	self.NameLabel = Kit.label({ Size = UDim2.new(1, -50, 0, 18), Position = UDim2.fromOffset(54, 4), Text = "", TextSize = 16, Font = Enum.Font.GothamBold, TextWrapped = false, TextTruncate = Enum.TextTruncate.AtEnd, Parent = portrait })
+	local xpBack = Kit.frame({ Size = UDim2.new(1, -62, 0, 9), Position = UDim2.fromOffset(54, 33), BackgroundColor3 = Color3.fromRGB(40, 44, 64), Parent = portrait })
 	self.XpFill = Kit.frame({ Size = UDim2.fromScale(0, 1), BackgroundColor3 = Color3.fromRGB(90, 180, 255), Parent = xpBack })
 	Kit.Hover(portrait, function()
 		return self.XpText
 	end)
 
-	self.Gold = Kit.label({ Size = UDim2.fromOffset(100, 22), Position = UDim2.fromOffset(8, 56), Text = "", TextSize = 13, Font = Enum.Font.GothamBold, TextColor3 = C.Accent, Parent = gui })
-	self.Shards = Kit.label({ Size = UDim2.fromOffset(100, 22), Position = UDim2.fromOffset(112, 56), Text = "", TextSize = 13, Font = Enum.Font.GothamBold, TextColor3 = Color3.fromRGB(150, 210, 255), Parent = gui })
+	self.Gold = Kit.label({ Size = UDim2.fromOffset(100, 22), Position = UDim2.fromOffset(8, safeTop + 56), Text = "", TextSize = 15, Font = Enum.Font.GothamBold, TextColor3 = C.Accent, Parent = gui })
+	self.Shards = Kit.label({ Size = UDim2.fromOffset(100, 22), Position = UDim2.fromOffset(116, safeTop + 56), Text = "", TextSize = 15, Font = Enum.Font.GothamBold, TextColor3 = Color3.fromRGB(150, 210, 255), Parent = gui })
 
 	-- top-centre: zone, stage, fight timer ---------------------------------
-	local top = pill(gui, { Size = UDim2.fromOffset(280, 44), Position = UDim2.new(0.5, -140, 0, 6) })
-	self.Zone = Kit.label({ Size = UDim2.new(1, 0, 0, 16), Position = UDim2.fromOffset(0, 3), Text = "", TextSize = 12, TextColor3 = C.Dim, TextXAlignment = Enum.TextXAlignment.Center, Parent = top })
-	self.Stage = Kit.label({ Size = UDim2.new(1, 0, 0, 24), Position = UDim2.fromOffset(0, 17), Text = "Stage -", TextSize = 20, Font = Enum.Font.GothamBlack, TextXAlignment = Enum.TextXAlignment.Center, Parent = top })
-	self.Fight = Kit.frame({ Size = UDim2.fromOffset(200, 5), Position = UDim2.new(0.5, -100, 0, 54), BackgroundColor3 = Color3.fromRGB(16, 18, 30), Parent = gui })
+	local top = pill(gui, { Size = UDim2.fromOffset(300, 50), Position = UDim2.new(0.5, -150, 0, 6) })
+	self.Zone = Kit.label({ Size = UDim2.new(1, 0, 0, 18), Position = UDim2.fromOffset(0, 3), Text = "", TextSize = 14, TextColor3 = C.Dim, TextXAlignment = Enum.TextXAlignment.Center, Parent = top })
+	self.Stage = Kit.label({ Size = UDim2.new(1, 0, 0, 28), Position = UDim2.fromOffset(0, 19), Text = "Stage -", TextSize = 24, Font = Enum.Font.GothamBlack, TextXAlignment = Enum.TextXAlignment.Center, Parent = top })
+	self.Fight = Kit.frame({ Size = UDim2.fromOffset(200, 5), Position = UDim2.new(0.5, -100, 0, 60), BackgroundColor3 = Color3.fromRGB(16, 18, 30), Parent = gui })
 	self.FightFill = Kit.frame({ Size = UDim2.fromScale(0, 1), BackgroundColor3 = C.Accent, Parent = self.Fight })
-	self.Toast = Kit.label({ Size = UDim2.new(0, 400, 0, 20), Position = UDim2.new(0.5, -200, 0, 62), Text = "", TextSize = 13, TextXAlignment = Enum.TextXAlignment.Center, TextColor3 = C.Accent, Parent = gui })
+	self.Toast = Kit.label({ Size = UDim2.new(0, 400, 0, 20), Position = UDim2.new(0.5, -200, 0, 68), Text = "", TextSize = 15, TextXAlignment = Enum.TextXAlignment.Center, TextColor3 = C.Accent, Parent = gui })
 
-	self.Watching = pill(gui, { Size = UDim2.fromOffset(300, 34), Position = UDim2.new(0.5, -150, 0, 86) })
+	self.Watching = pill(gui, { Size = UDim2.fromOffset(300, 34), Position = UDim2.new(0.5, -150, 0, 92) })
 	self.Watching.Visible = false
 	self.WatchText = Kit.label({ Size = UDim2.new(1, -110, 1, 0), Position = UDim2.fromOffset(8, 0), Text = "", TextSize = 13, TextWrapped = false, TextTruncate = Enum.TextTruncate.AtEnd, Parent = self.Watching })
 	self.StopButton = Kit.button({ Size = UDim2.fromOffset(92, 28), Position = UDim2.new(1, -98, 0, 3), Text = "Stop", TextSize = 13, BackgroundColor3 = C.Bad, Parent = self.Watching })
 
-	-- rails -----------------------------------------------------------------
-	local function rail(position, anchor)
-		local f = Kit.frame({ Size = UDim2.fromOffset(50, 10), AutomaticSize = Enum.AutomaticSize.Y, Position = position, AnchorPoint = anchor or Vector2.new(0, 0), BackgroundTransparency = 1, NoCorner = true, Parent = gui })
-		Kit.new("UIListLayout", { Padding = UDim.new(0, 4), SortOrder = Enum.SortOrder.LayoutOrder, VerticalAlignment = if anchor and anchor.Y == 1 then Enum.VerticalAlignment.Bottom else Enum.VerticalAlignment.Top, Parent = f })
-		return f
-	end
-	self.Rails = {
-		left = rail(UDim2.fromOffset(8, 92)),
-		right = rail(UDim2.fromOffset(786, 6)),
-		corner = rail(UDim2.fromOffset(786, 384), Vector2.new(0, 1)),
-	}
+	-- menu dock (bottom-centre) and small buttons (top-right) ---------------------
+	local dock = Kit.frame({ Size = UDim2.fromOffset(10, 58), AutomaticSize = Enum.AutomaticSize.X, Position = UDim2.new(0.5, 0, 1, -6), AnchorPoint = Vector2.new(0.5, 1), BackgroundTransparency = 1, NoCorner = true, Parent = gui })
+	Kit.new("UIListLayout", { Padding = UDim.new(0, 4), FillDirection = Enum.FillDirection.Horizontal, SortOrder = Enum.SortOrder.LayoutOrder, HorizontalAlignment = Enum.HorizontalAlignment.Center, Parent = dock })
+	local mini = Kit.frame({ Size = UDim2.fromOffset(10, 54), AutomaticSize = Enum.AutomaticSize.X, Position = UDim2.new(1, -8, 0, 6), AnchorPoint = Vector2.new(1, 0), BackgroundTransparency = 1, NoCorner = true, Parent = gui })
+	Kit.new("UIListLayout", { Padding = UDim.new(0, 4), FillDirection = Enum.FillDirection.Horizontal, SortOrder = Enum.SortOrder.LayoutOrder, HorizontalAlignment = Enum.HorizontalAlignment.Right, Parent = mini })
+	self.Rails = { dock = dock, mini = mini }
+	self.NextOrder = 0
 
-	-- bottom-left: party cards ---------------------------------------------
-	self.Cards = Kit.frame({ Size = UDim2.fromOffset(168, 62), Position = UDim2.fromOffset(8, 322), BackgroundTransparency = 1, NoCorner = true, Parent = gui })
+	-- party cards (top-right, under the small buttons)
+	self.Cards = Kit.frame({ Size = UDim2.fromOffset(190, 68), Position = UDim2.new(1, -8, 0, 66), AnchorPoint = Vector2.new(1, 0), BackgroundTransparency = 1, NoCorner = true, Parent = gui })
 	Kit.new("UIListLayout", { Padding = UDim.new(0, 3), Parent = self.Cards })
 
 	-- bottom-centre: skill bar + ultimate gauge ----------------------------
-	self.Bar = pill(gui, { Size = UDim2.fromOffset(300, 56), Position = UDim2.new(0.5, -150, 1, -62) })
-	self.Slots = Kit.frame({ Size = UDim2.fromOffset(212, 48), Position = UDim2.fromOffset(6, 4), BackgroundTransparency = 1, NoCorner = true, Parent = self.Bar })
+	self.Bar = pill(gui, { Size = UDim2.fromOffset(330, 62), Position = UDim2.new(0.5, -165, 1, -128) })
+	self.Slots = Kit.frame({ Size = UDim2.fromOffset(240, 54), Position = UDim2.fromOffset(6, 4), BackgroundTransparency = 1, NoCorner = true, Parent = self.Bar })
 	Kit.new("UIListLayout", { FillDirection = Enum.FillDirection.Horizontal, Padding = UDim.new(0, 5), VerticalAlignment = Enum.VerticalAlignment.Center, Parent = self.Slots })
-	self.UltSlot = Kit.frame({ Size = UDim2.fromOffset(64, 48), Position = UDim2.new(1, -70, 0, 4), BackgroundTransparency = 1, NoCorner = true, Parent = self.Bar })
+	self.UltSlot = Kit.frame({ Size = UDim2.fromOffset(70, 54), Position = UDim2.new(1, -76, 0, 4), BackgroundTransparency = 1, NoCorner = true, Parent = self.Bar })
 	self.UltIcon = nil
-	self.UltBack = Kit.frame({ Size = UDim2.fromOffset(52, 6), Position = UDim2.fromOffset(6, 40), BackgroundColor3 = Color3.fromRGB(40, 44, 64), Parent = self.UltSlot })
+	self.UltBack = Kit.frame({ Size = UDim2.fromOffset(56, 7), Position = UDim2.fromOffset(7, 46), BackgroundColor3 = Color3.fromRGB(40, 44, 64), Parent = self.UltSlot })
 	self.UltFill = Kit.frame({ Size = UDim2.fromScale(0, 1), BackgroundColor3 = Kit.Colors.Epic, Parent = self.UltBack })
 
 	-- banner ------------------------------------------------------------------
@@ -111,11 +108,12 @@ function Hud.new(root)
 	end
 
 	function self:AddButton(key, side, glyph, label, onClick)
-		local button = Kit.button({ Size = UDim2.fromOffset(50, 46), Text = "", BackgroundColor3 = Color3.fromRGB(26, 30, 48), Parent = self.Rails[side] }, onClick)
+		self.NextOrder += 1
+		local button = Kit.button({ Size = UDim2.fromOffset(56, 54), Text = "", BackgroundColor3 = Color3.fromRGB(26, 30, 48), LayoutOrder = self.NextOrder, Parent = self.Rails[side] }, onClick)
 		button.BackgroundTransparency = 0.15
 		Kit.new("UIStroke", { Color = Color3.fromRGB(110, 118, 150), Thickness = 1, Transparency = 0.5, Parent = button })
-		Kit.label({ Size = UDim2.new(1, 0, 0, 26), Position = UDim2.fromOffset(0, 2), Text = glyph, TextSize = 20, TextXAlignment = Enum.TextXAlignment.Center, TextStrokeTransparency = 1, Parent = button })
-		Kit.label({ Size = UDim2.new(1, 0, 0, 14), Position = UDim2.fromOffset(0, 29), Text = label, TextSize = 10, TextColor3 = C.Dim, TextXAlignment = Enum.TextXAlignment.Center, TextWrapped = false, TextStrokeTransparency = 1, Parent = button })
+		Kit.label({ Size = UDim2.new(1, 0, 0, 30), Position = UDim2.fromOffset(0, 3), Text = glyph, TextSize = 26, TextXAlignment = Enum.TextXAlignment.Center, TextStrokeTransparency = 1, Parent = button })
+		Kit.label({ Size = UDim2.new(1, 0, 0, 16), Position = UDim2.fromOffset(0, 35), Text = label, TextSize = 12, TextColor3 = C.Text, TextXAlignment = Enum.TextXAlignment.Center, TextWrapped = false, TextStrokeTransparency = 1, Parent = button })
 		local dot = Kit.frame({ Size = UDim2.fromOffset(12, 12), Position = UDim2.new(1, -9, 0, -3), BackgroundColor3 = C.Bad, Visible = false, ZIndex = 3, Parent = button })
 		Kit.corner(6).Parent = dot
 		self.Dots[key] = dot
@@ -183,10 +181,10 @@ function Hud.new(root)
 		-- party cards
 		Kit.clear(self.Cards)
 		local function card(name, classId, level, note)
-			local f = pill(self.Cards, { Size = UDim2.fromOffset(168, 28), Position = UDim2.new() })
-			local dot = Kit.frame({ Size = UDim2.fromOffset(18, 18), Position = UDim2.fromOffset(5, 5), BackgroundColor3 = C[classId] or C.Accent, Parent = f })
-			Kit.corner(9).Parent = dot
-			Kit.label({ Size = UDim2.new(1, -32, 1, 0), Position = UDim2.fromOffset(28, 0), Text = ("%s  Lv %d%s"):format(name, level, note or ""), TextSize = 12, TextWrapped = false, TextTruncate = Enum.TextTruncate.AtEnd, Parent = f })
+			local f = pill(self.Cards, { Size = UDim2.fromOffset(190, 32), Position = UDim2.new() })
+			local dot = Kit.frame({ Size = UDim2.fromOffset(20, 20), Position = UDim2.fromOffset(6, 6), BackgroundColor3 = C[classId] or C.Accent, Parent = f })
+			Kit.corner(10).Parent = dot
+			Kit.label({ Size = UDim2.new(1, -32, 1, 0), Position = UDim2.fromOffset(32, 0), Text = ("%s  Lv %d%s"):format(name, level, note or ""), TextSize = 14, TextWrapped = false, TextTruncate = Enum.TextTruncate.AtEnd, Parent = f })
 		end
 		card(me.Name, me.ClassId, me.Level)
 		if party and party.Partner then
@@ -201,7 +199,7 @@ function Hud.new(root)
 		for slot, id in ipairs(me.Loadout or {}) do
 			local def = Abilities[id]
 			if def then
-				local icon = Icons.Skill(self.Slots, def, { Size = UDim2.fromOffset(44, 44), Level = me.SlotLevels[slot], LayoutOrder = slot })
+				local icon = Icons.Skill(self.Slots, def, { Size = UDim2.fromOffset(50, 50), Level = me.SlotLevels[slot], LayoutOrder = slot })
 				Kit.label({ Size = UDim2.fromOffset(12, 12), Position = UDim2.fromOffset(2, 0), Text = tostring(slot), TextSize = 10, TextColor3 = C.Dim, TextWrapped = false, ZIndex = 3, Parent = icon })
 				Kit.Hover(icon, function() return Tips.Skill(def, me.SlotLevels[slot]) end)
 			end
@@ -214,7 +212,7 @@ function Hud.new(root)
 		end
 		local ult = party and party.Ultimate
 		local def = ult and ult.Chosen and UltCfg.Defs[ult.Chosen]
-		self.UltIcon = Icons.Ultimate(self.UltSlot, def, { Size = UDim2.fromOffset(40, 36), Position = UDim2.fromOffset(12, 0), Locked = def == nil })
+		self.UltIcon = Icons.Ultimate(self.UltSlot, def, { Size = UDim2.fromOffset(46, 40), Position = UDim2.fromOffset(12, 0), Locked = def == nil })
 		self.UltDef = def
 		Kit.Hover(self.UltIcon, function()
 			if def then

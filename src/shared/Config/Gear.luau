@@ -16,6 +16,10 @@
 ]]
 
 return {
+	-- Blacksmith upgrades: each level adds ValuePerLevel of the item's base stat. The cost grows
+	-- with the level and with the stage the item dropped at. Gold is the only cost.
+	Upgrade = { MaxLevel = 10, ValuePerLevel = 0.06, BaseCost = 20, CostGrowth = 1.42, PowerCost = 1.2 },
+
 	InventoryCap = 30, -- a full bag sells new drops automatically
 
 	Slots = {

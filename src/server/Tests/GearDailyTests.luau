@@ -20,12 +20,15 @@ local function loadModules(override)
 		Progression = require(Shared.Progression),
 		StatCalc = require(Shared.Combat.StatCalc),
 		Party = require(Shared.Party),
+		World = require(Shared.World),
+		Hero = require(Shared.Hero),
 	}
 end
 
 return function(modulesOverride)
 	local m = loadModules(modulesOverride)
 	local Gear, GearConfig, Daily, ProfileTemplate, Progression, StatCalc, Party = m.Gear, m.GearConfig, m.Daily, m.ProfileTemplate, m.Progression, m.StatCalc, m.Party
+	local World, Hero = m.World, m.Hero
 	local warnFn = warn or print
 	local passed, failed = 0, 0
 	local function check(name, condition)
@@ -136,6 +139,53 @@ return function(modulesOverride)
 	check("Day 7 gives a skill pick", p.Season.Currencies.SkillPicks >= picksBefore)
 	check("The cycle wraps after day 7", select(2, Daily.Claim(p, t0 + 13 * day)).Day == 1 or seventh)
 	check("Rewards grow with the frontier", Daily.RewardFor((function() local q = ProfileTemplate.New() q.Season.HighestStage = 50 return q end)(), 1).Gold > Daily.RewardFor((function() local q = ProfileTemplate.New() q.Season.HighestStage = 5 return q end)(), 1).Gold)
+
+	-- blacksmith + merchant -------------------------------------------------------
+	local up = ProfileTemplate.New()
+	local sword = Gear.Grant(up, 10, { Slot = "Weapon", Rarity = "Common" })
+	local _, base = Gear.StatOf(sword)
+	local cost = Gear.UpgradeCost(sword)
+	check("An upgrade has a gold cost", cost ~= nil and cost > 0)
+	local okBroke, whyBroke = Gear.Upgrade(up, sword.Id)
+	check("Upgrading without gold is refused", not okBroke and whyBroke == "NoGold")
+	up.Season.Currencies.Gold = 100000
+	local okUp, level = Gear.Upgrade(up, sword.Id)
+	local _, boosted = Gear.StatOf(sword)
+	check("Upgrading raises the level, costs gold and boosts the stat", okUp and level == 1 and up.Season.Currencies.Gold == 100000 - cost and boosted > base)
+	check("Each level costs more", Gear.UpgradeCost(sword) > cost)
+	for _ = 1, 20 do
+		Gear.Upgrade(up, sword.Id)
+	end
+	check("Upgrades stop at the max level", sword.Upgrade == GearConfig.Upgrade.MaxLevel and select(2, Gear.Upgrade(up, sword.Id)) == "MaxLevel" and Gear.UpgradeCost(sword) == nil)
+	check("Upgrading an unknown item fails", select(2, Gear.Upgrade(up, "nope")) == "NotFound")
+
+	local shop = ProfileTemplate.New()
+	local worn = Gear.Grant(shop, 30, { Slot = "Weapon", Rarity = "Epic" })
+	Gear.Equip(shop, worn.Id)
+	local c1 = Gear.Grant(shop, 5, { Slot = "Armor", Rarity = "Common" })
+	local c2 = Gear.Grant(shop, 6, { Slot = "Trinket", Rarity = "Common" })
+	local weak = Gear.Grant(shop, 1, { Slot = "Weapon", Rarity = "Uncommon" })
+	local keep = Gear.Grant(shop, 6, { Slot = "Armor", Rarity = "Common" })
+	Gear.Upgrade((function() shop.Season.Currencies.Gold = 100000 return shop end)(), keep.Id)
+	local goldBefore = shop.Season.Currencies.Gold
+	local okBulk, count, gold = Gear.SellBulk(shop, "Common")
+	check("Sell all Common sells commons and pays gold", okBulk and count == 2 and gold > 0 and shop.Season.Currencies.Gold == goldBefore + gold)
+	check("An upgraded item survives the bulk sale", (function() for _, i in ipairs(shop.Season.Equipment.Inventory) do if i.Id == keep.Id then return true end end return false end)())
+	local okWorse, count2 = Gear.SellBulk(shop, "Worse")
+	check("Sell worse gear sells items no better than worn", okWorse and count2 == 1)
+	check("A bad bulk mode is refused", select(2, Gear.SellBulk(shop, "Everything")) == "BadMode")
+
+	-- plaza geometry ---------------------------------------------------------------
+	local mx, mz = World.PlazaPoint("Merchant")
+	check("The plaza has a merchant and a blacksmith", mx ~= nil and World.PlazaPoint("Blacksmith") ~= nil)
+	check("Standing at a shop counts as near it", World.NearShop(mx, mz, "Merchant"))
+	check("Far from a shop is not near it", not World.NearShop(mx + 500, mz, "Merchant"))
+	local sx, _, sz = World.SpawnPosition()
+	check("Players spawn on the plaza", math.sqrt((sx - World.PLAZA.X) ^ 2 + (sz - World.PLAZA.Z) ^ 2) <= World.PLAZA.Radius)
+
+	-- hero sheet -------------------------------------------------------------------
+	local sheet = Hero.Sheet({ ClassId = "Warrior", Level = 10, Gear = shop.Season.Equipment.Equipped })
+	check("The hero sheet lists stats and gear", sheet and #sheet.Stats >= 6 and sheet.Gear.Weapon ~= nil)
 
 	print(("GearDailyTests done: %d passed, %d failed"):format(passed, failed))
 end

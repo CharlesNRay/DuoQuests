@@ -18,6 +18,11 @@
 	  Gear.Unequip(profile, slot)           reasons: "BadSlot", "Empty", "BagFull"
 	  Gear.Sell(profile, itemId)            -> true, gold   reasons: "NotFound"
 	  Gear.SellValue(item)                  -> gold
+	  Gear.SellBulk(profile, mode)          -> true, count, gold   mode "Common" | "Worse" (never set pieces)
+	  Gear.UpgradeCost(item)                -> gold for the next level (nil at max)
+	  Gear.Upgrade(profile, itemId)         -> true, newLevel   reasons: "NotFound", "MaxLevel", "NoGold"
+	                                           works on worn and bagged items
+	  Gear.Row(item)                        -> the UI row for one item
 	  Gear.List(profile)                    -> { Equipped = {slot = row}, Inventory = {rows}, Sets = {...} } for the UI
 	  Gear.SetFor(setId)                    -> definition + Loop for a set (setId = zone number)
 	  Gear.SetCounts(equipped)              -> { [setId] = pieces worn }
@@ -43,7 +48,8 @@ function Gear.StatOf(item)
 		return nil, 0
 	end
 	local mult = Config.RarityMult[item.Rarity] or 1
-	return slot.Stat, (slot.Base + slot.PerStage * item.Power) * mult
+	local upgrade = 1 + Config.Upgrade.ValuePerLevel * (item.Upgrade or 0)
+	return slot.Stat, (slot.Base + slot.PerStage * item.Power) * mult * upgrade
 end
 
 -- A set belongs to a zone (10 stages). Past the authored sets the list repeats.
@@ -232,8 +238,22 @@ local function row(item)
 		local def, loop = Gear.SetFor(item.SetId)
 		setName = if loop > 1 then def.Name .. " " .. loop else def.Name
 	end
-	return { Id = item.Id, Slot = item.Slot, Rarity = item.Rarity, Name = Gear.Name(item), Power = item.Power, Stat = stat, Value = value, SellValue = Gear.SellValue(item), SetId = item.SetId, SetName = setName }
+	local cost = Gear.UpgradeCost(item)
+	local nextValue = nil
+	if cost then
+		local copy = table.clone(item)
+		copy.Upgrade = (item.Upgrade or 0) + 1
+		local _, v = Gear.StatOf(copy)
+		nextValue = v
+	end
+	return {
+		Id = item.Id, Slot = item.Slot, Rarity = item.Rarity, Name = Gear.Name(item), Power = item.Power, Stat = stat, Value = value,
+		SellValue = Gear.SellValue(item), SetId = item.SetId, SetName = setName,
+		Upgrade = item.Upgrade or 0, MaxUpgrade = Config.Upgrade.MaxLevel, UpgradeCost = cost, NextValue = nextValue,
+	}
 end
+
+Gear.Row = row
 
 -- Every set up to the furthest zone reached, with what has been collected and worn.
 function Gear.Sets(profile)
@@ -269,6 +289,77 @@ function Gear.Sets(profile)
 		})
 	end
 	return list
+end
+
+function Gear.UpgradeCost(item)
+	local level = item.Upgrade or 0
+	local cfg = Config.Upgrade
+	if level >= cfg.MaxLevel then
+		return nil
+	end
+	return math.floor(cfg.BaseCost * cfg.CostGrowth ^ level + cfg.PowerCost * item.Power)
+end
+
+function Gear.Upgrade(profile, itemId)
+	local equipment = bag(profile)
+	local item
+	for _, worn in pairs(equipment.Equipped) do
+		if worn.Id == itemId then
+			item = worn
+		end
+	end
+	if not item then
+		local _, found = findInBag(equipment, itemId)
+		item = found
+	end
+	if not item then
+		return false, "NotFound"
+	end
+	local cost = Gear.UpgradeCost(item)
+	if not cost then
+		return false, "MaxLevel"
+	end
+	local currencies = profile.Season.Currencies
+	if currencies.Gold < cost then
+		return false, "NoGold"
+	end
+	currencies.Gold -= cost
+	item.Upgrade = (item.Upgrade or 0) + 1
+	return true, item.Upgrade
+end
+
+-- Sell many bagged items at once. "Common": every Common item. "Worse": every item that
+-- is no better than what is worn in its slot. Set pieces and upgraded items are never sold in bulk.
+function Gear.SellBulk(profile, mode)
+	if mode ~= "Common" and mode ~= "Worse" then
+		return false, "BadMode"
+	end
+	local equipment = bag(profile)
+	local kept, count, gold = {}, 0, 0
+	for _, item in ipairs(equipment.Inventory) do
+		local sell = false
+		if not item.SetId and (item.Upgrade or 0) == 0 then
+			if mode == "Common" then
+				sell = item.Rarity == "Common"
+			else
+				local worn = equipment.Equipped[item.Slot]
+				if worn then
+					local _, mine = Gear.StatOf(item)
+					local _, theirs = Gear.StatOf(worn)
+					sell = mine <= theirs
+				end
+			end
+		end
+		if sell then
+			count += 1
+			gold += Gear.SellValue(item)
+		else
+			table.insert(kept, item)
+		end
+	end
+	equipment.Inventory = kept
+	profile.Season.Currencies.Gold += gold
+	return true, count, gold
 end
 
 function Gear.List(profile)

@@ -236,7 +236,7 @@ end
 function Screens.Bag(container, state, call, extra)
 	local gear = state.Player.Gear
 	local scroll = list(container)
-	Kit.label({ Size = UDim2.new(1, 0, 0, 22), Text = ("Bag %d/%d  -  hover an item: green = better than what you wear, red = worse.  A full bag sells new drops."):format(#gear.Inventory, gear.Cap), TextColor3 = C.Dim, TextSize = 12, Parent = scroll })
+	Kit.label({ Size = UDim2.new(1, 0, 0, 34), TextWrapped = true, Text = ("Bag %d/%d  -  hover an item: green = better than what you wear, red = worse.  Sell at the Merchant, upgrade at the Blacksmith (in the plaza)."):format(#gear.Inventory, gear.Cap), TextColor3 = C.Dim, TextSize = 12, Parent = scroll })
 	if #gear.Inventory == 0 then
 		Kit.label({ Size = UDim2.new(1, 0, 0, 30), Text = "Empty. Win fights to find gear.", TextColor3 = C.Dim, Parent = scroll })
 	end
@@ -247,12 +247,9 @@ function Screens.Bag(container, state, call, extra)
 		Icons.Item(r, item, { Size = UDim2.fromOffset(40, 40), Position = UDim2.fromOffset(8, 6) })
 		Kit.Hover(r, function() return Tips.Item(item, gear) end)
 		local arrow = if cmp.Verdict == "Up" then "  ▲" elseif cmp.Verdict == "Down" then "  ▼" else ""
-		Kit.label({ Size = UDim2.new(1, -230, 1, 0), Position = UDim2.fromOffset(58, 0), Text = ("%s%s\n%s +%s %s  (stage %d)"):format(item.Name, arrow, item.Slot, Tips.Num(item.Value), item.Stat, item.Power), TextColor3 = C.Text, Parent = r })
-		Kit.button({ Size = UDim2.fromOffset(80, 40), Position = UDim2.new(1, -176, 0.5, -20), Text = "Equip", Parent = r }, function()
+		Kit.label({ Size = UDim2.new(1, -170, 1, 0), Position = UDim2.fromOffset(58, 0), Text = ("%s%s%s\n%s +%s %s  (stage %d)"):format(item.Name, (item.Upgrade or 0) > 0 and ("  +" .. item.Upgrade) or "", arrow, item.Slot, Tips.Num(item.Value), item.Stat, item.Power), TextColor3 = C.Text, Parent = r })
+		Kit.button({ Size = UDim2.fromOffset(90, 40), Position = UDim2.new(1, -104, 0.5, -20), Text = "Equip", Parent = r }, function()
 			call("EquipGear", item.Id)
-		end)
-		Kit.button({ Size = UDim2.fromOffset(88, 40), Position = UDim2.new(1, -92, 0.5, -20), Text = "Sell " .. item.SellValue .. "g", Parent = r }, function()
-			call("SellGear", item.Id)
 		end)
 	end
 end
