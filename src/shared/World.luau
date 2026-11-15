@@ -45,7 +45,7 @@ World.PlazaSpots = {
 	Map = { Angle = -100, Radius = 55 },
 	Rankings = { Angle = 100, Radius = 55 },
 	Daily = { Angle = 150, Radius = 52 },
-	Tree = { Angle = -150, Radius = 47 },
+	Tree = { Angle = -150, Radius = 100 }, -- out on the grass beyond the paving (plaza radius 70, rim 71.5)
 }
 
 function World.PlazaPoint(name)

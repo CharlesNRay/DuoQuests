@@ -54,13 +54,13 @@ local StageRunner = {}
 function StageRunner.NewParty(members)
 	local party = {}
 	for _, member in ipairs(members) do
-		local classId, level, loadout, slotLevels, passiveIds, passiveLevels, petId, petLevel, equipped, subclassId, extraMods
+		local classId, level, loadout, slotLevels, passiveIds, passiveLevels, petId, petLevel, petRank, equipped, subclassId, extraMods
 		if member.Profile then
 			local season = member.Profile.Season
 			classId, level = season.ClassId, season.Level
 			loadout, slotLevels = season.Loadouts[classId], season.SlotLevels[classId]
 			passiveIds, passiveLevels = season.PassiveLoadouts[classId], season.PassiveSlotLevels[classId]
-			petId, petLevel = Pets.Active(member.Profile)
+			petId, petLevel, petRank = Pets.Active(member.Profile)
 			subclassId = season.Subclasses and season.Subclasses[classId] or nil
 			equipped = season.Equipment and season.Equipment.Equipped
 			extraMods = Consumables.Mods(member.Profile, os.time())
@@ -69,7 +69,7 @@ function StageRunner.NewParty(members)
 			classId, level = snapshot.ClassId, snapshot.Level
 			loadout, slotLevels = snapshot.GhostLoadout, snapshot.SlotLevels
 			passiveIds, passiveLevels = snapshot.PassiveIds, snapshot.PassiveLevels
-			petId, petLevel = snapshot.PetId, snapshot.PetLevel
+			petId, petLevel, petRank = snapshot.PetId, snapshot.PetLevel, snapshot.PetRank
 			subclassId = snapshot.SubclassId
 			equipped = snapshot.Gear
 		end
@@ -82,6 +82,7 @@ function StageRunner.NewParty(members)
 				PassiveLevels = passiveLevels,
 				PetId = petId,
 				PetLevel = petLevel,
+				PetRank = petRank,
 				Equipped = equipped,
 				SubclassId = subclassId,
 				ExtraMods = extraMods,

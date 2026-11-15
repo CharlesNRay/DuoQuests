@@ -22,7 +22,22 @@
 return {
 	MaxLevel = 10,
 	XPPerLevel = 100, -- pet XP to go from level L to L+1 is this * L (pet food and fighting)
-	LevelCostPerLevel = 70, -- Gold to go from level L to L+1 is this * L
+	-- Duplicates rank a pet up (Permanent.PetRanks): each duplicate pull is +1 rank, up to MaxRank. A rank adds
+	-- RankBonus (a fraction) of the pet's stats and raises its skill level by one. Pets levelled by food/fighting.
+	MaxRank = 6,
+	RankBonus = 0.25,
+	DupFallbackXP = 80, -- pet XP when a duplicate comes in after the pet is already at max rank
+	-- Stat sizes at Share 1 for a Common pet; Share splits them (a one-stat pet gets 1.25, a two-stat pet 0.7 + 0.5,
+	-- so the single-stat pet is better at its stat). Mul = +fraction, Add = raw number.
+	StatUnits = {
+		MaxHealth = { Mode = "Mul", Base = 0.05, PerLevel = 0.012 },
+		Attack = { Mode = "Mul", Base = 0.05, PerLevel = 0.012 },
+		Defense = { Mode = "Mul", Base = 0.05, PerLevel = 0.012 },
+		AttackSpeed = { Mode = "Mul", Base = 0.03, PerLevel = 0.008 },
+		CritChance = { Mode = "Add", Base = 0.015, PerLevel = 0.003 },
+		CritMultiplier = { Mode = "Add", Base = 0.08, PerLevel = 0.016 },
+	},
+	RarityMult = { Common = 1, Rare = 1.5, Epic = 2.2, Legendary = 3.2 },
 
 	-- Slimey is a gift for clearing stage 1; Foxling for stage 5. Every other pet comes from the Wishing Tree
 	-- (Wish = true). Each one has its own look and its own stat, so no two feel alike.
@@ -37,82 +52,98 @@ return {
 		Slimey = {
 			Id = "Slimey", DisplayName = "Slimey", Rarity = "Common", UnlockStage = 1,
 			Look = { Shape = "Ball", Color = { 110, 205, 120 }, Size = 1.1 },
-			Bonus = { Stat = "MaxHealth", Mode = "Mul", Base = 0.04, PerLevel = 0.01 },
+			Stats = { { Stat = "MaxHealth", Share = 1.25 } },
+			Skill = { Name = "Goo Bubble", Text = "Wraps the most hurt ally in a shield." },
 		},
 		Foxling = {
 			Id = "Foxling", DisplayName = "Foxling", Rarity = "Common", UnlockStage = 5,
 			Look = { Shape = "Cat", Color = { 240, 150, 70 }, Size = 1.1 },
-			Bonus = { Stat = "Attack", Mode = "Mul", Base = 0.04, PerLevel = 0.01 },
+			Stats = { { Stat = "Attack", Share = 1.25 } },
+			Skill = { Name = "Fox Fire", Text = "Burns an enemy with a flicker of flame." },
 		},
 		Mossback = {
 			Id = "Mossback", DisplayName = "Mossback", Rarity = "Common", Wish = true,
 			Look = { Shape = "Turtle", Color = { 90, 150, 110 }, Size = 1.3 },
-			Bonus = { Stat = "Defense", Mode = "Mul", Base = 0.05, PerLevel = 0.012 },
+			Stats = { { Stat = "Defense", Share = 0.7 }, { Stat = "MaxHealth", Share = 0.5 } },
+			Skill = { Name = "Mossy Guard", Text = "Raises the whole party's defense." },
 		},
 		Pebbles = {
 			Id = "Pebbles", DisplayName = "Pebbles", Rarity = "Common", Wish = true,
 			Look = { Shape = "Ball", Color = { 150, 150, 160 }, Size = 1.0, Material = "Slate" },
-			Bonus = { Stat = "MaxHealth", Mode = "Mul", Base = 0.05, PerLevel = 0.012 },
+			Stats = { { Stat = "MaxHealth", Share = 1.25 } },
+			Skill = { Name = "Rockfall", Text = "Drops rocks on every enemy when two or more are up." },
 		},
 		Cottonpuff = {
 			Id = "Cottonpuff", DisplayName = "Cottonpuff", Rarity = "Common", Wish = true,
 			Look = { Shape = "Bunny", Color = { 245, 240, 235 }, Size = 1.0 },
-			Bonus = { Stat = "AttackSpeed", Mode = "Mul", Base = 0.03, PerLevel = 0.008 },
+			Stats = { { Stat = "AttackSpeed", Share = 0.7 }, { Stat = "Attack", Share = 0.5 } },
+			Skill = { Name = "Soft Landing", Text = "Heals the most hurt ally." },
 		},
 		Chirpy = {
 			Id = "Chirpy", DisplayName = "Chirpy", Rarity = "Common", Wish = true,
 			Look = { Shape = "Bird", Color = { 255, 214, 90 }, Size = 0.9 },
-			Bonus = { Stat = "CritChance", Mode = "Add", Base = 0.015, PerLevel = 0.003 },
+			Stats = { { Stat = "CritChance", Share = 1.25 } },
+			Skill = { Name = "Cheerful Song", Text = "Boosts the whole party's attack." },
 		},
 		Wisp = {
 			Id = "Wisp", DisplayName = "Spark Wisp", Rarity = "Rare", Wish = true,
 			Look = { Shape = "Wisp", Color = { 150, 210, 255 }, Size = 1 },
-			Bonus = { Stat = "CritChance", Mode = "Add", Base = 0.03, PerLevel = 0.005 },
+			Stats = { { Stat = "CritChance", Share = 0.7 }, { Stat = "CritMultiplier", Share = 0.5 } },
+			Skill = { Name = "Spark", Text = "Zaps an enemy with magic." },
 		},
 		Emberkit = {
 			Id = "Emberkit", DisplayName = "Emberkit", Rarity = "Rare", Wish = true,
 			Look = { Shape = "Cat", Color = { 235, 90, 50 }, Size = 1.15, Glow = true },
-			Bonus = { Stat = "Attack", Mode = "Mul", Base = 0.07, PerLevel = 0.014 },
+			Stats = { { Stat = "Attack", Share = 0.7 }, { Stat = "CritChance", Share = 0.5 } },
+			Skill = { Name = "Ember Claw", Text = "A heavy fiery swipe at one enemy." },
 		},
 		Shellby = {
 			Id = "Shellby", DisplayName = "Shellby", Rarity = "Rare", Wish = true,
 			Look = { Shape = "Turtle", Color = { 80, 170, 200 }, Size = 1.25 },
-			Bonus = { Stat = "MaxHealth", Mode = "Mul", Base = 0.08, PerLevel = 0.016 },
+			Stats = { { Stat = "MaxHealth", Share = 1.25 } },
+			Skill = { Name = "Tidal Shell", Text = "Shields the whole party." },
 		},
 		Zephyr = {
 			Id = "Zephyr", DisplayName = "Zephyr", Rarity = "Rare", Wish = true,
 			Look = { Shape = "Bird", Color = { 130, 200, 235 }, Size = 1.1 },
-			Bonus = { Stat = "AttackSpeed", Mode = "Mul", Base = 0.06, PerLevel = 0.01 },
+			Stats = { { Stat = "AttackSpeed", Share = 0.7 }, { Stat = "CritChance", Share = 0.5 } },
+			Skill = { Name = "Tailwind", Text = "Speeds up its owner's attacks for a while." },
 		},
 		Frostwing = {
 			Id = "Frostwing", DisplayName = "Frostwing", Rarity = "Epic", Wish = true,
 			Look = { Shape = "Bird", Color = { 190, 230, 255 }, Size = 1.35, Glow = true },
-			Bonus = { Stat = "CritMultiplier", Mode = "Add", Base = 0.12, PerLevel = 0.025 },
+			Stats = { { Stat = "CritMultiplier", Share = 0.7 }, { Stat = "AttackSpeed", Share = 0.5 } },
+			Skill = { Name = "Cold Snap", Text = "Freezing wind hits every enemy." },
 		},
 		Starbun = {
 			Id = "Starbun", DisplayName = "Starbun", Rarity = "Epic", Wish = true,
 			Look = { Shape = "Bunny", Color = { 200, 160, 255 }, Size = 1.2, Glow = true },
-			Bonus = { Stat = "Attack", Mode = "Mul", Base = 0.1, PerLevel = 0.02 },
+			Stats = { { Stat = "Attack", Share = 1.25 } },
+			Skill = { Name = "Star Wish", Text = "Heals the whole party." },
 		},
 		Thornback = {
 			Id = "Thornback", DisplayName = "Thornback", Rarity = "Epic", Wish = true,
 			Look = { Shape = "Turtle", Color = { 70, 120, 70 }, Size = 1.5, Spikes = true },
-			Bonus = { Stat = "Defense", Mode = "Mul", Base = 0.12, PerLevel = 0.024 },
+			Stats = { { Stat = "Defense", Share = 0.7 }, { Stat = "MaxHealth", Share = 0.5 } },
+			Skill = { Name = "Thorn Armor", Text = "Toughens its owner against hits." },
 		},
 		EmberDrake = {
 			Id = "EmberDrake", DisplayName = "Ember Drake", Rarity = "Legendary", Wish = true,
 			Look = { Shape = "Drake", Color = { 230, 70, 40 }, Size = 1.6, Glow = true },
-			Bonus = { Stat = "Attack", Mode = "Mul", Base = 0.16, PerLevel = 0.03 },
+			Stats = { { Stat = "Attack", Share = 0.7 }, { Stat = "CritMultiplier", Share = 0.5 } },
+			Skill = { Name = "Dragonfire", Text = "Breathes fire on every enemy." },
 		},
 		Colossling = {
 			Id = "Colossling", DisplayName = "Colossling", Rarity = "Legendary", Boss = true,
 			Look = { Shape = "Golem", Color = { 80, 150, 95 }, Size = 1.5 },
-			Bonus = { Stat = "MaxHealth", Mode = "Mul", Base = 0.18, PerLevel = 0.03 },
+			Stats = { { Stat = "MaxHealth", Share = 0.7 }, { Stat = "Defense", Share = 0.5 } },
+			Skill = { Name = "Colossal Stomp", Text = "Stomps every enemy and braces its owner." },
 		},
 		Aurora = {
 			Id = "Aurora", DisplayName = "Aurora", Rarity = "Legendary", Wish = true,
 			Look = { Shape = "Wisp", Color = { 120, 255, 200 }, Size = 1.6 },
-			Bonus = { Stat = "CritChance", Mode = "Add", Base = 0.07, PerLevel = 0.009 },
+			Stats = { { Stat = "CritChance", Share = 1.25 } },
+			Skill = { Name = "Aurora Veil", Text = "Heals and shields the whole party." },
 		},
 	},
 }

@@ -532,7 +532,7 @@ end
 -- Pets ---------------------------------------------------------------------
 function Screens.Pets(container, state, call)
 	local scroll = list(container)
-	Kit.label({ Size = UDim2.new(1, 0, 0, 30), Text = "Pets follow you and add a bonus. Win them at the Wishing Tree in the plaza, level them with pet food (Bag > Stash) and by fighting.", TextColor3 = C.Dim, TextSize = 12, Parent = scroll })
+	Kit.label({ Size = UDim2.new(1, 0, 0, 30), Text = "Pets follow you, add stats and cast their own skill in fights. Win them at the Wishing Tree - a duplicate ranks your pet up (stronger stats, stronger skill). Feed them (Bag > Stash) and fight to level them.", TextColor3 = C.Dim, TextSize = 12, Parent = scroll })
 	local rows = table.clone(state.Player.Pets or {})
 	local rank = { Legendary = 4, Epic = 3, Rare = 2, Common = 1 }
 	table.sort(rows, function(a, b)
@@ -545,24 +545,24 @@ function Screens.Pets(container, state, call)
 		return a.Name < b.Name
 	end)
 	for _, pet in ipairs(rows) do
-		local r = row(scroll, 56)
-		Icons.Pet(r, pet.Id, { Size = UDim2.fromOffset(40, 40), Position = UDim2.fromOffset(8, 8), Locked = not pet.Owned })
 		if pet.Owned then
-			local title = ("%s  Lv %d/%d  [%s]%s"):format(pet.Name, pet.Level, pet.MaxLevel, pet.Rarity, pet.Active and "  (equipped)" or "")
-			Kit.label({ Size = UDim2.new(1, -250, 1, 0), Position = UDim2.fromOffset(56, 0), Text = title .. "\n" .. pet.Text, TextColor3 = Kit.rarityColor(pet.Rarity), Parent = r })
+			local r = row(scroll, 78)
+			Icons.Pet(r, pet.Id, { Size = UDim2.fromOffset(44, 44), Position = UDim2.fromOffset(8, 17) })
+			local stars = string.rep("★", pet.Rank or 1) .. string.rep("☆", (pet.MaxRank or 1) - (pet.Rank or 1))
+			local title = ("%s  %s  Lv %d/%d  [%s]%s"):format(pet.Name, stars, pet.Level, pet.MaxLevel, pet.Rarity, pet.Active and "  (equipped)" or "")
+			local skill = if pet.Skill then ("\nSkill: %s (Lv %d) - %s"):format(pet.Skill.Name, pet.Rank or 1, pet.Skill.Text) else ""
+			Kit.label({ Size = UDim2.new(1, -150, 1, 0), Position = UDim2.fromOffset(60, 0), Text = title .. "\n" .. pet.Text .. skill, TextColor3 = Kit.rarityColor(pet.Rarity), TextSize = 12, Parent = r })
 			if not pet.Active then
-				Kit.button({ Size = UDim2.fromOffset(80, 40), Position = UDim2.new(1, -176, 0.5, -20), Text = "Equip", Parent = r }, function()
+				Kit.button({ Size = UDim2.fromOffset(80, 40), Position = UDim2.new(1, -90, 0.5, -20), Text = "Equip", Parent = r }, function()
 					call("EquipPet", pet.Id)
 				end)
 			end
-			if pet.Cost then
-				Kit.button({ Size = UDim2.fromOffset(80, 40), Position = UDim2.new(1, -90, 0.5, -20), Text = "Level\n" .. pet.Cost .. "g", TextSize = 12, Parent = r }, function()
-					call("LevelPet", pet.Id)
-				end)
-			end
 		else
+			local r = row(scroll, 56)
+			Icons.Pet(r, pet.Id, { Size = UDim2.fromOffset(40, 40), Position = UDim2.fromOffset(8, 8), Locked = true })
 			local how = if pet.UnlockStage then ("Clear stage %d to get this pet"):format(pet.UnlockStage) else "Win it at the Wishing Tree"
-			Kit.label({ Size = UDim2.new(1, -72, 1, 0), Position = UDim2.fromOffset(56, 0), Text = ("%s  [%s]\n%s"):format(pet.Name, pet.Rarity, how), TextColor3 = C.Dim, Parent = r })
+			local skill = if pet.Skill then ("  -  Skill: " .. pet.Skill.Name) else ""
+			Kit.label({ Size = UDim2.new(1, -72, 1, 0), Position = UDim2.fromOffset(56, 0), Text = ("%s  [%s]\n%s%s"):format(pet.Name, pet.Rarity, how, skill), TextColor3 = C.Dim, Parent = r })
 		end
 	end
 end
@@ -659,7 +659,7 @@ function Screens.Wish(container, state, call, extra)
 		Kit.label({ Size = UDim2.new(1, 4, 0, 10), Position = UDim2.fromOffset(-2, 46), Text = shown or "", TextSize = 9, TextXAlignment = Enum.TextXAlignment.Center, TextWrapped = false, TextTruncate = Enum.TextTruncate.AtEnd, ZIndex = 3, Parent = cell })
 		tile.BackgroundTransparency = 1
 		TweenService:Create(tile, TweenInfo.new(0.25 + index * 0.06), { BackgroundTransparency = 0 }):Play()
-		Kit.label({ Size = UDim2.new(1, 0, 0, 16), Position = UDim2.fromOffset(0, 55), Text = if rowData.New then "NEW!" else ("+%d xp"):format(rowData.DupXP or 0), TextSize = 10, TextXAlignment = Enum.TextXAlignment.Center, TextWrapped = false, TextColor3 = if rowData.New then Kit.rarityColor(rowData.Rarity) else C.Dim, Font = Enum.Font.GothamBold, Parent = cell })
+		Kit.label({ Size = UDim2.new(1, 0, 0, 16), Position = UDim2.fromOffset(0, 55), Text = if rowData.New then "NEW!" elseif rowData.Rank then ("Rank " .. rowData.Rank) else ("+%d xp"):format(rowData.DupXP or 0), TextSize = 10, TextXAlignment = Enum.TextXAlignment.Center, TextWrapped = false, TextColor3 = if rowData.New then Kit.rarityColor(rowData.Rarity) else C.Dim, Font = Enum.Font.GothamBold, Parent = cell })
 	end
 end
 

@@ -62,16 +62,8 @@ local function equipBest(m, profile, classId)
 	m.Economy.Equip(profile, classId, best)
 end
 
--- Pets: level the equipped pet whenever it costs under 30% of the gold on hand.
+-- Pets: pet XP now comes from fighting and food, not gold, so there is nothing to spend here.
 local function spendPets(m, profile)
-	local petId = m.Pets.Active(profile)
-	while petId do
-		local level = m.Pets.Level(profile, petId)
-		if level >= m.Pets.MaxLevel or m.Pets.LevelCost(level) > profile.Season.Currencies.Gold * 0.3 then
-			break
-		end
-		m.Pets.LevelUp(profile, petId)
-	end
 end
 
 -- Gear: wear the strongest item of each slot, sell the rest.

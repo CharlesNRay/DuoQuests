@@ -50,6 +50,16 @@ function StatCalc.ClassAbilities(classId, abilityIds, slotLevels)
 	return slots
 end
 
+-- A pet's own skill is cast by its owner as one more ability (after the equipped skills, so it never
+-- takes priority); its level is the pet's rank.
+function StatCalc.WithPetSkill(slots, petId, rank)
+	local skillId = petId and Pets.SkillId(petId)
+	if skillId then
+		table.insert(slots, { Id = skillId, Level = Skills.ClampSlotLevel(rank or 1) })
+	end
+	return slots
+end
+
 -- Stats that default to 1 when a class does not list them (see Simulation).
 local MULTIPLIER_STATS = { DamageDealt = true, HealingDealt = true, DamageTaken = true }
 
@@ -88,7 +98,7 @@ function StatCalc.NewPartyMember(id, name, classId, level, options)
 		applyMods(stats, Gear.Mods(options.Equipped))
 	end
 	if options.PetId then
-		applyMods(stats, Pets.Mods(options.PetId, options.PetLevel))
+		applyMods(stats, Pets.Mods(options.PetId, options.PetLevel, options.PetRank))
 	end
 	if options.ExtraMods then
 		applyMods(stats, options.ExtraMods) -- timed boosts from consumables
@@ -103,7 +113,7 @@ function StatCalc.NewPartyMember(id, name, classId, level, options)
 		DamageType = class.DamageType,
 		BasicAttack = class.BasicAttack,
 		Stats = stats,
-		Abilities = StatCalc.ClassAbilities(classId, options.AbilityIds, options.SlotLevels),
+		Abilities = StatCalc.WithPetSkill(StatCalc.ClassAbilities(classId, options.AbilityIds, options.SlotLevels), options.PetId, options.PetRank),
 	})
 end
 

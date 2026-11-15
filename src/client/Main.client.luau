@@ -84,6 +84,7 @@ end
 -- Take the world snapshot: build/refresh every party's arena and aim the battle
 -- camera at ours. The first time we know our slot we place the character.
 local current, extra, call, body -- set below; declared here so the world callbacks can see them
+local lastDrawn -- which panel was drawn last (so a redraw can keep its scroll position)
 extra = {}
 local lastWorld
 local lastMapKey
@@ -141,6 +142,7 @@ body = Kit.new("Frame", { Size = UDim2.new(1, -16, 1, -62), Position = UDim2.fro
 local title = Kit.label({ Size = UDim2.new(1, -70, 0, 36), Position = UDim2.fromOffset(12, 6), Text = "", TextSize = 20, Font = Enum.Font.GothamBold, Parent = panel })
 Kit.button({ Size = UDim2.fromOffset(44, 36), Position = UDim2.new(1, -52, 0, 6), Text = "X", Parent = panel }, function()
 	current = nil
+	lastDrawn = nil
 	panel.Visible = false
 	Kit.HideTip()
 end)
@@ -167,7 +169,37 @@ local function redraw()
 		if current == "Boss" and extra.Boss == nil then
 			extra.RefreshBoss()
 		end
+		-- redrawing a panel (after an upgrade, say) must not throw the player back to the top of its lists
+		local saved
+		if lastDrawn == current then
+			saved = {}
+			for _, d in ipairs(body:GetDescendants()) do
+				if d:IsA("ScrollingFrame") then
+					table.insert(saved, d.CanvasPosition)
+				end
+			end
+		end
+		lastDrawn = current
 		Screens[current](body, state, call, extra)
+		if saved and #saved > 0 then
+			local frames = {}
+			for _, d in ipairs(body:GetDescendants()) do
+				if d:IsA("ScrollingFrame") then
+					table.insert(frames, d)
+				end
+			end
+			local function restore()
+				for i, frame in ipairs(frames) do
+					if saved[i] and frame.Parent then
+						frame.CanvasPosition = saved[i]
+					end
+				end
+			end
+			restore()
+			-- the canvas size updates a frame later (AutomaticCanvasSize), so set it again once it has grown
+			task.defer(restore)
+			task.delay(0.05, restore)
+		end
 	end
 end
 
@@ -199,11 +231,13 @@ end
 local function open(name, label, keep)
 	if current == name and panel.Visible and not keep then
 		current = nil
+		lastDrawn = nil
 		panel.Visible = false
 		Kit.HideTip()
 		return
 	end
 	current = name
+	lastDrawn = nil
 	title.Text = label
 	local size = PANEL_SIZES[name] or PANEL_DEFAULT
 	panel.Size = UDim2.fromOffset(size.X, size.Y)
@@ -376,6 +410,7 @@ RunService.Heartbeat:Connect(function(dt)
 		local rootPart = character and character:FindFirstChild("HumanoidRootPart")
 		if rootPart and not World.NearShop(rootPart.Position.X, rootPart.Position.Z, shop) then
 			current = nil
+			lastDrawn = nil
 			panel.Visible = false
 			Kit.HideTip()
 		end
@@ -400,7 +435,8 @@ end
 local function watch(slot, origin)
 	local mine = arenas:MySlot()
 	watchingSlot = slot
-	current = nil -- close any open panel; it would cover the fight
+	current = nil
+	lastDrawn = nil -- close any open panel; it would cover the fight
 	panel.Visible = false
 	Kit.HideTip()
 	BattleCamera.SetTarget(origin)

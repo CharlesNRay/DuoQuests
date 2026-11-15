@@ -82,9 +82,27 @@ local function tile(parent, color, glyph, border, props)
 	return f
 end
 
+
+-- every skill has its own glyph and colour so they can be told apart at a glance
+local function rgb(r, g, b) return Color3.fromRGB(r, g, b) end
+local SKILL_LOOK = {
+	ShieldBash = { rgb(170, 120, 60), "🔨" }, Taunt = { rgb(150, 80, 60), "📣" }, IronSkin = { rgb(110, 120, 140), "⛓" },
+	Whirlwind = { rgb(70, 150, 170), "🌀" }, ShieldWall = { rgb(60, 100, 180), "🧱" }, CrushingBlow = { rgb(160, 60, 50), "💢" },
+	LastStand = { rgb(190, 90, 50), "💪" }, RallyingCry = { rgb(200, 150, 50), "🚩" }, Smite = { rgb(230, 200, 90), "⚡" },
+	Heal = { rgb(60, 170, 100), "➕" }, Blessing = { rgb(220, 190, 120), "🙏" }, RadiantBurst = { rgb(240, 210, 110), "☀" },
+	DivineShield = { rgb(110, 170, 230), "🔰" }, GroupHeal = { rgb(90, 190, 130), "💞" }, GuardianAngel = { rgb(200, 210, 240), "👼" },
+	Judgment = { rgb(220, 180, 70), "⚖" }, Resurrection = { rgb(170, 230, 190), "🕊" }, Fireball = { rgb(220, 90, 40), "🔥" },
+	Blizzard = { rgb(100, 180, 230), "❄" }, LightningBolt = { rgb(230, 220, 70), "🌩" }, ArcaneSurge = { rgb(150, 90, 210), "🔮" },
+	BloodFrenzy = { rgb(170, 30, 50), "🩸" }, Cleave = { rgb(190, 90, 80), "🪓" }, ExecutionerStrike = { rgb(110, 40, 60), "☠" },
+	Bulwark = { rgb(90, 110, 150), "🏰" }, Retribution = { rgb(210, 120, 60), "🔁" }, UnbreakableVow = { rgb(180, 170, 130), "💍" },
+	Sanctuary = { rgb(120, 200, 190), "⛪" }, Renewal = { rgb(120, 200, 120), "🌿" }, HolyAegis = { rgb(150, 190, 240), "✝" },
+	HolyWrath = { rgb(240, 170, 60), "✴" }, DivineSmite = { rgb(250, 230, 150), "🌟" }, SlimeSplit = { rgb(100, 200, 110), "🟢" },
+	Enrage = { rgb(200, 50, 40), "😡" }, SporeBurst = { rgb(150, 120, 190), "🍄" }, SporeCall = { rgb(120, 150, 100), "🌱" },
+}
 function Icons.Skill(parent, def, props)
 	local kind = Icons.SkillKind(def)
-	return tile(parent, KIND_COLORS[kind], KIND_GLYPHS[kind], Kit.rarityColor(def.Rarity), props)
+	local own = SKILL_LOOK[def.Id]
+	return tile(parent, if own then own[1] else KIND_COLORS[kind], if own then own[2] else KIND_GLYPHS[kind], Kit.rarityColor(def.Rarity), props)
 end
 
 -- Passives: tinted by category, with a plain glyph. A nil def is an empty slot.

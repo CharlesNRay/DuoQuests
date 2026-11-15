@@ -704,4 +704,259 @@ return {
 		Conditions = { MaxAllies = 5 },
 		Effects = { { Type = "Summon", EnemyId = "Sporeling", Count = 2 } },
 	},
+
+	-- Pet skills (cast automatically by a pet's owner; level = pet rank; see Config/Pets, Shared/Pets) ----------
+	Pet_Slimey = {
+		Id = "Pet_Slimey",
+		DisplayName = "Goo Bubble",
+		Description = "Wraps the most hurt ally in a shield.",
+		Class = "Pet",
+		Pet = true,
+		Rarity = "Common",
+		Cooldown = 12,
+		CooldownPerLevel = -0.3,
+		MinCooldown = 6,
+		Conditions = { AllyHealthBelow = 0.9 },
+		Effects = {
+			{ Type = "Shield", Target = "LowestAlly", Multiplier = 1.0, PercentMaxHealth = 0.08, Duration = 6, PerLevel = { Multiplier = 0.1, PercentMaxHealth = 0.01, Duration = 0.3 } },
+		},
+	},
+
+	Pet_Foxling = {
+		Id = "Pet_Foxling",
+		DisplayName = "Fox Fire",
+		Description = "Burns an enemy with a flicker of flame.",
+		Class = "Pet",
+		Pet = true,
+		Rarity = "Common",
+		Cooldown = 7,
+		CooldownPerLevel = -0.3,
+		MinCooldown = 3,
+		Effects = {
+			{ Type = "Damage", Target = "Primary", Multiplier = 1.3, PerLevel = { Multiplier = 0.1 } },
+		},
+	},
+
+	Pet_Mossback = {
+		Id = "Pet_Mossback",
+		DisplayName = "Mossy Guard",
+		Description = "Raises the whole party's defense.",
+		Class = "Pet",
+		Pet = true,
+		Rarity = "Common",
+		Cooldown = 18,
+		CooldownPerLevel = -0.3,
+		MinCooldown = 9,
+		Conditions = { SelfLacksStatus = "Fortified" },
+		Effects = {
+			{ Type = "ApplyStatus", Target = "AllAllies", Status = "Fortified", Duration = 6, PerLevel = { Duration = 0.4 } },
+		},
+	},
+
+	Pet_Pebbles = {
+		Id = "Pet_Pebbles",
+		DisplayName = "Rockfall",
+		Description = "Drops rocks on every enemy when two or more are up.",
+		Class = "Pet",
+		Pet = true,
+		Rarity = "Common",
+		Cooldown = 10,
+		CooldownPerLevel = -0.3,
+		MinCooldown = 5,
+		Conditions = { MinEnemies = 2 },
+		Effects = {
+			{ Type = "Damage", Target = "AllEnemies", Multiplier = 0.8, PerLevel = { Multiplier = 0.1 } },
+		},
+	},
+
+	Pet_Cottonpuff = {
+		Id = "Pet_Cottonpuff",
+		DisplayName = "Soft Landing",
+		Description = "Heals the most hurt ally.",
+		Class = "Pet",
+		Pet = true,
+		Rarity = "Common",
+		Cooldown = 10,
+		CooldownPerLevel = -0.3,
+		MinCooldown = 5,
+		Conditions = { AllyHealthBelow = 0.65 },
+		Effects = {
+			{ Type = "Heal", Target = "LowestAlly", Multiplier = 1.3, PerLevel = { Multiplier = 0.1 } },
+		},
+	},
+
+	Pet_Chirpy = {
+		Id = "Pet_Chirpy",
+		DisplayName = "Cheerful Song",
+		Description = "Boosts the whole party's attack.",
+		Class = "Pet",
+		Pet = true,
+		Rarity = "Common",
+		Cooldown = 16,
+		CooldownPerLevel = -0.3,
+		MinCooldown = 8,
+		Conditions = { SelfLacksStatus = "Rallied" },
+		Effects = {
+			{ Type = "ApplyStatus", Target = "AllAllies", Status = "Rallied", Duration = 6, PerLevel = { Duration = 0.4 } },
+		},
+	},
+
+	Pet_Wisp = {
+		Id = "Pet_Wisp",
+		DisplayName = "Spark",
+		Description = "Zaps an enemy with magic.",
+		Class = "Pet",
+		Pet = true,
+		Rarity = "Rare",
+		Cooldown = 8,
+		CooldownPerLevel = -0.3,
+		MinCooldown = 4,
+		Effects = {
+			{ Type = "Damage", Target = "Primary", Multiplier = 1.8, DamageType = "Magical", PerLevel = { Multiplier = 0.1 } },
+		},
+	},
+
+	Pet_Emberkit = {
+		Id = "Pet_Emberkit",
+		DisplayName = "Ember Claw",
+		Description = "A heavy fiery swipe at one enemy.",
+		Class = "Pet",
+		Pet = true,
+		Rarity = "Rare",
+		Cooldown = 9,
+		CooldownPerLevel = -0.3,
+		MinCooldown = 4,
+		Effects = {
+			{ Type = "Damage", Target = "Primary", Multiplier = 2.2, PerLevel = { Multiplier = 0.1 } },
+		},
+	},
+
+	Pet_Shellby = {
+		Id = "Pet_Shellby",
+		DisplayName = "Tidal Shell",
+		Description = "Shields the whole party.",
+		Class = "Pet",
+		Pet = true,
+		Rarity = "Rare",
+		Cooldown = 14,
+		CooldownPerLevel = -0.3,
+		MinCooldown = 7,
+		Conditions = { AllyHealthBelow = 0.85 },
+		Effects = {
+			{ Type = "Shield", Target = "AllAllies", Multiplier = 0.9, PercentMaxHealth = 0.08, Duration = 6, PerLevel = { Multiplier = 0.1, PercentMaxHealth = 0.01, Duration = 0.3 } },
+		},
+	},
+
+	Pet_Zephyr = {
+		Id = "Pet_Zephyr",
+		DisplayName = "Tailwind",
+		Description = "Speeds up its owner's attacks for a while.",
+		Class = "Pet",
+		Pet = true,
+		Rarity = "Rare",
+		Cooldown = 18,
+		CooldownPerLevel = -0.3,
+		MinCooldown = 9,
+		Conditions = { SelfLacksStatus = "Frenzied" },
+		Effects = {
+			{ Type = "ApplyStatus", Target = "Self", Status = "Frenzied", Duration = 6, PerLevel = { Duration = 0.4 } },
+		},
+	},
+
+	Pet_Frostwing = {
+		Id = "Pet_Frostwing",
+		DisplayName = "Cold Snap",
+		Description = "Freezing wind hits every enemy and chills one.",
+		Class = "Pet",
+		Pet = true,
+		Rarity = "Epic",
+		Cooldown = 13,
+		CooldownPerLevel = -0.3,
+		MinCooldown = 6,
+		Effects = {
+			{ Type = "Damage", Target = "AllEnemies", Multiplier = 1.2, DamageType = "Magical", PerLevel = { Multiplier = 0.1 } },
+			{ Type = "ApplyStatus", Target = "Primary", Status = "Chilled", Duration = 4, PerLevel = { Duration = 0.4 } },
+		},
+	},
+
+	Pet_Starbun = {
+		Id = "Pet_Starbun",
+		DisplayName = "Star Wish",
+		Description = "Heals the whole party.",
+		Class = "Pet",
+		Pet = true,
+		Rarity = "Epic",
+		Cooldown = 15,
+		CooldownPerLevel = -0.3,
+		MinCooldown = 7,
+		Conditions = { AllyHealthBelow = 0.7 },
+		Effects = {
+			{ Type = "Heal", Target = "AllAllies", Multiplier = 1.1, PerLevel = { Multiplier = 0.1 } },
+		},
+	},
+
+	Pet_Thornback = {
+		Id = "Pet_Thornback",
+		DisplayName = "Thorn Armor",
+		Description = "Toughens its owner against hits.",
+		Class = "Pet",
+		Pet = true,
+		Rarity = "Epic",
+		Cooldown = 20,
+		CooldownPerLevel = -0.3,
+		MinCooldown = 10,
+		Conditions = { SelfLacksStatus = "Aegis" },
+		Effects = {
+			{ Type = "ApplyStatus", Target = "Self", Status = "Aegis", Duration = 8, PerLevel = { Duration = 0.4 } },
+		},
+	},
+
+	Pet_EmberDrake = {
+		Id = "Pet_EmberDrake",
+		DisplayName = "Dragonfire",
+		Description = "Breathes fire on every enemy.",
+		Class = "Pet",
+		Pet = true,
+		Rarity = "Legendary",
+		Cooldown = 14,
+		CooldownPerLevel = -0.3,
+		MinCooldown = 7,
+		Effects = {
+			{ Type = "Damage", Target = "AllEnemies", Multiplier = 2.4, DamageType = "Magical", PerLevel = { Multiplier = 0.15 } },
+		},
+	},
+
+	Pet_Colossling = {
+		Id = "Pet_Colossling",
+		DisplayName = "Colossal Stomp",
+		Description = "Stomps every enemy and braces its owner.",
+		Class = "Pet",
+		Pet = true,
+		Rarity = "Legendary",
+		Cooldown = 16,
+		CooldownPerLevel = -0.3,
+		MinCooldown = 8,
+		Effects = {
+			{ Type = "Damage", Target = "AllEnemies", Multiplier = 1.8, PerLevel = { Multiplier = 0.15 } },
+			{ Type = "ApplyStatus", Target = "Self", Status = "Fortified", Duration = 6, PerLevel = { Duration = 0.4 } },
+		},
+	},
+
+	Pet_Aurora = {
+		Id = "Pet_Aurora",
+		DisplayName = "Aurora Veil",
+		Description = "Heals and shields the whole party.",
+		Class = "Pet",
+		Pet = true,
+		Rarity = "Legendary",
+		Cooldown = 16,
+		CooldownPerLevel = -0.3,
+		MinCooldown = 8,
+		Conditions = { AllyHealthBelow = 0.85 },
+		Effects = {
+			{ Type = "Heal", Target = "AllAllies", Multiplier = 1.0, PerLevel = { Multiplier = 0.12 } },
+			{ Type = "Shield", Target = "AllAllies", Multiplier = 1.2, PercentMaxHealth = 0.08, Duration = 8, PerLevel = { Multiplier = 0.1, PercentMaxHealth = 0.01, Duration = 0.3 } },
+		},
+	},
+
 }

@@ -8,7 +8,7 @@
 	                                    Tickets = n, Currency = n, CurrencyName, PityRare, PityEpic, LeftRare, LeftEpic, Remaining? }
 	  Wishing.Wish(profile, kind, tierId, method, count, rng?) -> true, { Results = {...}, Spent = n } | false, reason
 	      kind "Pet" | "Skill"; method "Ticket" | "Currency"; count 1 or 10 (a skill wish is capped by what is left to find)
-	      Results rows: { Id, Rarity, New = bool, DupXP = n? }
+	      Results rows: { Id, Rarity, New = bool, Rank = n? (a duplicate pet's new rank), DupXP = n? (at max rank) }
 	      reasons: "BadArgs", "UnknownTier", "TierLocked", "NotEnough", "NothingLeft"
 	  rng is a function() -> [0,1); default uses Random.
 
@@ -251,8 +251,13 @@ function Wishing.Wish(profile, kind, tierId, method, count, rng)
 			profile.Permanent.Pets = profile.Permanent.Pets or {}
 			if profile.Permanent.Pets[id] then
 				row.New = false
-				row.DupXP = Config.DupXP[rarity] or 60
-				Pets.AddXP(profile, id, row.DupXP)
+				-- a duplicate ranks the pet up (pet XP once it is at max rank)
+				local kind, amount = Pets.AddDuplicate(profile, id)
+				if kind == "Rank" then
+					row.Rank = amount
+				else
+					row.DupXP = amount
+				end
 			else
 				profile.Permanent.Pets[id] = true
 			end

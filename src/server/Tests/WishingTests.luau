@@ -87,7 +87,7 @@ return function(modulesOverride)
 	end
 	Consumables.Grant(p3, "PetWish", 3)
 	local _, d = Wishing.Wish(p3, "Pet", "Meadow", "Ticket", 1, seeded(9))
-	check("A duplicate pet gives pet XP instead", d.Results[1].New == false and (d.Results[1].DupXP or 0) > 0)
+	check("A duplicate pet ranks it up instead", d.Results[1].New == false and (d.Results[1].Rank or 0) >= 2)
 
 	-- skills
 	local sp = ProfileTemplate.New()

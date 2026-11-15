@@ -498,6 +498,7 @@ local function sheetOfSnapshot(snapshot)
 		Gear = snapshot.Gear or {},
 		PetId = snapshot.PetId,
 		PetLevel = snapshot.PetLevel,
+		PetRank = snapshot.PetRank,
 	})
 end
 
@@ -526,6 +527,7 @@ function PartyService.GetPartner(player)
 		Level = snapshot.Level,
 		PetId = snapshot.PetId,
 		PetLevel = snapshot.PetLevel,
+		PetRank = snapshot.PetRank,
 		Online = entry.Online[partnerId] ~= nil,
 		SlotLevels = table.clone(snapshot.SlotLevels),
 		GhostLoadout = table.clone(snapshot.GhostLoadout),
@@ -571,10 +573,10 @@ function PartyService.GetInspect(userId)
 	if online then
 		local season = online.Profile.Season
 		info.Loadout = table.clone(season.Loadouts[season.ClassId] or info.Loadout)
-		info.PetId, info.PetLevel = Pets.Active(online.Profile)
+		info.PetId, info.PetLevel, info.PetRank = Pets.Active(online.Profile)
 		info.Level = season.Level
 	else
-		info.PetId, info.PetLevel = snapshot.PetId, snapshot.PetLevel
+		info.PetId, info.PetLevel, info.PetRank = snapshot.PetId, snapshot.PetLevel, snapshot.PetRank
 	end
 	for _, memberId in ipairs(record.Members) do
 		if memberId ~= userId then
@@ -621,15 +623,16 @@ function PartyService.GetHostedSummaries()
 				local online = entry.Online[userId]
 				local snapshot = record.Snapshots[tostring(userId)]
 				local season = online and online.Profile.Season
-				local petId, petLevel
+				local petId, petLevel, petRank
 				if online then
-					petId, petLevel = Pets.Active(online.Profile)
+					petId, petLevel, petRank = Pets.Active(online.Profile)
 				elseif snapshot then
-					petId, petLevel = snapshot.PetId, snapshot.PetLevel
+					petId, petLevel, petRank = snapshot.PetId, snapshot.PetLevel, snapshot.PetRank
 				end
 				table.insert(members, {
 					PetId = petId,
 					PetLevel = petLevel,
+					PetRank = petRank,
 					UserId = userId,
 					Name = (online and online.Name) or (snapshot and snapshot.Name) or "?",
 					ClassId = (season and season.ClassId) or (snapshot and snapshot.ClassId) or "Warrior",

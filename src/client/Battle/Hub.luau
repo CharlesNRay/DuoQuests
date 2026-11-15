@@ -418,6 +418,12 @@ function Hub.Build(handlers)
 		local a = math.rad(index * 72 + 20)
 		local start = centre + Vector3.new(math.sin(a) * 26, 0.4, -math.cos(a) * 26)
 		local model = villager(names[index], look)
+		-- townsfolk never shove or block a player: nothing about them is solid
+		for _, d in ipairs(model:GetDescendants()) do
+			if d:IsA("BasePart") then
+				d.CanCollide = false
+			end
+		end
 		model:PivotTo(CFrame.new(start + Vector3.new(0, TORSO_HEIGHT, 0)))
 		walkers[index] = { Model = model, Pos = start, Target = start, Wait = math.random() * 3, Speed = 4 + math.random() * 2, Phase = math.random() * 6 }
 	end
@@ -482,8 +488,37 @@ function Hub.Update(dt)
 		end
 	end
 	local reach = World.PLAZA.Radius - 8
+	-- where the local player is, so a villager that meets them stops and heads another way
+	local me = game:GetService("Players").LocalPlayer
+	local root = me and me.Character and me.Character:FindFirstChild("HumanoidRootPart")
+	local mine = if root then Vector3.new(root.Position.X, 0, root.Position.Z) else nil
 	for _, w in ipairs(walkers) do
 		if w.Model.Parent then
+			w.Cool = (w.Cool or 0) - dt
+			if mine and w.Cool <= 0 and (w.Pause or 0) <= 0 then
+				local away = Vector3.new(w.Pos.X - mine.X, 0, w.Pos.Z - mine.Z)
+				if away.Magnitude < 5 then
+					-- bumped into the player: stop, then wander off in a direction away from them
+					local dir = if away.Magnitude > 0.05 then away.Unit else Vector3.new(math.random() - 0.5, 0, math.random() - 0.5).Unit
+					local turn = (math.random() - 0.5) * math.rad(100)
+					local c, s = math.cos(turn), math.sin(turn)
+					dir = Vector3.new(dir.X * c - dir.Z * s, 0, dir.X * s + dir.Z * c)
+					local goal = w.Pos + dir * (10 + math.random() * 8)
+					local fromCentre = Vector3.new(goal.X - World.PLAZA.X, 0, goal.Z - World.PLAZA.Z)
+					if fromCentre.Magnitude > reach then
+						goal = Vector3.new(World.PLAZA.X, 0.4, World.PLAZA.Z) + fromCentre.Unit * reach
+					end
+					w.Target = Vector3.new(goal.X, 0.4, goal.Z)
+					w.Wait = 0
+					w.Pause = 0.5
+					w.Cool = 3
+				end
+			end
+			if w.Pause and w.Pause > 0 then
+				w.Pause -= dt
+				w.Wait = math.max(w.Wait, 0)
+				continue
+			end
 			if w.Wait > 0 then
 				w.Wait -= dt
 				if w.Wait <= 0 then

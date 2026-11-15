@@ -199,13 +199,14 @@ function Party.MakeSnapshot(profile, userId, name, previous, now)
 		history = {}
 	end
 
-	local petId, petLevel = Pets.Active(profile)
+	local petId, petLevel, petRank = Pets.Active(profile)
 	return {
 		UserId = userId,
 		Name = name,
 		ClassId = classId,
 		PetId = petId,
 		PetLevel = petLevel,
+		PetRank = petRank,
 		SubclassId = season.Subclasses and season.Subclasses[classId] or nil,
 		Gear = TableUtil.DeepCopy((season.Equipment and season.Equipment.Equipped) or {}),
 		Level = season.Level,

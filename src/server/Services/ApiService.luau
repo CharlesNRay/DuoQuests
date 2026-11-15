@@ -23,7 +23,7 @@
 	  EquipGear(itemId, wornSlot?) / UnequipGear(slot) / SellGear(itemId)   equipment (8 worn slots)
 	  UseConsumable(id, petId?) / BuyConsumable(id, count)   the Stash: boosts, pet food, Merchant supplies
 	  ClaimDaily()                      today's login reward
-	  EquipPet(petId) / LevelPet(petId) the companion that follows you and its bonus
+	  EquipPet(petId)  the companion that follows you and its bonus
 	  SetStage(stage)                   pick any unlocked stage from the map (either member)
 	  Advance()                         step up one stage after a loss held the party back
 	  SetGhostLoadout(ids)              edit the PARTNER's ghost skills
@@ -114,7 +114,7 @@ end
 local function heroSheetOf(profile)
 	local season = profile.Season
 	local classId = season.ClassId
-	local petId, petLevel = Pets.Active(profile)
+	local petId, petLevel, petRank = Pets.Active(profile)
 	return Hero.Sheet({
 		ClassId = classId,
 		Level = season.Level,
@@ -124,6 +124,7 @@ local function heroSheetOf(profile)
 		Gear = (season.Equipment and season.Equipment.Equipped) or {},
 		PetId = petId,
 		PetLevel = petLevel,
+		PetRank = petRank,
 	})
 end
 
@@ -354,17 +355,6 @@ function handlers.EquipPet(player, profile, petId)
 		return false, "BadArgs"
 	end
 	local ok, reason = Pets.Equip(profile, petId)
-	if ok then
-		afterBuildChange(player)
-	end
-	return ok, reason
-end
-
-function handlers.LevelPet(player, profile, petId)
-	if type(petId) ~= "string" then
-		return false, "BadArgs"
-	end
-	local ok, reason = Pets.LevelUp(profile, petId)
 	if ok then
 		afterBuildChange(player)
 	end
