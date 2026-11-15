@@ -83,8 +83,8 @@ function Screens.Skills(container, state, call)
 	elseif me.SubclassId then
 		local def = SubclassRules.Defs[me.SubclassId]
 		Kit.label({ Size = UDim2.new(1, 0, 0, 22), Text = ("Path: %s  (%s)"):format(def.DisplayName, SubclassRules.Describe(me.SubclassId)), TextColor3 = C.Accent, TextSize = 13, Parent = scroll })
-	elseif me.SubclassUnlockStage then
-		Kit.label({ Size = UDim2.new(1, 0, 0, 22), Text = ("Reach stage %d to choose a subclass path."):format(me.SubclassUnlockStage), TextColor3 = C.Dim, TextSize = 13, Parent = scroll })
+	elseif me.SubclassUnlockLevel then
+		Kit.label({ Size = UDim2.new(1, 0, 0, 22), Text = ("Reach level %d to choose a subclass path."):format(me.SubclassUnlockLevel), TextColor3 = C.Dim, TextSize = 13, Parent = scroll })
 	end
 
 	Kit.label({ Size = UDim2.new(1, 0, 0, 22), Text = "Your skills", TextColor3 = C.Dim, Parent = scroll })

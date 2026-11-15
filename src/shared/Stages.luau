@@ -29,7 +29,13 @@ function Stages.TimeLimit(stage)
 end
 
 function Stages.Scale(stage)
-	return 1 + Config.ScalePerStage * (stage - 1) ^ Config.ScalePower
+	local scale = 1 + Config.ScalePerStage * (stage - 1) ^ Config.ScalePower
+	for _, tier in ipairs(Config.Tiers or {}) do
+		if stage >= tier.From then
+			scale *= tier.Mult
+		end
+	end
+	return scale
 end
 
 function Stages.Build(stage)
@@ -40,7 +46,7 @@ function Stages.Build(stage)
 	if Stages.IsBoss(stage) then
 		local bossNumber = stage // Config.BossEvery
 		local enemyId = Config.BossPool[(bossNumber - 1) % #Config.BossPool + 1]
-		table.insert(enemies, { Id = "e1", EnemyId = enemyId, Scale = scale })
+		table.insert(enemies, { Id = "e1", EnemyId = enemyId, Scale = scale * (Config.BossScaleMult or 1) })
 	else
 		local count = math.min(Config.MaxEnemies, 1 + (stage - 1) // 2)
 		for index = 1, count do

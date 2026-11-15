@@ -56,10 +56,10 @@ return function(modulesOverride)
 
 	-- choosing
 	local profile = ProfileTemplate.New()
-	profile.Season.HighestStage = 29
+	profile.Season.Level = 29
 	check("Nothing is available before the unlock stage", #Subclasses.Available(profile, "Warrior") == 0)
 	check("Choosing too early is refused", select(2, Subclasses.Choose(profile, "Warrior", "Berserker")) == "Locked")
-	profile.Season.HighestStage = 30
+	profile.Season.Level = 30
 	check("Both paths are offered at the unlock stage", #Subclasses.Available(profile, "Warrior") == 2)
 	check("A path of another class is refused", select(2, Subclasses.Choose(profile, "Warrior", "Priest")) == "WrongClass")
 	check("Unknown paths are refused", select(2, Subclasses.Choose(profile, "Warrior", "Nope")) == "UnknownSubclass")
@@ -114,7 +114,6 @@ return function(modulesOverride)
 		local w, c = ProfileTemplate.New(), ProfileTemplate.New()
 		c.Season.ClassId = "Cleric"
 		local mine = if def.Class == "Warrior" then w else c
-		mine.Season.HighestStage = 30
 		mine.Season.Level = 30
 		Subclasses.Choose(mine, def.Class, id)
 		for _, skillId in ipairs(def.Skills) do
@@ -145,7 +144,7 @@ return function(modulesOverride)
 	check("A ghost snapshot carries the subclass and its skills", snap.SubclassId == "Berserker" and snap.Owned.BloodFrenzy == true and snap.Owned.Cleave == true)
 
 	-- branches: a deeper tier stacks on its parent (data-only extension)
-	Config.Defs.TestWarlord = { Id = "TestWarlord", Class = "Warrior", Parent = "Berserker", UnlockStage = 60, Mods = { { Stat = "Attack", Mode = "Mul", Value = 0.1 } }, Skills = {}, DisplayName = "T", Description = "" }
+	Config.Defs.TestWarlord = { Id = "TestWarlord", Class = "Warrior", Parent = "Berserker", UnlockLevel = 60, Mods = { { Stat = "Attack", Mode = "Mul", Value = 0.1 } }, Skills = {}, DisplayName = "T", Description = "" }
 	local chain = Subclasses.Chain("TestWarlord")
 	check("Deeper tiers chain through their parents", #chain == 2 and chain[1].Id == "Berserker" and chain[2].Id == "TestWarlord")
 	check("Their stats and skills stack", #Subclasses.Mods("TestWarlord") == #Config.Defs.Berserker.Mods + 1 and #Subclasses.SkillIds("TestWarlord") == 3)

@@ -62,7 +62,7 @@ end
 function Subclasses.Available(profile, classId)
 	local list = {}
 	for _, def in ipairs(Subclasses.Choices(classId, Subclasses.Current(profile, classId))) do
-		if profile.Season.HighestStage >= def.UnlockStage then
+		if profile.Season.Level >= def.UnlockLevel then
 			table.insert(list, def)
 		end
 	end
@@ -117,7 +117,7 @@ function Subclasses.Choose(profile, classId, subclassId)
 	if def.Parent ~= (current or classId) then
 		return false, "NotAvailable"
 	end
-	if profile.Season.HighestStage < def.UnlockStage then
+	if profile.Season.Level < def.UnlockLevel then
 		return false, "Locked"
 	end
 	profile.Season.Subclasses = profile.Season.Subclasses or {}

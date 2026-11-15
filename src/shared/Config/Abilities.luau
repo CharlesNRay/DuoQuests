@@ -643,4 +643,65 @@ return {
 			{ Type = "Damage", Target = "Primary", Multiplier = 5, DamageType = "Magical", PerLevel = { Multiplier = 0.35 } },
 		},
 	},
+
+	-- Boss and enemy skills ---------------------------------------------------------
+	-- Bosses cast these on FIXED timers (opening Timer on the enemy, then Cooldown), so a
+	-- player can plan: a Telegraph warning appears that many seconds before the cast. A
+	-- Warrior wants a shield up when the blow lands; a Cleric wants a heal ready just after.
+	-- Not in any class pool (Enemy = true).
+	SlimeSplit = {
+		Id = "SlimeSplit",
+		DisplayName = "Slime Split",
+		Description = "Splits off slimelets. Area skills clear them fast.",
+		Enemy = true,
+		Rarity = "Common",
+		Cooldown = 14,
+		Conditions = { MaxAllies = 5 },
+		Effects = { { Type = "Summon", EnemyId = "Slimelet", Count = 2 } },
+	},
+
+	CrushingBlow = {
+		Id = "CrushingBlow",
+		DisplayName = "Crushing Blow",
+		Description = "A huge hit on one target.",
+		Enemy = true,
+		Rarity = "Common",
+		Cooldown = 11,
+		Telegraph = 1.5,
+		Effects = { { Type = "Damage", Target = "Primary", Multiplier = 3, PerLevel = { Multiplier = 0 } } },
+	},
+
+	Enrage = {
+		Id = "Enrage",
+		DisplayName = "Enrage",
+		Description = "Below half health, hits much harder and faster.",
+		Enemy = true,
+		Rarity = "Common",
+		Cooldown = 1,
+		UsesPerCombat = 1,
+		Conditions = { SelfHealthBelow = 0.5 },
+		Effects = { { Type = "ApplyStatus", Target = "Self", Status = "Enraged", Duration = 90 } },
+	},
+
+	SporeBurst = {
+		Id = "SporeBurst",
+		DisplayName = "Spore Burst",
+		Description = "Damages the whole party.",
+		Enemy = true,
+		Rarity = "Common",
+		Cooldown = 12,
+		Telegraph = 1.5,
+		Effects = { { Type = "Damage", Target = "AllEnemies", Multiplier = 1.2, DamageType = "Magical", PerLevel = { Multiplier = 0 } } },
+	},
+
+	SporeCall = {
+		Id = "SporeCall",
+		DisplayName = "Spore Call",
+		Description = "Calls sporelings to fight.",
+		Enemy = true,
+		Rarity = "Common",
+		Cooldown = 16,
+		Conditions = { MaxAllies = 5 },
+		Effects = { { Type = "Summon", EnemyId = "Sporeling", Count = 2 } },
+	},
 }

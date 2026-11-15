@@ -41,6 +41,8 @@
 	  Cast    { Source, Ability, Level }
 	  Status  { Target, Status, Duration, Amount, Source }  applied or refreshed
 	  StatusEnd { Target, Status, Reason? }       Reason "Broken" = shield used up
+	  Spawn   { Source, Entity = { Id, Name, Team, DefId, MaxHealth } }   a summoned minion joined
+	  Telegraph { Source, Ability, In }   a big enemy attack lands In seconds
 	  Death   { Target }
 	  Revive  { Source, Target, TargetHealth }    a fallen ally returned (Resurrection)
 	  Ultimate { Source, Ability }                the party ultimate fired
@@ -72,6 +74,7 @@ local Abilities = require(script.Parent.Parent.Config.Abilities)
 local Statuses = require(script.Parent.Parent.Config.Statuses)
 local Ultimates = require(script.Parent.Parent.Config.Ultimates)
 local AbilityStats = require(script.Parent.AbilityStats)
+local StatCalc = require(script.Parent.StatCalc)
 
 local Simulation = {}
 Simulation.__index = Simulation
@@ -125,6 +128,23 @@ end
 -- Each receives (sim, castCtx, effect). Register more in other modules.
 
 Simulation.Effects = {
+	-- Adds minions to the caster's team mid-fight (options.SpawnEnemy, default StatCalc.NewEnemy).
+	Summon = function(sim, castCtx, effect)
+		local caster = castCtx.Caster
+		assert(sim.SpawnEnemy ~= nil, "Summon needs Simulation option SpawnEnemy")
+		local list = if caster.Team == "Enemy" then sim.Enemies else sim.Party
+		for _ = 1, effect.Count or 1 do
+			sim.SummonCount += 1
+			local minion = sim.SpawnEnemy("s" .. sim.SummonCount, effect.EnemyId, caster.Scale or 1)
+			table.insert(list, minion)
+			sim:_record({
+				Type = "Spawn",
+				Source = caster.Id,
+				Entity = { Id = minion.Id, Name = minion.Name, Team = minion.Team, DefId = minion.DefId, MaxHealth = minion.Stats.MaxHealth },
+			})
+		end
+	end,
+
 	Damage = function(sim, castCtx, effect)
 		local caster = castCtx.Caster
 		local magnitude = AbilityStats.Value(castCtx.Ability, effect, "Multiplier", castCtx.Level)
@@ -189,6 +209,11 @@ Simulation.Effects = {
 -- Each receives (sim, caster, value) and returns true when casting is allowed.
 
 Simulation.Conditions = {
+	-- Living allies (self included) are at most this many. Caps summons.
+	MaxAllies = function(sim, caster, value)
+		return #livingOf(sim:_alliesOf(caster)) <= value
+	end,
+
 	MinEnemies = function(sim, caster, value)
 		return #livingOf(sim:_opponentsOf(caster)) >= value
 	end,
@@ -251,6 +276,8 @@ function Simulation.new(options)
 			else nil,
 		StatusDefs = options.StatusDefs or Statuses,
 
+		SpawnEnemy = options.SpawnEnemy or StatCalc.NewEnemy,
+		SummonCount = 0,
 		Ticks = 0,
 		Time = 0,
 		Events = {},
@@ -711,7 +738,13 @@ end
 -- Counts down cooldowns and status durations by one tick.
 function Simulation:_tickTimers(entity)
 	for _, slot in ipairs(entity.Abilities) do
+		local before = slot.Timer
 		slot.Timer = math.max(0, slot.Timer - Simulation.TICK)
+		local def = self.AbilityDefs[slot.Id]
+		-- warn the players shortly before a big enemy attack lands
+		if def and def.Telegraph and entity.Team == "Enemy" and before > def.Telegraph + EPSILON and slot.Timer <= def.Telegraph + EPSILON then
+			self:_record({ Type = "Telegraph", Source = entity.Id, Ability = def.Id, In = slot.Timer })
+		end
 	end
 
 	for index = #entity.Statuses, 1, -1 do

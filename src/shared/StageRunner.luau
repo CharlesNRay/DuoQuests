@@ -119,6 +119,7 @@ function StageRunner.Run(members, stage, seed, ultimate, record)
 		Ultimate = ultimate,
 		MaxSeconds = Stages.TimeLimit(stage),
 		RecordEvents = record == true,
+		SpawnEnemy = StatCalc.NewEnemy,
 	})
 	local roster
 	if record then

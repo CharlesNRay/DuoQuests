@@ -170,6 +170,7 @@ local function actorFor(self, id)
 end
 
 function Replay:Play(info, onDone)
+	self.Spawned = 0
 	self.Token += 1
 	local token = self.Token
 	self:_clearEnemies()
@@ -280,6 +281,27 @@ function Replay:_event(e)
 			else
 				target:Fall()
 			end
+		end
+	elseif t == "Spawn" then
+		-- a boss summoned a minion: it joins the enemy side
+		local entry = e.Entity
+		if entry and not self.Enemies[entry.Id] then
+			self.Spawned = (self.Spawned or 0) + 1
+			local x = ENEMY_X[#ENEMY_X] + 4 + ((self.Spawned - 1) % 4) * 3.5
+			local actor = Actor.new(scene, Models.Enemy(entry.DefId), { Name = entry.Name, Facing = -1, MaxHealth = entry.MaxHealth })
+			actor:Place(x)
+			self.Enemies[entry.Id] = actor
+			flash(scene, actor:Pos(), Color3.fromRGB(150, 230, 150), 4)
+		end
+	elseif t == "Telegraph" then
+		-- a big hit is coming: warn the player so they can see why a shield matters
+		local def = Abilities[e.Ability]
+		local source = actorFor(self, e.Source)
+		if def and source then
+			floatText(scene, source:Pos() + Vector3.new(0, 5, 0), def.DisplayName .. "!", Color3.fromRGB(255, 90, 80), 26)
+		end
+		if def and self.OnBanner then
+			self.OnBanner(def.DisplayName .. " incoming!", Color3.fromRGB(255, 90, 80))
 		end
 	elseif t == "Revive" then
 		local target = actorFor(self, e.Target)

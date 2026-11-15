@@ -81,3 +81,10 @@ Newest first.
 - [x] Starter ghost companion: single-member parties get a ghost partner (Cleric, or Warrior for Cleric owners) that mirrors the owner's level, is editable via ghost loadout, and is replaced when a real partner joins.
 - [x] Balance pass 2026-11-15 (gear and subclass numbers cut, sim bug fixed) - see docs/BALANCE.md
 - Open questions: respec for subclasses, deeper branches, stronger pets, pets as combatants.
+
+## 2026-11-15 (pacing and bosses)
+- [x] Level pacing retuned to the owner's goals (lv10 ~12m, lv20 ~27m, lv30 ~1h) - docs/BALANCE.md
+- [x] Subclass unlock moved to player level 30; enemies step up after floor 30
+- [x] Boss mechanics: fixed-timer heavy attacks with telegraph warnings, minion summons, enrage; 3 bosses (Slime King, Goblin Warlord, Spore Mother)
+- [ ] Hand-check floor 40 (Slime King, stronger) and later bosses; add more boss types and a boss info card showing their attack timings
+- [ ] Simulator: smarter skill choice and a companion mode

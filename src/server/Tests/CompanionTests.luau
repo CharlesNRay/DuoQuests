@@ -61,7 +61,7 @@ return function(modulesOverride)
 	Party.OnlineTick(party, { { UserId = OWNER, Name = "Owner", Profile = profile } }, 8, 300)
 	check("The companion matches its owner's level and slots", party.Companion.Level == 12 and party.Companion.SlotLevels[1] == 5)
 	check("Its subclass path comes at the unlock stage", party.Companion.SubclassId == nil)
-	profile.Season.HighestStage = 30
+	profile.Season.Level = 30
 	Party.OnlineTick(party, { { UserId = OWNER, Name = "Owner", Profile = profile } }, 9, 400)
 	check("Then it takes a path and its first skill", party.Companion.SubclassId == "Priest" and party.Companion.Owned.Sanctuary == true)
 

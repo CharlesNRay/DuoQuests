@@ -17,6 +17,7 @@ return {
 	RewardScale = 0.1, -- one dial that scales gold and XP income (shards have their own numbers below)
 	GoldBase = 10,
 	GoldPerStage = 4,
+	XPScale = 14, -- multiplies XP only (the level pacing dial): lv10 ~12 min, lv20 ~27 min, lv30 ~1 h
 	XPRewardBase = 10,
 	XPRewardPerStage = 3,
 	ShardsPerClear = 1, -- plus one extra per ShardStageStep stages

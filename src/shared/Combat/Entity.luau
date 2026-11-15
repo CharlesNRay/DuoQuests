@@ -9,7 +9,8 @@
 	  Team       "Party" or "Enemy"
 	  Stats      MaxHealth (required), Attack, Defense, AttackSpeed,
 	             CritChance, CritMultiplier (all optional)
-	  Abilities  list of { Id = "Fireball", Level = 1 }, in priority order
+	  Abilities  list of { Id = "Fireball", Level = 1, Timer = 0 }, in priority order
+	             (Timer = seconds before the first cast; bosses use it to schedule their attacks)
 	             (slot 1 is checked first). Definitions live in Config/Abilities.
 
 	Fields the simulation maintains while fighting:
@@ -31,7 +32,7 @@ function Entity.new(def)
 	local abilities = {}
 	for _, slot in ipairs(def.Abilities or {}) do
 		assert(slot.Id ~= nil, "Ability slot needs an Id")
-		table.insert(abilities, { Id = slot.Id, Level = slot.Level or 1, Timer = 0, Uses = 0 })
+		table.insert(abilities, { Id = slot.Id, Level = slot.Level or 1, Timer = slot.Timer or 0, Uses = 0 })
 	end
 
 	return {

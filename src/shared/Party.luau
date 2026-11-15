@@ -256,7 +256,7 @@ local function followOwner(companion, ownerProfile)
 	end
 	local pathId = COMPANION_PATHS[companion.ClassId]
 	local def = Subclasses.Defs[pathId]
-	if def and season.HighestStage >= def.UnlockStage and companion.SubclassId == nil then
+	if def and season.Level >= def.UnlockLevel and companion.SubclassId == nil then
 		companion.SubclassId = pathId
 		companion.Owned[def.Skills[1]] = true
 	end

@@ -117,6 +117,7 @@ function BalanceTool.Run(m, options)
 
 	local clock, stage, seed, fights = 0, 1, 1, 0
 	local snapshots, nextSnapshot = {}, 1
+	local levelMinutes, bossLog, bossLosses = {}, {}, {}
 
 	while clock < last do
 		seed += 1
@@ -142,6 +143,20 @@ function BalanceTool.Run(m, options)
 			equipBest(m, member.Profile, classId)
 		end
 
+		for _, goal in ipairs({ 5, 10, 15, 20, 25, 30, 40, 50 }) do
+			if levelMinutes[goal] == nil and warrior.Season.Level >= goal then
+				levelMinutes[goal] = { Minutes = clock / 60, Frontier = warrior.Season.HighestStage }
+			end
+		end
+		if outcome.Stage % 10 == 0 then
+			if outcome.Won then
+				if bossLog[outcome.Stage] == nil then
+					bossLog[outcome.Stage] = { Minutes = clock / 60, Losses = bossLosses[outcome.Stage] or 0 }
+				end
+			else
+				bossLosses[outcome.Stage] = (bossLosses[outcome.Stage] or 0) + 1
+			end
+		end
 		while hours[nextSnapshot] and clock >= hours[nextSnapshot] * 3600 do
 			local owned = 0
 			for _, abilityId in ipairs(m.Classes.Warrior.AbilityPool) do
@@ -164,6 +179,8 @@ function BalanceTool.Run(m, options)
 			nextSnapshot += 1
 		end
 	end
+	snapshots.LevelMinutes = levelMinutes -- { [level] = { Minutes, Frontier } } first time reached
+	snapshots.BossLog = bossLog -- { [stage] = { Minutes, Losses } } first boss kill
 	return snapshots
 end
 

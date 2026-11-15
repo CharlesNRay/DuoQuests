@@ -112,7 +112,7 @@ local function buildState(player)
 			ActivePet = (Pets.Active(profile)),
 			SubclassId = Subclasses.Current(profile, classId),
 			SubclassChoices = subclassChoices(profile, classId),
-			SubclassUnlockStage = (Subclasses.Choices(classId, Subclasses.Current(profile, classId))[1] or {}).UnlockStage,
+			SubclassUnlockLevel = (Subclasses.Choices(classId, Subclasses.Current(profile, classId))[1] or {}).UnlockLevel,
 			Gear = Gear.List(profile),
 			Daily = Daily.Status(profile, os.time()),
 		},

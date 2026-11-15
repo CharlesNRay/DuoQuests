@@ -114,15 +114,17 @@ function StatCalc.NewEnemy(id, enemyId, scale)
 	stats.MaxHealth = math.floor(stats.MaxHealth * scale)
 	stats.Attack = stats.Attack * scale
 
-	return Entity.new({
+	local entity = Entity.new({
 		Id = id,
 		Name = enemy.DisplayName,
 		Team = "Enemy",
 		DefId = enemyId,
 		DamageType = enemy.DamageType,
 		Stats = stats,
-		Abilities = enemy.Abilities, -- nil for now; bosses get abilities later
+		Abilities = enemy.Abilities,
 	})
+	entity.Scale = scale -- summons copy their summoner's scale
+	return entity
 end
 
 return StatCalc

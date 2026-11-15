@@ -117,4 +117,11 @@ return {
 		Description = "Attack speed reduced.",
 		Mods = { { Stat = "AttackSpeed", Mode = "Mult", Value = 0.6 } },
 	},
+
+	Enraged = {
+		Id = "Enraged",
+		DisplayName = "Enraged",
+		Description = "Hits much harder and faster.",
+		Mods = { { Stat = "Attack", Mode = "Mult", Value = 1.5 }, { Stat = "AttackSpeed", Mode = "Mult", Value = 1.25 } },
+	},
 }

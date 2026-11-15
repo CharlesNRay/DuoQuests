@@ -2,7 +2,7 @@
 	Subclasses (ModuleScript, data only)
 	Location: ReplicatedStorage > Shared > Config > Subclasses
 
-	At stage UnlockStage a player picks ONE path for their class. A path is a
+	At player level UnlockLevel a player picks ONE path for their class. A path is a
 	big, permanent (for the season) power spike: large stat bonuses plus new
 	class skills only that path can use. Right now every class has 2 paths.
 
@@ -10,7 +10,7 @@
 	  Class        the class it belongs to
 	  Parent       what it branches from: the class id (tier 1) or another
 	               subclass id (deeper tiers, NOT used yet)
-	  UnlockStage  reach this stage (frontier) to be able to pick it
+	  UnlockLevel  reach this PLAYER LEVEL to be able to pick it
 	  Mods         { Stat, Mode = "Add"|"Mul", Value } applied on top of the class
 	               stats (Mul adds a fraction: 0.4 = +40%). DamageDealt,
 	               HealingDealt and DamageTaken are multipliers that start at 1.
@@ -20,7 +20,7 @@
 
 	MORE BRANCHES LATER: to add a third path, add another entry with the same
 	Parent. To split a path further, add entries whose Parent is that subclass
-	and set a higher UnlockStage; Subclasses.Chain() already walks Parent links,
+	and set a higher UnlockLevel; Subclasses.Chain() already walks Parent links,
 	so stats and skills of every tier stack with no code change.
 
 	Every number is a PLACEHOLDER to be tuned (see docs/PROGRESSION.md).
@@ -33,7 +33,7 @@ return {
 			DisplayName = "Berserker",
 			Class = "Warrior",
 			Parent = "Warrior",
-			UnlockStage = 30,
+			UnlockLevel = 30,
 			Description = "All-out offense. Huge attack, attack speed and crits; a frenzy that makes the Warrior a damage dealer.",
 			Mods = {
 				{ Stat = "Attack", Mode = "Mul", Value = 0.25 },
@@ -49,7 +49,7 @@ return {
 			DisplayName = "Guardian",
 			Class = "Warrior",
 			Parent = "Warrior",
-			UnlockStage = 30,
+			UnlockLevel = 30,
 			Description = "An immovable wall. Enormous health and defense, damage reduction and party-wide shields.",
 			Mods = {
 				{ Stat = "MaxHealth", Mode = "Mul", Value = 0.35 },
@@ -64,7 +64,7 @@ return {
 			DisplayName = "Priest",
 			Class = "Cleric",
 			Parent = "Cleric",
-			UnlockStage = 30,
+			UnlockLevel = 30,
 			Description = "A true healer. Much stronger healing, more health, and party-wide heals and wards.",
 			Mods = {
 				{ Stat = "HealingDealt", Mode = "Mul", Value = 0.3 },
@@ -79,7 +79,7 @@ return {
 			DisplayName = "Templar",
 			Class = "Cleric",
 			Parent = "Cleric",
-			UnlockStage = 30,
+			UnlockLevel = 30,
 			Description = "A holy warrior. Big attack and holy damage; smites enemies and blesses the party.",
 			Mods = {
 				{ Stat = "Attack", Mode = "Mul", Value = 0.28 },
