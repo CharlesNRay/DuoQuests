@@ -23,6 +23,7 @@
 	  EquipGear(itemId, wornSlot?) / UnequipGear(slot) / SellGear(itemId)   equipment (8 worn slots)
 	  UseConsumable(id, petId?) / BuyConsumable(id, count)   the Stash: boosts, pet food, Merchant supplies
 	  ClaimDaily()                      today's login reward
+	  ClaimQuest(index) / ClaimQuestBonus() / ClaimPass(level|"All")   daily quests and the season pass
 	  EquipPet(petId)  the companion that follows you and its bonus
 	  SetStage(stage)                   pick any unlocked stage from the map (either member)
 	  Advance()                         step up one stage after a loss held the party back
@@ -51,6 +52,7 @@ local BossService = require(script.Parent.BossService)
 local Hero = require(Shared.Hero)
 local World = require(Shared.World)
 local Daily = require(Shared.Daily)
+local Quests = require(Shared.Quests)
 local Subclasses = require(Shared.Subclasses)
 local Abilities = require(Shared.Config.Abilities)
 
@@ -167,6 +169,8 @@ local function buildState(player)
 			Supplies = suppliesOf(profile),
 			Sheet = heroSheetOf(profile),
 			Daily = Daily.Status(profile, os.time()),
+			Quests = Quests.Daily(profile, os.time()),
+			Pass = Quests.Pass(profile),
 		},
 	}
 
@@ -246,6 +250,7 @@ function handlers.Wish(player, profile, kind, tierId, method, count)
 	end
 	local ok, data = Wishing.Wish(profile, kind, tierId, method, count)
 	if ok then
+		Quests.Record(profile, "Wish", #data.Results)
 		afterBuildChange(player)
 	end
 	return ok, data
@@ -441,6 +446,9 @@ function handlers.UseConsumable(player, profile, id, petId, force)
 	end
 	local ok, result = Consumables.Use(profile, id, os.time(), petId, force == true)
 	if ok then
+		if petId then
+			Quests.Record(profile, "Feed", 1)
+		end
 		afterBuildChange(player)
 	end
 	return ok, result
@@ -477,6 +485,29 @@ end
 
 function handlers.ClaimDaily(_, profile)
 	return Daily.Claim(profile, os.time())
+end
+
+-- Daily quests and the season pass
+function handlers.ClaimQuest(_, profile, index)
+	if type(index) ~= "number" then
+		return false, "BadArgs"
+	end
+	return Quests.ClaimQuest(profile, index, os.time())
+end
+
+function handlers.ClaimQuestBonus(_, profile)
+	return Quests.ClaimBonus(profile, os.time())
+end
+
+function handlers.ClaimPass(_, profile, level)
+	if level == "All" then
+		local claimed = Quests.ClaimAllPass(profile)
+		return claimed > 0, if claimed > 0 then claimed else "NothingToClaim"
+	end
+	if type(level) ~= "number" then
+		return false, "BadArgs"
+	end
+	return Quests.ClaimPass(profile, level)
 end
 
 function handlers.ChooseSubclass(player, profile, subclassId)

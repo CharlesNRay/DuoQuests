@@ -27,6 +27,7 @@ local Passives = require(script.Parent.Passives)
 local Pets = require(script.Parent.Pets)
 local Gear = require(script.Parent.Gear)
 local Consumables = require(script.Parent.Consumables)
+local Quests = require(script.Parent.Quests)
 
 local Progression = {}
 
@@ -99,11 +100,24 @@ function Progression.ApplyClear(profile, stage, rand)
 		season.Currencies.SkillPicks += skillPicks
 	end
 
+	-- quests and the season pass count every won fight
+	Quests.Record(profile, "Clear", 1)
+	if isFrontier then
+		Quests.Record(profile, "Frontier", 1)
+	end
+	if Stages.IsBoss(stage) then
+		Quests.Record(profile, "Boss", 1)
+	end
+
 	local petsGained = Pets.GrantForClear(profile, stage)
 	local dropped = Gear.RollDrop(stage, isFrontier, bonuses.ItemRarity, rand or math.random)
 	local item, itemSoldFor
 	if dropped then
 		item, itemSoldFor = Gear.Grant(profile, stage, dropped)
+	end
+
+	if item or itemSoldFor then
+		Quests.Record(profile, "Gear", 1)
 	end
 
 	local consumableId = Consumables.RollDrop(Stages.IsBoss(stage), rand or math.random)

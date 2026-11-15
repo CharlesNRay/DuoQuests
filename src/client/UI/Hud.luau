@@ -358,6 +358,15 @@ function Hud.new(root)
 
 		self:SetBadge("Skills", (me.SkillPicks or 0) > 0 or #(me.SubclassChoices or {}) > 0)
 		self:SetBadge("Party", party == nil)
+		-- red dot on Quests when a quest, the daily bonus or a pass level is waiting to be claimed
+		local waiting = me.Quests ~= nil and me.Quests.BonusReady == true
+		for _, q in ipairs(me.Quests and me.Quests.Quests or {}) do
+			waiting = waiting or (q.Done and not q.Claimed)
+		end
+		for _, r in ipairs(me.Pass and me.Pass.Rows or {}) do
+			waiting = waiting or (r.Reached and not r.Claimed and not r.Premium)
+		end
+		self:SetBadge("Quests", waiting)
 
 		-- party cards
 		Kit.clear(self.Cards)

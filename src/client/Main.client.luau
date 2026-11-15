@@ -24,6 +24,7 @@ Screens.Merchant = Shops.Merchant
 Screens.Blacksmith = Shops.Blacksmith
 Screens.Hero = HeroScreen.Hero
 Screens.Map = MapScreen.Map
+Screens.Quests = require(script.Parent.UI.QuestScreen).Quests
 local World = require(Shared.World)
 local Zones = require(Shared.Zones)
 local Arenas = require(script.Parent.Battle.Arenas)
@@ -134,7 +135,7 @@ end
 local PANEL_DEFAULT = Vector2.new(500, 286)
 local PANEL_SIZES = {
 	Map = Vector2.new(640, 298), Hero = Vector2.new(640, 298), Skills = Vector2.new(660, 344),
-	Merchant = Vector2.new(540, 292), Blacksmith = Vector2.new(540, 292), Wish = Vector2.new(640, 310), Boss = Vector2.new(640, 310),
+	Merchant = Vector2.new(540, 292), Blacksmith = Vector2.new(540, 292), Wish = Vector2.new(640, 310), Boss = Vector2.new(640, 310), Quests = Vector2.new(640, 330),
 }
 local SHOP_NPC = { Merchant = "Merchant", Blacksmith = "Blacksmith", Wish = "Tree" }
 local panel = Kit.frame({ Name = "Panel", Size = UDim2.new(0, 500, 0, 286), Position = UDim2.new(0.5, -250, 0, 42), BackgroundColor3 = Kit.Colors.Bg, Visible = false, ZIndex = 5, Parent = root })
@@ -340,6 +341,7 @@ hud:AddButton("Boss", "mini", "👹", "Bosses", function()
 	extra.Boss = nil
 	open("Boss", "Bosses")
 end)
+hud:AddButton("Quests", "mini", "📜", "Quests & Season Pass", function() open("Quests", "Quests & Season Pass") end)
 hud:AddButton("Log", "mini", "📋", "Fight log", function() open("Log", "Last Fight") end)
 
 push.OnClientEvent:Connect(function(kind, info)

@@ -157,3 +157,11 @@ Newest first.
 - Wishing Tree bigger/more magical and placed on the paving; HUD exact-value hovers, clickable partner card; skill/passive swaps are optimistic (no lag).
 - Merchant: rarity checkboxes + one Sell button; new Bag tab to upgrade bag size (+5 slots, up to 14 upgrades).
 - TODO: worn set visuals, verify tree/merchant visuals in Studio (Studio kept crashing), mobile tooltips.
+
+## Pets, Wishstones, quests (Nov 15, evening)
+- Pets: no more gold upgrades. Duplicates from wishes rank a pet up (up to rank 6, +25% stats per rank, stronger pet skill); pets still level from pet food and fighting. Some pets give two stats; single-stat pets give more of that stat. Every pet has its own skill (cast by its owner as an extra ability, level = rank).
+- Wishstones: one currency for both Wishing Tree options (and tickets). Earned from every stage clear (frontier 2, boss +4, every 4th replay 1), daily login, quests and the season pass.
+- Stash: boosts warn before wasting time over the 2-hour cap (server refuses unless forced).
+- Daily quests (3 per day + bonus) and a 30-level season pass (free track; Premium levels reserved). Quests window (HUD 📜). Pass XP from stage clears and quests.
+- Skills have unique icons; panels keep their scroll position on refresh; tree moved onto the grass; townsfolk are non-solid and walk away from you; arena backdrop wall removed; arena name cards show only up close; fight HUD shows the stage being fought (not the next one).
+- TODO: premium pass track, boss strike quest, weekly quests, pet skill icons, verify all of this in Studio.

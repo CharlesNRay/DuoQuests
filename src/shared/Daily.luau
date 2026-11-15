@@ -49,6 +49,7 @@ function Daily.RewardFor(profile, day)
 		Gold = math.floor(clear.Gold * def.GoldClears),
 		Shards = def.Shards,
 		SkillPicks = def.SkillPicks or 0,
+		Wishstones = def.Wishstones or 0,
 	}
 end
 
@@ -80,9 +81,10 @@ function Daily.Claim(profile, now)
 	season.Currencies.Gold += reward.Gold
 	season.Currencies.Shards += reward.Shards
 	season.Currencies.SkillPicks += reward.SkillPicks
+	season.Currencies.Wishstones = (season.Currencies.Wishstones or 0) + reward.Wishstones
 	state.Streak = streak
 	state.LastDay = today
-	return true, { Day = day, Streak = streak, Gold = reward.Gold, Shards = reward.Shards, SkillPicks = reward.SkillPicks }
+	return true, { Day = day, Streak = streak, Gold = reward.Gold, Shards = reward.Shards, SkillPicks = reward.SkillPicks, Wishstones = reward.Wishstones }
 end
 
 return Daily
