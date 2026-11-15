@@ -145,7 +145,15 @@ Newest first.
 
 
 ## Boss events (world boss + season boss)
-- World boss: appears on a timer on every server and wanders the plaza; each player strikes it (45s fight with their own build, cooldown, strike cap); at the end of the timer everyone gets every damage tier they reached (cumulative).
+- World boss: appears on a timer on every server and stands in the arena area; each player strikes it (45s fight with their own build, cooldown, strike cap); at the end of the timer everyone gets every damage tier they reached (cumulative).
 - Season boss "Verdant Colossus": one health bar for all servers (DataStore counter, UpdateAsync batches), permanent HP loss, withers in the season's finale so it dies near the end; health thresholds give community rewards (claim in the Boss window); on death every contributor gets a Colossus Egg -> Colossling (Legendary pet).
 - Code: Shared/Bosses + Config/Bosses (rules/data, BossEventTests), Server/Services/BossService, ApiService BossState/BossStrike/BossClaim/BossHatch, Screens.Boss + HUD button.
 - TODO: Colossling pet model (Golem shape), partner joins a strike, tune numbers, season StartsAt/EndsAt per season.
+
+## Polish batch (Nov 15, later)
+- Boss strikes are real auto-battle fights (player + partner/ghost) in the player's arena; bosses are stationary.
+- Plaza spread out (radius 70); Gear dock page removed; passives drag-and-drop; Gold Charm removed; spectate card with Advance.
+- Loot has 5 rarity tiers (Common, Uncommon, Rare, Epic, Legendary) blended by stage (early C/U, mid U/R/E, late E/L).
+- Wishing Tree bigger/more magical and placed on the paving; HUD exact-value hovers, clickable partner card; skill/passive swaps are optimistic (no lag).
+- Merchant: rarity checkboxes + one Sell button; new Bag tab to upgrade bag size (+5 slots, up to 14 upgrades).
+- TODO: worn set visuals, verify tree/merchant visuals in Studio (Studio kept crashing), mobile tooltips.
