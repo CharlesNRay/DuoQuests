@@ -147,6 +147,10 @@ end)
 
 function extra.RefreshBoss()
 	local ok, data = api:InvokeServer("BossState")
+	if not ok then
+		task.wait(0.3) -- the server rate-limits calls made back to back
+		ok, data = api:InvokeServer("BossState")
+	end
 	if ok and data then
 		extra.Boss = data
 		extra.BossAt = os.clock()
