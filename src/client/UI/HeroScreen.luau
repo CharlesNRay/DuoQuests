@@ -26,7 +26,7 @@ local C = Kit.Colors
 
 local HeroScreen = {}
 
-local SLOTS = { "Weapon", "Armor", "Trinket" }
+local SLOTS = { "Helmet", "Amulet", "Armor", "Pants", "Weapon", "Ring1", "Ring2", "Boots" }
 
 -- The avatar shown on the turntable ------------------------------------------
 local avatarCache = {} -- [userId] = Model (kept so reopening the screen is instant)
@@ -84,13 +84,32 @@ local function turntable(parent, info, size)
 	Kit.corner(10).Parent = viewport
 	local model = avatarFor(info)
 	model.Parent = viewport
-	local cf, extents = model:GetBoundingBox()
-	local pivot = cf.Position
-	model:PivotTo(model:GetPivot() * CFrame.new(-pivot.X, -pivot.Y, -pivot.Z) * CFrame.new(0, 0, 0))
-	local height = math.max(extents.Y, 4)
+	-- frame the body only (accessories and tools can stretch the bounding box and push the hero away)
+	local minV, maxV
+	for _, d in ipairs(model:GetDescendants()) do
+		if d:IsA("BasePart") and not d:FindFirstAncestorOfClass("Accessory") and not d:FindFirstAncestorOfClass("Tool") and d.Name ~= "HumanoidRootPart" then
+			local half = d.Size / 2
+			for _, sx in ipairs({ -1, 1 }) do
+				for _, sy in ipairs({ -1, 1 }) do
+					for _, sz in ipairs({ -1, 1 }) do
+						local corner = d.CFrame:PointToWorldSpace(Vector3.new(half.X * sx, half.Y * sy, half.Z * sz))
+						minV = if minV then Vector3.new(math.min(minV.X, corner.X), math.min(minV.Y, corner.Y), math.min(minV.Z, corner.Z)) else corner
+						maxV = if maxV then Vector3.new(math.max(maxV.X, corner.X), math.max(maxV.Y, corner.Y), math.max(maxV.Z, corner.Z)) else corner
+					end
+				end
+			end
+		end
+	end
+	if not minV then
+		local cf0, ext0 = model:GetBoundingBox()
+		minV, maxV = cf0.Position - ext0 / 2, cf0.Position + ext0 / 2
+	end
+	local center = (minV + maxV) / 2
+	model:PivotTo(model:GetPivot() * CFrame.new(-center.X, -center.Y, -center.Z))
+	local height = math.clamp(maxV.Y - minV.Y, 2, 12)
 	local camera = Instance.new("Camera")
 	camera.FieldOfView = 40
-	camera.CFrame = CFrame.lookAt(Vector3.new(0, height * 0.05, -height * 1.55), Vector3.new(0, 0, 0))
+	camera.CFrame = CFrame.lookAt(Vector3.new(0, 0, -height * 1.45), Vector3.new(0, 0, 0))
 	camera.Parent = viewport
 	viewport.CurrentCamera = camera
 	local base = model:GetPivot()
@@ -127,12 +146,13 @@ local function skillRow(parent, ids, levels)
 	end
 end
 
--- Worn gear sits on the avatar where it belongs: weapon by the hand, armour on the chest, trinket
--- at the neck. Tiles are children of the viewport, so they float over the turntable.
+-- Worn gear sits around the avatar, head to feet: armour pieces down the left, weapon, rings and
+-- boots down the right. Tiles are children of the viewport, so they float over the turntable.
 local DOLL = {
-	Weapon = { Position = UDim2.new(0, 6, 0, 66), Label = "Weapon" },
-	Armor = { Position = UDim2.new(1, -46, 0, 56), Label = "Armor" },
-	Trinket = { Position = UDim2.new(1, -46, 0, 8), Label = "Trinket" },
+	Helmet = { UDim2.new(0, 6, 0, 6), "Helmet" }, Amulet = { UDim2.new(0, 6, 0, 50), "Amulet" },
+	Armor = { UDim2.new(0, 6, 0, 94), "Armor" }, Pants = { UDim2.new(0, 6, 0, 138), "Pants" },
+	Weapon = { UDim2.new(1, -44, 0, 6), "Weapon" }, Ring1 = { UDim2.new(1, -44, 0, 50), "Ring" },
+	Ring2 = { UDim2.new(1, -44, 0, 94), "Ring" }, Boots = { UDim2.new(1, -44, 0, 138), "Boots" },
 }
 
 local function gearOnDoll(viewport, worn)
@@ -140,13 +160,13 @@ local function gearOnDoll(viewport, worn)
 		local spot = DOLL[slot]
 		local item = worn[slot]
 		if item then
-			local tile = Icons.Item(viewport, item, { Size = UDim2.fromOffset(40, 40), Position = spot.Position, Level = item.ItemPower })
+			local tile = Icons.Item(viewport, item, { Size = UDim2.fromOffset(38, 38), Position = spot[1], Level = item.ItemPower })
 			tile.ZIndex = 4
 			Kit.Hover(tile, function() return Tips.Item(item, { Equipped = worn }) end)
 		else
-			local empty = Kit.frame({ Size = UDim2.fromOffset(40, 40), Position = spot.Position, BackgroundColor3 = Color3.fromRGB(24, 26, 40), BackgroundTransparency = 0.3, ZIndex = 4, Parent = viewport })
+			local empty = Kit.frame({ Size = UDim2.fromOffset(38, 38), Position = spot[1], BackgroundColor3 = Color3.fromRGB(24, 26, 40), BackgroundTransparency = 0.3, ZIndex = 4, Parent = viewport })
 			Kit.new("UIStroke", { Color = Color3.fromRGB(90, 98, 130), Thickness = 1, Parent = empty })
-			Kit.label({ Size = UDim2.fromScale(1, 1), Text = spot.Label, TextSize = 9, TextColor3 = C.Dim, TextXAlignment = Enum.TextXAlignment.Center, TextWrapped = false, ZIndex = 5, Parent = empty })
+			Kit.label({ Size = UDim2.fromScale(1, 1), Text = spot[2], TextSize = 9, TextColor3 = C.Dim, TextXAlignment = Enum.TextXAlignment.Center, TextWrapped = false, ZIndex = 5, Parent = empty })
 		end
 	end
 end
@@ -217,27 +237,22 @@ function HeroScreen.Hero(container, state, _, extra)
 		Kit.label({ Size = UDim2.new(1, -240, 0, 32), Position = UDim2.fromOffset(236, 0), Text = "Join a party to see your partner here.", TextColor3 = C.Dim, TextSize = 12, Parent = container })
 	end
 
-	-- left: the avatar and headline facts
-	local left = Kit.frame({ Size = UDim2.new(0, 190, 1, -38), Position = UDim2.fromOffset(0, 38), BackgroundTransparency = 1, NoCorner = true, Parent = container })
-	local viewport = turntable(left, hero, UDim2.new(1, 0, 1, -92))
+	-- left: the avatar with its gear around it
+	local left = Kit.frame({ Size = UDim2.new(0, 250, 1, -38), Position = UDim2.fromOffset(0, 38), BackgroundTransparency = 1, NoCorner = true, Parent = container })
+	local viewport = turntable(left, hero, UDim2.new(1, 0, 1, 0))
 	gearOnDoll(viewport, hero.Worn or {})
 	local classDef = Classes[hero.ClassId]
 	local pet = hero.PetId and PetConfig.Defs[hero.PetId]
 	local subclass = hero.SubclassId and Subclasses.Defs[hero.SubclassId]
-	local lines = {
-		("%s  -  Lv %d"):format(hero.Name, hero.Level),
-		("%s%s"):format(classDef and classDef.DisplayName or hero.ClassId, subclass and ("  /  " .. subclass.DisplayName) or ""),
-		pet and ("Pet: %s Lv %d"):format(pet.DisplayName, hero.PetLevel or 1) or "No pet",
-	}
 	local status = if hero.IsCompanion then "Starter ghost" elseif hero.Online then "Online" else "Ghost (offline)"
-	Kit.label({ Size = UDim2.new(1, 0, 0, 88), Position = UDim2.new(0, 0, 1, -88), Text = table.concat(lines, "\n") .. "\n" .. status, TextSize = 13, Parent = left })
 
 	-- right: scrolling sheet
 	local scroll = Kit.new("ScrollingFrame", {
-		Size = UDim2.new(1, -200, 1, -38), Position = UDim2.fromOffset(200, 38), BackgroundTransparency = 1, BorderSizePixel = 0,
+		Size = UDim2.new(1, -260, 1, -38), Position = UDim2.fromOffset(260, 38), BackgroundTransparency = 1, BorderSizePixel = 0,
 		CanvasSize = UDim2.new(), AutomaticCanvasSize = Enum.AutomaticSize.Y, ScrollBarThickness = 5, Parent = container,
 	})
-	Kit.new("UIListLayout", { Padding = UDim.new(0, 4), Parent = scroll })
+	Kit.new("UIListLayout", { Padding = UDim.new(0, 4), SortOrder = Enum.SortOrder.LayoutOrder, Parent = scroll })
+	Kit.label({ Size = UDim2.new(1, 0, 0, 36), TextWrapped = true, Text = ("%s  -  Lv %d  %s%s\n%s   -   %s"):format(hero.Name, hero.Level, classDef and classDef.DisplayName or hero.ClassId, subclass and ("  /  " .. subclass.DisplayName) or "", pet and ("Pet: %s Lv %d"):format(pet.DisplayName, hero.PetLevel or 1) or "No pet", status), TextSize = 13, Parent = scroll })
 
 	section(scroll, "STATS  (with gear, passives and pet)")
 	if hero.Sheet then

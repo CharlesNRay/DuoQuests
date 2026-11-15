@@ -89,7 +89,7 @@ return function(modulesOverride)
 	local sorted = ProfileTemplate.New()
 	Gear.Grant(sorted, 3, { Slot = "Armor", Rarity = "Common" })
 	Gear.Grant(sorted, 30, { Slot = "Weapon", Rarity = "Epic" })
-	Gear.Grant(sorted, 12, { Slot = "Trinket", Rarity = "Rare" })
+	Gear.Grant(sorted, 12, { Slot = "Amulet", Rarity = "Rare" })
 	local listed = Gear.List(sorted).Inventory
 	check("The bag lists the strongest item first", listed[1].ItemPower >= listed[2].ItemPower and listed[2].ItemPower >= listed[3].ItemPower and listed[1].Slot == "Weapon")
 
@@ -182,7 +182,7 @@ return function(modulesOverride)
 	local worn = Gear.Grant(shop, 30, { Slot = "Weapon", Rarity = "Epic" })
 	Gear.Equip(shop, worn.Id)
 	local c1 = Gear.Grant(shop, 5, { Slot = "Armor", Rarity = "Common" })
-	local c2 = Gear.Grant(shop, 6, { Slot = "Trinket", Rarity = "Common" })
+	local c2 = Gear.Grant(shop, 6, { Slot = "Amulet", Rarity = "Common" })
 	local weak = Gear.Grant(shop, 1, { Slot = "Weapon", Rarity = "Uncommon" })
 	local keep = Gear.Grant(shop, 6, { Slot = "Armor", Rarity = "Common" })
 	Gear.Upgrade((function() shop.Season.Currencies.Gold = 100000 return shop end)(), keep.Id)
@@ -205,6 +205,69 @@ return function(modulesOverride)
 	-- hero sheet -------------------------------------------------------------------
 	local sheet = Hero.Sheet({ ClassId = "Warrior", Level = 10, Gear = shop.Season.Equipment.Equipped })
 	check("The hero sheet lists stats and gear", sheet and #sheet.Stats >= 6 and sheet.Gear.Weapon ~= nil)
+
+	-- eight worn slots, two rings ------------------------------------------------------
+	local kit = ProfileTemplate.New()
+	local types = { "Weapon", "Helmet", "Armor", "Pants", "Boots", "Ring", "Ring", "Amulet" }
+	for _, t in ipairs(types) do
+		local it = Gear.Grant(kit, 10, { Slot = t, Rarity = "Common" })
+		Gear.Equip(kit, it.Id)
+	end
+	local worn = kit.Season.Equipment.Equipped
+	check("All eight slots fill, rings in both ring slots", worn.Helmet and worn.Amulet and worn.Armor and worn.Weapon and worn.Pants and worn.Boots and worn.Ring1 and worn.Ring2 and #kit.Season.Equipment.Inventory == 0)
+	local strongRing = Gear.Grant(kit, 40, { Slot = "Ring", Rarity = "Epic" })
+	Gear.Equip(kit, strongRing.Id)
+	check("A third ring replaces a ring and the old one returns to the bag", (worn.Ring1.Id == strongRing.Id or worn.Ring2.Id == strongRing.Id) and #kit.Season.Equipment.Inventory == 1)
+	local weakRing = Gear.Grant(kit, 1, { Slot = "Ring", Rarity = "Common" })
+	check("A ring cannot go in a non-ring slot", select(2, Gear.Equip(kit, weakRing.Id, "Helmet")) == "BadSlot")
+	check("A ring can be put in a chosen ring slot", Gear.Equip(kit, weakRing.Id, "Ring2") and worn.Ring2.Id == weakRing.Id)
+	check("Unequip works on Ring1", Gear.Unequip(kit, "Ring1") and worn.Ring1 == nil)
+	check("Every item type has a stat", (function() for _, t in ipairs(Gear.Types) do if select(1, Gear.StatOf({ Slot = t, Rarity = "Common", Power = 5 })) == nil then return false end end return true end)())
+	local old = ProfileTemplate.New()
+	old.Season.Equipment.Equipped.Trinket = { Id = "g1", Slot = "Trinket", Rarity = "Rare", Power = 9 }
+	table.insert(old.Season.Equipment.Inventory, { Id = "g2", Slot = "Trinket", Rarity = "Common", Power = 3 })
+	Gear.Migrate(old)
+	check("Old Trinkets become Amulets", old.Season.Equipment.Equipped.Amulet ~= nil and old.Season.Equipment.Equipped.Trinket == nil and old.Season.Equipment.Inventory[1].Slot == "Amulet")
+	check("Set bonuses need 2 and 4 pieces", GearConfig.SetThresholds[1] == 2 and GearConfig.SetThresholds[2] == 4)
+
+	-- the Stash and timed boosts ---------------------------------------------------------
+	local C = m.Consumables
+	local p = ProfileTemplate.New()
+	local now = 1000
+	check("An empty stash cannot be used", select(2, C.Use(p, "XPTonic", now)) == "NoneLeft")
+	C.Grant(p, "XPTonic", 2)
+	C.Grant(p, "PowerElixir", 1)
+	check("Using an XP Tonic starts a boost and spends one", C.Use(p, "XPTonic", now) and C.Count(p, "XPTonic") == 1 and C.Rewards(p, now + 10).XPGain == 0.5)
+	check("The boost ends on time", C.Rewards(p, now + 901).XPGain == 0)
+	C.Use(p, "XPTonic", now)
+	check("Using it again extends the timer", p.Season.Buffs.XPTonic == now + 1800)
+	C.Use(p, "PowerElixir", now)
+	local mods = C.Mods(p, now + 5)
+	check("A damage boost becomes a combat modifier", #mods == 1 and mods[1].Stat == "DamageDealt" and mods[1].Value == 0.25)
+	check("Active boosts list their time left", #C.Active(p, now + 5) == 2 and C.Active(p, now + 5)[1].Remaining > 0)
+	check("Wish tickets cannot be used from the stash", (function() C.Grant(p, "PetWish", 1) return select(2, C.Use(p, "PetWish", now)) == "UseAtTree" end)())
+	p.Season.Currencies.Gold = 10
+	check("Supplies cost gold", select(2, C.Buy(p, "XPTonic", 1)) == "NotEnough" and select(2, C.Buy(p, "PetWish", 1)) == "NotSold")
+	p.Season.Currencies.Gold = 100000
+	check("Buying spends gold and fills the stash", C.Buy(p, "GoldCharm", 3) and C.Count(p, "GoldCharm") == 3 and p.Season.Currencies.Gold < 100000)
+	local geared2 = StatCalc.NewPartyMember("z", "Z", "Warrior", 5, { ExtraMods = { { Stat = "DamageDealt", Mode = "Mul", Value = 0.25 } } })
+	local base2 = StatCalc.NewPartyMember("z", "Z", "Warrior", 5, {})
+	check("A damage boost raises damage dealt in combat", (geared2.Stats.DamageDealt or 1) > (base2.Stats.DamageDealt or 1))
+	local drops = {}
+	for i = 1, 300 do
+		local id = C.RollDrop(false, (function() local v = { 0.0, (i % 100) / 100 } local k = 0 return function() k += 1 return v[math.min(k, 2)] end end)())
+		if id then drops[id] = true end
+	end
+	check("Stage drops can give boosts and pet food but never wish tickets", drops.XPTonic and drops.PetFood and not drops.PetWish and not drops.SkillWish)
+	local fed = ProfileTemplate.New()
+	fed.Permanent.Pets = { Slimey = true }
+	C.Grant(fed, "PetFood", 3)
+	local okFeed = C.Use(fed, "PetFood", now, "Slimey")
+	check("Pet food gives a pet XP and levels it", okFeed and fed.Season.PetXP.Slimey ~= nil and C.Count(fed, "PetFood") == 2)
+	C.Use(fed, "PetFood", now, "Slimey")
+	C.Use(fed, "PetFood", now, "Slimey")
+	check("Enough pet food raises the pet level", (fed.Season.PetLevels.Slimey or 1) >= 2)
+	check("Pet food needs a pet you own", select(2, C.Use(ProfileTemplate.New(), "PetFood", now, "Slimey")) == "NoneLeft")
 
 	print(("GearDailyTests done: %d passed, %d failed"):format(passed, failed))
 end

@@ -2,7 +2,7 @@
 	Gear (ModuleScript, data only)
 	Location: ReplicatedStorage > Shared > Config > Gear
 
-	Equipment drops from stages. Three slots, three rarities (same ones as skills,
+	Equipment drops from stages. Seven item types (worn in eight slots), three rarities (same ones as skills,
 	see Config/Rarities). An item remembers the stage it dropped at (its Power),
 	so a drop from stage 40 beats the same rarity from stage 5. Gear is
 	SEASONAL: it lives in Season.Equipment and resets with the season.
@@ -22,17 +22,31 @@ return {
 
 	InventoryCap = 30, -- a full bag sells new drops automatically
 
+	-- Item TYPES. Each gives one stat: (Base + PerStage * stage) * rarity * upgrades.
 	Slots = {
 		Weapon = { Stat = "Attack", Base = 0.3, PerStage = 0.05 },
+		Helmet = { Stat = "Defense", Base = 0.1, PerStage = 0.0175 },
 		Armor = { Stat = "MaxHealth", Base = 3, PerStage = 0.5 },
-		Trinket = { Stat = "Defense", Base = 0.15, PerStage = 0.025 },
+		Pants = { Stat = "MaxHealth", Base = 2, PerStage = 0.35 },
+		Boots = { Stat = "AttackSpeed", Base = 0.008, PerStage = 0.0015 },
+		Ring = { Stat = "CritChance", Base = 0.003, PerStage = 0.0005 },
+		Amulet = { Stat = "DamageDealt", Base = 0.004, PerStage = 0.0008 },
 	},
-	SlotOrder = { "Weapon", "Armor", "Trinket" },
+	Types = { "Weapon", "Helmet", "Armor", "Pants", "Boots", "Ring", "Amulet" },
+	-- Where things are WORN. Two rings, so a type can have more than one worn slot.
+	SlotOrder = { "Helmet", "Amulet", "Armor", "Weapon", "Pants", "Ring1", "Ring2", "Boots" },
+	WornType = { Helmet = "Helmet", Amulet = "Amulet", Armor = "Armor", Weapon = "Weapon", Pants = "Pants", Ring1 = "Ring", Ring2 = "Ring", Boots = "Boots" },
+	-- pieces of one set worn together that switch a bonus on
+	SetThresholds = { 2, 4 },
 
 	Names = {
 		Weapon = { Common = "Iron Sword", Rare = "Steel Blade", Epic = "Dragonfang" },
+		Helmet = { Common = "Leather Cap", Rare = "Iron Helm", Epic = "Crown of Valor" },
 		Armor = { Common = "Leather Vest", Rare = "Chain Mail", Epic = "Aegis Plate" },
-		Trinket = { Common = "Lucky Charm", Rare = "Silver Ring", Epic = "Star Pendant" },
+		Pants = { Common = "Cloth Pants", Rare = "Mail Leggings", Epic = "Titan Greaves" },
+		Boots = { Common = "Worn Boots", Rare = "Swift Boots", Epic = "Windrunners" },
+		Ring = { Common = "Copper Ring", Rare = "Silver Ring", Epic = "Ring of Fate" },
+		Amulet = { Common = "Lucky Charm", Rare = "Jade Amulet", Epic = "Star Pendant" },
 	},
 
 	RarityMult = { Common = 1, Rare = 1.5, Epic = 2.2, Set = 1.8 },

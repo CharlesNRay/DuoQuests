@@ -6,11 +6,11 @@
                      { PSlot = n } a passive slot, or { PId = passiveId, Target = slot } one from the passive pool
     Passives live here too: they are skills that are always on and do not use the four skill slots.
 
-	Left   your PARTNER (you are not listed: your own stats are on the Hero screen), with their skills
-	Centre your four equipped skills as icons (cast order, left to right), then icons of the skills you
-	       have unlocked, then locked ones (dim) that can still be unlocked
-	Right  the selected skill: everything about it, plus its actions (move, level up, equip, unlock)
-	Needs a panel of about 640 x 304 (Main gives it that).
+	Tabs   You / Partner. The partner tab edits their ghost skills (reorder, swap in skills they own).
+	Left   the four equipped skills (cast order, left to right; DRAG to reorder, or drag a skill from the
+	       pool onto a slot), passive slots, then a scrolling pool of unlocked and locked skills
+	Right  the selected skill: everything about it, plus its actions (level up, equip, unlock)
+	Needs a panel of about 640 x 320 (Main gives it that).
 ]]
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
@@ -27,182 +27,309 @@ local Kit = require(script.Parent.Kit)
 local Icons = require(script.Parent.Icons)
 local Tips = require(script.Parent.Tips)
 local C = Kit.Colors
+local UserInputService = game:GetService("UserInputService")
+local GuiService = game:GetService("GuiService")
 
 local SkillsScreen = {}
 
-local LEFT, CENTRE, RIGHT = 130, 250, 232
+local MAIN_W, DETAIL_W = 388, 232
 local GAP = 6
 
 local function panelFrame(parent, x, w)
 	return Kit.frame({ Size = UDim2.new(0, w, 1, 0), Position = UDim2.fromOffset(x, 0), BackgroundColor3 = Color3.fromRGB(30, 33, 50), Parent = parent })
 end
 
--- A skill icon that can be clicked; the selected one gets a bright frame.
-local function iconButton(parent, def, props, selected, onClick)
-	local tile = if props.Passive ~= nil then Icons.Passive(parent, props.Passive or nil, props) else Icons.Skill(parent, def, props)
+local lastDragEnd = 0
+
+-- Makes an icon tile clickable and draggable. onDrop(pointer) is called with the pointer in screen
+-- space when a drag ends; a click (no real movement) calls onClick.
+local function attach(tile, def, selected, onClick, drag)
 	local stroke = tile:FindFirstChildOfClass("UIStroke")
 	if selected and stroke then
 		stroke.Color = Color3.new(1, 1, 1)
 		stroke.Thickness = 3
 	end
 	local button = Kit.new("TextButton", { Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1, Text = "", ZIndex = 6, Parent = tile })
-	button.Activated:Connect(onClick)
-	return tile
+	button.Activated:Connect(function()
+		if os.clock() - lastDragEnd > 0.25 then
+			onClick()
+		end
+	end)
+	if not drag then
+		return
+	end
+	button.InputBegan:Connect(function(input)
+		if input.UserInputType ~= Enum.UserInputType.MouseButton1 and input.UserInputType ~= Enum.UserInputType.Touch then
+			return
+		end
+		local function pointerOf(i)
+			return Vector2.new(i.Position.X, i.Position.Y) + GuiService:GetGuiInset()
+		end
+		local start = pointerOf(input)
+		local ghost
+		local root = tile:FindFirstAncestor("Root")
+		local uiScale = root and root:FindFirstChildOfClass("UIScale")
+		local moveConn, endConn
+		moveConn = UserInputService.InputChanged:Connect(function(i)
+			if i.UserInputType ~= Enum.UserInputType.MouseMovement and i.UserInputType ~= Enum.UserInputType.Touch then
+				return
+			end
+			local pointer = pointerOf(i)
+			if not ghost and root and (pointer - start).Magnitude > 8 then
+				ghost = Icons.Skill(root, def, { Size = UDim2.fromOffset(52, 52) })
+				ghost.ZIndex = 50
+				for _, d in ipairs(ghost:GetDescendants()) do
+					if d:IsA("GuiObject") then
+						d.ZIndex = 51
+					end
+				end
+				ghost.BackgroundTransparency = 0.15
+				tile.BackgroundTransparency = 0.6
+			end
+			if ghost then
+				local s = uiScale and uiScale.Scale or 1
+				ghost.Position = UDim2.fromOffset((pointer - root.AbsolutePosition).X / s - 26, (pointer - root.AbsolutePosition).Y / s - 26)
+			end
+		end)
+		endConn = UserInputService.InputEnded:Connect(function(i)
+			if i.UserInputType ~= Enum.UserInputType.MouseButton1 and i.UserInputType ~= Enum.UserInputType.Touch then
+				return
+			end
+			moveConn:Disconnect()
+			endConn:Disconnect()
+			if ghost then
+				ghost:Destroy()
+				lastDragEnd = os.clock()
+				if tile.Parent then
+					tile.BackgroundTransparency = 0
+				end
+				drag(pointerOf(i))
+			end
+		end)
+	end)
 end
 
 local function actionButton(parent, text, y, color, onClick)
-	return Kit.button({ Size = UDim2.new(1, -16, 0, 30), Position = UDim2.new(0, 8, 0, y), Text = text, TextSize = 13, BackgroundColor3 = color or C.PanelLight, Parent = parent }, onClick)
+	return Kit.button({ Size = UDim2.new(1, -16, 0, 28), Position = UDim2.new(0, 8, 0, y), Text = text, TextSize = 13, BackgroundColor3 = color or C.PanelLight, Parent = parent }, onClick)
+end
+
+local function inside(frame, point)
+	if not (frame and frame.Parent) then
+		return false
+	end
+	local p, sz = frame.AbsolutePosition, frame.AbsoluteSize
+	-- AbsolutePosition ignores the top inset; pointers here include it
+	local inset = GuiService:GetGuiInset()
+	p += inset
+	return point.X >= p.X and point.X <= p.X + sz.X and point.Y >= p.Y and point.Y <= p.Y + sz.Y
+end
+
+local function note(parent, text, y, h)
+	Kit.label({ Size = UDim2.new(1, -16, 0, h or 26), Position = UDim2.new(0, 8, 1, y), Text = text, TextSize = 11, TextColor3 = C.Dim, Parent = parent })
 end
 
 function SkillsScreen.Skills(container, state, call, extra)
 	Kit.clear(container)
 	extra = extra or {}
 	local me = state.Player
-	local equipped = table.clone(me.Loadout)
+	local partner = state.Party and state.Party.Partner
+	local tab = extra.SkillsTab or "You"
+	if tab == "Partner" and not partner then
+		tab = "You"
+	end
+	local isPartner = tab == "Partner"
 	local function redraw()
 		SkillsScreen.Skills(container, state, call, extra)
 	end
 
-	-- default selection: your first equipped skill
+	-- tabs
+	for index, name in ipairs({ "You", "Partner" }) do
+		local enabled = name == "You" or partner ~= nil
+		local label = if name == "Partner" and partner then ("Partner: " .. partner.Name) else name
+		local b = Kit.button({ Size = UDim2.fromOffset(if name == "You" then 80 else 150, 24), Position = UDim2.fromOffset(if name == "You" then 0 else 86, 0), Text = label, TextSize = 12, TextWrapped = false, TextTruncate = Enum.TextTruncate.AtEnd, BackgroundColor3 = if name == tab then C.Accent else C.Panel, TextColor3 = if name == tab then Color3.fromRGB(30, 24, 10) elseif enabled then C.Text else C.Dim, Parent = container }, function()
+			if enabled and name ~= tab then
+				extra.SkillsTab = name
+				extra.SkillSel = nil
+				redraw()
+			end
+		end)
+		b.Active = enabled
+	end
+	if not partner then
+		Kit.label({ Size = UDim2.new(1, -250, 0, 24), Position = UDim2.fromOffset(246, 0), Text = "Join a party to edit a partner's skills.", TextSize = 11, TextColor3 = C.Dim, Parent = container })
+	end
+	local area = Kit.frame({ Size = UDim2.new(1, 0, 1, -30), Position = UDim2.fromOffset(0, 30), BackgroundTransparency = 1, NoCorner = true, Parent = container })
+
+	-- whose skills are on screen
+	local equipped = table.clone(if isPartner then (partner.GhostLoadout or {}) else me.Loadout)
+	local levels = if isPartner then (partner.SlotLevels or {}) else me.SlotLevels
+	local ownedSet = if isPartner then (partner.Owned or {}) else me.Owned
+	local function save(ids)
+		if isPartner then
+			call("SetGhostLoadout", ids)
+		else
+			call("EquipSkills", ids)
+		end
+	end
+
 	local sel = extra.SkillSel
 	if not sel or (sel.Slot and not equipped[sel.Slot]) then
 		sel = { Slot = 1 }
 		extra.SkillSel = sel
 	end
-	local isPassive = sel.PSlot ~= nil or sel.PId ~= nil
+	local isPassive = not isPartner and (sel.PSlot ~= nil or sel.PId ~= nil)
 	local pEquipped = table.clone(me.PassiveIds or {})
 	local selectedId = if sel.Slot then equipped[sel.Slot] else sel.Id
 	local selectedDef = selectedId and Abilities[selectedId]
 
-	-- LEFT: the partner ------------------------------------------------------
-	local left = panelFrame(container, 0, LEFT)
-	Kit.label({ Size = UDim2.new(1, -8, 0, 16), Position = UDim2.fromOffset(6, 4), Text = "PARTY", TextSize = 11, TextColor3 = C.Dim, Font = Enum.Font.GothamBold, Parent = left })
-	local partner = state.Party and state.Party.Partner
-	if not partner then
-		Kit.label({ Size = UDim2.new(1, -12, 0, 60), Position = UDim2.fromOffset(6, 24), Text = "No partner yet.\nOpen Party to invite one.", TextSize = 12, TextColor3 = C.Dim, Parent = left })
-	else
-		local dot = Kit.frame({ Size = UDim2.fromOffset(30, 30), Position = UDim2.fromOffset(6, 24), BackgroundColor3 = C[partner.ClassId] or C.Accent, Parent = left })
-		Kit.corner(15).Parent = dot
-		Kit.label({ Size = UDim2.fromScale(1, 1), Text = tostring(partner.Level), TextSize = 13, Font = Enum.Font.GothamBlack, TextColor3 = C.Bg, TextStrokeTransparency = 1, TextXAlignment = Enum.TextXAlignment.Center, Parent = dot })
-		local classDef = Classes[partner.ClassId]
-		Kit.label({ Size = UDim2.new(1, -44, 0, 16), Position = UDim2.fromOffset(40, 24), Text = partner.Name, TextSize = 12, Font = Enum.Font.GothamBold, TextWrapped = false, TextTruncate = Enum.TextTruncate.AtEnd, Parent = left })
-		Kit.label({ Size = UDim2.new(1, -44, 0, 14), Position = UDim2.fromOffset(40, 40), Text = classDef and classDef.DisplayName or partner.ClassId, TextSize = 11, TextColor3 = C.Dim, TextWrapped = false, Parent = left })
-		Kit.label({ Size = UDim2.new(1, -12, 0, 14), Position = UDim2.fromOffset(6, 60), Text = if partner.IsCompanion then "Starter ghost" elseif partner.Online then "Online" else "Ghost (offline)", TextSize = 11, TextColor3 = if partner.Online then C.Good else C.Dim, TextWrapped = false, Parent = left })
-		Kit.label({ Size = UDim2.new(1, -12, 0, 14), Position = UDim2.fromOffset(6, 80), Text = "Their skills", TextSize = 11, TextColor3 = C.Dim, Parent = left })
-		local grid = Kit.frame({ Size = UDim2.new(1, -12, 0, 100), Position = UDim2.fromOffset(6, 96), BackgroundTransparency = 1, NoCorner = true, Parent = left })
-		Kit.new("UIGridLayout", { CellSize = UDim2.fromOffset(52, 44), CellPadding = UDim2.fromOffset(4, 4), Parent = grid })
-		for slot, id in ipairs(partner.GhostLoadout or {}) do
-			local def = Abilities[id]
-			if def then
-				local tile = Icons.Skill(grid, def, { Level = partner.SlotLevels[slot] or 1 })
-				Kit.Hover(tile, function() return Tips.Skill(def, partner.SlotLevels[slot] or 1) end)
+	-- LEFT: slots, passives, pool ------------------------------------------------
+	local main = Kit.frame({ Size = UDim2.new(0, MAIN_W, 1, 0), BackgroundTransparency = 1, NoCorner = true, Parent = area })
+	Kit.label({ Size = UDim2.fromOffset(230, 14), Text = "CAST ORDER  (drag to reorder)", TextSize = 11, TextColor3 = C.Dim, Font = Enum.Font.GothamBold, TextWrapped = false, Parent = main })
+	local slotTiles = {}
+	local function dropOnSlot(pointer)
+		for slot, frame in pairs(slotTiles) do
+			if inside(frame, pointer) then
+				return slot
 			end
 		end
-		local ult = state.Party.Ultimate
-		local ultDef = ult and ult.Chosen and UltCfg.Defs[ult.Chosen]
-		if ultDef then
-			local tile = Icons.Ultimate(left, ultDef, { Size = UDim2.fromOffset(52, 30), Position = UDim2.new(0, 6, 1, -36) })
-			Kit.Hover(tile, function() return Tips.Ultimate(ultDef, 1) end)
-			Kit.label({ Size = UDim2.new(1, -64, 0, 30), Position = UDim2.new(0, 62, 1, -36), Text = "Party ultimate", TextSize = 11, TextColor3 = C.Dim, Parent = left })
-		end
 	end
-
-	-- CENTRE: equipped, unlocked, locked ----------------------------------------------
-	local centre = panelFrame(container, LEFT + GAP, CENTRE)
-	centre.BackgroundTransparency = 1
-	Kit.label({ Size = UDim2.new(1, 0, 0, 16), Position = UDim2.fromOffset(2, 0), Text = "EQUIPPED  (cast order)", TextSize = 11, TextColor3 = C.Dim, Font = Enum.Font.GothamBold, Parent = centre })
 	for slot, id in ipairs(equipped) do
 		local def = Abilities[id]
 		if def then
-			iconButton(centre, def, { Size = UDim2.fromOffset(56, 56), Position = UDim2.fromOffset(2 + (slot - 1) * 62, 18), Level = me.SlotLevels[slot] }, sel.Slot == slot, function()
+			local tile = Icons.Skill(main, def, { Size = UDim2.fromOffset(52, 52), Position = UDim2.fromOffset((slot - 1) * 58, 16), Level = levels[slot] })
+			slotTiles[slot] = tile
+			Kit.Hover(tile, function() return Tips.Skill(def, levels[slot] or 1) end)
+			attach(tile, def, sel.Slot == slot, function()
 				extra.SkillSel = { Slot = slot }
 				redraw()
+			end, function(pointer)
+				local to = dropOnSlot(pointer)
+				if to and to ~= slot then
+					equipped[slot], equipped[to] = equipped[to], equipped[slot]
+					extra.SkillSel = { Slot = to }
+					save(equipped)
+				end
 			end)
-			Kit.label({ Size = UDim2.fromOffset(12, 12), Position = UDim2.fromOffset(4 + (slot - 1) * 62, 18), Text = tostring(slot), TextSize = 10, TextWrapped = false, TextColor3 = C.Dim, ZIndex = 4, Parent = centre })
+			Kit.label({ Size = UDim2.fromOffset(12, 12), Position = UDim2.fromOffset(3 + (slot - 1) * 58, 17), Text = tostring(slot), TextSize = 10, TextWrapped = false, TextColor3 = C.Dim, ZIndex = 8, Parent = main })
 		end
 	end
 
-	-- subclass line
-	local subY = 78
-	if #(me.SubclassChoices or {}) > 0 then
-		Kit.label({ Size = UDim2.new(1, 0, 0, 16), Position = UDim2.fromOffset(2, subY), Text = "★ Choose your path (permanent this season)", TextSize = 11, TextColor3 = C.Accent, Font = Enum.Font.GothamBold, Parent = centre })
-		for index, choice in ipairs(me.SubclassChoices) do
-			local b = Kit.button({ Size = UDim2.new(0.5, -3, 0, 24), Position = UDim2.new((index - 1) * 0.5, if index == 1 then 0 else 3, 0, subY + 18), Text = choice.Name, TextSize = 12, BackgroundColor3 = C.Accent, TextColor3 = Color3.fromRGB(30, 24, 10), Parent = centre }, function()
-				call("ChooseSubclass", choice.Id)
-			end)
-			Kit.Hover(b, function()
-				return ("<b>%s</b>\n%s\n%s\n%s"):format(choice.Name, choice.Description, Kit.tint(choice.Summary, C.Dim), "New skills: " .. table.concat(choice.SkillNames, ", "))
+	-- passives (yours only; the partner's are shown on the Hero page)
+	if not isPartner then
+		Kit.label({ Size = UDim2.fromOffset(150, 14), Position = UDim2.fromOffset(244, 0), Text = "PASSIVES", TextSize = 11, TextColor3 = C.Dim, Font = Enum.Font.GothamBold, Parent = main })
+		for slot = 1, Passives.SLOTS do
+			local locked = slot > (me.PassiveSlots or 0)
+			local pdef = not locked and PassiveCfg.Defs[pEquipped[slot]] or nil
+			local tile = Icons.Passive(main, pdef, { Size = UDim2.fromOffset(44, 44), Position = UDim2.fromOffset(244 + (slot - 1) * 50, 20), Level = if pdef then (me.PassiveLevels or {})[slot] else nil, Locked = locked })
+			if pdef then
+				Kit.Hover(tile, function() return Tips.Passive(pdef, (me.PassiveLevels or {})[slot] or 1) end)
+			end
+			attach(tile, nil, sel.PSlot == slot, function()
+				extra.SkillSel = { PSlot = slot }
+				redraw()
 			end)
 		end
-		subY += 46
-	elseif me.SubclassId then
-		local def = Subclasses.Defs[me.SubclassId]
-		local l = Kit.label({ Size = UDim2.new(1, 0, 0, 16), Position = UDim2.fromOffset(2, subY), Text = "Path: " .. def.DisplayName, TextSize = 11, TextColor3 = C.Accent, Parent = centre })
-		Kit.Hover(l, function() return def.DisplayName .. "\n" .. Subclasses.Describe(me.SubclassId) end)
-		subY += 20
-	elseif me.SubclassUnlockLevel then
-		Kit.label({ Size = UDim2.new(1, 0, 0, 16), Position = UDim2.fromOffset(2, subY), Text = ("Reach level %d to choose a path"):format(me.SubclassUnlockLevel), TextSize = 11, TextColor3 = C.Dim, Parent = centre })
-		subY += 20
+	else
+		Kit.label({ Size = UDim2.fromOffset(140, 50), Position = UDim2.fromOffset(244, 18), Text = "Edits here change how your partner's ghost fights. Level-ups happen on their side.", TextSize = 10, TextColor3 = C.Dim, Parent = main })
 	end
 
-	-- passive slots: always-on skills that do not take a primary slot
-	Kit.label({ Size = UDim2.new(1, 0, 0, 16), Position = UDim2.fromOffset(2, subY), Text = "PASSIVES  (always on)", TextSize = 11, TextColor3 = C.Dim, Font = Enum.Font.GothamBold, Parent = centre })
-	for slot = 1, Passives.SLOTS do
-		local locked = slot > (me.PassiveSlots or 0)
-		local pdef = not locked and PassiveCfg.Defs[pEquipped[slot]] or nil
-		iconButton(centre, nil, { Size = UDim2.fromOffset(44, 44), Position = UDim2.fromOffset(2 + (slot - 1) * 50, subY + 16), Level = if pdef then (me.PassiveLevels or {})[slot] else nil, Locked = locked, Passive = pdef or false }, sel.PSlot == slot, function()
-			extra.SkillSel = { PSlot = slot }
-			redraw()
-		end)
+	local poolY = 72
+	if not isPartner then
+		if #(me.SubclassChoices or {}) > 0 then
+			Kit.label({ Size = UDim2.new(1, 0, 0, 14), Position = UDim2.fromOffset(0, poolY), Text = "★ Choose your path (permanent this season)", TextSize = 11, TextColor3 = C.Accent, Font = Enum.Font.GothamBold, Parent = main })
+			for index, choice in ipairs(me.SubclassChoices) do
+				local b = Kit.button({ Size = UDim2.new(0.5, -3, 0, 22), Position = UDim2.new((index - 1) * 0.5, if index == 1 then 0 else 3, 0, poolY + 16), Text = choice.Name, TextSize = 12, BackgroundColor3 = C.Accent, TextColor3 = Color3.fromRGB(30, 24, 10), Parent = main }, function()
+					call("ChooseSubclass", choice.Id)
+				end)
+				Kit.Hover(b, function()
+					return ("<b>%s</b>\n%s\n%s\n%s"):format(choice.Name, choice.Description, Kit.tint(choice.Summary, C.Dim), "New skills: " .. table.concat(choice.SkillNames, ", "))
+				end)
+			end
+			poolY += 42
+		elseif me.SubclassId then
+			local def = Subclasses.Defs[me.SubclassId]
+			local l = Kit.label({ Size = UDim2.new(1, 0, 0, 14), Position = UDim2.fromOffset(0, poolY), Text = "Path: " .. def.DisplayName, TextSize = 11, TextColor3 = C.Accent, Parent = main })
+			Kit.Hover(l, function() return def.DisplayName .. "\n" .. Subclasses.Describe(me.SubclassId) end)
+			poolY += 18
+		elseif me.SubclassUnlockLevel then
+			Kit.label({ Size = UDim2.new(1, 0, 0, 14), Position = UDim2.fromOffset(0, poolY), Text = ("Reach level %d to choose a path"):format(me.SubclassUnlockLevel), TextSize = 11, TextColor3 = C.Dim, Parent = main })
+			poolY += 18
+		end
 	end
-	subY += 64
 
 	local pool = Kit.new("ScrollingFrame", {
-		Size = UDim2.new(1, 0, 1, -subY), Position = UDim2.fromOffset(0, subY), BackgroundTransparency = 1, BorderSizePixel = 0,
-		CanvasSize = UDim2.new(), AutomaticCanvasSize = Enum.AutomaticSize.Y, ScrollBarThickness = 4, Parent = centre,
+		Size = UDim2.new(1, 0, 1, -poolY), Position = UDim2.fromOffset(0, poolY), BackgroundColor3 = Color3.fromRGB(24, 27, 42), BorderSizePixel = 0,
+		CanvasSize = UDim2.new(), AutomaticCanvasSize = Enum.AutomaticSize.Y, ScrollBarThickness = 5, ScrollingDirection = Enum.ScrollingDirection.Y, Parent = main,
 	})
-	Kit.new("UIListLayout", { Padding = UDim.new(0, 4), Parent = pool })
+	Kit.corner(8).Parent = pool
+	Kit.new("UIPadding", { PaddingLeft = UDim.new(0, 6), PaddingRight = UDim.new(0, 8), PaddingTop = UDim.new(0, 4), PaddingBottom = UDim.new(0, 6), Parent = pool })
+	Kit.new("UIListLayout", { Padding = UDim.new(0, 4), SortOrder = Enum.SortOrder.LayoutOrder, Parent = pool })
+	local order = 0
+	local function nextOrder()
+		order += 1
+		return order
+	end
 	local function section(text)
-		Kit.label({ Size = UDim2.new(1, 0, 0, 16), Text = text, TextSize = 11, TextColor3 = C.Dim, Font = Enum.Font.GothamBold, Parent = pool })
+		Kit.label({ Size = UDim2.new(1, 0, 0, 14), Text = text, TextSize = 11, TextColor3 = C.Dim, Font = Enum.Font.GothamBold, LayoutOrder = nextOrder(), Parent = pool })
 	end
 	local function iconGrid()
-		local g = Kit.frame({ Size = UDim2.new(1, 0, 0, 10), AutomaticSize = Enum.AutomaticSize.Y, BackgroundTransparency = 1, NoCorner = true, Parent = pool })
-		Kit.new("UIGridLayout", { CellSize = UDim2.fromOffset(44, 44), CellPadding = UDim2.fromOffset(6, 6), Parent = g })
+		local g = Kit.frame({ Size = UDim2.new(1, 0, 0, 10), AutomaticSize = Enum.AutomaticSize.Y, BackgroundTransparency = 1, NoCorner = true, LayoutOrder = nextOrder(), Parent = pool })
+		Kit.new("UIGridLayout", { CellSize = UDim2.fromOffset(42, 42), CellPadding = UDim2.fromOffset(6, 6), SortOrder = Enum.SortOrder.LayoutOrder, Parent = g })
 		return g
 	end
 
 	local owned, locked = {}, {}
-	for _, id in ipairs(Skills.Pool(me.ClassId, me.SubclassId)) do
-		if Abilities[id] and not table.find(equipped, id) then
-			table.insert(if me.Owned[id] then owned else locked, id)
+	if isPartner then
+		for id in pairs(ownedSet) do
+			if Abilities[id] and not table.find(equipped, id) then
+				table.insert(owned, id)
+			end
+		end
+		table.sort(owned)
+	else
+		for _, id in ipairs(Skills.Pool(me.ClassId, me.SubclassId)) do
+			if Abilities[id] and not table.find(equipped, id) then
+				table.insert(if ownedSet[id] then owned else locked, id)
+			end
 		end
 	end
-	section("UNLOCKED")
+	section(if isPartner then "THEIR SKILLS  (drag onto a slot)" else "UNLOCKED  (drag onto a slot)")
 	if #owned == 0 then
-		Kit.label({ Size = UDim2.new(1, 0, 0, 16), Text = "Everything you own is equipped", TextSize = 11, TextColor3 = C.Dim, Parent = pool })
+		Kit.label({ Size = UDim2.new(1, 0, 0, 16), Text = "Everything they own is equipped", TextSize = 11, TextColor3 = C.Dim, LayoutOrder = nextOrder(), Parent = pool })
 	else
 		local g = iconGrid()
 		for _, id in ipairs(owned) do
-			iconButton(g, Abilities[id], {}, sel.Id == id, function()
-				extra.SkillSel = { Id = id, Slot = nil, Target = sel.Slot or extra.SkillTarget }
-				extra.SkillTarget = sel.Slot or extra.SkillTarget
+			local def = Abilities[id]
+			local tile = Icons.Skill(g, def, {})
+			Kit.Hover(tile, function() return Tips.Skill(def, 1) end)
+			attach(tile, def, sel.Id == id, function()
+				extra.SkillSel = { Id = id, Target = sel.Slot or sel.Target }
 				redraw()
+			end, function(pointer)
+				local to = dropOnSlot(pointer)
+				if to then
+					equipped[to] = id
+					extra.SkillSel = { Slot = to }
+					save(equipped)
+				end
 			end)
 		end
 	end
 	if #locked > 0 then
-		section("LOCKED  (unlock with a pick or shards)")
+		section("LOCKED")
 		local g = iconGrid()
 		for _, id in ipairs(locked) do
-			iconButton(g, Abilities[id], { Locked = true }, sel.Id == id, function()
+			local def = Abilities[id]
+			local tile = Icons.Skill(g, def, { Locked = true })
+			Kit.Hover(tile, function() return Tips.Skill(def, 1) end)
+			attach(tile, def, sel.Id == id, function()
 				extra.SkillSel = { Id = id }
 				redraw()
 			end)
 		end
 	end
-
-	section("PASSIVES")
-	do
+	if not isPartner then
+		section("PASSIVES")
 		local g = iconGrid()
 		local any = false
 		for _, id in ipairs(Passives.Pool(me.ClassId)) do
@@ -210,7 +337,9 @@ function SkillsScreen.Skills(container, state, call, extra)
 				any = true
 				local pdef = PassiveCfg.Defs[id]
 				local open = Passives.IsUnlocked(id, me.Frontier)
-				iconButton(g, nil, { Passive = pdef, Locked = not open }, sel.PId == id, function()
+				local tile = Icons.Passive(g, pdef, { Locked = not open })
+				Kit.Hover(tile, function() return Tips.Passive(pdef, 1) end)
+				attach(tile, nil, sel.PId == id, function()
 					extra.SkillSel = { PId = id, Target = sel.PSlot or sel.Target }
 					redraw()
 				end)
@@ -222,7 +351,7 @@ function SkillsScreen.Skills(container, state, call, extra)
 	end
 
 	-- RIGHT: the selected skill ---------------------------------------------------
-	local right = panelFrame(container, LEFT + CENTRE + GAP * 2, RIGHT)
+	local right = panelFrame(area, MAIN_W + GAP, DETAIL_W)
 	if isPassive then
 		local pdef, slot
 		if sel.PSlot then
@@ -231,11 +360,8 @@ function SkillsScreen.Skills(container, state, call, extra)
 		else
 			pdef = PassiveCfg.Defs[sel.PId]
 		end
-		local function note(text, y)
-			Kit.label({ Size = UDim2.new(1, -16, 0, 30), Position = UDim2.new(0, 8, 1, y), Text = text, TextSize = 11, TextColor3 = C.Dim, Parent = right })
-		end
 		if not pdef then
-			local text = "Empty passive slot.\nPick an unlocked passive below to put in it."
+			local text = "Empty passive slot.\nPick an unlocked passive from the list to put in it."
 			if slot and slot > (me.PassiveSlots or 0) then
 				local unlock
 				for _, u in ipairs(PassiveCfg.SlotUnlocks) do
@@ -260,8 +386,8 @@ function SkillsScreen.Skills(container, state, call, extra)
 				if cost then
 					call("LevelPassiveSlot", slot)
 				end
-			end).Position = UDim2.new(0, 8, 1, -66)
-			note("Tap an unlocked passive to swap it in for this one.", -32)
+			end).Position = UDim2.new(0, 8, 1, -64)
+			note(right, "Pick an unlocked passive to swap it in.", -30)
 		elseif Passives.IsUnlocked(pdef.Id, me.Frontier) then
 			local target = math.clamp(sel.Target or (#pEquipped + 1), 1, math.min(#pEquipped + 1, math.max(me.PassiveSlots or 1, 1)))
 			local swapOut = PassiveCfg.Defs[pEquipped[target]]
@@ -269,10 +395,10 @@ function SkillsScreen.Skills(container, state, call, extra)
 				pEquipped[target] = pdef.Id
 				extra.SkillSel = { PSlot = target }
 				call("EquipPassives", pEquipped)
-			end).Position = UDim2.new(0, 8, 1, -66)
-			note(swapOut and ("Replaces " .. swapOut.DisplayName .. ". Select a passive slot first to choose which.") or "Goes in the first free slot.", -34)
+			end).Position = UDim2.new(0, 8, 1, -64)
+			note(right, swapOut and ("Replaces " .. swapOut.DisplayName .. ". Select a passive slot first to choose which.") or "Goes in the first free slot.", -34, 30)
 		else
-			note(("Unlocks when you reach stage %d."):format(pdef.UnlockStage or 1), -48)
+			note(right, ("Unlocks when you reach stage %d."):format(pdef.UnlockStage or 1), -48)
 		end
 		return
 	end
@@ -281,56 +407,55 @@ function SkillsScreen.Skills(container, state, call, extra)
 		return
 	end
 	local isEquipped = sel.Slot ~= nil
-	local isOwned = me.Owned[selectedId] == true
-	local level = if isEquipped then me.SlotLevels[sel.Slot] else 1
-	local text = Tips.Skill(selectedDef, level)
-	Kit.label({ Size = UDim2.new(1, -16, 1, -104), Position = UDim2.fromOffset(8, 6), Text = text, RichText = true, TextSize = 12, TextYAlignment = Enum.TextYAlignment.Top, Parent = right })
+	local isOwned = ownedSet[selectedId] == true
+	local level = if isEquipped then (levels[sel.Slot] or 1) else 1
+	Kit.label({ Size = UDim2.new(1, -16, 1, -104), Position = UDim2.fromOffset(8, 6), Text = Tips.Skill(selectedDef, level), RichText = true, TextSize = 12, TextYAlignment = Enum.TextYAlignment.Top, Parent = right })
 
 	if isEquipped then
 		local slot = sel.Slot
-		local cost = Economy.SlotLevelCost(me.SlotLevels[slot])
-		local lvl = actionButton(right, cost and ("Level up  -  " .. cost .. "g") or "Max level", 0, C.Up, function()
-			if cost then
-				call("LevelSlot", slot)
-			end
-		end)
-		lvl.Position = UDim2.new(0, 8, 1, -100)
-		local left2 = Kit.button({ Size = UDim2.new(0.5, -12, 0, 30), Position = UDim2.new(0, 8, 1, -66), Text = "◀ Earlier", TextSize = 12, Parent = right }, function()
+		if not isPartner then
+			local cost = Economy.SlotLevelCost(me.SlotLevels[slot])
+			actionButton(right, cost and ("Level up  -  " .. cost .. "g") or "Max level", 0, C.Up, function()
+				if cost then
+					call("LevelSlot", slot)
+				end
+			end).Position = UDim2.new(0, 8, 1, -98)
+		end
+		local earlier = Kit.button({ Size = UDim2.new(0.5, -12, 0, 28), Position = UDim2.new(0, 8, 1, -64), Text = "◀ Earlier", TextSize = 12, Parent = right }, function()
 			if slot > 1 then
 				equipped[slot], equipped[slot - 1] = equipped[slot - 1], equipped[slot]
 				extra.SkillSel = { Slot = slot - 1 }
-				call("EquipSkills", equipped)
+				save(equipped)
 			end
 		end)
-		local right2 = Kit.button({ Size = UDim2.new(0.5, -12, 0, 30), Position = UDim2.new(0.5, 4, 1, -66), Text = "Later ▶", TextSize = 12, Parent = right }, function()
+		local later = Kit.button({ Size = UDim2.new(0.5, -12, 0, 28), Position = UDim2.new(0.5, 4, 1, -64), Text = "Later ▶", TextSize = 12, Parent = right }, function()
 			if slot < #equipped then
 				equipped[slot], equipped[slot + 1] = equipped[slot + 1], equipped[slot]
 				extra.SkillSel = { Slot = slot + 1 }
-				call("EquipSkills", equipped)
+				save(equipped)
 			end
 		end)
-		left2.Active = slot > 1
-		right2.Active = slot < #equipped
-		Kit.label({ Size = UDim2.new(1, -16, 0, 26), Position = UDim2.new(0, 8, 1, -32), Text = "Tap an unlocked skill to swap it in for this one.", TextSize = 11, TextColor3 = C.Dim, Parent = right })
+		earlier.Active = slot > 1
+		later.Active = slot < #equipped
+		note(right, "Drag icons to reorder, or drag a pool skill onto this slot.", -32, 30)
 	elseif isOwned then
-		local target = sel.Target or #equipped
-		target = math.clamp(target, 1, #equipped)
+		local target = math.clamp(sel.Target or #equipped, 1, #equipped)
 		local swapOut = Abilities[equipped[target]]
 		actionButton(right, ("Equip in slot %d"):format(target), 0, C.Up, function()
 			equipped[target] = selectedId
 			extra.SkillSel = { Slot = target }
-			call("EquipSkills", equipped)
-		end).Position = UDim2.new(0, 8, 1, -66)
-		Kit.label({ Size = UDim2.new(1, -16, 0, 30), Position = UDim2.new(0, 8, 1, -34), Text = swapOut and ("Replaces " .. swapOut.DisplayName .. ". Select an equipped icon first to choose the slot.") or "", TextSize = 11, TextColor3 = C.Dim, Parent = right })
+			save(equipped)
+		end).Position = UDim2.new(0, 8, 1, -64)
+		note(right, swapOut and ("Replaces " .. swapOut.DisplayName .. ". Or drag the icon onto any slot.") or "", -32, 30)
 	else
 		local picks = me.SkillPicks or 0
 		actionButton(right, ("Unlock with a pick  (%d)"):format(picks), 0, C.Up, function()
 			call("UnlockSkillWithPick", selectedId)
-		end).Position = UDim2.new(0, 8, 1, -100)
+		end).Position = UDim2.new(0, 8, 1, -98)
 		actionButton(right, "Unlock with shards", 0, C.PanelLight, function()
 			call("UnlockSkill", selectedId)
-		end).Position = UDim2.new(0, 8, 1, -66)
-		Kit.label({ Size = UDim2.new(1, -16, 0, 26), Position = UDim2.new(0, 8, 1, -32), Text = ("You have %d shards."):format(me.Shards or 0), TextSize = 11, TextColor3 = C.Dim, Parent = right })
+		end).Position = UDim2.new(0, 8, 1, -64)
+		note(right, ("You have %d shards."):format(me.Shards or 0), -32)
 	end
 end
 

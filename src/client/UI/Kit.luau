@@ -8,8 +8,8 @@ local UserInputService = game:GetService("UserInputService")
 local Kit = {}
 
 -- Design size the UI is laid out for; the real screen is filled by stretching the root (see Main).
-Kit.RefW = 760
-Kit.RefH = 340
+Kit.RefW = 860
+Kit.RefH = 400
 
 Kit.Colors = {
 	Bg = Color3.fromRGB(24, 26, 38),

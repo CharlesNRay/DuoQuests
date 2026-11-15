@@ -65,6 +65,9 @@ function ProfileTemplate.NewSeasonData(seasonId)
 			Equipped = {}, -- [slotName] = item
 			Inventory = {}, -- list of items
 		},
+		Stash = {}, -- [consumableId] = count (see Consumables)
+		Buffs = {}, -- [consumableId] = os.time() the boost ends
+		PetXP = {}, -- [petId] = xp towards the next pet level
 		OwnedAbilities = {}, -- [abilityId] = true
 		Loadouts = {}, -- [classId] = equipped ability ids, priority order
 		SlotLevels = {}, -- [classId] = level per slot position

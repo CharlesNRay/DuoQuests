@@ -5,6 +5,7 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local AbilityStats = require(Shared.Combat.AbilityStats)
+local Gear = require(Shared.Gear)
 local Kit = require(script.Parent.Kit)
 local Icons = require(script.Parent.Icons)
 local C = Kit.Colors
@@ -59,7 +60,12 @@ Tips.Num = num
 -- How an item compares to what is worn in its slot. Verdict: "Up" | "Down" | "Same".
 -- gear = state.Player.Gear (has Equipped and Sets).
 function Tips.Compare(item, gear)
-	local worn = gear.Equipped[item.Slot]
+	local worn = Gear.Replaced(gear.Equipped, item.Slot)
+	for _, w in pairs(gear.Equipped) do
+		if w.Id == item.Id then
+			return { Verdict = "Worn", Delta = 0 }
+		end
+	end
 	if worn and worn.Id == item.Id then
 		return { Verdict = "Worn", Delta = 0 }
 	end
@@ -76,9 +82,9 @@ function Tips.Compare(item, gear)
 		elseif worn and worn.SetId == set.Id then
 			after -= 1
 		end
-		if after > before and (after == 2 or after == 3) then
+		if after > before and (after == (set.Need1 or 2) or after == (set.Need2 or 4)) then
 			setGain = { Set = set, Count = after }
-		elseif after < before and (before == 2 or before == 3) then
+		elseif after < before and (before == (set.Need1 or 2) or before == (set.Need2 or 4)) then
 			setLoss = { Set = set, Count = before }
 		end
 	end
@@ -99,17 +105,17 @@ function Tips.Item(item, gear)
 	local cmp = Tips.Compare(item, gear)
 	local rarity = if item.SetId then "Set" else item.Rarity
 	local lines = { ("<b>%s</b>"):format(Kit.tint(item.Name, Kit.rarityColor(rarity))), dim(("%s  -  %s  -  from stage %d"):format(item.Slot, if item.SetId then "Set piece" else item.Rarity, item.Power)), Kit.tint(("Item Power %d"):format(item.ItemPower or 0), C.Accent) }
-	table.insert(lines, ("+%s %s"):format(num(item.Value), item.Stat))
+	table.insert(lines, item.StatText or Gear.FormatStat(item.Stat, item.Value))
 	if cmp.Verdict == "Worn" then
 		table.insert(lines, dim("Currently worn"))
 	else
 		local worn = cmp.Worn
 		if worn then
 			local color = if cmp.Delta > 0.05 then C.Good elseif cmp.Delta < -0.05 then C.Bad else C.Dim
-			local deltaText = (if cmp.Delta < 0 then "-" else "+") .. num(math.abs(cmp.Delta))
-			table.insert(lines, Kit.tint(("%s %s compared to your %s"):format(deltaText, item.Stat, worn.Name), color))
+			local deltaText = Gear.FormatStat(item.Stat, math.abs(cmp.Delta)):gsub("^%+", if cmp.Delta < 0 then "-" else "+")
+			table.insert(lines, Kit.tint(("%s compared to your %s"):format(deltaText, worn.Name), color))
 		else
-			table.insert(lines, Kit.tint(("Empty slot: +%s %s"):format(num(item.Value), item.Stat), C.Good))
+			table.insert(lines, Kit.tint(("Empty slot: %s"):format(item.StatText or Gear.FormatStat(item.Stat, item.Value)), C.Good))
 		end
 		if cmp.SetGain then
 			table.insert(lines, Kit.tint(("Gains the %d-piece bonus of %s"):format(cmp.SetGain.Count, cmp.SetGain.Set.Name), C.Good))
@@ -121,9 +127,9 @@ function Tips.Item(item, gear)
 	if item.SetId then
 		for _, set in ipairs(gear.Sets or {}) do
 			if set.Id == item.SetId then
-				table.insert(lines, Kit.tint(("%s  (%d/3 worn)"):format(set.Name, set.Worn), C.Set))
-				table.insert(lines, dim("2 pieces: ") .. set.Bonus2)
-				table.insert(lines, dim("3 pieces: ") .. set.Bonus3)
+				table.insert(lines, Kit.tint(("%s  (%d worn)"):format(set.Name, set.Worn), C.Set))
+				table.insert(lines, dim(("%d pieces: "):format(set.Need1 or 2)) .. set.Bonus2)
+				table.insert(lines, dim(("%d pieces: "):format(set.Need2 or 4)) .. set.Bonus3)
 			end
 		end
 	end

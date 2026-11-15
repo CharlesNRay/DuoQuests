@@ -46,13 +46,14 @@ local StatCalc = require(script.Parent.Combat.StatCalc)
 local Stages = require(script.Parent.Stages)
 local Ultimates = require(script.Parent.Ultimates)
 local Pets = require(script.Parent.Pets)
+local Consumables = require(script.Parent.Consumables)
 
 local StageRunner = {}
 
 function StageRunner.NewParty(members)
 	local party = {}
 	for _, member in ipairs(members) do
-		local classId, level, loadout, slotLevels, passiveIds, passiveLevels, petId, petLevel, equipped, subclassId
+		local classId, level, loadout, slotLevels, passiveIds, passiveLevels, petId, petLevel, equipped, subclassId, extraMods
 		if member.Profile then
 			local season = member.Profile.Season
 			classId, level = season.ClassId, season.Level
@@ -61,6 +62,7 @@ function StageRunner.NewParty(members)
 			petId, petLevel = Pets.Active(member.Profile)
 			subclassId = season.Subclasses and season.Subclasses[classId] or nil
 			equipped = season.Equipment and season.Equipment.Equipped
+			extraMods = Consumables.Mods(member.Profile, os.time())
 		else
 			local snapshot = member.Snapshot
 			classId, level = snapshot.ClassId, snapshot.Level
@@ -81,6 +83,7 @@ function StageRunner.NewParty(members)
 				PetLevel = petLevel,
 				Equipped = equipped,
 				SubclassId = subclassId,
+				ExtraMods = extraMods,
 			})
 		)
 	end

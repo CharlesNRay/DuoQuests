@@ -6,8 +6,9 @@
 	comes in as a function `rand()` returning a number in [0, 1) so tests can fix it.
 	Each action returns true, or false plus a reason, and changes NOTHING on failure.
 
-	Item = { Id = "g12", Slot = "Weapon", Rarity = "Rare", Power = 18 }
-	Season.Equipment = { Equipped = { Weapon = item, ... }, Inventory = { item, ... }, NextId = n }
+	Item = { Id = "g12", Slot = "Weapon", Rarity = "Rare", Power = 18 }   (Slot is the item TYPE)
+	Season.Equipment = { Equipped = { Weapon = item, Ring1 = item, ... }, Inventory = { item, ... }, NextId = n }
+	Worn slots: Helmet, Amulet, Armor, Weapon, Pants, Ring1, Ring2, Boots (Gear.WornSlots); Ring1/Ring2 take Ring items.
 
 	  Gear.StatOf(item)                     -> stat name, value
 	  Gear.ItemPower(item)                  -> one comparable number for any item (stat / base stat * 10)
@@ -16,7 +17,10 @@
 	  Gear.Mods(equipped)                   -> list of { Stat, Mode = "Add", Value } for StatCalc
 	  Gear.RollDrop(stage, isFrontier, itemRarityBonus, rand)  -> { Slot, Rarity } or nil
 	  Gear.Grant(profile, stage, drop)      -> item, soldFor  (bag full: sold for gold)
-	  Gear.Equip(profile, itemId)           reasons: "NotFound"
+	  Gear.Equip(profile, itemId, wornSlot?)  reasons: "NotFound", "BadSlot"; a Ring goes to a free ring slot, else replaces the weaker
+	  Gear.Replaced(equipped, type)         -> the worn item an item of that type would replace (nil if a slot is free)
+	  Gear.Migrate(profile)                 old saves: Trinket -> Amulet
+	  Gear.FormatStat(stat, value)          -> "+3.2% Crit" style text
 	  Gear.Unequip(profile, slot)           reasons: "BadSlot", "Empty", "BagFull"
 	  Gear.Sell(profile, itemId)            -> true, gold   reasons: "NotFound"
 	  Gear.SellValue(item)                  -> gold
@@ -44,6 +48,50 @@ local function bag(profile)
 	return equipment
 end
 
+Gear.WornSlots = Config.SlotOrder
+Gear.Types = Config.Types
+
+local STAT_LABELS_SHORT = { MaxHealth = "Health", Attack = "Attack", Defense = "Defense", AttackSpeed = "Atk speed", CritChance = "Crit chance", DamageDealt = "Damage" }
+local PERCENT_STATS = { CritChance = true, DamageDealt = true }
+
+function Gear.StatLabel(stat)
+	return STAT_LABELS_SHORT[stat] or stat
+end
+
+-- "+3.2% Crit chance", "+0.05/s Atk speed", "+8.1 Health"
+function Gear.FormatStat(stat, value)
+	if stat == nil then
+		return ""
+	end
+	local label = Gear.StatLabel(stat)
+	if PERCENT_STATS[stat] then
+		return ("+%.1f%% %s"):format(value * 100, label)
+	elseif stat == "AttackSpeed" then
+		return ("+%.2f/s %s"):format(value, label)
+	elseif value < 10 then
+		return ("+%.1f %s"):format(value, label)
+	end
+	return ("+%d %s"):format(math.floor(value + 0.5), label)
+end
+
+-- Which worn item would an item of `itemType` replace? Nil when a slot of that type is free.
+-- With two ring slots, the weaker ring (by Value) is the one replaced.
+function Gear.Replaced(equipped, itemType)
+	local worst
+	for _, slotName in ipairs(Config.SlotOrder) do
+		if Config.WornType[slotName] == itemType then
+			local worn = equipped and equipped[slotName]
+			if not worn then
+				return nil
+			end
+			if not worst or (worn.Value or select(2, Gear.StatOf(worn))) < (worst.Value or select(2, Gear.StatOf(worst))) then
+				worst = worn
+			end
+		end
+	end
+	return worst
+end
+
 function Gear.StatOf(item)
 	local slot = Config.Slots[item.Slot]
 	if slot == nil then
@@ -65,8 +113,29 @@ function Gear.ItemPower(item)
 	return math.floor(10 * value / slot.Base + 0.5)
 end
 
+-- Old saves had a Trinket slot; it became the Amulet.
+function Gear.Migrate(profile)
+	local equipment = bag(profile)
+	if equipment.Equipped.Trinket then
+		local item = equipment.Equipped.Trinket
+		equipment.Equipped.Trinket = nil
+		item.Slot = "Amulet"
+		if equipment.Equipped.Amulet then
+			table.insert(equipment.Inventory, item)
+		else
+			equipment.Equipped.Amulet = item
+		end
+	end
+	for _, item in ipairs(equipment.Inventory) do
+		if item.Slot == "Trinket" then
+			item.Slot = "Amulet"
+		end
+	end
+end
+
 -- Everybody starts with a weapon. Safe to call every login: it only acts when you own no weapon.
 function Gear.EnsureStarter(profile)
+	Gear.Migrate(profile)
 	local equipment = bag(profile)
 	if equipment.Equipped.Weapon then
 		return false
@@ -135,12 +204,12 @@ function Gear.Mods(equipped)
 	-- set bonuses: 2 pieces of one set, then 3
 	for setId, count in pairs(Gear.SetCounts(equipped)) do
 		local def = Gear.SetFor(setId)
-		if count >= 2 then
+		if count >= Config.SetThresholds[1] then
 			for _, mod in ipairs(def.Bonus2) do
 				table.insert(mods, table.clone(mod))
 			end
 		end
-		if count >= 3 then
+		if count >= Config.SetThresholds[2] then
 			for _, mod in ipairs(def.Bonus3) do
 				table.insert(mods, table.clone(mod))
 			end
@@ -161,7 +230,7 @@ function Gear.RollDrop(stage, isFrontier, itemRarityBonus, rand)
 		return nil
 	end
 	local slotFor = function()
-		return Config.SlotOrder[math.min(#Config.SlotOrder, math.floor(rand() * #Config.SlotOrder) + 1)]
+		return Config.Types[math.min(#Config.Types, math.floor(rand() * #Config.Types) + 1)]
 	end
 	-- Set pieces are ordinary gear: some drops simply turn out to be a piece of the zone's set.
 	-- (They only come from the zone itself, on frontier fights and replays alike.)
@@ -190,10 +259,6 @@ function Gear.Grant(profile, stage, drop)
 	local equipment = bag(profile)
 	equipment.NextId = (equipment.NextId or 0) + 1
 	local item = { Id = "g" .. equipment.NextId, Slot = drop.Slot, Rarity = drop.Rarity, Power = stage, SetId = drop.SetId }
-	if drop.SetId then
-		equipment.Collected = equipment.Collected or {}
-		equipment.Collected[drop.SetId .. ":" .. drop.Slot] = true
-	end
 	if #equipment.Inventory >= Config.InventoryCap then
 		local gold = Gear.SellValue(item)
 		profile.Season.Currencies.Gold += gold
@@ -212,15 +277,42 @@ local function findInBag(equipment, itemId)
 	return nil
 end
 
-function Gear.Equip(profile, itemId)
+function Gear.Equip(profile, itemId, wornSlot)
 	local equipment = bag(profile)
 	local index, item = findInBag(equipment, itemId)
 	if not index then
 		return false, "NotFound"
 	end
-	local previous = equipment.Equipped[item.Slot]
+	-- pick the worn slot: the one asked for (if it takes this type), a free one, else the weaker one
+	local target
+	if wornSlot ~= nil then
+		if Config.WornType[wornSlot] ~= item.Slot then
+			return false, "BadSlot"
+		end
+		target = wornSlot
+	else
+		local weakest, weakestValue
+		for _, slotName in ipairs(Config.SlotOrder) do
+			if Config.WornType[slotName] == item.Slot then
+				local worn = equipment.Equipped[slotName]
+				if not worn then
+					target = slotName
+					break
+				end
+				local _, value = Gear.StatOf(worn)
+				if not weakest or value < weakestValue then
+					weakest, weakestValue = slotName, value
+				end
+			end
+		end
+		target = target or weakest
+	end
+	if target == nil then
+		return false, "BadSlot"
+	end
+	local previous = equipment.Equipped[target]
 	table.remove(equipment.Inventory, index)
-	equipment.Equipped[item.Slot] = item
+	equipment.Equipped[target] = item
 	if previous then
 		table.insert(equipment.Inventory, previous)
 	end
@@ -228,7 +320,7 @@ function Gear.Equip(profile, itemId)
 end
 
 function Gear.Unequip(profile, slotName)
-	if type(slotName) ~= "string" or Config.Slots[slotName] == nil then
+	if type(slotName) ~= "string" or Config.WornType[slotName] == nil then
 		return false, "BadSlot"
 	end
 	local equipment = bag(profile)
@@ -273,42 +365,31 @@ local function row(item)
 	end
 	return {
 		Id = item.Id, Slot = item.Slot, Rarity = item.Rarity, Name = Gear.Name(item), Power = item.Power, Stat = stat, Value = value,
-		ItemPower = Gear.ItemPower(item), SellValue = Gear.SellValue(item), SetId = item.SetId, SetName = setName,
+		ItemPower = Gear.ItemPower(item), StatText = Gear.FormatStat(stat, value), SellValue = Gear.SellValue(item), SetId = item.SetId, SetName = setName,
 		Upgrade = item.Upgrade or 0, MaxUpgrade = Config.Upgrade.MaxLevel, UpgradeCost = cost, NextValue = nextValue,
 	}
 end
 
 Gear.Row = row
 
--- Every set up to the furthest zone reached, with what has been collected and worn.
+-- Every set up to the furthest zone reached, with how many of its pieces are worn.
 function Gear.Sets(profile)
 	local equipment = bag(profile)
 	local counts = Gear.SetCounts(equipment.Equipped)
-	local collected = equipment.Collected or {}
 	local last = Zones.IndexForStage(profile.Season.HighestStage)
 	local list = {}
 	for setId = 1, last do
 		local def, loop = Gear.SetFor(setId)
 		local zone = Zones.ForStage((setId - 1) * StageConfig.BossEvery + 1)
-		local pieces = {}
-		local have = 0
-		for _, slotName in ipairs(Config.SlotOrder) do
-			local owned = collected[setId .. ":" .. slotName] == true
-			if owned then
-				have += 1
-			end
-			local worn = equipment.Equipped[slotName]
-			table.insert(pieces, { Slot = slotName, Name = if loop > 1 then def.Pieces[slotName] .. " " .. loop else def.Pieces[slotName], Collected = owned, Worn = worn ~= nil and worn.SetId == setId })
-		end
 		table.insert(list, {
 			Id = setId,
 			Name = if loop > 1 then def.Name .. " " .. loop else def.Name,
 			ZoneName = zone.Name,
 			FirstStage = zone.FirstStage,
 			LastStage = zone.LastStage,
-			Pieces = pieces,
-			Collected = have,
 			Worn = counts[setId] or 0,
+			Need1 = Config.SetThresholds[1],
+			Need2 = Config.SetThresholds[2],
 			Bonus2 = Gear.DescribeMods(def.Bonus2),
 			Bonus3 = Gear.DescribeMods(def.Bonus3),
 		})
@@ -367,7 +448,7 @@ function Gear.SellBulk(profile, mode)
 			if mode == "Common" then
 				sell = item.Rarity == "Common"
 			else
-				local worn = equipment.Equipped[item.Slot]
+				local worn = Gear.Replaced(equipment.Equipped, item.Slot)
 				if worn then
 					local _, mine = Gear.StatOf(item)
 					local _, theirs = Gear.StatOf(worn)

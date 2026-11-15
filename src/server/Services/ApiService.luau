@@ -20,7 +20,8 @@
 	  GetLeaderboard(categoryId)        top rows + your own score, "Stage" or "Level"
 	  Inspect(userId)                   public card of a party member on this server
 	  ChooseSubclass(subclassId)        pick a subclass path (once per season)
-	  EquipGear(itemId) / UnequipGear(slot) / SellGear(itemId)   equipment
+	  EquipGear(itemId, wornSlot?) / UnequipGear(slot) / SellGear(itemId)   equipment (8 worn slots)
+	  UseConsumable(id, petId?) / BuyConsumable(id, count)   the Stash: boosts, pet food, Merchant supplies
 	  ClaimDaily()                      today's login reward
 	  EquipPet(petId) / LevelPet(petId) the companion that follows you and its bonus
 	  SetStage(stage)                   pick any unlocked stage from the map (either member)
@@ -44,6 +45,7 @@ local Skills = require(Shared.Skills)
 local Party = require(Shared.Party)
 local Pets = require(Shared.Pets)
 local Gear = require(Shared.Gear)
+local Consumables = require(Shared.Consumables)
 local Hero = require(Shared.Hero)
 local World = require(Shared.World)
 local Daily = require(Shared.Daily)
@@ -95,6 +97,18 @@ local function nearShop(player, shop)
 	return World.NearShop(root.Position.X, root.Position.Z, shop)
 end
 
+local function suppliesOf(profile)
+	local rows = {}
+	for _, id in ipairs(Consumables.Order) do
+		local def = Consumables.Defs[id]
+		local price = Consumables.Price(def, profile.Season.HighestStage)
+		if price then
+			table.insert(rows, { Id = id, Name = def.DisplayName, Glyph = def.Glyph, Description = def.Description, Price = price, Kind = def.Kind })
+		end
+	end
+	return rows
+end
+
 local function heroSheetOf(profile)
 	local season = profile.Season
 	local classId = season.ClassId
@@ -143,6 +157,9 @@ local function buildState(player)
 			SubclassChoices = subclassChoices(profile, classId),
 			SubclassUnlockLevel = (Subclasses.Choices(classId, Subclasses.Current(profile, classId))[1] or {}).UnlockLevel,
 			Gear = Gear.List(profile),
+			Stash = Consumables.List(profile),
+			Buffs = Consumables.Active(profile, os.time()),
+			Supplies = suppliesOf(profile),
 			Sheet = heroSheetOf(profile),
 			Daily = Daily.Status(profile, os.time()),
 		},
@@ -280,11 +297,11 @@ function handlers.LevelPet(player, profile, petId)
 	return ok, reason
 end
 
-function handlers.EquipGear(player, profile, itemId)
-	if type(itemId) ~= "string" then
+function handlers.EquipGear(player, profile, itemId, wornSlot)
+	if type(itemId) ~= "string" or (wornSlot ~= nil and type(wornSlot) ~= "string") then
 		return false, "BadArgs"
 	end
-	local ok, reason = Gear.Equip(profile, itemId)
+	local ok, reason = Gear.Equip(profile, itemId, wornSlot)
 	if ok then
 		afterBuildChange(player)
 	end
@@ -339,6 +356,46 @@ function handlers.UpgradeGear(player, profile, itemId)
 		afterBuildChange(player)
 	end
 	return ok, result
+end
+
+-- The Stash: use a boost, feed a pet, buy supplies at the Merchant.
+function handlers.UseConsumable(player, profile, id, petId)
+	if type(id) ~= "string" or (petId ~= nil and type(petId) ~= "string") then
+		return false, "BadArgs"
+	end
+	local ok, result = Consumables.Use(profile, id, os.time(), petId)
+	if ok then
+		afterBuildChange(player)
+	end
+	return ok, result
+end
+
+function handlers.BuyConsumable(player, profile, id, count)
+	if type(id) ~= "string" or (count ~= nil and type(count) ~= "number") then
+		return false, "BadArgs"
+	end
+	if not nearShop(player, "Merchant") then
+		return false, "TooFar"
+	end
+	return Consumables.Buy(profile, id, count)
+end
+
+-- Studio-only test helper (press F7 in the client): gold, shards and a few of everything.
+function handlers.DevGrant(player, profile)
+	if not game:GetService("RunService"):IsStudio() then
+		return false, "Forbidden"
+	end
+	profile.Season.Currencies.Gold += 5000
+	profile.Season.Currencies.Shards += 100
+	for _, id in ipairs(Consumables.Order) do
+		Consumables.Grant(profile, id, 3)
+	end
+	for i = 1, 12 do
+		local t = Gear.Types[(i - 1) % #Gear.Types + 1]
+		Gear.Grant(profile, 5 + i * 3, { Slot = t, Rarity = if i % 5 == 0 then "Epic" elseif i % 2 == 0 then "Rare" else "Common" })
+	end
+	afterBuildChange(player)
+	return true
 end
 
 function handlers.ClaimDaily(_, profile)

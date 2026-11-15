@@ -26,6 +26,7 @@ local Stages = require(script.Parent.Stages)
 local Passives = require(script.Parent.Passives)
 local Pets = require(script.Parent.Pets)
 local Gear = require(script.Parent.Gear)
+local Consumables = require(script.Parent.Consumables)
 
 local Progression = {}
 
@@ -72,6 +73,8 @@ function Progression.ApplyClear(profile, stage, rand)
 	local isFrontier = stage >= season.HighestStage
 	local classId = season.ClassId
 	local bonuses = Passives.Rewards(classId, season.PassiveLoadouts[classId], season.PassiveSlotLevels[classId])
+	local boost = Consumables.Rewards(profile, os.time())
+	bonuses = { GoldGain = (bonuses.GoldGain or 0) + boost.GoldGain, XPGain = (bonuses.XPGain or 0) + boost.XPGain, ItemRarity = bonuses.ItemRarity }
 	local rewards = Progression.ClearRewards(stage, isFrontier, bonuses)
 
 	season.Currencies.Gold += rewards.Gold
@@ -92,6 +95,19 @@ function Progression.ApplyClear(profile, stage, rand)
 		item, itemSoldFor = Gear.Grant(profile, stage, dropped)
 	end
 
+	local consumableId = Consumables.RollDrop(Stages.IsBoss(stage), rand or math.random)
+	if consumableId then
+		Consumables.Grant(profile, consumableId, 1)
+	end
+
+	-- the active pet levels up from fighting too
+	local petId = Pets.Active(profile)
+	local petLevelsGained = 0
+	if petId then
+		local okPet, gained = Pets.AddXP(profile, petId, Economy.PetXPPerClear or 12)
+		petLevelsGained = if okPet then gained else 0
+	end
+
 	if isFrontier then
 		season.HighestStage = stage + 1
 	end
@@ -106,6 +122,8 @@ function Progression.ApplyClear(profile, stage, rand)
 		PetsGained = petsGained,
 		Item = item,
 		ItemSoldFor = itemSoldFor,
+		Consumable = consumableId,
+		PetLevelsGained = petLevelsGained,
 		LevelsGained = levelsGained,
 		Level = season.Level,
 	}

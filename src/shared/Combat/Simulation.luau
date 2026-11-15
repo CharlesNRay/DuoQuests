@@ -269,6 +269,7 @@ function Simulation.new(options)
 		Rng = Rng.new(options.Seed or 1),
 		MaxSeconds = options.MaxSeconds or Simulation.DEFAULT_MAX_SECONDS,
 		RecordEvents = options.RecordEvents ~= false,
+		CastTimes = options.CastTimes ~= false,
 		OnEvent = options.OnEvent,
 		AbilityDefs = options.AbilityDefs or Abilities,
 		Ultimate = if options.Ultimate and Ultimates.Defs[options.Ultimate.Id]
@@ -683,12 +684,56 @@ function Simulation:Cast(caster, slot)
 		self:AddUltimateCharge(Ultimates.ChargePerCast)
 	end
 
+	local castTime = if slot.IsUltimate or not self.CastTimes or caster.Team ~= "Party" then 0 else AbilityStats.CastTime(def)
+	if castTime > EPSILON then
+		-- winding up: effects land when the cast finishes (see _advanceCast)
+		caster.Casting = { Ctx = ctx, Def = def, Remaining = castTime }
+		return true
+	end
+	self:_resolveCast(ctx, def)
+	return true
+end
+
+function Simulation:_resolveCast(ctx, def)
 	for _, effect in ipairs(def.Effects) do
 		local handler = Simulation.Effects[effect.Type]
 		assert(handler ~= nil, "Unknown effect type: " .. tostring(effect.Type))
 		handler(self, ctx, effect)
 	end
-	return true
+end
+
+-- Counts a wind-up down; when it ends the effects land and the caster is
+-- locked out of casting for AbilityStats.AfterCastDelay seconds.
+function Simulation:_advanceCast(entity)
+	local casting = entity.Casting
+	if casting == nil then
+		return
+	end
+	if not entity.Alive then
+		entity.Casting = nil
+		return
+	end
+	casting.Remaining -= Simulation.TICK
+	if casting.Remaining > EPSILON then
+		return
+	end
+	entity.Casting = nil
+	local ctx = casting.Ctx
+	if ctx.Primary ~= nil and not ctx.Primary.Alive then
+		ctx.Primary = self:PickTarget(entity)
+	end
+	local needsPrimary = false
+	for _, effect in ipairs(casting.Def.Effects) do
+		if effect.Target == "Primary" then
+			needsPrimary = true
+		end
+	end
+	if needsPrimary and ctx.Primary == nil then
+		entity.CastLock = AbilityStats.AfterCastDelay
+		return
+	end
+	self:_resolveCast(ctx, casting.Def)
+	entity.CastLock = AbilityStats.AfterCastDelay
 end
 
 -- Party ultimate ----------------------------------------------------------------
@@ -722,6 +767,9 @@ end
 
 -- Casts the first ready ability whose conditions are met (one per tick).
 function Simulation:_tryCast(caster)
+	if caster.Casting ~= nil or (caster.CastLock or 0) > EPSILON then
+		return false
+	end
 	for _, slot in ipairs(caster.Abilities) do
 		if slot.Timer <= EPSILON then
 			local def = self.AbilityDefs[slot.Id]
@@ -808,6 +856,10 @@ function Simulation:Step()
 
 	for _, entity in ipairs(actors) do
 		self:_tickTimers(entity)
+		if entity.CastLock and entity.CastLock > 0 then
+			entity.CastLock = math.max(0, entity.CastLock - Simulation.TICK)
+		end
+		self:_advanceCast(entity)
 	end
 
 	self:AddUltimateCharge(Ultimates.ChargePerSecond * Simulation.TICK)

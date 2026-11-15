@@ -24,7 +24,7 @@ local KIND_COLORS = {
 	Ultimate = Color3.fromRGB(120, 70, 190),
 }
 local KIND_GLYPHS = { Damage = "⚔", AoE = "💥", Heal = "💚", Shield = "🛡", Revive = "✨", Taunt = "📣", Buff = "▲", Ultimate = "★" }
-local SLOT_GLYPHS = { Weapon = "⚔", Armor = "🛡", Trinket = "💎" }
+local SLOT_GLYPHS = { Weapon = "⚔", Armor = "🛡", Helmet = "⛑", Pants = "👖", Boots = "👢", Ring = "💍", Amulet = "📿" }
 
 function Icons.SkillKind(def)
 	local first = def.Effects and def.Effects[1]

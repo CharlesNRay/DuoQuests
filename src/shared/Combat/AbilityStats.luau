@@ -37,6 +37,27 @@ local Rarities = require(script.Parent.Parent.Config.Rarities)
 
 local AbilityStats = {}
 
+-- Abilities wind up before their effects land, then the caster can't start
+-- another ability for AfterCastDelay seconds (basic attacks carry on).
+AbilityStats.AfterCastDelay = 1.0
+AbilityStats.DefaultCastTime = { Damage = 0.6, AoE = 0.9, Heal = 0.7, Shield = 0.5, Buff = 0.4 }
+
+function AbilityStats.CastTime(ability)
+	if ability.CastTime ~= nil then
+		return ability.CastTime
+	end
+	local first = ability.Effects and ability.Effects[1]
+	local kind = first and first.Type or "Buff"
+	if kind == "Damage" then
+		return if first.Target == "AllEnemies" then AbilityStats.DefaultCastTime.AoE else AbilityStats.DefaultCastTime.Damage
+	elseif kind == "Heal" or kind == "Revive" then
+		return AbilityStats.DefaultCastTime.Heal
+	elseif kind == "Shield" then
+		return AbilityStats.DefaultCastTime.Shield
+	end
+	return AbilityStats.DefaultCastTime.Buff
+end
+
 local POWER_FIELDS = { Multiplier = true, PercentMaxHealth = true }
 
 local function rarityBonus(ability)

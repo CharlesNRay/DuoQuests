@@ -177,16 +177,18 @@ end
 
 local VERDICT_TINT = { Up = C.Up, Down = C.Down }
 
+local WORN_ORDER = { "Helmet", "Amulet", "Armor", "Weapon", "Pants", "Ring1", "Ring2", "Boots" }
+
 function Screens.Gear(container, state, call)
 	local gear = state.Player.Gear
 	local scroll = list(container)
-	for _, slotName in ipairs({ "Weapon", "Armor", "Trinket" }) do
+	for _, slotName in ipairs(WORN_ORDER) do
 		local item = gear.Equipped[slotName]
 		local r = row(scroll, 56)
 		if item then
 			Icons.Item(r, item, { Size = UDim2.fromOffset(40, 40), Position = UDim2.fromOffset(8, 8) })
 			Kit.Hover(r, function() return Tips.Item(item, gear) end)
-			Kit.label({ Size = UDim2.new(1, -170, 1, 0), Position = UDim2.fromOffset(58, 0), Text = ("%s%s\n+%s %s   -   Item Power %d"):format(item.Name, (item.Upgrade or 0) > 0 and ("  +" .. item.Upgrade) or "", Tips.Num(item.Value), item.Stat, item.ItemPower or 0), TextColor3 = Kit.rarityColor(if item.SetId then "Set" else item.Rarity), Parent = r })
+			Kit.label({ Size = UDim2.new(1, -170, 1, 0), Position = UDim2.fromOffset(58, 0), Text = ("%s%s   [%s]\n%s   -   Item Power %d"):format(item.Name, (item.Upgrade or 0) > 0 and ("  +" .. item.Upgrade) or "", slotName, item.StatText, item.ItemPower or 0), TextColor3 = Kit.rarityColor(if item.SetId then "Set" else item.Rarity), Parent = r })
 			Kit.button({ Size = UDim2.fromOffset(92, 40), Position = UDim2.new(1, -100, 0.5, -20), Text = "Unequip", Parent = r }, function()
 				call("UnequipGear", slotName)
 			end)
@@ -200,11 +202,78 @@ function Screens.Gear(container, state, call)
 		if set.Worn >= 1 then
 			any = true
 			local r = row(scroll, 62)
-			Kit.label({ Size = UDim2.new(1, -16, 1, 0), Position = UDim2.fromOffset(8, 0), Text = ("%s  (%d/3 worn)\n2 pieces: %s\n3 pieces: %s"):format(set.Name, set.Worn, set.Bonus2, set.Bonus3), TextColor3 = if set.Worn >= 2 then C.Set else C.Dim, TextSize = 12, Parent = r })
+			Kit.label({ Size = UDim2.new(1, -16, 1, 0), Position = UDim2.fromOffset(8, 0), Text = ("%s  (%d worn)\n%d pieces: %s\n%d pieces: %s"):format(set.Name, set.Worn, set.Need1, set.Bonus2, set.Need2, set.Bonus3), TextColor3 = if set.Worn >= set.Need1 then C.Set else C.Dim, TextSize = 12, Parent = r })
 		end
 	end
 	if not any then
-		Kit.label({ Size = UDim2.new(1, 0, 0, 36), Text = "Set pieces are normal gear that drops in their own zone. Wear 2 or 3 of one set for bonuses.", TextColor3 = C.Dim, TextSize = 12, Parent = scroll })
+		Kit.label({ Size = UDim2.new(1, 0, 0, 36), Text = "Set pieces are normal gear that drops in their own zone. Wear 2 or 4 pieces of one set for bonuses.", TextColor3 = C.Dim, TextSize = 12, Parent = scroll })
+	end
+end
+
+-- The Stash: consumables. Select one, then use it (boost) or feed it to a pet.
+local function stashTab(container, state, call, extra)
+	local me = state.Player
+	local rows = me.Stash or {}
+	local sel = extra.StashSel
+	local selRow
+	for _, r in ipairs(rows) do
+		if r.Id == sel then
+			selRow = r
+		end
+	end
+	if not selRow then
+		selRow = rows[1]
+		extra.StashSel = selRow and selRow.Id
+	end
+
+	local gridHolder = Kit.new("ScrollingFrame", {
+		Size = UDim2.new(0.55, -4, 1, -36), Position = UDim2.fromOffset(0, 36), BackgroundTransparency = 1, BorderSizePixel = 0,
+		CanvasSize = UDim2.new(), AutomaticCanvasSize = Enum.AutomaticSize.Y, ScrollBarThickness = 5, Parent = container,
+	})
+	local detail = Kit.frame({ Size = UDim2.new(0.45, -4, 1, -36), Position = UDim2.new(0.55, 4, 0, 36), BackgroundColor3 = Color3.fromRGB(30, 33, 50), Parent = container })
+
+	if #rows == 0 then
+		detail.Visible = false
+		gridHolder.Visible = false
+		Kit.label({ Size = UDim2.new(1, 0, 0, 70), Position = UDim2.fromOffset(0, 40), TextWrapped = true, Text = "Your stash is empty.\nFights, bosses and the world boss drop boosts, pet food and wish tickets. The Merchant sells supplies.", TextColor3 = C.Dim, TextSize = 13, TextYAlignment = Enum.TextYAlignment.Top, Parent = container })
+		return
+	end
+	Kit.new("UIPadding", { PaddingLeft = UDim.new(0, 2), PaddingTop = UDim.new(0, 2), Parent = gridHolder })
+	Kit.new("UIGridLayout", { CellSize = UDim2.fromOffset(54, 54), CellPadding = UDim2.fromOffset(6, 6), SortOrder = Enum.SortOrder.LayoutOrder, Parent = gridHolder })
+	for index, r in ipairs(rows) do
+		local tile = Kit.frame({ BackgroundColor3 = C.PanelLight, LayoutOrder = index, Parent = gridHolder })
+		Kit.new("UIStroke", { Color = if r.Id == extra.StashSel then Color3.new(1, 1, 1) else Kit.rarityColor(r.Rarity), Thickness = if r.Id == extra.StashSel then 3 else 2, Parent = tile })
+		Kit.label({ Size = UDim2.fromScale(1, 1), Text = r.Glyph, TextSize = 26, TextXAlignment = Enum.TextXAlignment.Center, TextStrokeTransparency = 1, Parent = tile })
+		Kit.label({ Size = UDim2.fromOffset(30, 14), Position = UDim2.new(1, -32, 1, -16), Text = "x" .. r.Count, TextSize = 12, Font = Enum.Font.GothamBold, TextXAlignment = Enum.TextXAlignment.Right, TextWrapped = false, ZIndex = 3, Parent = tile })
+		local click = Kit.new("TextButton", { Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1, Text = "", ZIndex = 6, Parent = tile })
+		click.Activated:Connect(function()
+			extra.StashSel = r.Id
+			Screens.Bag(container, state, call, extra)
+		end)
+	end
+
+	if not selRow then
+		return
+	end
+	Kit.label({ Size = UDim2.new(1, -16, 0, 22), Position = UDim2.fromOffset(8, 6), Text = ("%s  %s  x%d"):format(selRow.Glyph, selRow.Name, selRow.Count), TextSize = 15, Font = Enum.Font.GothamBold, TextColor3 = Kit.rarityColor(selRow.Rarity), Parent = detail })
+	Kit.label({ Size = UDim2.new(1, -16, 0, 50), Position = UDim2.fromOffset(8, 30), Text = selRow.Description, TextSize = 12, TextYAlignment = Enum.TextYAlignment.Top, Parent = detail })
+	if selRow.Kind == "Buff" then
+		Kit.button({ Size = UDim2.new(1, -16, 0, 34), Position = UDim2.new(0, 8, 1, -44), Text = "Use now", BackgroundColor3 = C.Up, Parent = detail }, function()
+			call("UseConsumable", selRow.Id)
+		end)
+	elseif selRow.Kind == "PetFood" then
+		Kit.label({ Size = UDim2.new(1, -16, 0, 16), Position = UDim2.fromOffset(8, 84), Text = "Feed to:", TextSize = 11, TextColor3 = C.Dim, Parent = detail })
+		local y = 100
+		for _, pet in ipairs(me.Pets or {}) do
+			if pet.Owned and y < 170 then
+				Kit.button({ Size = UDim2.new(1, -16, 0, 26), Position = UDim2.fromOffset(8, y), Text = ("%s  Lv %d%s"):format(pet.Name, pet.Level, pet.Level >= (pet.MaxLevel or 10) and "  (max)" or ""), TextSize = 12, Parent = detail }, function()
+					call("UseConsumable", selRow.Id, pet.Id)
+				end)
+				y += 30
+			end
+		end
+	else
+		Kit.label({ Size = UDim2.new(1, -16, 0, 40), Position = UDim2.new(0, 8, 1, -50), Text = "Spend it at the Wishing Tree in the plaza.", TextSize = 12, TextColor3 = C.Accent, Parent = detail })
 	end
 end
 
@@ -212,10 +281,21 @@ function Screens.Bag(container, state, call, extra)
 	local gear = state.Player.Gear
 	extra = extra or {}
 	local compact = extra.BagCompact == true
+	local tab = extra.BagTab or "Gear"
 	Kit.clear(container)
-	-- header: count, view toggle
-	Kit.label({ Size = UDim2.new(1, -150, 0, 32), TextWrapped = true, Text = ("Bag %d/%d  -  strongest first (Item Power).  Hover an item: green = better than what you wear.  Sell at the Merchant, upgrade at the Blacksmith."):format(#gear.Inventory, gear.Cap), TextColor3 = C.Dim, TextSize = 11, Parent = container })
-	Kit.button({ Size = UDim2.fromOffset(140, 30), Position = UDim2.new(1, -140, 0, 0), Text = if compact then "View: icons" else "View: list", Parent = container }, function()
+	-- header: tabs, count, view toggle
+	for index, name in ipairs({ "Gear", "Stash" }) do
+		Kit.button({ Size = UDim2.fromOffset(86, 30), Position = UDim2.fromOffset((index - 1) * 92, 0), Text = name, BackgroundColor3 = if tab == name then C.Accent else C.Panel, TextColor3 = if tab == name then C.Bg else C.Text, Parent = container }, function()
+			extra.BagTab = name
+			Screens.Bag(container, state, call, extra)
+		end)
+	end
+	if tab == "Stash" then
+		stashTab(container, state, call, extra)
+		return
+	end
+	Kit.label({ Size = UDim2.new(1, -330, 0, 32), Position = UDim2.fromOffset(190, 0), TextWrapped = true, Text = ("Bag %d/%d  -  strongest first.  Hover: green = better than what you wear."):format(#gear.Inventory, gear.Cap), TextColor3 = C.Dim, TextSize = 11, Parent = container })
+	Kit.button({ Size = UDim2.fromOffset(130, 30), Position = UDim2.new(1, -130, 0, 0), Text = if compact then "View: icons" else "View: list", Parent = container }, function()
 		extra.BagCompact = not compact
 		Screens.Bag(container, state, call, extra)
 	end)
@@ -253,7 +333,7 @@ function Screens.Bag(container, state, call, extra)
 		Icons.Item(r, item, { Size = UDim2.fromOffset(40, 40), Position = UDim2.fromOffset(8, 6) })
 		Kit.Hover(r, function() return Tips.Item(item, gear) end)
 		local arrow = if cmp.Verdict == "Up" then "  ▲" elseif cmp.Verdict == "Down" then "  ▼" else ""
-		Kit.label({ Size = UDim2.new(1, -170, 1, 0), Position = UDim2.fromOffset(58, 0), Text = ("%s%s%s\n%s +%s %s   -   Item Power %d"):format(item.Name, (item.Upgrade or 0) > 0 and ("  +" .. item.Upgrade) or "", arrow, item.Slot, Tips.Num(item.Value), item.Stat, item.ItemPower or 0), TextColor3 = C.Text, Parent = r })
+		Kit.label({ Size = UDim2.new(1, -170, 1, 0), Position = UDim2.fromOffset(58, 0), Text = ("%s%s%s\n%s   -   %s   -   Item Power %d"):format(item.Name, (item.Upgrade or 0) > 0 and ("  +" .. item.Upgrade) or "", arrow, item.Slot, item.StatText, item.ItemPower or 0), TextColor3 = C.Text, Parent = r })
 		Kit.button({ Size = UDim2.fromOffset(90, 40), Position = UDim2.new(1, -104, 0.5, -20), Text = "Equip", Parent = r }, function()
 			call("EquipGear", item.Id)
 		end)
@@ -286,8 +366,9 @@ local function buildLog(fight, everyHit)
 		return def and def.DisplayName or tostring(id)
 	end
 
-	local lines, bigHits = {}, {}
+	local lines, bigHits, times = {}, {}, {}
 	local function add(t, text)
+		table.insert(times, t)
 		table.insert(lines, ("%s  %s"):format(Kit.tint(clock(t), C.Dim), text))
 	end
 	for _, e in ipairs(fight.Events or {}) do
@@ -323,8 +404,9 @@ local function buildLog(fight, everyHit)
 			add(t, Kit.tint(if e.Winner == "Party" then "Victory" else "Defeat", if e.Winner == "Party" then C.Good else C.Bad))
 		end
 	end
-	return lines, bigHits
+	return lines, bigHits, times
 end
+Screens.BuildLog = buildLog
 
 function Screens.Log(container, state, call, extra)
 	local scroll = list(container)

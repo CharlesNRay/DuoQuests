@@ -120,6 +120,21 @@ function Hud.new(root)
 	local mini = Kit.frame({ Size = UDim2.new(1, 0, 0, 38), BackgroundTransparency = 1, NoCorner = true, Parent = right })
 	Kit.new("UIListLayout", { Padding = UDim.new(0, 4), FillDirection = Enum.FillDirection.Horizontal, SortOrder = Enum.SortOrder.LayoutOrder, HorizontalAlignment = Enum.HorizontalAlignment.Right, Parent = mini })
 
+	-- active boosts (XP Tonic ...) with a live countdown
+	self.BuffRow = Kit.frame({ Size = UDim2.new(1, 0, 0, 22), BackgroundTransparency = 1, NoCorner = true, Parent = right })
+	Kit.new("UIListLayout", { Padding = UDim.new(0, 3), FillDirection = Enum.FillDirection.Horizontal, SortOrder = Enum.SortOrder.LayoutOrder, HorizontalAlignment = Enum.HorizontalAlignment.Right, Parent = self.BuffRow })
+	self.BuffChips = {}
+	task.spawn(function()
+		while gui.Parent do
+			for _, chip in ipairs(self.BuffChips) do
+				local left = math.max(0, math.floor(chip.EndsAt - os.clock()))
+				chip.Frame.Visible = left > 0
+				chip.Label.Text = ("%s %d:%02d"):format(chip.Glyph, left // 60, left % 60)
+			end
+			task.wait(1)
+		end
+	end)
+
 	-- bottom-centre: the menu dock -----------------------------------------------
 	local dock = Kit.frame({ Size = UDim2.fromOffset(10, 48), AutomaticSize = Enum.AutomaticSize.X, Position = UDim2.new(0.5, 0, 1, -6), AnchorPoint = Vector2.new(0.5, 1), BackgroundTransparency = 1, NoCorner = true, Parent = chrome })
 	Kit.new("UIListLayout", { Padding = UDim.new(0, 4), FillDirection = Enum.FillDirection.Horizontal, SortOrder = Enum.SortOrder.LayoutOrder, HorizontalAlignment = Enum.HorizontalAlignment.Center, Parent = dock })
@@ -268,6 +283,15 @@ function Hud.new(root)
 		self.XpText = ("Level %d\nXP %d / %d"):format(me.Level, me.XP or 0, me.XPNeeded or 0)
 		self.Gold.Text = "💰 " .. me.Gold
 		self.Shards.Text = "💠 " .. me.Shards
+
+		Kit.clear(self.BuffRow)
+		self.BuffChips = {}
+		for _, buff in ipairs(me.Buffs or {}) do
+			local f = pill(self.BuffRow, { Size = UDim2.fromOffset(64, 22), Position = UDim2.new() })
+			local l = Kit.label({ Size = UDim2.new(1, -4, 1, 0), Position = UDim2.fromOffset(4, 0), Text = "", TextSize = 12, TextWrapped = false, Parent = f })
+			Kit.Hover(f, function() return ("<b>%s</b>\n%s"):format(buff.Name, buff.Description) end)
+			table.insert(self.BuffChips, { Frame = f, Label = l, Glyph = buff.Glyph, EndsAt = os.clock() + buff.Remaining })
+		end
 
 		self:SetBadge("Skills", (me.SkillPicks or 0) > 0 or #(me.SubclassChoices or {}) > 0)
 		self:SetBadge("Party", party == nil)

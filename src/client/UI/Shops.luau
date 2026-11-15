@@ -8,6 +8,7 @@
 local Kit = require(script.Parent.Kit)
 local Icons = require(script.Parent.Icons)
 local Tips = require(script.Parent.Tips)
+local Gear = require(game:GetService("ReplicatedStorage"):WaitForChild("Shared").Gear)
 local C = Kit.Colors
 
 local Shops = {}
@@ -42,16 +43,42 @@ local function gold(state)
 end
 
 -- Merchant -----------------------------------------------------------------
-function Shops.Merchant(container, state, call)
+-- Tabs: Sell (bagged gear, one piece or in bulk) and Supplies (boosts and pet food for gold).
+function Shops.Merchant(container, state, call, extra)
+	extra = extra or {}
+	local tab = extra.MerchantTab or "Sell"
 	local gear = state.Player.Gear
 	local scroll = list(container, 44)
+	Kit.label({ Size = UDim2.new(0.3, 0, 0, 40), Text = ("Gold: %d\nBag %d/%d"):format(gold(state), #gear.Inventory, gear.Cap), TextColor3 = C.Accent, TextSize = 13, Parent = container })
+	for index, name in ipairs({ "Sell", "Supplies" }) do
+		Kit.button({ Size = UDim2.fromOffset(78, 38), Position = UDim2.new(0.3, (index - 1) * 82, 0, 0), Text = name, BackgroundColor3 = if tab == name then C.Accent else C.Panel, TextColor3 = if tab == name then C.Bg else C.Text, Parent = container }, function()
+			extra.MerchantTab = name
+			Shops.Merchant(container, state, call, extra)
+		end)
+	end
 
-	-- bulk buttons along the top
-	Kit.label({ Size = UDim2.new(0.4, 0, 0, 40), Text = ("Gold: %d\nBag %d/%d"):format(gold(state), #gear.Inventory, gear.Cap), TextColor3 = C.Accent, TextSize = 14, Parent = container })
-	Kit.button({ Size = UDim2.new(0.28, -4, 0, 38), Position = UDim2.new(0.42, 0, 0, 0), Text = "Sell all Common", Parent = container }, function()
+	if tab == "Supplies" then
+		for index, item in ipairs(state.Player.Supplies or {}) do
+			local r = row(scroll, 54)
+			r.LayoutOrder = index
+			Kit.label({ Size = UDim2.fromOffset(40, 40), Position = UDim2.fromOffset(8, 7), Text = item.Glyph, TextSize = 26, TextXAlignment = Enum.TextXAlignment.Center, TextStrokeTransparency = 1, Parent = r })
+			Kit.label({ Size = UDim2.new(1, -160, 1, 0), Position = UDim2.fromOffset(56, 0), Text = ("%s\n%s"):format(item.Name, item.Description), TextSize = 12, Parent = r })
+			local can = gold(state) >= item.Price
+			local b = Kit.button({ Size = UDim2.fromOffset(92, 40), Position = UDim2.new(1, -98, 0.5, -20), Text = "Buy " .. item.Price .. "g", BackgroundColor3 = if can then C.Up else C.Panel, TextColor3 = if can then C.Text else C.Dim, Parent = r }, function()
+				if can then
+					call("BuyConsumable", item.Id, 1)
+				end
+			end)
+			b.Active = can
+		end
+		Kit.label({ Size = UDim2.new(1, 0, 0, 30), Text = "Boosts and pet food go to your Stash (Bag > Stash).", TextColor3 = C.Dim, TextSize = 12, Parent = scroll })
+		return
+	end
+
+	Kit.button({ Size = UDim2.new(0.2, -4, 0, 38), Position = UDim2.new(0.6, 0, 0, 0), Text = "Sell Common", TextSize = 12, Parent = container }, function()
 		call("SellBulk", "Common")
 	end)
-	Kit.button({ Size = UDim2.new(0.28, -4, 0, 38), Position = UDim2.new(0.71, 0, 0, 0), Text = "Sell worse gear", Parent = container }, function()
+	Kit.button({ Size = UDim2.new(0.2, -4, 0, 38), Position = UDim2.new(0.8, 0, 0, 0), Text = "Sell worse", TextSize = 12, Parent = container }, function()
 		call("SellBulk", "Worse")
 	end)
 
@@ -60,10 +87,11 @@ function Shops.Merchant(container, state, call)
 		shown += 1
 		local cmp = Tips.Compare(item, gear)
 		local r = row(scroll, 54)
+		r.LayoutOrder = shown
 		Icons.Item(r, item, { Size = UDim2.fromOffset(42, 42), Position = UDim2.fromOffset(8, 6) })
 		Kit.Hover(r, function() return Tips.Item(item, gear) end)
 		local mark = if cmp.Verdict == "Up" then "  ▲ better than worn" elseif cmp.Verdict == "Down" then "  ▼ worse than worn" else ""
-		Kit.label({ Size = UDim2.new(1, -150, 1, 0), Position = UDim2.fromOffset(60, 0), Text = ("%s%s\n%s +%s %s  (Item Power %d)"):format(nameOf(item), mark, item.Slot, fmt(item.Value), item.Stat, item.ItemPower or 0), TextColor3 = if cmp.Verdict == "Up" then C.Good else C.Text, TextSize = 13, Parent = r })
+		Kit.label({ Size = UDim2.new(1, -150, 1, 0), Position = UDim2.fromOffset(60, 0), Text = ("%s%s\n%s  %s  (Item Power %d)"):format(nameOf(item), mark, item.Slot, item.StatText, item.ItemPower or 0), TextColor3 = if cmp.Verdict == "Up" then C.Good else C.Text, TextSize = 13, Parent = r })
 		Kit.button({ Size = UDim2.fromOffset(96, 40), Position = UDim2.new(1, -102, 0.5, -20), Text = "Sell " .. item.SellValue .. "g", BackgroundColor3 = C.Panel, Parent = r }, function()
 			call("SellGear", item.Id)
 		end)
@@ -76,7 +104,7 @@ function Shops.Merchant(container, state, call)
 end
 
 -- Blacksmith ---------------------------------------------------------------
-local SLOT_ORDER = { "Weapon", "Armor", "Trinket" }
+local SLOT_ORDER = Gear.WornSlots
 
 function Shops.Blacksmith(container, state, call)
 	local gear = state.Player.Gear
@@ -91,9 +119,9 @@ function Shops.Blacksmith(container, state, call)
 		local pips = ("%d/%d"):format(item.Upgrade or 0, item.MaxUpgrade or 10)
 		local detail
 		if cost then
-			detail = ("%s %s  ->  %s  (%s)"):format(item.Stat, fmt(item.Value), fmt(item.NextValue), pips)
+			detail = ("%s  ->  %s  (%s)"):format(item.StatText, Gear.FormatStat(item.Stat, item.NextValue), pips)
 		else
-			detail = ("%s %s   MAX (%s)"):format(item.Stat, fmt(item.Value), pips)
+			detail = ("%s   MAX (%s)"):format(item.StatText, pips)
 		end
 		Kit.label({ Size = UDim2.new(1, -160, 1, 0), Position = UDim2.fromOffset(60, 0), Text = ("%s   [%s]\n%s"):format(nameOf(item), where, detail), TextColor3 = C.Text, TextSize = 13, Parent = r })
 		if cost then

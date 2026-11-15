@@ -73,7 +73,7 @@ local function applyPassives(stats, classId, passiveIds, passiveLevels)
 end
 
 -- options (all optional): AbilityIds, SlotLevels, PassiveIds, PassiveLevels, PetId, PetLevel,
--- Equipped (gear: { [slot] = item }), SubclassId
+-- Equipped (gear: { [slot] = item }), SubclassId, ExtraMods (list of { Stat, Mode, Value })
 function StatCalc.NewPartyMember(id, name, classId, level, options)
 	local class = Classes[classId]
 	assert(class ~= nil, "Unknown class: " .. tostring(classId))
@@ -89,6 +89,9 @@ function StatCalc.NewPartyMember(id, name, classId, level, options)
 	end
 	if options.PetId then
 		applyMods(stats, Pets.Mods(options.PetId, options.PetLevel))
+	end
+	if options.ExtraMods then
+		applyMods(stats, options.ExtraMods) -- timed boosts from consumables
 	end
 
 	return Entity.new({

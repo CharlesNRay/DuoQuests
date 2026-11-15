@@ -129,3 +129,11 @@ Newest first.
 - Everybody starts with a Common weapon (Gear.EnsureStarter at profile load).
 - Set pieces are now a variant of a normal drop (no separate set roll) and are worn like any gear; the Sets collection tab is gone (Gear tab shows bonuses of worn sets).
 - Hero page draws worn gear on the avatar (weapon by the hand, armour on the chest, trinket at the neck). No helmet slot exists yet (3 slots: Weapon, Armor, Trinket).
+
+## Gear slots, stash, combat feel, Skills screen (Nov 15)
+- 8 worn slots (helmet, amulet, armor, pants, weapon, 2 rings, boots); Stash tab for consumables; timed buffs (XP / damage / etc.) via Merchant Supplies; Studio-only Dev grant button.
+- Combat: party abilities now have cast times (damage/heal land after a wind-up) and a 1s lockout after each cast; basic attacks continue. Bosses keep their telegraphs.
+- Live combat log pops open during fights with a minimize button; the Fight log button still shows the full last fight.
+- Hero screen frames the body only so the character is centred; UI reference size enlarged so everything reads smaller.
+- Skills screen rebuilt: You / Partner tabs, drag to reorder cast order, drag pool skills onto slots, scrolling pool, partner ghost skills editable.
+- TODO next: worn sets visible on character, pet wishing + pet food, Wishing Tree (pet + skill wishes; then remove shard/gold unlocks on Skills/Pets pages), world boss.

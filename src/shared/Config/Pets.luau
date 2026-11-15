@@ -21,6 +21,7 @@
 
 return {
 	MaxLevel = 10,
+	XPPerLevel = 100, -- pet XP to go from level L to L+1 is this * L (pet food and fighting)
 	LevelCostPerLevel = 70, -- Gold to go from level L to L+1 is this * L
 
 	Order = { "Slimey", "Foxling", "Mossback", "Wisp" },

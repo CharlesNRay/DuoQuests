@@ -18,6 +18,7 @@ local Shops = require(script.Parent.UI.Shops)
 local HeroScreen = require(script.Parent.UI.HeroScreen)
 local MapScreen = require(script.Parent.UI.MapScreen)
 local SkillsScreen = require(script.Parent.UI.SkillsScreen)
+local LiveLog = require(script.Parent.UI.LiveLog)
 Screens.Skills = SkillsScreen.Skills
 Screens.Merchant = Shops.Merchant
 Screens.Blacksmith = Shops.Blacksmith
@@ -55,6 +56,7 @@ Kit.SetupTooltips(root, scale)
 
 local hud = Hud.new(root)
 local state
+local liveLog = LiveLog.new(root, Screens.BuildLog)
 local fighting = false
 local arenas = Arenas.new(Players.LocalPlayer.UserId)
 
@@ -130,7 +132,7 @@ end
 -- every screen can pick its own panel size (reference units); the rest use the default
 local PANEL_DEFAULT = Vector2.new(500, 286)
 local PANEL_SIZES = {
-	Map = Vector2.new(640, 298), Hero = Vector2.new(640, 298), Skills = Vector2.new(640, 298),
+	Map = Vector2.new(640, 298), Hero = Vector2.new(640, 298), Skills = Vector2.new(660, 344),
 	Merchant = Vector2.new(540, 292), Blacksmith = Vector2.new(540, 292),
 }
 local SHOP_NPC = { Merchant = "Merchant", Blacksmith = "Blacksmith" }
@@ -248,6 +250,11 @@ hud:AddButton("Skills", "dock", "⚔️", "Skills", function() open("Skills", "S
 hud:AddButton("Pets", "dock", "🐱", "Pets", function() open("Pets", "Pets") end)
 hud:AddButton("Party", "dock", "👥", "Party", function() open("Party", "Party") end)
 
+-- Studio only: a test button that grants gold, boosts and gear so every screen can be exercised.
+if RunService:IsStudio() then
+	hud:AddButton("Dev", "mini", "🧪", "Test items (Studio only)", function() call("DevGrant") end)
+end
+
 hud:AddButton("Gear", "dock", "🛡️", "Gear", function() open("Gear", "Gear & Sets") end)
 hud:AddButton("Bag", "dock", "🎒", "Bag", function() open("Bag", "Bag") end)
 
@@ -278,6 +285,7 @@ push.OnClientEvent:Connect(function(kind, info)
 			redraw()
 		end
 		hud:OnFight(info)
+		liveLog:Play(info, 0.8)
 		fighting = true
 		arenas:Play(info.Slot, info, function()
 			fighting = false

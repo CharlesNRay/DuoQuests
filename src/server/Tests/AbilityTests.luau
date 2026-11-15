@@ -167,6 +167,7 @@ return function(modulesOverride)
 			Seed = options.Seed or 1,
 			MaxSeconds = options.MaxSeconds or 12,
 			Hooks = options.Hooks,
+			CastTimes = options.CastTimes,
 			AbilityDefs = defs,
 		})
 	end
@@ -311,9 +312,32 @@ return function(modulesOverride)
 	check("Warrior's Last Stand triggers below 50% health", warriorAt6s({ { Id = "LastStand" } }) == "Timeout")
 	check("...and without it the Warrior would have died", warriorAt6s(nil) == "Enemy")
 
+	-- Cast times: effects land after the wind-up; abilities are 1s apart at least
+	do
+		local cs = Simulation.new({ Party = { caster("c", { { Id = "Nuke" }, { Id = "Nuke" } }) }, Enemies = { punchingBag() }, Seed = 1, MaxSeconds = 8, AbilityDefs = defs })
+		cs:Run()
+		local castT, hitT = nil, nil
+		local casts = {}
+		for _, e in ipairs(cs.Events) do
+			if e.Type == "Cast" then
+				table.insert(casts, e.T)
+			elseif e.Type == "Damage" and hitT == nil and e.Tag ~= "Basic" then
+				hitT = e.T
+			end
+		end
+		check("A cast's damage lands after its wind-up", #casts >= 1 and hitT ~= nil and hitT > casts[1])
+		local gapOk = true
+		for i = 2, #casts do
+			if casts[i] - casts[i - 1] < 1.0 - 1e-6 then
+				gapOk = false
+			end
+		end
+		check("Abilities are at least 1s apart", gapOk)
+	end
+
 	-- Fortified (generates defense) and expiry ---------------------------------
 	local fortifier = caster("c", { { Id = "ShortFortify" } }, { Defense = 10 })
-	local fortSim = newSim({ fortifier }, { punchingBag() }, { MaxSeconds = 3 })
+	local fortSim = newSim({ fortifier }, { punchingBag() }, { MaxSeconds = 3, CastTimes = false })
 	fortSim:Step()
 	check("Fortified raises Defense by 50% while active", math.abs(fortSim:GetStat(fortifier, "Defense") - 15) < 1e-9)
 	fortSim:Run()
@@ -359,7 +383,7 @@ return function(modulesOverride)
 	statusHooks:On("OnApplyStatus", function(ctx)
 		ctx.Duration *= 2
 	end)
-	local doubledSim = newSim({ caster("c", { { Id = "ShortFortify" } }) }, { punchingBag() }, { MaxSeconds = 5, Hooks = statusHooks })
+	local doubledSim = newSim({ caster("c", { { Id = "ShortFortify" } }) }, { punchingBag() }, { MaxSeconds = 5, Hooks = statusHooks, CastTimes = false })
 	doubledSim:Run()
 	local doubledEnd = nil
 	for _, e in ipairs(doubledSim.Events) do

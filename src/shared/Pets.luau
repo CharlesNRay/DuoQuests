@@ -129,6 +129,41 @@ function Pets.LevelUp(profile, petId)
 	return true
 end
 
+-- Pet XP: pets level up from pet food and from fighting (see Progression). XP to go from level L to L+1
+-- is Config.XPPerLevel * L. XP is kept in Season.PetXP[petId], the level in Season.PetLevels[petId].
+function Pets.XPToNext(level)
+	return Config.XPPerLevel * level
+end
+
+function Pets.AddXP(profile, petId, amount)
+	if type(petId) ~= "string" or Config.Defs[petId] == nil then
+		return false, "UnknownPet"
+	end
+	if not owned(profile, petId) then
+		return false, "NotOwned"
+	end
+	local season = profile.Season
+	season.PetLevels = season.PetLevels or {}
+	season.PetXP = season.PetXP or {}
+	local level = Pets.Level(profile, petId)
+	if level >= Config.MaxLevel then
+		return false, "MaxLevel"
+	end
+	local xp = (season.PetXP[petId] or 0) + math.max(0, amount or 0)
+	local gained = 0
+	while level < Config.MaxLevel and xp >= Pets.XPToNext(level) do
+		xp -= Pets.XPToNext(level)
+		level += 1
+		gained += 1
+	end
+	if level >= Config.MaxLevel then
+		xp = 0
+	end
+	season.PetXP[petId] = xp
+	season.PetLevels[petId] = level
+	return true, gained
+end
+
 function Pets.List(profile)
 	local activeId = Pets.Active(profile)
 	local rows = {}
