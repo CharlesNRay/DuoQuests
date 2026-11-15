@@ -49,11 +49,11 @@ function Hud.new(root)
 	end
 
 	self.Gui = gui
-	self.Nav = Kit.frame({ Size = UDim2.new(0, 800, 0, 46), Position = UDim2.new(0.5, -400, 1, -54), BackgroundTransparency = 1, NoCorner = true, Parent = gui })
+	self.Nav = Kit.frame({ Size = UDim2.new(0, 790, 0, 46), Position = UDim2.new(0.5, -395, 1, -54), BackgroundTransparency = 1, NoCorner = true, Parent = gui })
 	Kit.new("UIListLayout", { FillDirection = Enum.FillDirection.Horizontal, Padding = UDim.new(0, 6), Parent = self.Nav })
 
 	function self:AddNav(text, onClick)
-		return Kit.button({ Size = UDim2.new(0, 76, 0, 46), Text = text, Parent = self.Nav }, onClick)
+		return Kit.button({ Size = UDim2.new(0, 72, 0, 46), TextSize = 13, Text = text, Parent = self.Nav }, onClick)
 	end
 
 	function self:Render(state)
@@ -85,6 +85,12 @@ function Hud.new(root)
 		local text = info.Won and ("Stage " .. info.Stage .. " cleared!") or (info.TimedOut and "Time ran out - back a stage" or "Defeated - back a stage")
 		if info.Reward then
 			text ..= string.format("  +%d gold  +%d xp", info.Reward.Gold or 0, info.Reward.XP or 0)
+			if info.Reward.Item then
+				text ..= "  +" .. info.Reward.Item
+			end
+			if info.Reward.Pets and #info.Reward.Pets > 0 then
+				text ..= "  NEW PET!"
+			end
 		end
 		self.Toast.Text = text
 		self.FightFill.Size = UDim2.fromScale(0, 1)

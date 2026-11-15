@@ -20,7 +20,7 @@
 	UltimateId   optional: the pair's chosen ultimate (Party.SetUltimate)
 
 	Snapshot (a member's saved build, used as their ghost while offline)
-	  UserId, Name, ClassId, PetId?, PetLevel?, Level, Frontier, SlotLevels, Owned, GhostLoadout,
+	  UserId, Name, ClassId, PetId?, PetLevel?, Gear (equipped items), Level, Frontier, SlotLevels, Owned, GhostLoadout,
 	  History, SavedAt
 	  GhostLoadout is separate from the player's own loadout. Either party member
 	  can edit it (SetGhostLoadout), so partners never have to be online together
@@ -50,6 +50,7 @@ local Progression = require(script.Parent.Progression)
 local Skills = require(script.Parent.Skills)
 local StageRunner = require(script.Parent.StageRunner)
 local Pets = require(script.Parent.Pets)
+local TableUtil = require(script.Parent.Util.TableUtil)
 local Ultimates = require(script.Parent.Ultimates)
 local Classes = require(script.Parent.Config.Classes)
 
@@ -200,6 +201,7 @@ function Party.MakeSnapshot(profile, userId, name, previous, now)
 		ClassId = classId,
 		PetId = petId,
 		PetLevel = petLevel,
+		Gear = TableUtil.DeepCopy((season.Equipment and season.Equipment.Equipped) or {}),
 		Level = season.Level,
 		Frontier = season.HighestStage,
 		SlotLevels = copyList(season.SlotLevels[classId]),

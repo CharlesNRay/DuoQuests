@@ -176,6 +176,8 @@ local function showBoard(categoryId)
 end
 extra.ShowBoard = showBoard
 hud:AddNav("Ranks", function() showBoard(extra.BoardCategory or "Stage") end)
+hud:AddNav("Gear", function() open("Gear", "Gear") end)
+hud:AddNav("Daily", function() open("Daily", "Daily Login") end)
 hud:AddNav("Skills", function() open("Skills", "Skills") end)
 hud:AddNav("Passives", function() open("Passives", "Passives") end)
 hud:AddNav("Pets", function() open("Pets", "Pets") end)

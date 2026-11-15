@@ -128,6 +128,52 @@ function Screens.Passives(container, state, call)
 	end
 end
 
+-- Gear ---------------------------------------------------------------------
+function Screens.Gear(container, state, call)
+	local gear = state.Player.Gear
+	local scroll = list(container)
+	local order = { "Weapon", "Armor", "Trinket" }
+	for _, slotName in ipairs(order) do
+		local item = gear.Equipped[slotName]
+		local r = row(scroll, 52)
+		if item then
+			Kit.label({ Size = UDim2.new(1, -120, 1, 0), Position = UDim2.fromOffset(8, 0), Text = ("%s: %s  [%s]\n+%d %s  (from stage %d)"):format(slotName, item.Name, item.Rarity, math.floor(item.Value + 0.5), item.Stat, item.Power), TextColor3 = Kit.rarityColor(item.Rarity), Parent = r })
+			Kit.button({ Size = UDim2.fromOffset(100, 40), Position = UDim2.new(1, -108, 0.5, -20), Text = "Unequip", Parent = r }, function()
+				call("UnequipGear", slotName)
+			end)
+		else
+			Kit.label({ Size = UDim2.new(1, -16, 1, 0), Position = UDim2.fromOffset(8, 0), Text = slotName .. ": empty", TextColor3 = C.Dim, Parent = r })
+		end
+	end
+	Kit.label({ Size = UDim2.new(1, 0, 0, 22), Text = ("Bag %d/%d  (gear drops from stages; a full bag sells new drops)"):format(#gear.Inventory, gear.Cap), TextColor3 = C.Dim, TextSize = 13, Parent = scroll })
+	for _, item in ipairs(gear.Inventory) do
+		local r = row(scroll, 52)
+		Kit.label({ Size = UDim2.new(1, -230, 1, 0), Position = UDim2.fromOffset(8, 0), Text = ("%s  [%s]\n%s +%d  (stage %d)"):format(item.Name, item.Rarity, item.Slot, math.floor(item.Value + 0.5), item.Power), TextColor3 = Kit.rarityColor(item.Rarity), Parent = r })
+		Kit.button({ Size = UDim2.fromOffset(100, 40), Position = UDim2.new(1, -216, 0.5, -20), Text = "Equip", Parent = r }, function()
+			call("EquipGear", item.Id)
+		end)
+		Kit.button({ Size = UDim2.fromOffset(100, 40), Position = UDim2.new(1, -108, 0.5, -20), Text = "Sell " .. item.SellValue .. "g", Parent = r }, function()
+			call("SellGear", item.Id)
+		end)
+	end
+end
+
+-- Daily --------------------------------------------------------------------
+function Screens.Daily(container, state, call)
+	local daily = state.Player.Daily
+	local scroll = list(container)
+	local r = row(scroll, 110)
+	local text = if daily.CanClaim then ("Day %d reward is ready!"):format(daily.NextDay) else ("Come back tomorrow for day %d."):format(daily.NextDay)
+	local reward = daily.Reward
+	local lines = { text, ("Gold %d   Shards %d%s"):format(reward.Gold, reward.Shards, reward.SkillPicks > 0 and ("   Skill pick " .. reward.SkillPicks) or ""), ("Current streak: %d day(s). Missing a day restarts at day 1."):format(daily.Streak) }
+	Kit.label({ Size = UDim2.new(1, -16, 0, 70), Position = UDim2.fromOffset(8, 4), Text = table.concat(lines, "\n"), Parent = r })
+	if daily.CanClaim then
+		Kit.button({ Size = UDim2.fromOffset(160, 40), Position = UDim2.fromOffset(8, 64), Text = "Claim", BackgroundColor3 = C.Accent, Parent = r }, function()
+			call("ClaimDaily")
+		end)
+	end
+end
+
 -- Ranks --------------------------------------------------------------------
 -- extra.Board = reply of GetLeaderboard, extra.BoardCategory = "Stage"|"Level",
 -- extra.ShowBoard(categoryId) switches tabs.

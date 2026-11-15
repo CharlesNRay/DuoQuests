@@ -26,9 +26,7 @@ In rough order.
 
 ## Later
 - ⬜ Pets as combatants
-- ⬜ Gear and inventory
 - ⬜ Rebirth ranks / Legacy progression polish
-- ⬜ Daily login rewards
 - ⬜ Friend invites and random partner matchmaking
 - ⬜ Pacing and balance pass including passives and ultimates
 - ⬜ Live-server testing: teleport between places, real DataStore saves
@@ -39,6 +37,8 @@ In rough order.
 Newest first.
 
 ### 2026-11-15 (overnight, code only, not yet checked in Studio)
+- 🔨 Gear and inventory: Weapon / Armor / Trinket drops from stages (rarity rolls, boss drops, ItemRarity passive helps), bag of 30 (full bag sells new drops), equip / unequip / sell, ghost partners keep their gear, Gear screen (29 tests with daily login)
+- 🔨 Daily login: 7-day streak cycle with rewards that scale with your frontier, Daily screen
 - 🔨 Leaderboards: furthest stage and highest level per season (ordered DataStore), Ranks screen, and a sign in the hub (10 tests; live-server saving untested)
 - 🔨 Pets: 4 pets (Slimey, Foxling, Mossback, Spark Wisp) earned by clearing stages, kept every season, levelled with gold, small combat bonuses; shown beside heroes in the world and on arena cards; Pets screen; ghost partners fight with their pet (22 tests)
 - 🔨 Click-to-inspect on heroes and other players' avatars (class, level, pet, skills, passives, party stage)

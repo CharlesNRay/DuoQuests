@@ -52,19 +52,21 @@ local StageRunner = {}
 function StageRunner.NewParty(members)
 	local party = {}
 	for _, member in ipairs(members) do
-		local classId, level, loadout, slotLevels, passiveIds, passiveLevels, petId, petLevel
+		local classId, level, loadout, slotLevels, passiveIds, passiveLevels, petId, petLevel, equipped
 		if member.Profile then
 			local season = member.Profile.Season
 			classId, level = season.ClassId, season.Level
 			loadout, slotLevels = season.Loadouts[classId], season.SlotLevels[classId]
 			passiveIds, passiveLevels = season.PassiveLoadouts[classId], season.PassiveSlotLevels[classId]
 			petId, petLevel = Pets.Active(member.Profile)
+			equipped = season.Equipment and season.Equipment.Equipped
 		else
 			local snapshot = member.Snapshot
 			classId, level = snapshot.ClassId, snapshot.Level
 			loadout, slotLevels = snapshot.GhostLoadout, snapshot.SlotLevels
 			passiveIds, passiveLevels = snapshot.PassiveIds, snapshot.PassiveLevels
 			petId, petLevel = snapshot.PetId, snapshot.PetLevel
+			equipped = snapshot.Gear
 		end
 		table.insert(
 			party,
@@ -75,6 +77,7 @@ function StageRunner.NewParty(members)
 				PassiveLevels = passiveLevels,
 				PetId = petId,
 				PetLevel = petLevel,
+				Equipped = equipped,
 			})
 		)
 	end

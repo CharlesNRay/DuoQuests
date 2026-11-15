@@ -18,13 +18,14 @@
 	  Progression.ClearRewards(stage, isFrontier, bonuses)  -> { Gold, XP, Shards }
 	      bonuses is optional { GoldGain, XPGain } (fractions from passives);
 	      shards are not affected
-	  Progression.ApplyClear(profile, stage)       -> summary table
+	  Progression.ApplyClear(profile, stage, rand?) -> summary table (rand() in [0,1) is for tests)
 ]]
 
 local Economy = require(script.Parent.Config.Economy)
 local Stages = require(script.Parent.Stages)
 local Passives = require(script.Parent.Passives)
 local Pets = require(script.Parent.Pets)
+local Gear = require(script.Parent.Gear)
 
 local Progression = {}
 
@@ -66,7 +67,7 @@ function Progression.ClearRewards(stage, isFrontier, bonuses)
 	}
 end
 
-function Progression.ApplyClear(profile, stage)
+function Progression.ApplyClear(profile, stage, rand)
 	local season = profile.Season
 	local isFrontier = stage >= season.HighestStage
 	local classId = season.ClassId
@@ -85,6 +86,11 @@ function Progression.ApplyClear(profile, stage)
 	end
 
 	local petsGained = Pets.GrantForClear(profile, stage)
+	local dropped = Gear.RollDrop(stage, isFrontier, bonuses.ItemRarity, rand or math.random)
+	local item, itemSoldFor
+	if dropped then
+		item, itemSoldFor = Gear.Grant(profile, stage, dropped)
+	end
 
 	if isFrontier then
 		season.HighestStage = stage + 1
@@ -98,6 +104,8 @@ function Progression.ApplyClear(profile, stage)
 		Shards = rewards.Shards,
 		SkillPicks = skillPicks,
 		PetsGained = petsGained,
+		Item = item,
+		ItemSoldFor = itemSoldFor,
 		LevelsGained = levelsGained,
 		Level = season.Level,
 	}

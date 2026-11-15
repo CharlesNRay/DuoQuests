@@ -19,6 +19,8 @@
 	  SetUltimate(ultimateId)           the party's ultimate (either member)
 	  GetLeaderboard(categoryId)        top rows + your own score, "Stage" or "Level"
 	  Inspect(userId)                   public card of a party member on this server
+	  EquipGear(itemId) / UnequipGear(slot) / SellGear(itemId)   equipment
+	  ClaimDaily()                      today's login reward
 	  EquipPet(petId) / LevelPet(petId) the companion that follows you and its bonus
 	  SetStage(stage)                   pick any unlocked stage from the map (either member)
 	  SetGhostLoadout(ids)              edit the PARTNER's ghost skills
@@ -39,6 +41,8 @@ local Progression = require(Shared.Progression)
 local Skills = require(Shared.Skills)
 local Party = require(Shared.Party)
 local Pets = require(Shared.Pets)
+local Gear = require(Shared.Gear)
+local Daily = require(Shared.Daily)
 
 local DataService = require(script.Parent.DataService)
 local PartyService = require(script.Parent.PartyService)
@@ -91,6 +95,8 @@ local function buildState(player)
 			PassiveSlots = Passives.SlotsAt(season.HighestStage),
 			Pets = Pets.List(profile),
 			ActivePet = (Pets.Active(profile)),
+			Gear = Gear.List(profile),
+			Daily = Daily.Status(profile, os.time()),
 		},
 	}
 
@@ -226,6 +232,39 @@ function handlers.LevelPet(player, profile, petId)
 	return ok, reason
 end
 
+function handlers.EquipGear(player, profile, itemId)
+	if type(itemId) ~= "string" then
+		return false, "BadArgs"
+	end
+	local ok, reason = Gear.Equip(profile, itemId)
+	if ok then
+		afterBuildChange(player)
+	end
+	return ok, reason
+end
+
+function handlers.UnequipGear(player, profile, slotName)
+	if type(slotName) ~= "string" then
+		return false, "BadArgs"
+	end
+	local ok, reason = Gear.Unequip(profile, slotName)
+	if ok then
+		afterBuildChange(player)
+	end
+	return ok, reason
+end
+
+function handlers.SellGear(_, profile, itemId)
+	if type(itemId) ~= "string" then
+		return false, "BadArgs"
+	end
+	return Gear.Sell(profile, itemId)
+end
+
+function handlers.ClaimDaily(_, profile)
+	return Daily.Claim(profile, os.time())
+end
+
 function handlers.SetStage(player, _, stage)
 	if type(stage) ~= "number" then
 		return false, "BadArgs"
@@ -354,7 +393,7 @@ function ApiService.Init()
 					Wait = waitSeconds,
 					Roster = outcome.Roster,
 					Events = events,
-					Reward = reward and { Gold = reward.Gold, XP = reward.XP, Shards = reward.Shards } or nil,
+					Reward = reward and { Gold = reward.Gold, XP = reward.XP, Shards = reward.Shards, Item = reward.Item and Gear.Name(reward.Item) or nil, Pets = reward.PetsGained } or nil,
 				})
 			end
 		end
