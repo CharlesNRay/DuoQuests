@@ -23,7 +23,7 @@
 	  EquipGear(itemId, wornSlot?) / UnequipGear(slot) / SellGear(itemId)   equipment (8 worn slots)
 	  UseConsumable(id, petId?) / BuyConsumable(id, count)   the Stash: boosts, pet food, Merchant supplies
 	  ClaimDaily()                      today's login reward
-	  ClaimQuest(index) / ClaimQuestBonus() / ClaimWeeklyQuest(index) / ClaimWeeklyBonus() / ClaimPass(level|"All")   daily quests and the season pass
+	  ClaimQuest(index) / ClaimQuestBonus() / ClaimWeeklyQuest(index) / ClaimWeeklyBonus() / BuyPremium(itemId) / ClaimPass(level|"All")   daily quests and the season pass
 	  EquipPet(petId)  the companion that follows you and its bonus
 	  SetStage(stage)                   pick any unlocked stage from the map (either member)
 	  Advance()                         step up one stage after a loss held the party back
@@ -54,6 +54,7 @@ local Hero = require(Shared.Hero)
 local World = require(Shared.World)
 local Daily = require(Shared.Daily)
 local Quests = require(Shared.Quests)
+local Premium = require(Shared.Premium)
 local Subclasses = require(Shared.Subclasses)
 local Abilities = require(Shared.Config.Abilities)
 
@@ -175,6 +176,9 @@ local function buildState(player)
 			Quests = Quests.Daily(profile, os.time()),
 			WeeklyQuests = Quests.Weekly(profile, os.time()),
 			Pass = Quests.Pass(profile),
+			Sunstones = Premium.Sunstones(profile),
+			PremiumShop = Premium.List(profile),
+			SunstonePacks = Premium.Packs(profile),
 		},
 	}
 
@@ -549,6 +553,27 @@ function handlers.ClaimPass(_, profile, level, track)
 	return Quests.ClaimPass(profile, level, if track == "Premium" then "Premium" else "Free")
 end
 
+-- The Premium shop: spend Sunstones on fixed-content items (never wishes or tickets).
+function handlers.BuyPremium(player, profile, itemId)
+	if type(itemId) ~= "string" then
+		return false, "BadArgs"
+	end
+	local ok, data = Premium.Buy(profile, itemId)
+	if ok then
+		afterBuildChange(player)
+	end
+	return ok, data
+end
+
+-- Studio only: Sunstones without paying, so the shop can be tried.
+function handlers.DevSunstones(_, profile)
+	if not game:GetService("RunService"):IsStudio() then
+		return false, "Forbidden"
+	end
+	Premium.AddSunstones(profile, 1000)
+	return true
+end
+
 -- Studio only: flips the premium pass track so it can be tried without a purchase.
 function handlers.DevPremium(_, profile)
 	if not game:GetService("RunService"):IsStudio() then
@@ -619,6 +644,13 @@ function handlers.Leave(player)
 end
 
 local PROFILE_FREE = { GetState = true, GetWorld = true, Inspect = true, GetLeaderboard = true, CreateCode = true, JoinByCode = true, Leave = true, RevertMyGhost = true }
+
+-- Tells a client its Sunstones changed (a Robux purchase just went through) so it refreshes its screen.
+function ApiService.PushState(player)
+	if pushRemote then
+		pushRemote:FireClient(player, "Purchase", {})
+	end
+end
 
 function ApiService.Init()
 	local folder = Instance.new("Folder")

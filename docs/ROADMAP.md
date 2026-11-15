@@ -191,3 +191,11 @@ Newest first.
 - Season pass has two tracks side by side: Free and Premium (locked until `Season.Pass.Premium`; `Quests.SetPremium(profile, true)` is what a Robux purchase will call). Premium pays Wishstones, consumables, Pet Wish on 5/15/25, Skill Wish on 10/20/30, a skill pick at 20 and 30 Wishstones at 30; never gold. Claim all takes both tracks. Studio-only HUD button (star) toggles premium for testing.
 - Pet skills have their own icons (Icons.PetSkill) on the Pets page with a hover tip; the pet's rank is the level badge.
 - Verified in Studio (Nov 15): Weekly and Daily tabs, premium pass column, Pets page skill icons, Wishing Tree prompt (works within ~14 studs of the trunk), Wish screen (Pet/Skill ticket labels, unlocked skill tiers, locked pet tiers), skill wish results, Skills page Rank up and Upgrade. Fixed: unsupported emoji in pet skill icons, wish result grid overlapping the footer (5 per row).
+
+## Currency split and Premium shop (Nov 15, evening)
+- Two currencies: Wishstones (blue 💎, earned only: stage clears, quests, pass, daily; the wishing currency) and Sunstones (orange 🔶, bought with Robux, permanent across seasons; spent in the Premium shop). Shards stay (violet 💠, skill unlocks).
+- Sunstones never buy wishes, tickets, Wishstones or anything random, so Roblox's paid-random-item rules (odds, regional restriction) do not apply to the shop. Direct Wishstone sales are removed from the plan.
+- Premium shop (HUD 🔶 button): Starter Pack (once per account), Level-up Pack (3 hero levels, 3/season), Subclass Pack (4 skill picks + boosts, 1/season), Pass Boost (+5 pass levels, 4/season), Bag Expansion, Boost Bundle (unlimited), Premium Season Pass (400). Config/Premium; Shared/Premium; 23 tests.
+- "Get Sunstones" tab: four Robux packs, first purchase of each doubles. Server: PremiumService.ProcessReceipt (idempotent by PurchaseId, saves before granting). Packs show "soon" until real Developer Product ids go into Config/Premium Packs[].ProductId.
+- Studio helpers: first Dev button grants test items, a star toggles the premium pass, "Studio only: add 1,000 Sunstones" in the Get Sunstones tab.
+- TODO: PolicyService check for the premium pass's wish tickets in restricted regions; cosmetics shop; gifting; real product ids; verify in Studio.

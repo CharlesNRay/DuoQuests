@@ -14,10 +14,12 @@ local PartyService = require(Services.PartyService)
 local ApiService = require(Services.ApiService)
 local LeaderboardService = require(Services.LeaderboardService)
 local WorldService = require(Services.WorldService)
+local PremiumService = require(Services.PremiumService)
 
 DataService.Init()
 PartyService.Init()
 ApiService.Init()
+PremiumService.Init(DataService.GetProfile, DataService.SaveNow, ApiService.PushState)
 LeaderboardService.Init(WorldService.SetBoardText)
 
 local function onPlayerAdded(player)

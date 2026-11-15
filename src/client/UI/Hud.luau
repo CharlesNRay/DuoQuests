@@ -101,21 +101,27 @@ function Hud.new(root)
 	-- top-right: the map card in the very corner, gold + shards directly to its left ----------
 	local right = Kit.frame({ Size = UDim2.fromOffset(296, 10), AutomaticSize = Enum.AutomaticSize.Y, Position = UDim2.new(1, -6, 0, 4), AnchorPoint = Vector2.new(1, 0), BackgroundTransparency = 1, NoCorner = true, Parent = chrome })
 	Kit.new("UIListLayout", { Padding = UDim.new(0, 4), HorizontalAlignment = Enum.HorizontalAlignment.Right, Parent = right })
-	local topRow = Kit.frame({ Size = UDim2.new(1, 0, 0, 86), BackgroundTransparency = 1, NoCorner = true, Parent = right })
-	local money = Kit.frame({ Size = UDim2.fromOffset(100, 80), BackgroundTransparency = 1, NoCorner = true, Parent = topRow })
+	local topRow = Kit.frame({ Size = UDim2.new(1, 0, 0, 110), BackgroundTransparency = 1, NoCorner = true, Parent = right })
+	local money = Kit.frame({ Size = UDim2.fromOffset(100, 108), BackgroundTransparency = 1, NoCorner = true, Parent = topRow })
 	local goldPill = pill(money, { Size = UDim2.new(1, 0, 0, 24), Position = UDim2.fromOffset(0, 0) })
 	local shardPill = pill(money, { Size = UDim2.new(1, 0, 0, 24), Position = UDim2.fromOffset(0, 28) })
 	local stonePill = pill(money, { Size = UDim2.new(1, 0, 0, 24), Position = UDim2.fromOffset(0, 56) })
-	self.GoldPill, self.ShardPill, self.StonePill = goldPill, shardPill, stonePill
-	self.Stones = Kit.label({ Size = UDim2.new(1, -6, 1, 0), Position = UDim2.fromOffset(6, 0), Text = "", TextSize = 13, Font = Enum.Font.GothamBold, TextColor3 = Color3.fromRGB(255, 170, 230), TextWrapped = false, Parent = stonePill })
+	local sunPill = pill(money, { Size = UDim2.new(1, 0, 0, 24), Position = UDim2.fromOffset(0, 84) })
+	self.GoldPill, self.ShardPill, self.StonePill, self.SunPill = goldPill, shardPill, stonePill, sunPill
+	-- the orange premium currency: tap the pill to open the Premium shop
+	self.Suns = Kit.label({ Size = UDim2.new(1, -6, 1, 0), Position = UDim2.fromOffset(6, 0), Text = "", TextSize = 13, Font = Enum.Font.GothamBold, TextColor3 = Color3.fromRGB(255, 165, 70), TextWrapped = false, Parent = sunPill })
+	self.Stones = Kit.label({ Size = UDim2.new(1, -6, 1, 0), Position = UDim2.fromOffset(6, 0), Text = "", TextSize = 13, Font = Enum.Font.GothamBold, TextColor3 = Color3.fromRGB(110, 185, 255), TextWrapped = false, Parent = stonePill })
 	self.Gold = Kit.label({ Size = UDim2.new(1, -6, 1, 0), Position = UDim2.fromOffset(6, 0), Text = "", TextSize = 13, Font = Enum.Font.GothamBold, TextColor3 = C.Accent, TextWrapped = false, Parent = goldPill })
-	self.Shards = Kit.label({ Size = UDim2.new(1, -6, 1, 0), Position = UDim2.fromOffset(6, 0), Text = "", TextSize = 13, Font = Enum.Font.GothamBold, TextColor3 = Color3.fromRGB(150, 210, 255), TextWrapped = false, Parent = shardPill })
+	self.Shards = Kit.label({ Size = UDim2.new(1, -6, 1, 0), Position = UDim2.fromOffset(6, 0), Text = "", TextSize = 13, Font = Enum.Font.GothamBold, TextColor3 = Color3.fromRGB(200, 170, 255), TextWrapped = false, Parent = shardPill })
 
 	Kit.Hover(goldPill, function()
 		return ("<b>Gold</b>\n%s"):format(commas(self.GoldExact or 0))
 	end)
 	Kit.Hover(stonePill, function()
-		return ("<b>Wishstones</b>\n%s\nSpend them at the Wishing Tree on pet or skill wishes. Earned by clearing stages."):format(commas(self.StoneExact or 0))
+		return ("<b>Wishstones</b>\n%s\nSpend them at the Wishing Tree on pet or skill wishes. Earned by playing: clearing stages, quests, the season pass and daily login."):format(commas(self.StoneExact or 0))
+	end)
+	Kit.Hover(sunPill, function()
+		return ("<b>Sunstones</b>\n%s\nThe premium currency, bought with Robux. Spend it in the Premium shop on packs, passes and upgrades. It never buys wishes."):format(commas(self.SunExact or 0))
 	end)
 	Kit.Hover(shardPill, function()
 		return ("<b>Shards</b>\n%s"):format(commas(self.ShardExact or 0))
@@ -344,7 +350,9 @@ function Hud.new(root)
 		self.Gold.Text = "💰 " .. short(me.Gold)
 		self.Shards.Text = "💠 " .. short(me.Shards)
 		self.GoldExact, self.ShardExact = me.Gold, me.Shards
-		self.Stones.Text = "✨ " .. short(me.Wishstones or 0)
+		self.Stones.Text = "💎 " .. short(me.Wishstones or 0)
+		self.Suns.Text = "🔶 " .. short(me.Sunstones or 0)
+		self.SunExact = me.Sunstones or 0
 		self.StoneExact = me.Wishstones or 0
 
 		Kit.clear(self.BuffRow)

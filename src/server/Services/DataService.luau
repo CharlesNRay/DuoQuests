@@ -313,6 +313,18 @@ function DataService.GetProfile(player)
 	return if session then session.Data else nil
 end
 
+-- Saves a player's data right now (used after a Robux purchase, so a granted purchase is never lost). Returns true when saved.
+function DataService.SaveNow(player)
+	local session = sessions[player.UserId]
+	if not session then
+		return false
+	end
+	while session.Saving do
+		task.wait()
+	end
+	return saveSession(player.UserId, session, false) == true
+end
+
 function DataService.ReleaseProfile(player)
 	releaseUserId(player.UserId)
 end
