@@ -364,6 +364,10 @@ function PartyService.Leave(player)
 		return false, "NoParty"
 	end
 	local profile = entry.Online[userId].Profile
+	-- The fight clock belongs to the player, not to the party record: remember it so the fresh solo party picks up
+	-- where this one was. (Otherwise every Leave starts a new party whose first fight is due at once - spamming the
+	-- button would clear a stage each time.)
+	local carry = { NextFightAt = entry.NextFightAt, FightStage = entry.FightStage, FightUntil = entry.FightUntil }
 
 	-- Pay the leaver everything they are owed first, then save, then leave.
 	lastClaim[userId] = Party.Claim(entry.Record, userId, profile)
@@ -399,7 +403,15 @@ function PartyService.Leave(player)
 		warn("[PartyService] Could not create a new party after leaving: " .. tostring(reason))
 		return true
 	end
-	attach(player, profile)
+	if attach(player, profile) then
+		local fresh = hosted[profile.Permanent.PartyId]
+		if fresh then
+			fresh.NextFightAt = math.max(fresh.NextFightAt or 0, carry.NextFightAt or 0)
+			if carry.FightUntil and carry.FightUntil > now() then
+				fresh.FightStage, fresh.FightUntil = carry.FightStage, carry.FightUntil
+			end
+		end
+	end
 	return true
 end
 

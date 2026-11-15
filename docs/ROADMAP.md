@@ -175,3 +175,7 @@ Newest first.
 - Skills page: Earlier/Later buttons removed (drag to reorder); locked things (passive slots, locked passives, locked pets, locked wish tiers) show a padlock veil with the stage needed. Red dots on Skills/Pets docks when a rank up or upgrade is ready.
 - Wishing Tree name tag moved above the canopy.
 - Pacing (simulated, Bright skill wishes, ~12 skills per class): 100 wishes -> top four skills ~level 12-13; 200 -> ~2 maxed; 300 -> ~5 maxed.
+
+## Party leave fixes (Nov 15)
+- A fresh solo party (after Leave) starts at the player's own frontier, never stage 1.
+- The fight clock is carried over when you leave (PartyService.Leave): a new party's first fight is no longer due at once, so spamming Leave cannot clear a stage per click.
