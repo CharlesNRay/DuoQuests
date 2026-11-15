@@ -291,7 +291,7 @@ return function(modulesOverride)
 	check("Enough pet food raises the pet level", (fed.Season.PetLevels.Slimey or 1) >= 2)
 	check("Pet food needs a pet you own", select(2, C.Use(ProfileTemplate.New(), "PetFood", now, "Slimey")) == "NoneLeft")
 
-	local lookGear = require(game:GetService("ReplicatedStorage").Shared.Gear)
+	local lookGear = Gear
 	local look = lookGear.Look({
 		Weapon = { Slot = "Weapon", Rarity = "Epic", SetId = 3 },
 		Armor = { Slot = "Armor", Rarity = "Rare", SetId = 3 },
