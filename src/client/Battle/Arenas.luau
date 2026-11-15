@@ -14,6 +14,8 @@
 	  arenas:OriginOf(slot)             Vector3
 	  arenas.OnBanner                   optional function(text, color) for YOUR arena's callouts
 	  arenas.OnInspect                  optional function(userId): a hero was clicked
+	  arenas.OnWatch                    optional function(slot, origin): the "Watch battle" pad was used
+	                                    (every arena has one in front of it; yours reads "Battle view")
 ]]
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
@@ -78,6 +80,32 @@ local function makeCard(origin)
 	return anchor, label
 end
 
+-- A gold pad in front of the arena with a "Watch battle" prompt: step up to it and
+-- use it to snap the camera to that fight (anyone can watch anyone).
+local function makePad(origin)
+	local pad = Instance.new("Part")
+	pad.Name = "WatchPad"
+	pad.Anchored = true
+	pad.CanCollide = false
+	pad.Shape = Enum.PartType.Cylinder
+	pad.Size = Vector3.new(0.4, 5, 5)
+	pad.CFrame = CFrame.new(origin + Vector3.new(0, 0.2, 26)) * CFrame.Angles(0, 0, math.rad(90))
+	pad.Color = Color3.fromRGB(255, 196, 70)
+	pad.Material = Enum.Material.Neon
+	pad.Transparency = 0.25
+	pad.Parent = workspace
+	local prompt = Instance.new("ProximityPrompt")
+	prompt.Name = "DuoQuestWatch"
+	prompt.ActionText = "Watch battle"
+	prompt.ObjectText = ""
+	prompt.HoldDuration = 0
+	prompt.MaxActivationDistance = 14
+	prompt.RequiresLineOfSight = false
+	prompt.KeyboardKeyCode = Enum.KeyCode.E
+	prompt.Parent = pad
+	return pad, prompt
+end
+
 function Arenas:_get(slot)
 	local arena = self.BySlot[slot]
 	if arena then
@@ -86,7 +114,13 @@ function Arenas:_get(slot)
 	local origin = self:OriginOf(slot)
 	local scene = Scene.new(origin)
 	local anchor, label = makeCard(origin)
-	arena = { Slot = slot, Scene = scene, Replay = Replay.new(scene), Anchor = anchor, Label = label, Fighting = false, Zone = nil }
+	local pad, prompt = makePad(origin)
+	arena = { Slot = slot, Scene = scene, Replay = Replay.new(scene), Anchor = anchor, Label = label, Pad = pad, Prompt = prompt, Fighting = false, Zone = nil }
+	prompt.Triggered:Connect(function()
+		if self.OnWatch then
+			self.OnWatch(slot, origin)
+		end
+	end)
 	self.BySlot[slot] = arena
 	return arena
 end
@@ -155,6 +189,7 @@ function Arenas:Apply(snapshot)
 			arena.Replay:Destroy()
 			arena.Scene:Destroy()
 			arena.Anchor:Destroy()
+			arena.Pad:Destroy()
 			self.BySlot[slot] = nil
 		end
 	end
@@ -166,6 +201,8 @@ function Arenas:Apply(snapshot)
 			arena.Scene:SetZone(zone.Theme)
 		end
 		arena.Label.Text = cardText(party, zone)
+		arena.Prompt.ActionText = if party.Slot == self.Mine then "Battle view" else "Watch battle"
+		arena.Prompt.ObjectText = (party.Members[1] and party.Members[1].Name or "") .. " - " .. zone.Name
 		if not arena.Fighting then
 			arena.Replay:Idle(rosterOf(party))
 		end

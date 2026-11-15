@@ -2,6 +2,9 @@
 	Kit (ModuleScript) - tiny helpers for building UI in code, plain Roblox
 	parts only (no image assets). Reference frame is 844x390; Main scales it.
 ]]
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+
 local Kit = {}
 
 Kit.Colors = {
@@ -16,6 +19,9 @@ Kit.Colors = {
 	Common = Color3.fromRGB(170, 176, 190),
 	Rare = Color3.fromRGB(90, 160, 255),
 	Epic = Color3.fromRGB(190, 110, 255),
+	Set = Color3.fromRGB(255, 150, 60),
+	Up = Color3.fromRGB(70, 150, 90),
+	Down = Color3.fromRGB(170, 66, 66),
 	Warrior = Color3.fromRGB(220, 110, 80),
 	Cleric = Color3.fromRGB(240, 220, 130),
 }
@@ -96,6 +102,94 @@ end
 
 function Kit.rarityColor(rarity)
 	return Kit.Colors[rarity] or Kit.Colors.Common
+end
+
+function Kit.hex(color)
+	return "#" .. color:ToHex()
+end
+
+-- Rich-text colour wrapper
+function Kit.tint(text, color)
+	return ('<font color="%s">%s</font>'):format(Kit.hex(color), text)
+end
+
+-- Tooltips ----------------------------------------------------------------
+-- Kit.SetupTooltips(root, uiScale) once; then Kit.Hover(guiObject, function() return richText end).
+-- Mouse: follows the cursor. Touch: tap shows it for a couple of seconds.
+local tip = nil
+
+function Kit.SetupTooltips(root, uiScale)
+	local frame = Kit.frame({
+		Name = "Tooltip", Size = UDim2.fromOffset(236, 20), AutomaticSize = Enum.AutomaticSize.Y,
+		BackgroundColor3 = Color3.fromRGB(12, 14, 24), BackgroundTransparency = 0.04, Visible = false, ZIndex = 100, Active = false, Parent = root,
+	})
+	Kit.new("UIStroke", { Color = Color3.fromRGB(120, 128, 160), Thickness = 1, Parent = frame })
+	Kit.new("UIPadding", { PaddingTop = UDim.new(0, 6), PaddingBottom = UDim.new(0, 6), PaddingLeft = UDim.new(0, 8), PaddingRight = UDim.new(0, 8), Parent = frame })
+	local label = Kit.label({ Size = UDim2.new(1, 0, 0, 0), AutomaticSize = Enum.AutomaticSize.Y, RichText = true, TextSize = 13, TextYAlignment = Enum.TextYAlignment.Top, ZIndex = 101, Parent = frame })
+	tip = { Root = root, Scale = uiScale, Frame = frame, Label = label, Owner = nil, At = nil }
+	RunService.Heartbeat:Connect(function()
+		if not tip.Frame.Visible then
+			return
+		end
+		local s = math.max(0.01, tip.Scale.Scale)
+		local anchor
+		if tip.At then
+			anchor = tip.At
+		else
+			anchor = (UserInputService:GetMouseLocation() - root.AbsolutePosition) / s + Vector2.new(14, 16)
+		end
+		local size = tip.Frame.AbsoluteSize / s
+		local x = math.clamp(anchor.X, 4, 844 - size.X - 4)
+		local y = anchor.Y
+		if y + size.Y > 386 then
+			y = math.max(4, anchor.Y - size.Y - 28)
+		end
+		tip.Frame.Position = UDim2.fromOffset(x, y)
+	end)
+end
+
+local function showTip(owner, text, at)
+	if not tip or text == nil or text == "" then
+		return
+	end
+	tip.Owner = owner
+	tip.At = at
+	tip.Label.Text = text
+	tip.Frame.Visible = true
+end
+
+local function hideTip(owner)
+	if tip and (owner == nil or tip.Owner == owner) then
+		tip.Frame.Visible = false
+		tip.Owner = nil
+		tip.At = nil
+	end
+end
+
+function Kit.HideTip()
+	hideTip(nil)
+end
+
+function Kit.Hover(inst, getText)
+	inst.MouseEnter:Connect(function()
+		showTip(inst, getText())
+	end)
+	inst.MouseLeave:Connect(function()
+		hideTip(inst)
+	end)
+	inst.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.Touch and tip then
+			local s = math.max(0.01, tip.Scale.Scale)
+			local at = (inst.AbsolutePosition - tip.Root.AbsolutePosition) / s + Vector2.new(0, inst.AbsoluteSize.Y / s + 4)
+			showTip(inst, getText(), at)
+			task.delay(2.8, function()
+				hideTip(inst)
+			end)
+		end
+	end)
+	inst.Destroying:Connect(function()
+		hideTip(inst)
+	end)
 end
 
 return Kit

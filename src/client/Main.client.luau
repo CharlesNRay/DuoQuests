@@ -15,6 +15,7 @@ local Hud = require(script.Parent.UI.Hud)
 local Screens = require(script.Parent.UI.Screens)
 local Zones = require(Shared.Zones)
 local Arenas = require(script.Parent.Battle.Arenas)
+local Hub = require(script.Parent.Battle.Hub)
 local BattleCamera = require(script.Parent.Battle.BattleCamera)
 
 local folder = ReplicatedStorage:WaitForChild(Remotes.FolderName)
@@ -30,6 +31,7 @@ local function fit()
 end
 gui:GetPropertyChangedSignal("AbsoluteSize"):Connect(fit)
 fit()
+Kit.SetupTooltips(root, scale)
 
 local hud = Hud.new(root)
 local state
@@ -52,7 +54,9 @@ end
 -- Take the world snapshot: build/refresh every party's arena and aim the battle
 -- camera at ours. The first time we know our slot we place the character.
 local placed = false
+local lastWorld
 local function applyWorld(snapshot)
+	lastWorld = snapshot
 	arenas:Apply(snapshot)
 	local mine = arenas:MySlot()
 	if mine then
@@ -84,17 +88,19 @@ local current -- name of the open panel, or nil
 local extra = {}
 local call
 
-local panel = Kit.frame({ Name = "Panel", Size = UDim2.new(0, 500, 0, 300), Position = UDim2.new(0.5, -250, 0, 46), BackgroundColor3 = Kit.Colors.Bg, Visible = false, ZIndex = 5, Parent = root })
+local panel = Kit.frame({ Name = "Panel", Size = UDim2.new(0, 500, 0, 286), Position = UDim2.new(0.5, -250, 0, 42), BackgroundColor3 = Kit.Colors.Bg, Visible = false, ZIndex = 5, Parent = root })
 local body = Kit.new("Frame", { Size = UDim2.new(1, -16, 1, -62), Position = UDim2.fromOffset(8, 50), BackgroundTransparency = 1, Parent = panel })
 local title = Kit.label({ Size = UDim2.new(1, -70, 0, 36), Position = UDim2.fromOffset(12, 6), Text = "", TextSize = 20, Font = Enum.Font.GothamBold, Parent = panel })
 Kit.button({ Size = UDim2.fromOffset(44, 36), Position = UDim2.new(1, -52, 0, 6), Text = "X", Parent = panel }, function()
 	current = nil
 	panel.Visible = false
+	Kit.HideTip()
 end)
 
 local function redraw()
 	if not state then return end
 	hud:Render(state)
+	Hub.SetDailyReady(state.Player.Daily ~= nil and state.Player.Daily.CanClaim == true)
 	syncWorld()
 	if current then
 		Screens[current](body, state, call, extra)
@@ -117,7 +123,13 @@ function call(action, ...)
 	return ok, data
 end
 
-local function open(name, label)
+local function open(name, label, keep)
+	if current == name and panel.Visible and not keep then
+		current = nil
+		panel.Visible = false
+		Kit.HideTip()
+		return
+	end
 	current = name
 	title.Text = label
 	panel.Visible = true
@@ -171,22 +183,34 @@ for _, player in ipairs(Players:GetPlayers()) do
 end
 Players.PlayerAdded:Connect(wirePlayer)
 
-local function showBoard(categoryId)
+local function showBoard(categoryId, keep)
 	extra.BoardCategory = categoryId
 	local ok, data = api:InvokeServer("GetLeaderboard", categoryId)
 	extra.Board = if ok then data else nil
-	open("Ranks", "Leaderboards")
+	open("Ranks", "Leaderboards", keep)
 end
-extra.ShowBoard = showBoard
-hud:AddNav("Ranks", function() showBoard(extra.BoardCategory or "Stage") end)
-hud:AddNav("Gear", function() open("Gear", "Gear") end)
-hud:AddNav("Daily", function() open("Daily", "Daily Login") end)
-hud:AddNav("Skills", function() open("Skills", "Skills") end)
-hud:AddNav("Passives", function() open("Passives", "Passives") end)
-hud:AddNav("Pets", function() open("Pets", "Pets") end)
-hud:AddNav("Ultimate", function() open("Ultimate", "Party Ultimate") end)
-hud:AddNav("Map", function() open("Map", "World Map") end)
-hud:AddNav("Party", function() open("Party", "Party") end)
+extra.ShowBoard = function(categoryId)
+	showBoard(categoryId, true)
+end
+hud:AddButton("Skills", "left", "⚔️", "Skills", function() open("Skills", "Skills") end)
+hud:AddButton("Passives", "left", "📜", "Passives", function() open("Passives", "Passives") end)
+hud:AddButton("Pets", "left", "🐾", "Pets", function() open("Pets", "Pets") end)
+hud:AddButton("Party", "left", "👥", "Party", function() open("Party", "Party") end)
+
+hud:AddButton("Map", "right", "🗺️", "Map", function() open("Map", "World Map") end)
+hud:AddButton("Gear", "right", "🛡️", "Gear", function() open("Gear", "Gear & Sets") end)
+hud:AddButton("Bag", "right", "🎒", "Bag", function() open("Bag", "Bag") end)
+hud:AddButton("Daily", "right", "🎁", "Daily", function() open("Daily", "Daily Login") end)
+hud:AddButton("Ranks", "right", "🏆", "Ranks", function() showBoard(extra.BoardCategory or "Stage") end)
+
+hud:AddButton("Log", "corner", "📋", "Fight log", function() open("Log", "Last Fight") end)
+
+-- the same menus as props in the hub
+Hub.Build({
+	Map = function() open("Map", "World Map") end,
+	Ranks = function() showBoard(extra.BoardCategory or "Stage") end,
+	Daily = function() open("Daily", "Daily Login") end,
+})
 
 push.OnClientEvent:Connect(function(kind, info)
 	if kind == "World" then
@@ -194,6 +218,10 @@ push.OnClientEvent:Connect(function(kind, info)
 	elseif kind == "ArenaFight" then
 		arenas:Play(info.Slot, info)
 	elseif kind == "Fight" then
+		extra.LastFight = info
+		if current == "Log" then
+			redraw()
+		end
 		hud:OnFight(info)
 		fighting = true
 		arenas:Play(info.Slot, info, function()
@@ -210,11 +238,47 @@ end)
 
 BattleCamera.Start()
 BattleCamera.SetBattleView(false) -- start walking around, not in the fixed battle view
-local viewButton
-viewButton = hud:AddNav("Battle view", function()
-	local battle = not BattleCamera.IsBattleView()
-	BattleCamera.SetBattleView(battle)
-	viewButton.Text = battle and "Walk" or "Battle view"
+-- Camera: walk around, snap to your own battle, or watch someone else's.
+local watchingSlot = nil
+local function stopWatching()
+	watchingSlot = nil
+	local mine = arenas:MySlot()
+	if mine then
+		BattleCamera.SetTarget(arenas:OriginOf(mine))
+	end
+	BattleCamera.SetBattleView(false)
+	hud:SetWatching(nil)
+	hud:SetButtonText("View", "🎥", "Battle view")
+end
+
+local function watch(slot, origin)
+	local mine = arenas:MySlot()
+	watchingSlot = slot
+	BattleCamera.SetTarget(origin)
+	BattleCamera.SetBattleView(true)
+	local label = "Your battle"
+	if slot ~= mine then
+		label = "Watching a battle"
+		for _, party in ipairs(lastWorld and lastWorld.Parties or {}) do
+			if party.Slot == slot and party.Members[1] then
+				label = "Watching " .. party.Members[1].Name .. "'s party"
+			end
+		end
+	end
+	hud:SetWatching(label, stopWatching)
+	hud:SetButtonText("View", "🚶", "Walk")
+end
+arenas.OnWatch = watch
+
+hud:AddButton("View", "corner", "🎥", "Battle view", function()
+	if BattleCamera.IsBattleView() then
+		stopWatching()
+	else
+		local mine = arenas:MySlot()
+		if mine then
+			watch(mine, arenas:OriginOf(mine))
+		end
+	end
 end)
 
 -- first state (the server may still be loading the profile)

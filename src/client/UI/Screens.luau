@@ -14,6 +14,8 @@ local Skills = require(Shared.Skills)
 local Zones = require(game:GetService("ReplicatedStorage"):WaitForChild("Shared").Zones)
 local Stages = require(game:GetService("ReplicatedStorage"):WaitForChild("Shared").Stages)
 local Kit = require(script.Parent.Kit)
+local Icons = require(script.Parent.Icons)
+local Tips = require(script.Parent.Tips)
 local C = Kit.Colors
 
 local Screens = {}
@@ -62,8 +64,10 @@ function Screens.Skills(container, state, call)
 	for slot, id in ipairs(equipped) do
 		local def = Abilities[id]
 		local r = row(scroll, 70)
-		Kit.label({ Size = UDim2.new(1, -150, 0, 20), Position = UDim2.fromOffset(8, 4), Text = ("%d. %s  Lv %d"):format(slot, def.DisplayName, me.SlotLevels[slot]), TextColor3 = Kit.rarityColor(def.Rarity), Font = Enum.Font.GothamBold, Parent = r })
-		Kit.label({ Size = UDim2.new(1, -150, 0, 40), Position = UDim2.fromOffset(8, 24), Text = statsText(def, me.SlotLevels[slot]), TextSize = 12, TextColor3 = C.Dim, Parent = r })
+		local icon = Icons.Skill(r, def, { Size = UDim2.fromOffset(48, 48), Position = UDim2.fromOffset(8, 11), Level = me.SlotLevels[slot] })
+		Kit.Hover(r, function() return Tips.Skill(def, me.SlotLevels[slot]) end)
+		Kit.label({ Size = UDim2.new(1, -210, 0, 20), Position = UDim2.fromOffset(64, 4), Text = ("%d. %s  Lv %d"):format(slot, def.DisplayName, me.SlotLevels[slot]), TextColor3 = Kit.rarityColor(def.Rarity), Font = Enum.Font.GothamBold, Parent = r })
+		Kit.label({ Size = UDim2.new(1, -210, 0, 40), Position = UDim2.fromOffset(64, 24), Text = statsText(def, me.SlotLevels[slot]), TextSize = 12, TextColor3 = C.Dim, Parent = r })
 		if slot > 1 then
 			Kit.button({ Size = UDim2.fromOffset(44, 44), Position = UDim2.new(1, -150, 0.5, -22), Text = "Up", Parent = r }, function()
 				equipped[slot], equipped[slot - 1] = equipped[slot - 1], equipped[slot]
@@ -101,8 +105,10 @@ function Screens.Skills(container, state, call)
 		local isOwned = me.Owned[id] == true
 		local isEquipped = table.find(equipped, id) ~= nil
 		local r = row(scroll, 60)
-		Kit.label({ Size = UDim2.new(1, -120, 0, 20), Position = UDim2.fromOffset(8, 4), Text = def.DisplayName .. (isEquipped and "  (equipped)" or ""), TextColor3 = Kit.rarityColor(def.Rarity), Font = Enum.Font.GothamBold, Parent = r })
-		Kit.label({ Size = UDim2.new(1, -120, 0, 32), Position = UDim2.fromOffset(8, 24), Text = def.Description or "", TextSize = 12, TextColor3 = C.Dim, Parent = r })
+		Icons.Skill(r, def, { Size = UDim2.fromOffset(42, 42), Position = UDim2.fromOffset(8, 9), Locked = not isOwned })
+		Kit.Hover(r, function() return Tips.Skill(def, 1) end)
+		Kit.label({ Size = UDim2.new(1, -180, 0, 20), Position = UDim2.fromOffset(58, 4), Text = def.DisplayName .. (isEquipped and "  (equipped)" or ""), TextColor3 = Kit.rarityColor(def.Rarity), Font = Enum.Font.GothamBold, Parent = r })
+		Kit.label({ Size = UDim2.new(1, -180, 0, 32), Position = UDim2.fromOffset(58, 24), Text = def.Description or "", TextSize = 12, TextColor3 = C.Dim, Parent = r })
 		if isOwned and not isEquipped then
 			Kit.button({ Size = UDim2.fromOffset(100, 44), Position = UDim2.new(1, -108, 0.5, -22), Text = "Equip in 4", Parent = r }, function()
 				equipped[#equipped] = id
@@ -144,6 +150,7 @@ function Screens.Passives(container, state, call)
 		local def = PassiveCfg.Defs[id]
 		local unlocked = Passives.IsUnlocked(id, me.Frontier)
 		local r = row(scroll, 52)
+		Kit.Hover(r, function() return Tips.Passive(def, 1) end)
 		Kit.label({ Size = UDim2.new(1, -110, 1, 0), Position = UDim2.fromOffset(8, 0), Text = ("%s  [%s]\n%s"):format(def.DisplayName, def.Category, unlocked and def.Description or ("Unlocks at stage " .. def.UnlockStage)), TextColor3 = unlocked and C.Text or C.Dim, Parent = r })
 		if unlocked and not table.find(equipped, id) then
 			Kit.button({ Size = UDim2.fromOffset(92, 44), Position = UDim2.new(1, -100, 0.5, -22), Text = "Equip", Parent = r }, function()
@@ -155,33 +162,195 @@ function Screens.Passives(container, state, call)
 	end
 end
 
--- Gear ---------------------------------------------------------------------
-function Screens.Gear(container, state, call)
+-- Gear (worn pieces + set collection) and Bag (everything acquired) ---------
+local function tabs(scroll, current, options, onPick)
+	local bar = row(scroll, 44)
+	for index, option in ipairs(options) do
+		Kit.button({
+			Size = UDim2.fromOffset(150, 36), Position = UDim2.fromOffset(4 + (index - 1) * 158, 4), Text = option,
+			BackgroundColor3 = if current == option then C.Accent else C.Panel, TextColor3 = if current == option then C.Bg else C.Text, Parent = bar,
+		}, function()
+			onPick(option)
+		end)
+	end
+end
+
+local VERDICT_TINT = { Up = C.Up, Down = C.Down }
+
+function Screens.Gear(container, state, call, extra)
 	local gear = state.Player.Gear
 	local scroll = list(container)
-	local order = { "Weapon", "Armor", "Trinket" }
-	for _, slotName in ipairs(order) do
-		local item = gear.Equipped[slotName]
-		local r = row(scroll, 52)
-		if item then
-			Kit.label({ Size = UDim2.new(1, -120, 1, 0), Position = UDim2.fromOffset(8, 0), Text = ("%s: %s  [%s]\n+%s %s  (from stage %d)"):format(slotName, item.Name, item.Rarity, num(item.Value), item.Stat, item.Power), TextColor3 = Kit.rarityColor(item.Rarity), Parent = r })
-			Kit.button({ Size = UDim2.fromOffset(100, 40), Position = UDim2.new(1, -108, 0.5, -20), Text = "Unequip", Parent = r }, function()
-				call("UnequipGear", slotName)
-			end)
-		else
-			Kit.label({ Size = UDim2.new(1, -16, 1, 0), Position = UDim2.fromOffset(8, 0), Text = slotName .. ": empty", TextColor3 = C.Dim, Parent = r })
+	extra = extra or {}
+	local tab = extra.GearTab or "Equipped"
+	tabs(scroll, tab, { "Equipped", "Sets" }, function(option)
+		extra.GearTab = option
+		Screens.Gear(container, state, call, extra)
+	end)
+
+	if tab == "Equipped" then
+		for _, slotName in ipairs({ "Weapon", "Armor", "Trinket" }) do
+			local item = gear.Equipped[slotName]
+			local r = row(scroll, 56)
+			if item then
+				Icons.Item(r, item, { Size = UDim2.fromOffset(40, 40), Position = UDim2.fromOffset(8, 8) })
+				Kit.Hover(r, function() return Tips.Item(item, gear) end)
+				Kit.label({ Size = UDim2.new(1, -170, 1, 0), Position = UDim2.fromOffset(58, 0), Text = ("%s\n+%s %s  (from stage %d)"):format(item.Name, Tips.Num(item.Value), item.Stat, item.Power), TextColor3 = Kit.rarityColor(if item.SetId then "Set" else item.Rarity), Parent = r })
+				Kit.button({ Size = UDim2.fromOffset(92, 40), Position = UDim2.new(1, -100, 0.5, -20), Text = "Unequip", Parent = r }, function()
+					call("UnequipGear", slotName)
+				end)
+			else
+				Kit.label({ Size = UDim2.new(1, -16, 1, 0), Position = UDim2.fromOffset(8, 0), Text = slotName .. ": empty  (open the Bag to equip something)", TextColor3 = C.Dim, Parent = r })
+			end
 		end
+		-- active set bonuses
+		local any = false
+		for _, set in ipairs(gear.Sets or {}) do
+			if set.Worn >= 2 then
+				any = true
+				local r = row(scroll, 48)
+				Kit.label({ Size = UDim2.new(1, -16, 1, 0), Position = UDim2.fromOffset(8, 0), Text = ("%s  (%d/3 worn)\n2 pieces: %s%s"):format(set.Name, set.Worn, set.Bonus2, set.Worn >= 3 and ("\n3 pieces: " .. set.Bonus3) or ""), TextColor3 = C.Set, TextSize = 12, Parent = r })
+				r.Size = UDim2.new(1, -8, 0, set.Worn >= 3 and 62 or 48)
+			end
+		end
+		if not any then
+			Kit.label({ Size = UDim2.new(1, 0, 0, 36), Text = "Wear 2 or 3 pieces of the same set for bonuses. Sets drop in their own zone - check the Sets tab.", TextColor3 = C.Dim, TextSize = 12, Parent = scroll })
+		end
+		return
 	end
-	Kit.label({ Size = UDim2.new(1, 0, 0, 22), Text = ("Bag %d/%d  (gear drops from stages; a full bag sells new drops)"):format(#gear.Inventory, gear.Cap), TextColor3 = C.Dim, TextSize = 13, Parent = scroll })
+
+	-- Sets: one card per zone reached
+	if #(gear.Sets or {}) == 0 then
+		Kit.label({ Size = UDim2.new(1, 0, 0, 30), Text = "Sets appear as you reach new zones.", TextColor3 = C.Dim, Parent = scroll })
+	end
+	for _, set in ipairs(gear.Sets or {}) do
+		local r = row(scroll, 118)
+		Kit.label({ Size = UDim2.new(1, -16, 0, 20), Position = UDim2.fromOffset(8, 4), Text = ("%s   %d/3 found   -   %s, stages %d-%d"):format(set.Name, set.Collected, set.ZoneName, set.FirstStage, set.LastStage), TextColor3 = C.Set, Font = Enum.Font.GothamBold, TextSize = 13, Parent = r })
+		for index, piece in ipairs(set.Pieces) do
+			local cell = Kit.frame({ Size = UDim2.fromOffset(120, 24), Position = UDim2.fromOffset(8 + (index - 1) * 126, 26), BackgroundColor3 = if piece.Worn then C.Up else C.Panel, Parent = r })
+			Kit.label({ Size = UDim2.new(1, -4, 1, 0), Position = UDim2.fromOffset(4, 0), Text = (piece.Collected and "" or "? ") .. piece.Name, TextSize = 11, TextWrapped = false, TextTruncate = Enum.TextTruncate.AtEnd, TextColor3 = piece.Collected and C.Text or C.Dim, Parent = cell })
+		end
+		Kit.label({ Size = UDim2.new(1, -16, 0, 56), Position = UDim2.fromOffset(8, 56), Text = ("2 pieces: %s\n3 pieces: %s\nDrops in %s (boss floors drop it most). Pieces beat normal gear from this zone."):format(set.Bonus2, set.Bonus3, set.ZoneName), TextSize = 12, TextColor3 = if set.Worn >= 2 then C.Good else C.Dim, Parent = r })
+	end
+end
+
+function Screens.Bag(container, state, call, extra)
+	local gear = state.Player.Gear
+	local scroll = list(container)
+	Kit.label({ Size = UDim2.new(1, 0, 0, 22), Text = ("Bag %d/%d  -  hover an item: green = better than what you wear, red = worse.  A full bag sells new drops."):format(#gear.Inventory, gear.Cap), TextColor3 = C.Dim, TextSize = 12, Parent = scroll })
+	if #gear.Inventory == 0 then
+		Kit.label({ Size = UDim2.new(1, 0, 0, 30), Text = "Empty. Win fights to find gear.", TextColor3 = C.Dim, Parent = scroll })
+	end
 	for _, item in ipairs(gear.Inventory) do
+		local cmp = Tips.Compare(item, gear)
 		local r = row(scroll, 52)
-		Kit.label({ Size = UDim2.new(1, -230, 1, 0), Position = UDim2.fromOffset(8, 0), Text = ("%s  [%s]\n%s +%s  (stage %d)"):format(item.Name, item.Rarity, item.Slot, num(item.Value), item.Power), TextColor3 = Kit.rarityColor(item.Rarity), Parent = r })
-		Kit.button({ Size = UDim2.fromOffset(100, 40), Position = UDim2.new(1, -216, 0.5, -20), Text = "Equip", Parent = r }, function()
+		r.BackgroundColor3 = VERDICT_TINT[cmp.Verdict] or C.PanelLight
+		Icons.Item(r, item, { Size = UDim2.fromOffset(40, 40), Position = UDim2.fromOffset(8, 6) })
+		Kit.Hover(r, function() return Tips.Item(item, gear) end)
+		local arrow = if cmp.Verdict == "Up" then "  ▲" elseif cmp.Verdict == "Down" then "  ▼" else ""
+		Kit.label({ Size = UDim2.new(1, -230, 1, 0), Position = UDim2.fromOffset(58, 0), Text = ("%s%s\n%s +%s %s  (stage %d)"):format(item.Name, arrow, item.Slot, Tips.Num(item.Value), item.Stat, item.Power), TextColor3 = Kit.rarityColor(if item.SetId then "Set" else item.Rarity), Parent = r })
+		Kit.button({ Size = UDim2.fromOffset(80, 40), Position = UDim2.new(1, -176, 0.5, -20), Text = "Equip", Parent = r }, function()
 			call("EquipGear", item.Id)
 		end)
-		Kit.button({ Size = UDim2.fromOffset(100, 40), Position = UDim2.new(1, -108, 0.5, -20), Text = "Sell " .. item.SellValue .. "g", Parent = r }, function()
+		Kit.button({ Size = UDim2.fromOffset(88, 40), Position = UDim2.new(1, -92, 0.5, -20), Text = "Sell " .. item.SellValue .. "g", Parent = r }, function()
 			call("SellGear", item.Id)
 		end)
+	end
+end
+
+-- Combat log: the last fight, with times, so a hard boss can be studied -------
+local function clock(t)
+	return ("%d:%04.1f"):format(math.floor(t / 60), t % 60)
+end
+
+local function buildLog(fight, everyHit)
+	local names, teams = {}, {}
+	for _, entry in ipairs(fight.Roster or {}) do
+		names[entry.Id] = entry.Name
+		teams[entry.Id] = entry.Team
+	end
+	for _, e in ipairs(fight.Events or {}) do
+		if e.Type == "Spawn" and e.Entity then
+			names[e.Entity.Id] = e.Entity.Name
+			teams[e.Entity.Id] = e.Entity.Team
+		end
+	end
+	local function who(id)
+		local name = names[id] or tostring(id)
+		return Kit.tint(name, if teams[id] == "Party" then C.Rare else C.Bad)
+	end
+	local function ability(id)
+		local def = Abilities[id] or (UltCfg.Defs and UltCfg.Defs[id])
+		return def and def.DisplayName or tostring(id)
+	end
+
+	local lines, bigHits = {}, {}
+	local function add(t, text)
+		table.insert(lines, ("%s  %s"):format(Kit.tint(clock(t), C.Dim), text))
+	end
+	for _, e in ipairs(fight.Events or {}) do
+		local t = e.T or 0
+		local kind = e.Type
+		if kind == "Cast" then
+			add(t, ("%s casts %s (Lv %d)"):format(who(e.Source), Kit.tint(ability(e.Ability), C.Accent), e.Level or 1))
+		elseif kind == "Telegraph" then
+			table.insert(bigHits, clock(t + (e["In"] or 0)))
+			add(t, ("%s  %s winds up %s - lands in %.1fs"):format(Kit.tint("WARNING", C.Bad), who(e.Source), Kit.tint(ability(e.Ability), C.Bad), e["In"] or 0))
+		elseif kind == "Spawn" and e.Entity then
+			add(t, ("%s summons %s"):format(who(e.Source), who(e.Entity.Id)))
+		elseif kind == "Ultimate" then
+			add(t, Kit.tint("ULTIMATE: " .. ability(e.Ability), Kit.Colors.Epic))
+		elseif kind == "Death" then
+			add(t, ("%s falls"):format(who(e.Target)))
+		elseif kind == "Revive" then
+			add(t, ("%s is revived"):format(who(e.Target)))
+		elseif kind == "Status" and everyHit then
+			add(t, ("%s gets %s (%.0fs)"):format(who(e.Target), e.Status, e.Duration or 0))
+		elseif kind == "StatusEnd" and everyHit then
+			add(t, ("%s loses %s%s"):format(who(e.Target), e.Status, e.Reason == "Broken" and " (shield broken)" or ""))
+		elseif kind == "Damage" then
+			local isBasic = e.Tag == "BasicAttack"
+			local enemySource = teams[e.Source] ~= "Party"
+			if everyHit or (enemySource and not isBasic) then
+				local absorbed = (e.Absorbed or 0) > 0 and ("  (" .. math.floor(e.Absorbed + 0.5) .. " absorbed)") or ""
+				add(t, ("%s hits %s for %d%s%s%s"):format(who(e.Source), who(e.Target), math.floor((e.Amount or 0) + 0.5), e.Crit and " CRIT" or "", isBasic and "" or (" [" .. ability(e.Tag) .. "]"), absorbed))
+			end
+		elseif kind == "Heal" and everyHit and (e.Amount or 0) > 0 then
+			add(t, ("%s heals %s for %d%s"):format(who(e.Source), who(e.Target), math.floor((e.Amount or 0) + 0.5), e.Tag and e.Tag ~= "BasicAttack" and (" [" .. ability(e.Tag) .. "]") or ""))
+		elseif kind == "End" then
+			add(t, Kit.tint(if e.Winner == "Party" then "Victory" else "Defeat", if e.Winner == "Party" then C.Good else C.Bad))
+		end
+	end
+	return lines, bigHits
+end
+
+function Screens.Log(container, state, call, extra)
+	local scroll = list(container)
+	local fight = extra and extra.LastFight
+	if not (fight and fight.Events) then
+		Kit.label({ Size = UDim2.new(1, 0, 0, 40), Text = "No fight recorded yet. Win or lose one and it shows up here.", TextColor3 = C.Dim, Parent = scroll })
+		return
+	end
+	local everyHit = extra.LogAll == true
+	local head = row(scroll, 74)
+	local result = if fight.Won then Kit.tint("Cleared", C.Good) elseif fight.TimedOut then Kit.tint("Timed out", C.Bad) else Kit.tint("Defeated", C.Bad)
+	local lines, bigHits = buildLog(fight, everyHit)
+	Kit.label({
+		Size = UDim2.new(1, -170, 1, -6), Position = UDim2.fromOffset(8, 3), RichText = true, TextSize = 13,
+		Text = ("Stage %d  -  %s  -  %s\n%s"):format(fight.Stage or 0, result, clock(fight.Duration or 0), #bigHits > 0 and ("Boss big hits land at: " .. table.concat(bigHits, ", ") .. "\nTime a shield BEFORE, a heal AFTER.") or "Skills cast in slot order as soon as they are ready."),
+		Parent = head,
+	})
+	Kit.button({ Size = UDim2.fromOffset(150, 44), Position = UDim2.new(1, -158, 0.5, -22), Text = everyHit and "Show key moments" or "Show every hit", Parent = head }, function()
+		extra.LogAll = not everyHit
+		Screens.Log(container, state, call, extra)
+	end)
+	local shown = 0
+	for _, text in ipairs(lines) do
+		shown += 1
+		if shown > 400 then
+			Kit.label({ Size = UDim2.new(1, -8, 0, 20), Text = "... log trimmed", TextColor3 = C.Dim, Parent = scroll })
+			break
+		end
+		Kit.label({ Size = UDim2.new(1, -8, 0, 0), AutomaticSize = Enum.AutomaticSize.Y, RichText = true, TextSize = 12, Text = text, Parent = scroll })
 	end
 end
 
@@ -300,8 +469,7 @@ function Screens.Pets(container, state, call)
 end
 
 -- Ultimate -----------------------------------------------------------------
-function Screens.Ultimate(container, state, call)
-	local scroll = list(container)
+local function ultimateRows(scroll, state, call)
 	local info = state.Party and state.Party.Ultimate
 	if not info then
 		Kit.label({ Size = UDim2.new(1, 0, 0, 40), Text = "Join a party to unlock a party ultimate.", TextColor3 = C.Dim, Parent = scroll })
@@ -311,13 +479,19 @@ function Screens.Ultimate(container, state, call)
 		local def = UltCfg.Defs[id]
 		local unlocked = info.Frontier >= def.UnlockStage
 		local r = row(scroll, 64)
-		Kit.label({ Size = UDim2.new(1, -110, 1, 0), Position = UDim2.fromOffset(8, 0), Text = ("%s%s\n%s"):format(def.DisplayName, info.Chosen == id and "  (equipped)" or "", unlocked and def.Description or ("Unlocks at stage " .. def.UnlockStage)), TextColor3 = Kit.rarityColor(def.Rarity), Parent = r })
+		Icons.Ultimate(r, def, { Size = UDim2.fromOffset(44, 44), Position = UDim2.fromOffset(8, 10), Locked = not unlocked })
+		Kit.Hover(r, function() return Tips.Ultimate(def, 1) end)
+		Kit.label({ Size = UDim2.new(1, -170, 1, 0), Position = UDim2.fromOffset(60, 0), Text = ("%s%s\n%s"):format(def.DisplayName, info.Chosen == id and "  (equipped)" or "", unlocked and def.Description or ("Unlocks at stage " .. def.UnlockStage)), TextColor3 = Kit.rarityColor(def.Rarity), Parent = r })
 		if unlocked and info.Chosen ~= id then
 			Kit.button({ Size = UDim2.fromOffset(92, 44), Position = UDim2.new(1, -100, 0.5, -22), Text = "Equip", Parent = r }, function()
 				call("SetUltimate", id)
 			end)
 		end
 	end
+end
+
+function Screens.Ultimate(container, state, call)
+	ultimateRows(list(container), state, call)
 end
 
 -- Party --------------------------------------------------------------------
@@ -365,7 +539,9 @@ function Screens.Party(container, state, call, extra)
 	for slot, id in ipairs(ghost) do
 		local def = Abilities[id]
 		local rr = row(scroll, 52)
-		Kit.label({ Size = UDim2.new(1, -170, 1, 0), Position = UDim2.fromOffset(8, 0), Text = ("%d. %s  Lv %d"):format(slot, def.DisplayName, partner.SlotLevels[slot] or 1), TextColor3 = Kit.rarityColor(def.Rarity), Parent = rr })
+		Icons.Skill(rr, def, { Size = UDim2.fromOffset(40, 40), Position = UDim2.fromOffset(8, 6), Level = partner.SlotLevels[slot] or 1 })
+		Kit.Hover(rr, function() return Tips.Skill(def, partner.SlotLevels[slot] or 1) end)
+		Kit.label({ Size = UDim2.new(1, -230, 1, 0), Position = UDim2.fromOffset(56, 0), Text = ("%d. %s  Lv %d"):format(slot, def.DisplayName, partner.SlotLevels[slot] or 1), TextColor3 = Kit.rarityColor(def.Rarity), Parent = rr })
 		if slot > 1 then
 			Kit.button({ Size = UDim2.fromOffset(44, 44), Position = UDim2.new(1, -160, 0.5, -22), Text = "Up", Parent = rr }, function()
 				ghost[slot], ghost[slot - 1] = ghost[slot - 1], ghost[slot]
@@ -390,6 +566,8 @@ function Screens.Party(container, state, call, extra)
 			call("RevertMyGhost")
 		end)
 	end
+	Kit.label({ Size = UDim2.new(1, 0, 0, 22), Text = "Party ultimate (fires on its own when the shared gauge fills)", TextColor3 = C.Dim, Parent = scroll })
+	ultimateRows(scroll, state, call)
 end
 
 -- Map ----------------------------------------------------------------------

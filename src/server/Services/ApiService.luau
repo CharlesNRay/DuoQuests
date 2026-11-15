@@ -382,7 +382,7 @@ function ApiService.Init()
 	end
 
 	-- Only what the client needs to replay a fight as animation.
-	local REPLAYED = { Damage = true, Heal = true, Cast = true, Death = true, Revive = true, Ultimate = true, End = true }
+	local REPLAYED = { Damage = true, Heal = true, Cast = true, Death = true, Revive = true, Ultimate = true, End = true, Spawn = true, Telegraph = true, Status = true, StatusEnd = true }
 	local function replayEvents(outcome)
 		local events = {}
 		for _, event in ipairs(outcome.Events or {}) do
