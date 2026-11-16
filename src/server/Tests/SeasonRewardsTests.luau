@@ -145,6 +145,21 @@ return function(modulesOverride)
 		wishable = wishable or PetConfig.Defs[petId].Wish == true
 	end
 	check("Every prize pet exists, is marked Reward and cannot be wished for", rewardPetsOk and not wishable)
+	local function peak(id) -- a pet's total stat power at level 1 rank 1
+		local total = 0
+		for _, mod in ipairs(Pets.Mods(id, 1, 1)) do
+			total += mod.Value
+		end
+		return total
+	end
+	local strongest = 0
+	for id, def in pairs(PetConfig.Defs) do
+		if def.Wish and peak(id) > strongest then
+			strongest = peak(id)
+		end
+	end
+	check("Laurelwing and Crownling are Legendary", PetConfig.Defs.Laurelwing.Rarity == "Legendary" and PetConfig.Defs.Crownling.Rarity == "Legendary")
+	check("Every season prize pet out-stats the best wishable pet", peak("Crownling") > strongest and peak("Laurelwing") > strongest and peak("Bannerhound") > strongest and peak("Haloette") > strongest)
 	local classHigher = Config.ClassRanks[1].Sunstones > Config.Ranks[1].Sunstones
 	check("Class awards are worth more than the matching overall rows", classHigher)
 	local rank50 = SR.Reward(SR.Standing({ Total = 1000, Histogram = { [12] = 1000 }, Top = { [1] = 30 }, ClassTop = {} }, { UserId = 1, Score = 12, ClassId = "Cleric" }))

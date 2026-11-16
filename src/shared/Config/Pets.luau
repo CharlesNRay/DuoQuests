@@ -12,6 +12,7 @@
 	  Rarity       Common / Rare / Epic (Config/Rarities colours)
 	  UnlockStage  you receive it the first time you clear this stage
 	  Look         { Shape = "Ball"|"Cat"|"Wisp", Color = {r,g,b}, Size }
+	  Power        optional multiplier on every stat line (season prize pets use 1.7-2.0 so they out-stat every wishable pet)
 	  Bonus        { Stat, Mode = "Add"|"Mul", Base, PerLevel }
 	               value at level L = Base + PerLevel * (L - 1)
 	               (Mul adds a fraction: 0.05 = +5%; Add adds the raw number)
@@ -150,28 +151,28 @@ return {
 		},
 		-- Season prizes (see Config/SeasonRewards): not wishable, only earned by placing at the end of a season.
 		Crownling = {
-			Id = "Crownling", DisplayName = "Crownling", Rarity = "Legendary", Reward = true,
+			Id = "Crownling", DisplayName = "Crownling", Rarity = "Legendary", Reward = true, Power = 1.7,
 			Look = { Shape = "Drake", Color = { 255, 205, 70 }, Size = 1.6, Glow = true },
-			Stats = { { Stat = "Attack", Share = 0.7 }, { Stat = "CritChance", Share = 0.5 } },
+			Stats = { { Stat = "Attack", Share = 0.8 }, { Stat = "CritChance", Share = 0.5 } },
 			Skill = { Name = "Royal Decree", Text = "Strikes every enemy and shields the party." },
 		},
 		Laurelwing = {
-			Id = "Laurelwing", DisplayName = "Laurelwing", Rarity = "Epic", Reward = true,
+			Id = "Laurelwing", DisplayName = "Laurelwing", Rarity = "Legendary", Reward = true, Power = 1.7,
 			Look = { Shape = "Wisp", Color = { 160, 220, 110 }, Size = 1.4 },
-			Stats = { { Stat = "AttackSpeed", Share = 1.25 } },
-			Skill = { Name = "Victory March", Text = "Rallies the whole party's attack." },
+			Stats = { { Stat = "AttackSpeed", Share = 0.7 }, { Stat = "Attack", Share = 0.5 } },
+			Skill = { Name = "Victory March", Text = "Whips the whole party into a frenzy: attack and attack speed up." },
 		},
 		Bannerhound = {
-			Id = "Bannerhound", DisplayName = "Bannerhound", Rarity = "Epic", Reward = true,
+			Id = "Bannerhound", DisplayName = "Bannerhound", Rarity = "Epic", Reward = true, Power = 2.0,
 			Look = { Shape = "Cat", Color = { 200, 80, 70 }, Size = 1.3 },
 			Stats = { { Stat = "Defense", Share = 0.7 }, { Stat = "MaxHealth", Share = 0.5 } },
-			Skill = { Name = "Banner Guard", Text = "Raises the whole party's defense." },
+			Skill = { Name = "Banner Guard", Text = "Raises the whole party's defense and shields it." },
 		},
 		Haloette = {
-			Id = "Haloette", DisplayName = "Haloette", Rarity = "Epic", Reward = true,
+			Id = "Haloette", DisplayName = "Haloette", Rarity = "Epic", Reward = true, Power = 2.0,
 			Look = { Shape = "Wisp", Color = { 255, 240, 170 }, Size = 1.3, Glow = true },
-			Stats = { { Stat = "MaxHealth", Share = 0.7 }, { Stat = "CritMultiplier", Share = 0.5 } },
-			Skill = { Name = "Halo Mend", Text = "Heals the most hurt ally." },
+			Stats = { { Stat = "MaxHealth", Share = 0.8 }, { Stat = "CritMultiplier", Share = 0.4 } },
+			Skill = { Name = "Halo Mend", Text = "Heals the most hurt ally a lot and the rest a little." },
 		},
 	},
 }

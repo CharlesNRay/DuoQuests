@@ -62,7 +62,7 @@ end
 -- One stat line of a pet at a level and rank: { Stat, Mode, Value }
 local function statValue(def, entry, level, rank)
 	local unit = Config.StatUnits[entry.Stat]
-	local scale = (Config.RarityMult[def.Rarity] or 1) * entry.Share * (1 + Config.RankBonus * (math.clamp(rank or 1, 1, Config.MaxRank) - 1))
+	local scale = (Config.RarityMult[def.Rarity] or 1) * (def.Power or 1) * entry.Share * (1 + Config.RankBonus * (math.clamp(rank or 1, 1, Config.MaxRank) - 1))
 	return unit.Base * scale + unit.PerLevel * scale * (math.clamp(level or 1, 1, Config.MaxLevel) - 1)
 end
 
