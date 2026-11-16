@@ -5,6 +5,7 @@
 	  Shops.Merchant(container, state, call, extra)   sell bagged gear, one piece or in bulk
 	  Shops.Blacksmith(container, state, call, extra) upgrade worn or bagged gear with gold
 ]]
+local Short = require(game:GetService("ReplicatedStorage"):WaitForChild("Shared").Util.NumberFormat).Short
 local Kit = require(script.Parent.Kit)
 local Icons = require(script.Parent.Icons)
 local Tips = require(script.Parent.Tips)
@@ -49,7 +50,7 @@ function Shops.Merchant(container, state, call, extra)
 	local tab = extra.MerchantTab or "Sell"
 	local gear = state.Player.Gear
 	local scroll = list(container, if tab == "Sell" then 78 else 44)
-	Kit.label({ Size = UDim2.new(0.3, 0, 0, 40), Text = ("Gold: %d\nBag %d/%d"):format(gold(state), #gear.Inventory, gear.Cap), TextColor3 = C.Accent, TextSize = 13, Parent = container })
+	Kit.label({ Size = UDim2.new(0.3, 0, 0, 40), Text = ("Gold: %s\nBag %d/%d"):format(Short(gold(state)), #gear.Inventory, gear.Cap), TextColor3 = C.Accent, TextSize = 13, Parent = container })
 	for index, name in ipairs({ "Sell", "Supplies", "Bag" }) do
 		Kit.button({ Size = UDim2.fromOffset(62, 38), Position = UDim2.new(0.3, (index - 1) * 66, 0, 0), Text = name, BackgroundColor3 = if tab == name then C.Accent else C.Panel, TextColor3 = if tab == name then C.Bg else C.Text, Parent = container }, function()
 			extra.MerchantTab = name
@@ -62,7 +63,7 @@ function Shops.Merchant(container, state, call, extra)
 		Kit.label({ Size = UDim2.new(1, 0, 0, 44), Text = ("Your bag holds %d pieces of gear (%d in use).\nEach upgrade adds %d slots."):format(gear.Cap, #gear.Inventory, gear.BagStep or 5), TextColor3 = C.Text, TextSize = 14, TextWrapped = true, Parent = scroll })
 		if cost then
 			local can = gold(state) >= cost
-			local b = Kit.button({ Size = UDim2.new(1, -8, 0, 46), Text = ("Upgrade bag  (+%d slots)  -  %d gold"):format(gear.BagStep or 5, cost), TextSize = 15, BackgroundColor3 = if can then C.Up else C.Panel, TextColor3 = if can then C.Text else C.Dim, Parent = scroll }, function()
+			local b = Kit.button({ Size = UDim2.new(1, -8, 0, 46), Text = ("Upgrade bag  (+%d slots)  -  %s gold"):format(gear.BagStep or 5, Short(cost)), TextSize = 15, BackgroundColor3 = if can then C.Up else C.Panel, TextColor3 = if can then C.Text else C.Dim, Parent = scroll }, function()
 				if can then
 					call("UpgradeBag")
 				end
@@ -108,7 +109,7 @@ function Shops.Merchant(container, state, call, extra)
 		end
 	end
 	local can = count > 0
-	local sellButton = Kit.button({ Size = UDim2.new(0.32, -4, 0, 38), Position = UDim2.new(0.68, 0, 0, 0), Text = if can then ("Sell (%d items)\n+%dg"):format(count, goldTotal) else "Sell\n(none ticked)", TextSize = 12, BackgroundColor3 = if can then C.Accent else C.Panel, TextColor3 = if can then C.Bg else C.Dim, Parent = container }, function()
+	local sellButton = Kit.button({ Size = UDim2.new(0.32, -4, 0, 38), Position = UDim2.new(0.68, 0, 0, 0), Text = if can then ("Sell (%d items)\n+%sg"):format(count, Short(goldTotal)) else "Sell\n(none ticked)", TextSize = 12, BackgroundColor3 = if can then C.Accent else C.Panel, TextColor3 = if can then C.Bg else C.Dim, Parent = container }, function()
 		if can then
 			call("SellBulk", picked)
 		end
@@ -131,7 +132,7 @@ function Shops.Merchant(container, state, call, extra)
 		Icons.Item(r, item, { Size = UDim2.fromOffset(42, 42), Position = UDim2.fromOffset(8, 6) })
 		Kit.Hover(r, function() return Tips.Item(item, gear) end)
 		local mark = if cmp.Verdict == "Up" then "  ▲ better than worn" elseif cmp.Verdict == "Down" then "  ▼ worse than worn" else ""
-		Kit.label({ Size = UDim2.new(1, -150, 1, 0), Position = UDim2.fromOffset(60, 0), Text = ("%s%s\n%s  %s  (IP %d)"):format(nameOf(item), mark, item.Slot, item.StatText, item.ItemPower or 0), TextColor3 = if cmp.Verdict == "Up" then C.Good else C.Text, TextSize = 13, Parent = r })
+		Kit.label({ Size = UDim2.new(1, -150, 1, 0), Position = UDim2.fromOffset(60, 0), Text = ("%s%s\n%s  %s  (IP %s)"):format(nameOf(item), mark, item.Slot, item.StatText, Short(item.ItemPower or 0)), TextColor3 = if cmp.Verdict == "Up" then C.Good else C.Text, TextSize = 13, Parent = r })
 		Kit.button({ Size = UDim2.fromOffset(96, 40), Position = UDim2.new(1, -102, 0.5, -20), Text = "Sell " .. item.SellValue .. "g", BackgroundColor3 = C.Panel, Parent = r }, function()
 			call("SellGear", item.Id)
 		end)
@@ -149,7 +150,7 @@ local SLOT_ORDER = Gear.WornSlots
 function Shops.Blacksmith(container, state, call)
 	local gear = state.Player.Gear
 	local scroll = list(container, 26)
-	Kit.label({ Size = UDim2.new(1, 0, 0, 24), Text = ("Gold: %d   -   each level adds %d%% of the base stat; costs climb quickly"):format(gold(state), 6), TextColor3 = C.Accent, TextSize = 13, Parent = container })
+	Kit.label({ Size = UDim2.new(1, 0, 0, 24), Text = ("Gold: %s   -   each level adds %d%% of the base stat; costs climb quickly"):format(Short(gold(state)), 6), TextColor3 = C.Accent, TextSize = 13, Parent = container })
 
 	local function block(item, where)
 		local cost = item.UpgradeCost

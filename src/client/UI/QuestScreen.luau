@@ -2,6 +2,7 @@
 	QuestScreen (ModuleScript): the Quests window - daily quests and the season pass.
 	  QuestScreen.Quests(container, state, call, extra)    extra.QuestTab = "Daily" | "Pass"
 ]]
+local Short = require(game:GetService("ReplicatedStorage"):WaitForChild("Shared").Util.NumberFormat).Short
 local Kit = require(script.Parent.Kit)
 local Consumables = require(game:GetService("ReplicatedStorage"):WaitForChild("Shared").Config.Consumables)
 local C = Kit.Colors
@@ -98,7 +99,7 @@ local function passTab(area, state, call, extra, redraw)
 	end
 	Kit.label({ Size = UDim2.new(1, -160, 0, 20), Text = ("Season Pass   Level %d / %d"):format(pass.Level, pass.MaxLevel), TextSize = 15, Font = Enum.Font.GothamBold, Parent = area })
 	bar(area, pass.XPInLevel / pass.XPPerLevel, UDim2.fromOffset(0, 24), UDim2.new(1, -160, 0, 10))
-	Kit.label({ Size = UDim2.new(1, -160, 0, 14), Position = UDim2.fromOffset(0, 38), Text = ("%d / %d XP to the next level - earn Pass XP from quests and clearing stages"):format(pass.XPInLevel, pass.XPPerLevel), TextSize = 10, TextColor3 = C.Dim, Parent = area })
+	Kit.label({ Size = UDim2.new(1, -160, 0, 14), Position = UDim2.fromOffset(0, 38), Text = ("%s / %s XP to the next level - earn Pass XP from quests and clearing stages"):format(Short(pass.XPInLevel), Short(pass.XPPerLevel)), TextSize = 10, TextColor3 = C.Dim, Parent = area })
 	local claimable = 0
 	for _, r in ipairs(pass.Rows) do
 		if r.Reached and not r.Claimed then

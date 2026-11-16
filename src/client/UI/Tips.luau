@@ -7,6 +7,7 @@ local Shared = ReplicatedStorage:WaitForChild("Shared")
 local AbilityStats = require(Shared.Combat.AbilityStats)
 local Gear = require(Shared.Gear)
 local Power = require(Shared.Power)
+local Short = require(game:GetService("ReplicatedStorage"):WaitForChild("Shared").Util.NumberFormat).Short
 local Kit = require(script.Parent.Kit)
 local Icons = require(script.Parent.Icons)
 local C = Kit.Colors
@@ -26,7 +27,7 @@ function Tips.Skill(def, level, tier)
 	local meta = KIND_NAMES[kind] .. "  -  " .. (def.Rarity or "Common")
 	table.insert(lines, dim(meta))
 	if level then
-		table.insert(lines, Kit.tint(("IP %d"):format(Power.Skill(tier or def.Rarity or "Common", level)), C.Accent))
+		table.insert(lines, Kit.tint(("IP %s"):format(Short(Power.Skill(tier or def.Rarity or "Common", level))), C.Accent))
 	end
 	if def.Description and def.Description ~= "" then
 		table.insert(lines, def.Description)
@@ -108,7 +109,7 @@ end
 function Tips.Item(item, gear)
 	local cmp = Tips.Compare(item, gear)
 	local rarity = if item.SetId then "Set" else item.Rarity
-	local lines = { ("<b>%s</b>"):format(Kit.tint(item.Name, Kit.rarityColor(rarity))), dim(("%s  -  %s  -  from stage %d"):format(item.Slot, if item.SetId then "Set piece" else item.Rarity, item.Power)), Kit.tint(("IP %d"):format(item.ItemPower or 0), C.Accent) .. dim(("   Roll %d%%"):format(math.floor((item.Roll or 1) * 100 + 0.5))) }
+	local lines = { ("<b>%s</b>"):format(Kit.tint(item.Name, Kit.rarityColor(rarity))), dim(("%s  -  %s  -  from stage %d"):format(item.Slot, if item.SetId then "Set piece" else item.Rarity, item.Power)), Kit.tint(("IP %s"):format(Short(item.ItemPower or 0)), C.Accent) .. dim(("   Roll %d%%"):format(math.floor((item.Roll or 1) * 100 + 0.5))) }
 	table.insert(lines, item.StatText or Gear.FormatStat(item.Stat, item.Value))
 	if cmp.Verdict == "Worn" then
 		table.insert(lines, dim("Currently worn"))

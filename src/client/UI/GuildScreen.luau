@@ -5,6 +5,7 @@
 
 	Not in a guild: browse guilds and create one. In a guild: Overview, Members, Missions, Upgrades, Raid, Pets.
 ]]
+local Short = require(game:GetService("ReplicatedStorage"):WaitForChild("Shared").Util.NumberFormat).Short
 local Kit = require(script.Parent.Kit)
 local Icons = require(script.Parent.Icons)
 local Config = require(game:GetService("ReplicatedStorage"):WaitForChild("Shared").Config.Guilds)
@@ -130,7 +131,7 @@ function GuildScreen.Guild(container, state, call, extra)
 			extra.GuildNewName, extra.GuildNewTag, extra.GuildNewOpen = nameBox.Text, tagBox.Text, not open
 			redraw()
 		end)
-		Kit.label({ Size = UDim2.new(1, -16, 0, 60), Position = UDim2.fromOffset(8, 102), Text = ("Costs %d gold. You need level %d.\nMembers share missions and a weekly raid boss, and you choose the guild upgrades together."):format(data.Create.Gold, data.Create.MinLevel), TextSize = 11, TextColor3 = C.Dim, TextYAlignment = Enum.TextYAlignment.Top, Parent = right })
+		Kit.label({ Size = UDim2.new(1, -16, 0, 60), Position = UDim2.fromOffset(8, 102), Text = ("Costs %s gold. You need level %d.\nMembers share missions and a weekly raid boss, and you choose the guild upgrades together."):format(Short(data.Create.Gold), data.Create.MinLevel), TextSize = 11, TextColor3 = C.Dim, TextYAlignment = Enum.TextYAlignment.Top, Parent = right })
 		Kit.button({ Size = UDim2.new(1, -16, 0, 34), Position = UDim2.new(0, 8, 1, -42), Text = "Create guild", BackgroundColor3 = C.Accent, TextColor3 = DARK, Parent = right }, function()
 			extra.GuildNewName, extra.GuildNewTag = nil, nil
 			act("GuildCreate", nameBox.Text, tagBox.Text, open)
@@ -280,8 +281,8 @@ function GuildScreen.Guild(container, state, call, extra)
 		Kit.label({ Size = UDim2.new(1, -16, 0, 24), Position = UDim2.fromOffset(8, 6), Text = "Raid: " .. r.Boss.Name, TextSize = 18, Font = Enum.Font.GothamBlack, Parent = left })
 		Kit.label({ Size = UDim2.new(1, -16, 0, 18), Position = UDim2.fromOffset(8, 30), Text = ("%s  ·  changes in %s"):format(r.Boss.Blurb, span(r.SecondsLeft)), TextSize = 11, TextColor3 = C.Dim, Parent = left })
 		bar(left, r.Health / r.MaxHealth, UDim2.fromOffset(8, 56), UDim2.new(1, -16, 0, 18), if r.Defeated then C.Good else C.Bad)
-		Kit.label({ Size = UDim2.new(1, -16, 0, 18), Position = UDim2.fromOffset(8, 56), Text = if r.Defeated then "DEFEATED" else ("%d / %d"):format(r.Health, r.MaxHealth), TextSize = 11, TextXAlignment = Enum.TextXAlignment.Center, ZIndex = 3, Parent = left })
-		Kit.label({ Size = UDim2.new(1, -16, 0, 34), Position = UDim2.fromOffset(8, 80), Text = ("Strikes today: %d / %d  ·  your damage this week: %d\nAnyone in the guild can strike at any time - on any server."):format(r.Attempts, r.PerDay, r.MyDamage), TextSize = 11, TextColor3 = C.Dim, TextYAlignment = Enum.TextYAlignment.Top, Parent = left })
+		Kit.label({ Size = UDim2.new(1, -16, 0, 18), Position = UDim2.fromOffset(8, 56), Text = if r.Defeated then "DEFEATED" else ("%s / %s"):format(Short(r.Health), Short(r.MaxHealth)), TextSize = 11, TextXAlignment = Enum.TextXAlignment.Center, ZIndex = 3, Parent = left })
+		Kit.label({ Size = UDim2.new(1, -16, 0, 34), Position = UDim2.fromOffset(8, 80), Text = ("Strikes today: %d / %d  ·  your damage this week: %s\nAnyone in the guild can strike at any time - on any server."):format(r.Attempts, r.PerDay, Short(r.MyDamage)), TextSize = 11, TextColor3 = C.Dim, TextYAlignment = Enum.TextYAlignment.Top, Parent = left })
 		local strike = Kit.button({ Size = UDim2.new(1, -16, 0, 34), Position = UDim2.fromOffset(8, 122), Text = if r.Defeated then "Boss defeated" elseif r.Attempts <= 0 then "No strikes left today" else "Strike the boss", BackgroundColor3 = if r.Attempts > 0 and not r.Defeated then C.Accent else C.Panel, TextColor3 = if r.Attempts > 0 and not r.Defeated then DARK else C.Text, Parent = left }, function()
 			if r.Attempts > 0 and not r.Defeated then
 				act("GuildRaid")

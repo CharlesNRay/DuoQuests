@@ -32,6 +32,7 @@ local Power = require(Shared.Power)
 local Stages = require(Shared.Stages)
 local Abilities = require(Shared.Config.Abilities)
 local UltCfg = require(Shared.Config.Ultimates)
+local Short = require(game:GetService("ReplicatedStorage"):WaitForChild("Shared").Util.NumberFormat).Short
 local Kit = require(script.Parent.Kit)
 local Icons = require(script.Parent.Icons)
 local Tips = require(script.Parent.Tips)
@@ -381,16 +382,16 @@ function Hud.new(root)
 
 		self.LevelLabel.Text = tostring(me.Level)
 		if me.IP then
-			self.IPLabel.Text = ("IP %d"):format(me.IP.Total)
-			self.IPTip = ("<b>Item Power %d</b>\nLevel %d   Gear %d   Skills %d   Passives %d\nPet %d   Collection %d   Subclass %d   Titles %d   Guild %d"):format(me.IP.Total, me.IP.Level, me.IP.Gear, me.IP.Skills, me.IP.Passives, me.IP.Pet, me.IP.Collection, me.IP.Subclass, me.IP.Titles, me.IP.Guild)
+			self.IPLabel.Text = ("IP %s"):format(Short(me.IP.Total))
+			self.IPTip = ("<b>Item Power %s</b>\nLevel %s   Gear %s   Skills %s   Passives %s\nPet %s   Collection %s   Subclass %s   Titles %s   Guild %s"):format(Short(me.IP.Total), Short(me.IP.Level), Short(me.IP.Gear), Short(me.IP.Skills), Short(me.IP.Passives), Short(me.IP.Pet), Short(me.IP.Collection), Short(me.IP.Subclass), Short(me.IP.Titles), Short(me.IP.Guild))
 		end
 		self.Badge.BackgroundColor3 = C[me.ClassId] or C.Accent
 		self.NameLabel.Text = me.Name .. "  -  " .. me.ClassId
 		local frac = if me.XPNeeded and me.XPNeeded > 0 then math.clamp((me.XP or 0) / me.XPNeeded, 0, 1) else 0
-		self.XpText = ("Level %d\nXP %d / %d"):format(me.Level, me.XP or 0, me.XPNeeded or 0)
+		self.XpText = ("Level %d\nXP %s / %s"):format(me.Level, Short(me.XP or 0), Short(me.XPNeeded or 0))
 		if me.Level >= 120 then -- level cap: the bar shows Paragon progress
 			frac = math.clamp((me.ParagonXP or 0) / math.max(me.ParagonNeed or 1, 1), 0, 1)
-			self.XpText = ("Paragon %d / 100\nXP %d / %d\nEach Paragon level: +0.4%% Attack, Health and Defense"):format(me.Paragon or 0, me.ParagonXP or 0, me.ParagonNeed or 0)
+			self.XpText = ("Paragon %d / 100\nXP %s / %s\nEach Paragon level: +0.4%% Attack, Health and Defense"):format(me.Paragon or 0, Short(me.ParagonXP or 0), Short(me.ParagonNeed or 0))
 		end
 		self.XpFill.Size = UDim2.fromScale(frac, 1)
 		self.Gold.Text = "💰 " .. short(me.Gold)
@@ -444,7 +445,7 @@ function Hud.new(root)
 			Kit.corner(10).Parent = dot
 			Kit.label({ Size = UDim2.new(1, -if ip then 100 else 36, 1, 0), Position = UDim2.fromOffset(32, 0), Text = if classId ~= "" then ("%s  Lv %d %s%s"):format(name, level, classId, note or "") else name, TextSize = 12, TextWrapped = false, TextTruncate = Enum.TextTruncate.AtEnd, Parent = f })
 			if ip then
-				Kit.label({ Size = UDim2.fromOffset(60, 28), Position = UDim2.new(1, -64, 0, 0), Text = ("IP %d"):format(ip), TextSize = 11, Font = Enum.Font.GothamBlack, TextColor3 = C.Accent, TextXAlignment = Enum.TextXAlignment.Right, TextWrapped = false, ZIndex = 3, Parent = f })
+				Kit.label({ Size = UDim2.fromOffset(60, 28), Position = UDim2.new(1, -64, 0, 0), Text = ("IP %s"):format(Short(ip)), TextSize = 11, Font = Enum.Font.GothamBlack, TextColor3 = C.Accent, TextXAlignment = Enum.TextXAlignment.Right, TextWrapped = false, ZIndex = 3, Parent = f })
 			end
 			if onClick then
 				local b = Kit.new("TextButton", { Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1, Text = "", ZIndex = 4, Parent = f })
@@ -501,7 +502,7 @@ function Hud.new(root)
 	function self:OnFight(info)
 		local text = info.Won and ("Stage " .. info.Stage .. " cleared!") or (info.TimedOut and "Time ran out - holding on the stage before" or "Defeated - holding on the stage before")
 		if info.Reward then
-			text ..= string.format("  +%d gold  +%d xp", info.Reward.Gold or 0, info.Reward.XP or 0)
+			text ..= string.format("  +%s gold  +%s xp", Short(info.Reward.Gold or 0), Short(info.Reward.XP or 0))
 			if (info.Reward.Wishstones or 0) > 0 then
 				text ..= string.format("  +%d wishstone%s", info.Reward.Wishstones, if info.Reward.Wishstones > 1 then "s" else "")
 			end

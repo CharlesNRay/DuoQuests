@@ -18,6 +18,7 @@ local PassiveCfg = require(Shared.Config.Passives)
 local PetConfig = require(Shared.Config.Pets)
 local Classes = require(Shared.Config.Classes)
 local Subclasses = require(Shared.Subclasses)
+local Short = require(game:GetService("ReplicatedStorage"):WaitForChild("Shared").Util.NumberFormat).Short
 local Kit = require(script.Parent.Kit)
 local Icons = require(script.Parent.Icons)
 local Tips = require(script.Parent.Tips)
@@ -266,7 +267,7 @@ function HeroScreen.Hero(container, state, _, extra)
 
 	if hero.IP then
 		local ip = hero.IP
-		Kit.label({ Size = UDim2.new(1, 0, 0, 34), TextWrapped = true, RichText = true, TextSize = 12, TextColor3 = C.Dim, Text = ("<b><font color=\"#ffd25a\" size=\"16\">IP %d</font></b>   Level %d  Gear %d  Skills %d  Passives %d\nPet %d  Collection %d  Subclass %d  Titles %d  Guild %d"):format(ip.Total, ip.Level, ip.Gear, ip.Skills, ip.Passives, ip.Pet, ip.Collection, ip.Subclass, ip.Titles, ip.Guild), Parent = scroll })
+		Kit.label({ Size = UDim2.new(1, 0, 0, 34), TextWrapped = true, RichText = true, TextSize = 12, TextColor3 = C.Dim, Text = ("<b><font color=\"#ffd25a\" size=\"16\">IP %s</font></b>   Level %s  Gear %s  Skills %s  Passives %s\nPet %s  Collection %s  Subclass %s  Titles %s  Guild %s"):format(Short(ip.Total), Short(ip.Level), Short(ip.Gear), Short(ip.Skills), Short(ip.Passives), Short(ip.Pet), Short(ip.Collection), Short(ip.Subclass), Short(ip.Titles), Short(ip.Guild)), Parent = scroll })
 	end
 	section(scroll, "STATS  (with gear, passives and pet)")
 	if hero.Sheet then

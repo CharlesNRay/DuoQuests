@@ -13,6 +13,7 @@
 local TweenService = game:GetService("TweenService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Shared = ReplicatedStorage:WaitForChild("Shared")
+local Short = require(game:GetService("ReplicatedStorage"):WaitForChild("Shared").Util.NumberFormat).Short
 local Kit = require(script.Parent.Kit)
 local Icons = require(script.Parent.Icons)
 local Abilities = require(Shared.Config.Abilities)
@@ -76,7 +77,7 @@ local function tagText(row)
 	if row.Shard then
 		return "+" .. tostring(row.Shards or 1) .. " shard"
 	end
-	return ("+%d xp"):format(row.DupXP or 0)
+	return ("+%s xp"):format(Short(row.DupXP or 0))
 end
 
 function WishAnim.Play(parent, kind, rows, onDone)

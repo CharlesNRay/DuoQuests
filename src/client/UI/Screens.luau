@@ -18,6 +18,7 @@ local PetsLib = require(Shared.Pets)
 local Zones = require(game:GetService("ReplicatedStorage"):WaitForChild("Shared").Zones)
 local Stages = require(game:GetService("ReplicatedStorage"):WaitForChild("Shared").Stages)
 local TweenService = game:GetService("TweenService")
+local Short = require(game:GetService("ReplicatedStorage"):WaitForChild("Shared").Util.NumberFormat).Short
 local Kit = require(script.Parent.Kit)
 local Icons = require(script.Parent.Icons)
 local Tips = require(script.Parent.Tips)
@@ -190,7 +191,7 @@ function Screens.Gear(container, state, call)
 		if item then
 			Icons.Item(r, item, { Size = UDim2.fromOffset(40, 40), Position = UDim2.fromOffset(8, 8) })
 			Kit.Hover(r, function() return Tips.Item(item, gear) end)
-			Kit.label({ Size = UDim2.new(1, -170, 1, 0), Position = UDim2.fromOffset(58, 0), Text = ("%s%s   [%s]\n%s   -   IP %d"):format(item.Name, (item.Upgrade or 0) > 0 and ("  +" .. item.Upgrade) or "", slotName, item.StatText, item.ItemPower or 0), TextColor3 = Kit.rarityColor(if item.SetId then "Set" else item.Rarity), Parent = r })
+			Kit.label({ Size = UDim2.new(1, -170, 1, 0), Position = UDim2.fromOffset(58, 0), Text = ("%s%s   [%s]\n%s   -   IP %s"):format(item.Name, (item.Upgrade or 0) > 0 and ("  +" .. item.Upgrade) or "", slotName, item.StatText, Short(item.ItemPower or 0)), TextColor3 = Kit.rarityColor(if item.SetId then "Set" else item.Rarity), Parent = r })
 			Kit.button({ Size = UDim2.fromOffset(92, 40), Position = UDim2.new(1, -100, 0.5, -20), Text = "Unequip", Parent = r }, function()
 				call("UnequipGear", slotName)
 			end)
@@ -357,7 +358,7 @@ function Screens.Bag(container, state, call, extra)
 		Icons.Item(r, item, { Size = UDim2.fromOffset(40, 40), Position = UDim2.fromOffset(8, 6) })
 		Kit.Hover(r, function() return Tips.Item(item, gear) end)
 		local arrow = if cmp.Verdict == "Up" then "  ▲" elseif cmp.Verdict == "Down" then "  ▼" else ""
-		Kit.label({ Size = UDim2.new(1, -170, 1, 0), Position = UDim2.fromOffset(58, 0), Text = ("%s%s%s\n%s   -   %s   -   IP %d"):format(item.Name, (item.Upgrade or 0) > 0 and ("  +" .. item.Upgrade) or "", arrow, item.Slot, item.StatText, item.ItemPower or 0), TextColor3 = C.Text, Parent = r })
+		Kit.label({ Size = UDim2.new(1, -170, 1, 0), Position = UDim2.fromOffset(58, 0), Text = ("%s%s%s\n%s   -   %s   -   IP %s"):format(item.Name, (item.Upgrade or 0) > 0 and ("  +" .. item.Upgrade) or "", arrow, item.Slot, item.StatText, Short(item.ItemPower or 0)), TextColor3 = C.Text, Parent = r })
 		Kit.button({ Size = UDim2.fromOffset(90, 40), Position = UDim2.new(1, -104, 0.5, -20), Text = "Equip", Parent = r }, function()
 			call("EquipGear", item.Id)
 		end)
@@ -435,7 +436,7 @@ local function buildLog(fight, everyHit)
 				add(t, ("%s hits %s for %d%s%s%s"):format(whoFor(e.Source, e.Tag), who(e.Target), math.floor((e.Amount or 0) + 0.5), e.Crit and " CRIT" or "", isBasic and "" or (" [" .. ability(e.Tag) .. "]"), absorbed))
 			end
 		elseif kind == "Heal" and (everyHit or (type(e.Tag) == "string" and e.Tag:sub(1, 4) == "Pet_")) and (e.Amount or 0) > 0 then
-			add(t, ("%s heals %s for %d%s"):format(whoFor(e.Source, e.Tag), who(e.Target), math.floor((e.Amount or 0) + 0.5), e.Tag and e.Tag ~= "BasicAttack" and (" [" .. ability(e.Tag) .. "]") or ""))
+			add(t, ("%s heals %s for %s%s"):format(whoFor(e.Source, e.Tag), who(e.Target), Short(e.Amount or 0), e.Tag and e.Tag ~= "BasicAttack" and (" [" .. ability(e.Tag) .. "]") or ""))
 		elseif kind == "End" then
 			add(t, Kit.tint(if e.Winner == "Party" then "Victory" else "Defeat", if e.Winner == "Party" then C.Good else C.Bad))
 		end
@@ -875,7 +876,7 @@ function Screens.Wish(container, state, call, extra)
 				table.insert(odds, Kit.tint(("%s %d%%"):format(ODDS_SHORT[r], tier.Odds[r]), Kit.rarityColor(r)))
 			end
 		end
-		local cost = if pay == "Ticket" then ("%d ticket"):format(tier.Tickets) else ("%d %s"):format(tier.Cost, info.CurrencyName)
+		local cost = if pay == "Ticket" then ("%d ticket"):format(tier.Tickets) else ("%s %s"):format(Short(tier.Cost), info.CurrencyName)
 		Kit.button({ Name = "PoolButton", Size = UDim2.fromOffset(56, 20), Position = UDim2.new(1, -206, 0, 5), Text = "📖 Pool", TextSize = 11, BackgroundColor3 = theme.C1, Parent = card }, function()
 			extra.WishPool = tier.Id
 			redraw()
@@ -939,7 +940,7 @@ function Screens.Wish(container, state, call, extra)
 		Kit.label({ Size = UDim2.new(1, 4, 0, 10), Position = UDim2.fromOffset(-2, 46), Text = shown or "", TextSize = 9, TextXAlignment = Enum.TextXAlignment.Center, TextWrapped = false, TextTruncate = Enum.TextTruncate.AtEnd, ZIndex = 3, Parent = cell })
 		tile.BackgroundTransparency = 1
 		TweenService:Create(tile, TweenInfo.new(0.25 + index * 0.06), { BackgroundTransparency = 0 }):Play()
-		Kit.label({ Size = UDim2.new(1, 0, 0, 16), Position = UDim2.fromOffset(0, 55), Text = if rowData.New then "NEW!" elseif rowData.Upgrade then ("▲ " .. rowData.Rarity) elseif rowData.Copies then "+1 copy" elseif rowData.Shard then "+1 shard" else ("+%d xp"):format(rowData.DupXP or 0), TextSize = 10, TextXAlignment = Enum.TextXAlignment.Center, TextWrapped = false, TextColor3 = if rowData.New or rowData.Upgrade then Kit.rarityColor(rowData.Rarity) else C.Dim, Font = Enum.Font.GothamBold, Parent = cell })
+		Kit.label({ Size = UDim2.new(1, 0, 0, 16), Position = UDim2.fromOffset(0, 55), Text = if rowData.New then "NEW!" elseif rowData.Upgrade then ("▲ " .. rowData.Rarity) elseif rowData.Copies then "+1 copy" elseif rowData.Shard then "+1 shard" else ("+%s xp"):format(Short(rowData.DupXP or 0)), TextSize = 10, TextXAlignment = Enum.TextXAlignment.Center, TextWrapped = false, TextColor3 = if rowData.New or rowData.Upgrade then Kit.rarityColor(rowData.Rarity) else C.Dim, Font = Enum.Font.GothamBold, Parent = cell })
 	end
 end
 
@@ -1158,7 +1159,7 @@ function Screens.Boss(container, state, call, extra)
 		if w.Active then
 			local left_s = w.EndsIn - age
 			Kit.label({ Size = UDim2.new(1, -16, 0, 34), Position = UDim2.fromOffset(8, 30), Text = ("It is roaming the plaza!\nEnds in %s"):format(clock(left_s)), TextSize = 12, TextColor3 = C.Good, TextWrapped = true, Parent = left })
-			Kit.label({ Size = UDim2.new(1, -16, 0, 34), Position = UDim2.fromOffset(8, 68), Text = ("Your best fight: %d damage\nChallenges: %d"):format(w.Damage, w.Challenges), TextSize = 12, Parent = left })
+			Kit.label({ Size = UDim2.new(1, -16, 0, 34), Position = UDim2.fromOffset(8, 68), Text = ("Your best fight: %s damage\nChallenges: %d"):format(Short(w.Damage), w.Challenges), TextSize = 12, Parent = left })
 			local wait = math.max(0, w.CooldownLeft - age)
 			local can = wait <= 0
 			local text = if wait > 0 then ("Ready in %ds"):format(math.ceil(wait)) else "Challenge!"
@@ -1175,7 +1176,7 @@ function Screens.Boss(container, state, call, extra)
 		note(msg)
 		for _, tier in ipairs(w.Tiers) do
 			local reached = tier.Id <= w.Reached
-			tierRow(("%s  -  %d damage"):format(tier.Name, tier.Need), tier.Rewards, reached, if reached then C.Good else C.Text)
+			tierRow(("%s  -  %s damage"):format(tier.Name, Short(tier.Need)), tier.Rewards, reached, if reached then C.Good else C.Text)
 		end
 	else
 		local s = boss.Season
@@ -1183,7 +1184,7 @@ function Screens.Boss(container, state, call, extra)
 		local bar = Kit.frame({ Size = UDim2.new(1, -16, 0, 16), Position = UDim2.fromOffset(8, 32), BackgroundColor3 = Color3.fromRGB(20, 22, 30), Parent = left })
 		Kit.frame({ Size = UDim2.fromScale(math.clamp(s.Fraction, 0, 1), 1), BackgroundColor3 = if s.Dead then C.Dim else C.Good, Parent = bar })
 		Kit.label({ Size = UDim2.new(1, -16, 0, 30), Position = UDim2.fromOffset(8, 52), Text = if s.Dead then "Defeated! Thank you, everyone." else ("%d%% health  -  all servers\nIt withers away in %s"):format(math.ceil(s.Fraction * 100), clock(s.EndsIn - age)), TextSize = 11, TextColor3 = C.Dim, TextWrapped = true, Parent = left })
-		Kit.label({ Size = UDim2.new(1, -16, 0, 34), Position = UDim2.fromOffset(8, 84), Text = ("Your best fight: %d damage\nChallenges: %d  (need %d to share rewards)"):format(s.Damage, s.Challenges, s.MinContribution), TextSize = 11, TextWrapped = true, Parent = left })
+		Kit.label({ Size = UDim2.new(1, -16, 0, 34), Position = UDim2.fromOffset(8, 84), Text = ("Your best fight: %s damage\nChallenges: %d  (need %s to share rewards)"):format(Short(s.Damage), s.Challenges, Short(s.MinContribution)), TextSize = 11, TextWrapped = true, Parent = left })
 		local wait = math.max(0, s.CooldownLeft - age)
 		local can = wait <= 0 and not s.Dead
 		local text = if s.Dead then "Defeated" elseif wait > 0 then ("Ready in %ds"):format(math.ceil(wait)) else "Challenge!"

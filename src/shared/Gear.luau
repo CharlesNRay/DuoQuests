@@ -39,6 +39,7 @@
 ]]
 
 local Config = require(script.Parent.Config.Gear)
+local NumberFormat = require(script.Parent.Util.NumberFormat)
 local StageConfig = require(script.Parent.Config.Stages)
 local Zones = require(script.Parent.Zones)
 
@@ -102,7 +103,7 @@ function Gear.FormatStat(stat, value)
 	elseif value < 10 then
 		return ("+%.1f %s"):format(value, label)
 	end
-	return ("+%d %s"):format(math.floor(value + 0.5), label)
+	return ("+%s %s"):format(NumberFormat.Short(value), label)
 end
 
 -- Which worn item would an item of `itemType` replace? Nil when a slot of that type is free.
