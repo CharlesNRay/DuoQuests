@@ -56,6 +56,18 @@ return function(modulesOverride)
 	check("Shares add to 100%", math.abs((byKey["1"].Share + byKey["1:pet"].Share + byKey["2"].Share + byKey["2:minions"].Share) - 1) < 1e-6)
 	local early = FightStats.Compute(fight, 3)
 	check("A cut-off time only counts damage so far", early.Total == 200)
+	-- damage by skill, both sides
+	local src = FightStats.Sources(fight)
+	local named = {}
+	for _, r in ipairs(src.Rows) do
+		named[r.Name] = r
+	end
+	check("Sources count every damage source, enemies included", src.Total == 1399)
+	check("A basic attack is its own row", named["Basic attack (Ann)"] and named["Basic attack (Ann)"].Damage == 100)
+	check("A pet strike is its own row", named["Pet_Foxling (Ann)"] ~= nil or named["Foxling Strike (Ann)"] ~= nil or (function() for name, r in pairs(named) do if r.Kind == "Pet" then return true end end return false end)())
+	check("Enemy damage is marked as Enemy", named["Basic attack (Rat)"] and named["Basic attack (Rat)"].Kind == "Enemy" and named["Basic attack (Rat)"].Damage == 999)
+	check("Sacrifices are left out of the sources too", src.Total == 1399)
+	check("Sources are sorted biggest first", src.Rows[1].Damage >= src.Rows[2].Damage)
 	print(("FightStatsTests: %d passed, %d failed"):format(passed, failed))
 	return failed == 0
 end

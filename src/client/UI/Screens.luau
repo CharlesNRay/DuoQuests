@@ -450,15 +450,15 @@ function Screens.DamageMeter(parent, stats, widthScale)
 	local top = stats.Rows[1] and math.max(stats.Rows[1].Damage, 1) or 1
 	Kit.label({
 		Size = UDim2.new(1, -8, 0, 18), RichText = true, TextSize = 12, TextColor3 = C.Dim,
-		Text = ("Party damage %s  -  %s DPS"):format(Kit.tint(tostring(stats.Total), C.Text), Kit.tint(("%.0f"):format(stats.Dps), C.Accent)),
+		Text = ("%s %s  -  %s DPS"):format(stats.Title or "Party damage", Kit.tint(Short(stats.Total), C.Text), Kit.tint(Short(stats.Dps), C.Accent)),
 		Parent = parent, LayoutOrder = 0,
 	})
 	for i, r in ipairs(stats.Rows) do
 		local color = FightStats.PlayerColor(r.Color)
-		local fill = if r.Kind == "Hero" then color else color:Lerp(Color3.new(1, 1, 1), 0.35)
+		local fill = if r.Kind == "Enemy" then Color3.fromRGB(220, 80, 80) elseif r.Kind == "Hero" then color else color:Lerp(Color3.new(1, 1, 1), 0.35)
 		local bar = Kit.frame({ Size = UDim2.new(1, -8, 0, 22), BackgroundColor3 = Color3.fromRGB(26, 30, 48), LayoutOrder = i, Parent = parent })
 		Kit.frame({ Size = UDim2.new(math.max(r.Damage / top, 0.01), 0, 1, 0), BackgroundColor3 = fill, BackgroundTransparency = if r.Kind == "Hero" then 0.25 else 0.5, Parent = bar })
-		local prefix = if r.Kind == "Pet" then "🐾 " elseif r.Kind == "Minion" then "💀 " else ""
+		local prefix = if r.Kind == "Pet" then "🐾 " elseif r.Kind == "Minion" then "💀 " elseif r.Kind == "Enemy" then "👹 " else ""
 		Kit.label({ Size = UDim2.new(0.62, 0, 1, 0), Position = UDim2.fromOffset(6, 0), Text = prefix .. r.Name, TextSize = 12, TextWrapped = false, TextTruncate = Enum.TextTruncate.AtEnd, Parent = bar })
 		Kit.label({ Size = UDim2.new(0.38, -8, 1, 0), Position = UDim2.new(0.62, 0, 0, 0), TextXAlignment = Enum.TextXAlignment.Right, TextSize = 12, TextWrapped = false, Text = ("%s/s  %d%%"):format(require(Shared.Util.NumberFormat).Short(r.Dps), math.floor(r.Share * 100 + 0.5)), Parent = bar })
 	end
@@ -487,6 +487,9 @@ function Screens.Log(container, state, call, extra)
 	local meter = Kit.frame({ Size = UDim2.new(1, -8, 0, 0), AutomaticSize = Enum.AutomaticSize.Y, BackgroundTransparency = 1, NoCorner = true, Parent = scroll })
 	Kit.new("UIListLayout", { Padding = UDim.new(0, 2), SortOrder = Enum.SortOrder.LayoutOrder, Parent = meter })
 	Screens.DamageMeter(meter, FightStats.Compute(fight))
+	local sources = Kit.frame({ Size = UDim2.new(1, -8, 0, 0), AutomaticSize = Enum.AutomaticSize.Y, BackgroundTransparency = 1, NoCorner = true, Parent = scroll })
+	Kit.new("UIListLayout", { Padding = UDim.new(0, 2), SortOrder = Enum.SortOrder.LayoutOrder, Parent = sources })
+	Screens.DamageMeter(sources, FightStats.Sources(fight))
 	local shown = 0
 	for _, text in ipairs(lines) do
 		shown += 1

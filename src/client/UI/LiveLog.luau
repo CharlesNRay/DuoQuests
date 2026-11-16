@@ -13,10 +13,10 @@ local C = Kit.Colors
 local LiveLog = {}
 LiveLog.__index = LiveLog
 
-local OPEN_H, BAR_H, WIDTH = 116, 22, 250
+local OPEN_H, BAR_H, WIDTH = 178, 22, 290
 
 function LiveLog.new(parent, buildLog, buildMeter)
-	local self = setmetatable({ BuildLog = buildLog, BuildMeter = buildMeter, MeterOn = true, Lines = {}, Times = {}, Shown = 0, Open = true }, LiveLog)
+	local self = setmetatable({ BuildLog = buildLog, BuildMeter = buildMeter, Mode = "Damage", Lines = {}, Times = {}, Shown = 0, Open = true }, LiveLog)
 	local frame = Kit.frame({
 		Name = "LiveLog", Size = UDim2.fromOffset(WIDTH, OPEN_H), AnchorPoint = Vector2.new(1, 1),
 		Position = UDim2.new(1, -10, 1, -78), BackgroundColor3 = Color3.fromRGB(14, 16, 28), BackgroundTransparency = 0.2,
@@ -40,10 +40,11 @@ function LiveLog.new(parent, buildLog, buildMeter)
 	})
 	Kit.new("UIListLayout", { SortOrder = Enum.SortOrder.LayoutOrder, Padding = UDim.new(0, 2), Parent = meter })
 	self.Meter = meter
+	-- one button cycles the three views: party damage, damage by skill (every source, both sides), and the written log
 	self.MeterButton = Kit.button({
-		Size = UDim2.fromOffset(58, 18), Position = UDim2.new(1, -94, 0, 2), Text = "Log", TextSize = 11, BackgroundColor3 = C.PanelLight, Parent = frame,
+		Size = UDim2.fromOffset(70, 18), Position = UDim2.new(1, -106, 0, 2), Text = "Damage", TextSize = 11, BackgroundColor3 = C.PanelLight, Parent = frame,
 	}, function()
-		self.MeterOn = not self.MeterOn
+		self.Mode = if self.Mode == "Damage" then "Skills" elseif self.Mode == "Skills" then "Log" else "Damage"
 		self:_Layout()
 		self:_RefreshMeter(true)
 	end)
@@ -67,13 +68,13 @@ function LiveLog.new(parent, buildLog, buildMeter)
 end
 
 function LiveLog:_Layout()
-	self.Scroll.Visible = self.Open and not self.MeterOn
-	self.Meter.Visible = self.Open and self.MeterOn
-	self.MeterButton.Text = if self.MeterOn then "Log" else "Damage"
+	self.Scroll.Visible = self.Open and self.Mode == "Log"
+	self.Meter.Visible = self.Open and self.Mode ~= "Log"
+	self.MeterButton.Text = if self.Mode == "Damage" then "Party" elseif self.Mode == "Skills" then "Skills" else "Log"
 end
 
 function LiveLog:_RefreshMeter(force, now)
-	if not (self.MeterOn and self.Fight and self.BuildMeter) then
+	if not (self.Mode ~= "Log" and self.Fight and self.BuildMeter) then
 		return
 	end
 	now = now or (os.clock() - (self.StartAt or os.clock()))
@@ -86,7 +87,8 @@ function LiveLog:_RefreshMeter(force, now)
 			child:Destroy()
 		end
 	end
-	self.BuildMeter(self.Meter, FightStats.Compute(self.Fight, math.max(now, 1)))
+	local upTo = math.max(now, 1)
+	self.BuildMeter(self.Meter, if self.Mode == "Skills" then FightStats.Sources(self.Fight, upTo) else FightStats.Compute(self.Fight, upTo))
 end
 
 function LiveLog:SetOpen(open)
