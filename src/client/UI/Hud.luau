@@ -28,6 +28,7 @@ local UserInputService = game:GetService("UserInputService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Zones = require(Shared.Zones)
+local Power = require(Shared.Power)
 local Stages = require(Shared.Stages)
 local Abilities = require(Shared.Config.Abilities)
 local UltCfg = require(Shared.Config.Ultimates)
@@ -95,7 +96,9 @@ function Hud.new(root)
 	Kit.Hover(portrait, function()
 		return self.XpText
 	end)
-	self.Cards = Kit.frame({ Size = UDim2.fromOffset(220, 30), Position = UDim2.fromOffset(8, safeTop + 50), BackgroundTransparency = 1, NoCorner = true, Parent = chrome })
+	self.IPLabel = Kit.label({ Size = UDim2.fromOffset(220, 18), Position = UDim2.fromOffset(12, safeTop + 49), Text = "IP 0", TextSize = 14, Font = Enum.Font.GothamBlack, TextColor3 = C.Accent, Parent = chrome })
+	Kit.Hover(self.IPLabel, function() return self.IPTip end)
+	self.Cards = Kit.frame({ Size = UDim2.fromOffset(220, 30), Position = UDim2.fromOffset(8, safeTop + 70), BackgroundTransparency = 1, NoCorner = true, Parent = chrome })
 	Kit.new("UIListLayout", { Padding = UDim.new(0, 3), Parent = self.Cards })
 
 	-- top-right: the map card in the very corner, gold + shards directly to its left ----------
@@ -351,6 +354,10 @@ function Hud.new(root)
 		self.CNote.Text = if holding then "Holding" elseif party then ("Furthest: %d"):format(frontier) else "No party yet"
 
 		self.LevelLabel.Text = tostring(me.Level)
+		if me.IP then
+			self.IPLabel.Text = ("IP %d"):format(me.IP.Total)
+			self.IPTip = ("<b>Item Power %d</b>\nLevel %d   Gear %d   Skills %d   Passives %d\nPet %d   Collection %d   Subclass %d   Titles %d   Guild %d"):format(me.IP.Total, me.IP.Level, me.IP.Gear, me.IP.Skills, me.IP.Passives, me.IP.Pet, me.IP.Collection, me.IP.Subclass, me.IP.Titles, me.IP.Guild)
+		end
 		self.Badge.BackgroundColor3 = C[me.ClassId] or C.Accent
 		self.NameLabel.Text = me.Name .. "  -  " .. me.ClassId
 		local frac = if me.XPNeeded and me.XPNeeded > 0 then math.clamp((me.XP or 0) / me.XPNeeded, 0, 1) else 0
@@ -436,7 +443,7 @@ function Hud.new(root)
 			if def then
 				local icon = Icons.Skill(self.Slots, def, { Size = UDim2.fromOffset(50, 50), Level = me.SlotLevels[slot], LayoutOrder = slot })
 				Kit.label({ Size = UDim2.fromOffset(12, 12), Position = UDim2.fromOffset(2, 0), Text = tostring(slot), TextSize = 10, TextColor3 = C.Dim, TextWrapped = false, ZIndex = 3, Parent = icon })
-				Kit.Hover(icon, function() return Tips.Skill(def, me.SlotLevels[slot]) end)
+				Kit.Hover(icon, function() return Tips.Skill(def, me.SlotLevels[slot], ((me.SkillInfo or {})[def.Id] or {}).Tier) end)
 			end
 		end
 

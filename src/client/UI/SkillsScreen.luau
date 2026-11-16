@@ -287,7 +287,7 @@ function SkillsScreen.Skills(container, state, call, extra)
 				x.Active = true
 				Kit.Hover(x, function() return "Unequip this skill" end)
 			end
-			Kit.Hover(tile, function() return Tips.Skill(def, levels[slot] or 1) end)
+			Kit.Hover(tile, function() return Tips.Skill(def, levels[slot] or 1, ((me.SkillInfo or {})[def.Id] or {}).Tier) end)
 			attach(tile, def, sel.Slot == slot, function()
 				extra.SkillSel = { Slot = slot }
 				redraw()
@@ -417,7 +417,7 @@ function SkillsScreen.Skills(container, state, call, extra)
 		for _, id in ipairs(owned) do
 			local def = Abilities[id]
 			local tile = Icons.Skill(g, def, if isPartner then {} else skillProps(me, id, { Level = (me.SkillInfo or {})[id] and me.SkillInfo[id].Level or nil }))
-			Kit.Hover(tile, function() return Tips.Skill(def, if isPartner then 1 else ((me.SkillInfo or {})[id] or {}).Level or 1) end)
+			Kit.Hover(tile, function() return Tips.Skill(def, if isPartner then 1 else ((me.SkillInfo or {})[id] or {}).Level or 1, ((me.SkillInfo or {})[id] or {}).Tier) end)
 			attach(tile, def, sel.Id == id, function()
 				extra.SkillSel = { Id = id, Target = sel.Slot or sel.Target }
 				redraw()
@@ -555,7 +555,7 @@ function SkillsScreen.Skills(container, state, call, extra)
 	if info and isOwned then
 		header = ("%s  -  %s  -  Rank %d/%d\n"):format(Kit.tint(info.Tier, Kit.rarityColor(info.Tier)), Kit.tint("Level " .. level, C.Dim), info.Rank, info.MaxRank)
 	end
-	Kit.label({ Size = UDim2.new(1, -16, 1, -(if isOwned and not isPartner then 128 else 104)), Position = UDim2.fromOffset(8, 6), Text = header .. Tips.Skill(selectedDef, level), RichText = true, TextSize = 12, TextYAlignment = Enum.TextYAlignment.Top, Parent = right })
+	Kit.label({ Size = UDim2.new(1, -16, 1, -(if isOwned and not isPartner then 128 else 104)), Position = UDim2.fromOffset(8, 6), Text = header .. Tips.Skill(selectedDef, level, info and info.Tier), RichText = true, TextSize = 12, TextYAlignment = Enum.TextYAlignment.Top, Parent = right })
 
 	-- Rank up / Upgrade are pressed by hand (copies from the Wishing Tree become XP and tier upgrades that wait for you)
 	local function progressButtons()

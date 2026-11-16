@@ -6,6 +6,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local AbilityStats = require(Shared.Combat.AbilityStats)
 local Gear = require(Shared.Gear)
+local Power = require(Shared.Power)
 local Kit = require(script.Parent.Kit)
 local Icons = require(script.Parent.Icons)
 local C = Kit.Colors
@@ -18,12 +19,15 @@ local function dim(text)
 	return Kit.tint(text, C.Dim)
 end
 
-function Tips.Skill(def, level)
+function Tips.Skill(def, level, tier)
 	local lines = {}
 	table.insert(lines, ("<b>%s</b>%s"):format(Kit.tint(def.DisplayName, Kit.rarityColor(def.Rarity)), level and ("   Lv " .. level) or ""))
 	local kind = Icons.SkillKind(def)
 	local meta = KIND_NAMES[kind] .. "  -  " .. (def.Rarity or "Common")
 	table.insert(lines, dim(meta))
+	if level then
+		table.insert(lines, Kit.tint(("IP %d"):format(Power.Skill(tier or def.Rarity or "Common", level)), C.Accent))
+	end
 	if def.Description and def.Description ~= "" then
 		table.insert(lines, def.Description)
 	end
@@ -104,7 +108,7 @@ end
 function Tips.Item(item, gear)
 	local cmp = Tips.Compare(item, gear)
 	local rarity = if item.SetId then "Set" else item.Rarity
-	local lines = { ("<b>%s</b>"):format(Kit.tint(item.Name, Kit.rarityColor(rarity))), dim(("%s  -  %s  -  from stage %d"):format(item.Slot, if item.SetId then "Set piece" else item.Rarity, item.Power)), Kit.tint(("Item Power %d"):format(item.ItemPower or 0), C.Accent) }
+	local lines = { ("<b>%s</b>"):format(Kit.tint(item.Name, Kit.rarityColor(rarity))), dim(("%s  -  %s  -  from stage %d"):format(item.Slot, if item.SetId then "Set piece" else item.Rarity, item.Power)), Kit.tint(("IP %d"):format(item.ItemPower or 0), C.Accent) }
 	table.insert(lines, item.StatText or Gear.FormatStat(item.Stat, item.Value))
 	if cmp.Verdict == "Worn" then
 		table.insert(lines, dim("Currently worn"))

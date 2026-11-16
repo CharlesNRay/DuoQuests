@@ -52,6 +52,7 @@ local Skills = require(Shared.Skills)
 local SkillProgress = require(Shared.SkillProgress)
 local Party = require(Shared.Party)
 local Pets = require(Shared.Pets)
+local Power = require(Shared.Power)
 local Gear = require(Shared.Gear)
 local Consumables = require(Shared.Consumables)
 local Wishing = require(Shared.Wishing)
@@ -186,6 +187,7 @@ local function buildState(player)
 			PassiveLevels = table.clone(season.PassiveSlotLevels[classId]),
 			PassiveSlots = Passives.SlotsAt(season.HighestStage),
 			Pets = Pets.List(profile),
+			IP = Power.Hero(profile),
 			PetShards = Pets.Shards(profile),
 			PetShardInfo = { PetCost = require(Shared.Config.Pets).Shards.PetCost, CondenseCost = require(Shared.Config.Pets).Shards.CondenseCost },
 			PetCollection = (function() local c = Pets.Collection(profile) return { Points = c.Points, Percent = c.Percent } end)(),

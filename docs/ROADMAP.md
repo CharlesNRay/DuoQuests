@@ -341,3 +341,7 @@ two paths of 3 skills, a season prize pet (Arcanix, Skyhawk, Shadowcat, Spiritli
 - Damage effects can carry `PercentTargetHealth` (+`PercentCap`); low-damage skills across all classes got a small %HP hit and/or a stacking DoT (Fireball/Meteor burn, Backstab/Fan of Knives/Flurry/Poison Blade poison, Whirlwind/Crushing Blow/Power Shot bleed, Smite/Volley/Haunt etc. small %HP). Skill tooltips show the %HP and stack lines.
 - Measured on the world boss (where %HP is reduced): Rogue +26%, Ranger +20%, Mage +12%, others +3-5%; against ordinary monsters the %HP portion matters more.
 - Not yet: stack counts are not drawn on the monsters in the battle view (the Status event carries `Stacks`).
+
+## IP (Item Power) score
+- `shared/Power.luau`: one number for hero strength. Level x5, equipped gear (Gear.ItemPower), skills (tier + level), passives, active pet (rarity, level, rank), pet collection, subclass, titles, guild bonuses. Never affects combat.
+- Shown on the HUD (hover for the breakdown), Hero screen, pet cards, skill tooltips and gear text. Tests: PowerTests.

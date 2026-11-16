@@ -206,7 +206,7 @@ local function describe(state, which)
 			UserId = p.UserId, Name = p.Name, ClassId = p.ClassId, Level = p.Level, SubclassId = p.SubclassId,
 			Skills = p.Loadout, SkillLevels = p.SlotLevels, PassiveIds = p.PassiveIds, PassiveLevels = p.PassiveLevels,
 			PetId = pet and pet.Id, PetLevel = pet and pet.Level, Sheet = p.Sheet, Worn = p.Gear.Equipped, Online = true,
-			XP = p.XP, XPNeeded = p.XPNeeded,
+			XP = p.XP, XPNeeded = p.XPNeeded, IP = p.IP,
 		}
 	end
 	local partner = state.Party and state.Party.Partner
@@ -264,6 +264,10 @@ function HeroScreen.Hero(container, state, _, extra)
 	Kit.new("UIListLayout", { Padding = UDim.new(0, 4), SortOrder = Enum.SortOrder.LayoutOrder, Parent = scroll })
 	Kit.label({ Size = UDim2.new(1, 0, 0, 36), TextWrapped = true, Text = ("%s  -  Lv %d  %s%s\n%s   -   %s"):format(hero.Name, hero.Level, classDef and classDef.DisplayName or hero.ClassId, subclass and ("  /  " .. subclass.DisplayName) or "", pet and ("Pet: %s Lv %d"):format(pet.DisplayName, hero.PetLevel or 1) or "No pet", status), TextSize = 13, Parent = scroll })
 
+	if hero.IP then
+		local ip = hero.IP
+		Kit.label({ Size = UDim2.new(1, 0, 0, 34), TextWrapped = true, RichText = true, TextSize = 12, TextColor3 = C.Dim, Text = ("<b><font color=\"#ffd25a\" size=\"16\">IP %d</font></b>   Level %d  Gear %d  Skills %d  Passives %d\nPet %d  Collection %d  Subclass %d  Titles %d  Guild %d"):format(ip.Total, ip.Level, ip.Gear, ip.Skills, ip.Passives, ip.Pet, ip.Collection, ip.Subclass, ip.Titles, ip.Guild), Parent = scroll })
+	end
 	section(scroll, "STATS  (with gear, passives and pet)")
 	if hero.Sheet then
 		statGrid(scroll, hero.Sheet.Stats)
