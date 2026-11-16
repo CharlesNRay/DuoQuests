@@ -327,8 +327,8 @@ function WishAnim.Play(parent, kind, rows, onDone)
 		finished = true
 		hint.Text = "Tap to continue"
 		hint.TextColor3 = Kit.Colors.Text
-		-- closes by itself if nobody taps
-		task.delay(10, function()
+		-- closes by itself quickly, so the Wish buttons underneath are never blocked for long (the results stay in the panel)
+		task.delay(1.6, function()
 			if alive() then
 				close()
 			end
