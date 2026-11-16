@@ -6,6 +6,8 @@
 	A character is just a class (see Shared/Characters). Up to state.Player.Character.MaxCharacters cards: a filled card
 	(class, level, stage, Play) or an empty one that opens the class picker.
 ]]
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
 local Kit = require(script.Parent.Kit)
 local Branding = require(game:GetService("ReplicatedStorage"):WaitForChild("Shared").Config.Branding)
 local C = Kit.Colors
@@ -23,12 +25,141 @@ local REASONS = {
 	BadSlot = "That character no longer exists.",
 }
 
+-- The animated backdrop: a dusk sky, twinkling stars, a moon, drifting clouds, three layers of mountains and fireflies.
+-- Positions are fractions of the screen so it fits any shape; everything moves in update().
+local function rnd(a, b)
+	return a + math.random() * (b - a)
+end
+
+local function buildBackground(parent)
+	local bg = { Stars = {}, Clouds = {}, Layers = {}, Flies = {} }
+	local holder = Kit.frame({ Name = "Backdrop", Size = UDim2.fromScale(1, 1), BackgroundColor3 = Color3.new(1, 1, 1), NoCorner = true, ClipsDescendants = true, ZIndex = 1, Parent = parent })
+	Kit.new("UIGradient", { Rotation = 90, Color = ColorSequence.new({
+		ColorSequenceKeypoint.new(0, Color3.fromRGB(14, 12, 40)), ColorSequenceKeypoint.new(0.55, Color3.fromRGB(70, 44, 110)),
+		ColorSequenceKeypoint.new(0.85, Color3.fromRGB(214, 96, 90)), ColorSequenceKeypoint.new(1, Color3.fromRGB(248, 170, 100)),
+	}), Parent = holder })
+	bg.Holder = holder
+
+	for _ = 1, 70 do
+		local size = rnd(1.5, 3.2)
+		local star = Kit.frame({ Size = UDim2.fromOffset(size, size), Position = UDim2.fromScale(math.random(), rnd(0, 0.6)), BackgroundColor3 = Color3.fromRGB(255, 248, 225), NoCorner = true, ZIndex = 2, Parent = holder })
+		table.insert(bg.Stars, { Frame = star, Phase = rnd(0, 6.3), Speed = rnd(0.8, 2.4) })
+	end
+
+	-- the moon with a soft halo
+	local halo = Kit.frame({ Size = UDim2.fromOffset(150, 150), Position = UDim2.new(0.78, -75, 0.14, -75), BackgroundColor3 = Color3.fromRGB(255, 232, 190), BackgroundTransparency = 0.88, ZIndex = 2, Parent = holder })
+	Kit.corner(75).Parent = halo
+	local moon = Kit.frame({ Size = UDim2.fromOffset(76, 76), Position = UDim2.new(0.78, -38, 0.14, -38), BackgroundColor3 = Color3.fromRGB(255, 244, 214), ZIndex = 3, Parent = holder })
+	Kit.corner(38).Parent = moon
+	bg.Halo = halo
+
+	for i = 1, 6 do
+		local w = rnd(160, 320)
+		local cloud = Kit.frame({ Size = UDim2.fromOffset(w, rnd(26, 44)), Position = UDim2.fromScale(math.random(), rnd(0.08, 0.5)), BackgroundColor3 = Color3.fromRGB(150, 120, 190), BackgroundTransparency = rnd(0.55, 0.8), ZIndex = 3, Parent = holder })
+		Kit.corner(22).Parent = cloud
+		table.insert(bg.Clouds, { Frame = cloud, X = math.random(), Speed = rnd(0.004, 0.012), Width = w })
+	end
+
+	-- mountains: rotated squares cut off at the ground line, three layers drifting at different speeds (parallax)
+	local view = parent.AbsoluteSize
+	local H = math.max(view.Y, 300)
+	local LAYERS = {
+		{ Color = Color3.fromRGB(72, 52, 120), Base = 0.82, Size = 0.34, Speed = 6, Gap = 1.5 },
+		{ Color = Color3.fromRGB(44, 34, 84), Base = 0.9, Size = 0.3, Speed = 14, Gap = 1.35 },
+		{ Color = Color3.fromRGB(22, 18, 48), Base = 1.0, Size = 0.26, Speed = 28, Gap = 1.2 },
+	}
+	for _, spec in ipairs(LAYERS) do
+		local base = Kit.frame({ Size = UDim2.fromScale(1, 1 - spec.Base + 0.002), Position = UDim2.fromScale(0, spec.Base), BackgroundColor3 = spec.Color, NoCorner = true, ZIndex = 4, Parent = holder })
+		local clip = Kit.frame({ Size = UDim2.fromScale(1, 0.5), Position = UDim2.fromScale(0, spec.Base - 0.5), BackgroundTransparency = 1, NoCorner = true, ClipsDescendants = true, ZIndex = 4, Parent = holder })
+		local peaks, total = {}, 0
+		local span = math.max(view.X, 600) * 1.4 + 400
+		while total < span do
+			local size = H * spec.Size * rnd(0.7, 1.25)
+			local peak = Kit.frame({ Size = UDim2.fromOffset(size, size), AnchorPoint = Vector2.new(0.5, 0.5), Rotation = 45, BackgroundColor3 = spec.Color, NoCorner = true, ZIndex = 4, Parent = clip })
+			table.insert(peaks, { Frame = peak, X = total, Size = size })
+			total += size * spec.Gap * 0.7
+		end
+		table.insert(bg.Layers, { Peaks = peaks, Span = total, Speed = spec.Speed, Clip = clip })
+	end
+
+	for _ = 1, 26 do
+		local size = rnd(3, 6)
+		local fly = Kit.frame({ Size = UDim2.fromOffset(size, size), BackgroundColor3 = Color3.fromRGB(255, 226, 130), ZIndex = 6, Parent = holder })
+		Kit.corner(size).Parent = fly
+		table.insert(bg.Flies, { Frame = fly, X = math.random(), Y = rnd(0.55, 1), Sway = rnd(0, 6.3), Rise = rnd(0.01, 0.04), Speed = rnd(0.6, 1.6) })
+	end
+	return bg
+end
+
+local function updateBackground(bg, t, dt, view)
+	for _, s in ipairs(bg.Stars) do
+		s.Frame.BackgroundTransparency = 0.15 + (math.sin(t * s.Speed + s.Phase) * 0.5 + 0.5) * 0.7
+	end
+	bg.Halo.BackgroundTransparency = 0.86 + math.sin(t * 0.6) * 0.04
+	for _, c in ipairs(bg.Clouds) do
+		c.X -= c.Speed * dt
+		if c.X < -c.Width / view.X then
+			c.X = 1.05
+		end
+		c.Frame.Position = UDim2.new(c.X, 0, c.Frame.Position.Y.Scale, 0)
+	end
+	for _, layer in ipairs(bg.Layers) do
+		for _, p in ipairs(layer.Peaks) do
+			p.X -= layer.Speed * dt
+			if p.X < -p.Size then
+				p.X += layer.Span
+			end
+			p.Frame.Position = UDim2.new(0, p.X, 1, 0)
+		end
+	end
+	for _, f in ipairs(bg.Flies) do
+		f.Y -= f.Rise * dt
+		if f.Y < 0.5 then
+			f.Y = 1.02
+			f.X = math.random()
+		end
+		f.Frame.Position = UDim2.new(f.X + math.sin(t * f.Speed + f.Sway) * 0.02, 0, f.Y, 0)
+		f.Frame.BackgroundTransparency = 0.2 + (math.sin(t * 3 * f.Speed + f.Sway) * 0.5 + 0.5) * 0.6
+	end
+end
+
 function MainMenu.new(root, call, extra, CharacterScreen)
 	local self = setmetatable({ Visible = false, Creating = false, Message = nil }, MainMenu)
 	self.Call, self.Extra, self.CharacterScreen = call, extra, CharacterScreen
-	self.Frame = Kit.frame({ Name = "MainMenu", Size = UDim2.fromScale(1, 1), BackgroundColor3 = Color3.fromRGB(14, 16, 28), NoCorner = true, Visible = false, Active = true, ZIndex = 60, Parent = root })
-	Kit.new("UIGradient", { Color = ColorSequence.new(Color3.fromRGB(70, 60, 120), Color3.fromRGB(14, 16, 28)), Rotation = 90, Parent = self.Frame })
-	self.Body = Kit.frame({ Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1, NoCorner = true, ZIndex = 61, Parent = self.Frame })
+	-- its own ScreenGui that ignores the top bar inset, so the backdrop really covers the whole screen
+	local gui = Kit.new("ScreenGui", { Name = "DuoQuestMenu", ResetOnSpawn = false, IgnoreGuiInset = true, DisplayOrder = 100, Enabled = false, ZIndexBehavior = Enum.ZIndexBehavior.Sibling, Parent = Players.LocalPlayer:WaitForChild("PlayerGui") })
+	self.Gui = gui
+	self.Frame = Kit.frame({ Name = "MainMenu", Size = UDim2.fromScale(1, 1), BackgroundColor3 = Color3.fromRGB(14, 16, 28), NoCorner = true, Active = true, ZIndex = 1, Parent = gui })
+	self.Bg = buildBackground(self.Frame)
+	local scale = Kit.new("UIScale", {})
+	self.Body = Kit.frame({ Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1, NoCorner = true, ZIndex = 10, Parent = self.Frame })
+	scale.Parent = self.Body
+	local function fit()
+		local view = gui.AbsoluteSize
+		local s = math.clamp(math.min(view.X / 800, view.Y / 470), 0.5, 2)
+		scale.Scale = s
+		self.Body.Size = UDim2.fromOffset(view.X / s, view.Y / s)
+	end
+	gui:GetPropertyChangedSignal("AbsoluteSize"):Connect(fit)
+	fit()
+	local last = os.clock()
+	RunService.RenderStepped:Connect(function()
+		local now = os.clock()
+		local dt = math.min(0.1, now - last)
+		last = now
+		if not self.Visible then
+			return
+		end
+		updateBackground(self.Bg, now, dt, gui.AbsoluteSize)
+		-- the title floats and its gold / blue shine sweeps across
+		if self.TitleHolder and self.TitleHolder.Parent then
+			self.TitleHolder.Position = UDim2.fromOffset(0, math.sin(now * 1.6) * 3)
+			local sweep = (now * 0.35) % 2 - 0.5
+			for _, g in ipairs(self.TitleGradients or {}) do
+				g.Offset = Vector2.new(sweep * 1.6 - 0.8, 0)
+			end
+		end
+	end)
 	extra.PlaySlot = function(slot)
 		return self:Play(slot)
 	end
@@ -38,13 +169,13 @@ end
 function MainMenu:Show(state)
 	self.Visible = true
 	self.Creating = false
-	self.Frame.Visible = true
+	self.Gui.Enabled = true
 	self:Render(state)
 end
 
 function MainMenu:Hide()
 	self.Visible = false
-	self.Frame.Visible = false
+	self.Gui.Enabled = false
 	self.Extra.MenuCreate = false
 end
 
@@ -59,7 +190,7 @@ function MainMenu:Play(slot)
 	return false, reason
 end
 
-local STAGE_W, STAGE_H = 700, 380
+local STAGE_W, STAGE_H = 700, 400
 
 local function divider(parent, y, z)
 	Kit.frame({ Size = UDim2.new(1, -28, 0, 1), Position = UDim2.fromOffset(14, y), BackgroundColor3 = C.Dim, BackgroundTransparency = 0.75, NoCorner = true, ZIndex = z, Parent = parent })
@@ -95,12 +226,40 @@ function MainMenu:Render(state)
 	end
 	self.Extra.MenuCreate = false
 
-	-- title block
+	-- title block: DUO (gold) and QUEST (blue) with crossed swords between, a drop shadow, a stroke and a moving shine
+	local holder = Kit.frame({ Name = "Title", Size = UDim2.new(1, 0, 0, 70), BackgroundTransparency = 1, NoCorner = true, ZIndex = 62, Parent = stage })
+	self.TitleHolder = holder
+	self.TitleGradients = {}
 	if Branding.LogoImage ~= "" then
-		Kit.new("ImageLabel", { Size = UDim2.fromOffset(52, 52), Position = UDim2.new(0.5, -26, 0, -6), BackgroundTransparency = 1, Image = Branding.LogoImage, ScaleType = Enum.ScaleType.Fit, ZIndex = 62, Parent = stage })
+		Kit.new("ImageLabel", { Size = UDim2.fromOffset(64, 64), Position = UDim2.new(0.5, -32, 0, -34), BackgroundTransparency = 1, Image = Branding.LogoImage, ScaleType = Enum.ScaleType.Fit, ZIndex = 63, Parent = holder })
+	else
+		Kit.label({ Size = UDim2.fromOffset(50, 40), Position = UDim2.new(0.5, -25, 0, -2), Text = "⚔", TextSize = 34, TextXAlignment = Enum.TextXAlignment.Center, TextColor3 = Color3.fromRGB(255, 232, 150), TextWrapped = false, ZIndex = 64, Parent = holder })
 	end
-	Kit.label({ Size = UDim2.new(1, 0, 0, 44), Position = UDim2.fromOffset(0, if Branding.LogoImage ~= "" then 44 else 0), Text = "DUO QUEST", TextSize = if Branding.LogoImage ~= "" then 28 else 38, Font = Enum.Font.GothamBlack, TextColor3 = C.Accent, TextXAlignment = Enum.TextXAlignment.Center, ZIndex = 62, Parent = stage })
-	Kit.label({ Size = UDim2.new(1, 0, 0, 18), Position = UDim2.fromOffset(0, 46), Text = "SELECT A CHARACTER", TextSize = 12, Font = Enum.Font.GothamBold, TextColor3 = C.Dim, TextXAlignment = Enum.TextXAlignment.Center, ZIndex = 62, Parent = stage })
+	local function word(text, anchorRight, warm)
+		local function make(color, dx, dy, z, stroke)
+			local l = Kit.label({
+				Size = UDim2.fromOffset(300, 54), AnchorPoint = Vector2.new(if anchorRight then 1 else 0, 0), Position = UDim2.new(0.5, (if anchorRight then -30 else 30) + dx, 0, 22 + dy),
+				Text = text, TextSize = 52, Font = Enum.Font.GothamBlack, TextColor3 = color, TextXAlignment = if anchorRight then Enum.TextXAlignment.Right else Enum.TextXAlignment.Left,
+				TextWrapped = false, TextStrokeTransparency = 1, ZIndex = z, Parent = holder,
+			})
+			if stroke then
+				Kit.new("UIStroke", { Color = Color3.fromRGB(12, 8, 30), Thickness = 4, Parent = l })
+			end
+			return l
+		end
+		make(Color3.fromRGB(8, 6, 20), 3, 5, 62, false).TextTransparency = 0.45 -- shadow
+		local face = make(Color3.new(1, 1, 1), 0, 0, 63, true)
+		local gradient = Kit.new("UIGradient", {
+			Rotation = 90, Color = ColorSequence.new(
+				if warm then { ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 244, 170)), ColorSequenceKeypoint.new(0.5, Color3.fromRGB(255, 176, 60)), ColorSequenceKeypoint.new(1, Color3.fromRGB(226, 86, 44)) }
+				else { ColorSequenceKeypoint.new(0, Color3.fromRGB(200, 255, 245)), ColorSequenceKeypoint.new(0.5, Color3.fromRGB(90, 200, 235)), ColorSequenceKeypoint.new(1, Color3.fromRGB(42, 110, 226)) }),
+			Parent = face,
+		})
+		table.insert(self.TitleGradients, gradient)
+	end
+	word("DUO", true, true)
+	word("QUEST", false, false)
+	Kit.label({ Size = UDim2.new(1, 0, 0, 18), Position = UDim2.fromOffset(0, 80), Text = "SELECT A CHARACTER", TextSize = 12, Font = Enum.Font.GothamBold, TextColor3 = Color3.fromRGB(220, 205, 245), TextXAlignment = Enum.TextXAlignment.Center, ZIndex = 62, Parent = stage })
 
 	local max = char and char.MaxCharacters or 2
 	local list = char and char.Characters or {}
@@ -108,7 +267,7 @@ function MainMenu:Render(state)
 	for _, class in ipairs(char and char.Classes or {}) do
 		classes[class.Id] = class
 	end
-	local cardW, cardH, gap, top = 290, 236, 28, 80
+	local cardW, cardH, gap, top = 290, 236, 28, 108
 	local total = max * cardW + (max - 1) * gap
 	local inGame = char and char.InGame
 	for index = 1, max do
