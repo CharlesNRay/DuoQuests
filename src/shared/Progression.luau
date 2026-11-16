@@ -32,7 +32,7 @@ local Quests = require(script.Parent.Quests)
 local Progression = {}
 
 function Progression.XPToNext(level)
-	local need = Economy.XPBase + Economy.XPPerLevel * (level - 1)
+	local need = (Economy.XPBase + Economy.XPPerLevel * (level - 1)) * (Economy.XPNumber or 1)
 	local early = Economy.EarlyGame
 	if early and early.LevelCost then
 		-- the first levels are cheaper, fading back to the full cost a few levels later
@@ -92,7 +92,7 @@ function Progression.ClearRewards(stage, isFrontier, bonuses)
 	end
 	return {
 		Gold = math.max(1, math.floor((Economy.GoldCurve.Base * Economy.GoldCurve.Growth ^ stage + Economy.GoldCurve.PerStage * stage) * replay * goldFactor)),
-		XP = math.max(1, math.floor((Economy.XPRewardBase + Economy.XPRewardPerStage * stage) * factor * xpFactor * (Economy.XPScale or 1))),
+		XP = math.max(1, math.floor((Economy.XPRewardBase + Economy.XPRewardPerStage * stage) * factor * xpFactor * (Economy.XPScale or 1) * (Economy.XPNumber or 1))),
 		Shards = math.max(1, math.floor(shards * replay)), -- shards ignore RewardScale: unlock costs are tuned for them
 	}
 end

@@ -20,7 +20,9 @@
 	Ranger (steady ranged, pets), Rogue (fast, crits) and Summoner (minions paid for in health, and life drain).
 ]]
 
-return {
+local Economy = require(script.Parent.Economy)
+
+local Classes = {
 	Warrior = {
 		Id = "Warrior",
 		DisplayName = "Warrior",
@@ -257,3 +259,16 @@ return {
 		Subclasses = {},
 	},
 }
+
+-- every health, attack and defense number is NumberScale times bigger (see Config/Economy)
+for _, class in pairs(Classes) do
+	for _, group in ipairs({ class.BaseStats, class.GrowthPerLevel }) do
+		for _, stat in ipairs({ "MaxHealth", "Attack", "Defense" }) do
+			if group[stat] then
+				group[stat] *= Economy.NumberScale
+			end
+		end
+	end
+end
+
+return Classes

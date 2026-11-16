@@ -7,17 +7,8 @@ local C = Kit.Colors
 
 local MarketScreen = {}
 
-local function commas(n)
-	local s = tostring(math.floor(n))
-	while true do
-		local nxt, k = s:gsub("^(-?%d+)(%d%d%d)", "%1,%2")
-		s = nxt
-		if k == 0 then
-			break
-		end
-	end
-	return s
-end
+local NumberFormat = require(game:GetService("ReplicatedStorage"):WaitForChild("Shared").Util.NumberFormat)
+local commas = NumberFormat.Short
 
 local REASONS = { SoldOut = "Sold out for now.", NotEnough = "Not enough gold.", Unknown = "That is not for sale." }
 

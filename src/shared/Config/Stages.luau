@@ -19,7 +19,7 @@ return {
 		{ "Bat", "Wraith", "CrystalBeetle" },
 		{ "Scorpion", "Mummy", "SandSerpent" },
 		{ "SnowWolf", "FrostImp", "Yeti" },
-		{ "FireElemental", "LavaCrab", "Imp" },
+		{ "FireElemental", "MagmaHound", "Imp" },
 		{ "Frog", "BogWraith", "Spider" },
 		{ "Skeleton", "Ghost", "RuinGolem" },
 		{ "SkyHarpy", "StormSprite", "Bat" },

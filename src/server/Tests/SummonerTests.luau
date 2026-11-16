@@ -192,7 +192,7 @@ return function(modulesOverride)
 
 	-- spirit guardian heals allies by itself
 	sim, hero = fight({ "GuardianSpirit" }, function(h, foe)
-		foe.Stats.Attack = 9
+		foe.Stats.Attack = 90
 		foe.Stats.AttackSpeed = 1
 		h.Stats.AttackSpeed = 0.0001
 	end, 15)

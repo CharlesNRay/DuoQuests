@@ -76,6 +76,7 @@ local Ultimates = require(script.Parent.Parent.Config.Ultimates)
 local Minions = require(script.Parent.Parent.Config.Minions)
 local AbilityStats = require(script.Parent.AbilityStats)
 local PetConfig = require(script.Parent.Parent.Config.Pets)
+local EconomyConfig = require(script.Parent.Parent.Config.Economy)
 local StatCalc = require(script.Parent.StatCalc)
 local EnemyConfig = require(script.Parent.Parent.Config.Enemies)
 
@@ -737,7 +738,8 @@ function Simulation:DealDamage(source, target, amount, info)
 
 	-- Defense mitigation. (Magical damage also uses Defense for now; a
 	-- separate magic resistance stat can be added later.)
-	ctx.Amount = ctx.Amount * 100 / (100 + math.max(0, self:GetStat(target, "Defense")))
+	local defenseK = 100 * EconomyConfig.NumberScale
+	ctx.Amount = ctx.Amount * defenseK / (defenseK + math.max(0, self:GetStat(target, "Defense")))
 	ctx.Amount *= self:GetStat(target, "DamageTaken")
 
 	self.Hooks:Fire("OnBeforeDamage", ctx)

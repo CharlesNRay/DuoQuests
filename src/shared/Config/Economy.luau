@@ -9,6 +9,11 @@
 
 return {
 	-- Player level --------------------------------------------------------
+	-- NumberScale makes every health / attack / defense number this many times bigger (heroes, enemies, gear, bosses) without
+	-- changing the balance: defense is scaled with it (see Simulation) and percentages stay percentages.
+	NumberScale = 10,
+	-- XPNumber does the same for experience (needed to level, earned per fight) so levels fly by in bigger numbers.
+	XPNumber = 20,
 	MaxLevel = 120,
 	XPBase = 50, -- XP needed to go from level 1 to 2
 	XPPerLevel = 25, -- each later level needs this much more
@@ -24,7 +29,7 @@ return {
 	EarlyGame = { LastFullStage = 10, FadeStages = 4, XP = 1.8, LevelCost = 0.65, LastCheapLevel = 9, LevelFade = 6 },
 	XPRewardBase = 10,
 	XPRewardPerStage = 3,
-	PetXPPerClear = 12, -- XP the active pet earns from every won fight
+	PetXPPerClear = 240, -- XP the active pet earns from every won fight
 	ShardsPerClear = 1, -- plus one extra per ShardStageStep stages
 	ShardStageStep = 10,
 	BossShardBonus = 5, -- extra shards for clearing a boss stage

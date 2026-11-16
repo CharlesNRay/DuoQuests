@@ -21,6 +21,7 @@ local Debris = game:GetService("Debris")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Abilities = require(Shared.Config.Abilities)
+local NumberFormat = require(Shared.Util.NumberFormat)
 local Ultimates = require(Shared.Config.Ultimates)
 local Actor = require(script.Parent.Actor)
 local StatusLook = require(script.Parent.StatusLook)
@@ -369,7 +370,7 @@ function Replay:_event(e)
 			-- health paid for a dark spell, or a minion consumed: a dark puff and the number, no strike
 			target:SetHealth(e.TargetHealth or target.Health)
 			flash(scene, target:Pos(), Color3.fromRGB(150, 40, 70), 4)
-			floatText(scene, target:Pos() + Vector3.new(0, 1.5, 0), "-" .. math.floor((e.Amount or 0) + 0.5), Color3.fromRGB(190, 60, 100), 22)
+			floatText(scene, target:Pos() + Vector3.new(0, 1.5, 0), "-" .. NumberFormat.Short(e.Amount or 0), Color3.fromRGB(190, 60, 100), 22)
 			return
 		end
 		local dot = StatusLook.DotTag(e.Tag)
@@ -377,7 +378,7 @@ function Replay:_event(e)
 			-- a damage-over-time tick: no strike, just a tinted pulse on the victim and a coloured number
 			target:SetHealth(e.TargetHealth or target.Health)
 			target:Tint(dot.Color, 0.4, 0.35)
-			floatText(scene, target:Pos() + Vector3.new(0, 1.5, 0), dot.Glyph .. math.floor((e.Amount or 0) + 0.5), dot.Color, 18)
+			floatText(scene, target:Pos() + Vector3.new(0, 1.5, 0), dot.Glyph .. NumberFormat.Short(e.Amount or 0), dot.Color, 18)
 			return
 		end
 		source:Attack(source.AttackStyle, target.X)
@@ -392,14 +393,14 @@ function Replay:_event(e)
 		target:Flinch()
 		target:Absorb(e.Absorbed)
 		target:SetHealth(e.TargetHealth or target.Health)
-		local text = tostring(math.floor((e.Amount or 0) + 0.5)) .. (if e.Crit then "!" else "")
+		local text = NumberFormat.Short(e.Amount or 0) .. (if e.Crit then "!" else "")
 		floatText(scene, target:Pos() + Vector3.new(0, 1.5, 0), text, if e.Crit then Color3.fromRGB(255, 210, 60) else Color3.new(1, 1, 1), if e.Crit then 28 else 22)
 	elseif t == "Heal" then
 		local target = actorFor(self, e.Target)
 		if target then
 			target:SetHealth(e.TargetHealth or target.Health)
 			target:HealFx()
-			floatText(scene, target:Pos() + Vector3.new(0, 1.5, 0), "+" .. math.floor((e.Amount or 0) + 0.5), Color3.fromRGB(110, 235, 140), 22)
+			floatText(scene, target:Pos() + Vector3.new(0, 1.5, 0), "+" .. NumberFormat.Short(e.Amount or 0), Color3.fromRGB(110, 235, 140), 22)
 			safely(SkillEffects.Heal, scene, e.Tag, target:Pos())
 		end
 	elseif t == "Status" then

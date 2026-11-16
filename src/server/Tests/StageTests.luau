@@ -64,7 +64,7 @@ return function(modulesOverride)
 	local gained = Progression.AddXP(p.Season, Progression.XPToNext(1) + 5)
 	check("Enough XP levels you up and keeps the remainder", gained == 1 and p.Season.Level == 2 and p.Season.XP == 5)
 	local many = ProfileTemplate.New()
-	Progression.AddXP(many.Season, 1000000)
+	Progression.AddXP(many.Season, 100000000000)
 	check("XP stops at the max level", many.Season.Level == EconomyConfig.MaxLevel and many.Season.XP == 0)
 
 	-- Clear rewards ------------------------------------------------------------

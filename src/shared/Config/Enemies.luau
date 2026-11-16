@@ -8,7 +8,9 @@
 	Every number is a PLACEHOLDER to be tuned during playtesting.
 ]]
 
-return {
+local Economy = require(script.Parent.Economy)
+
+local Enemies = {
 	Slime = {
 		Id = "Slime",
 		DisplayName = "Slime",
@@ -201,12 +203,12 @@ return {
 		BaseStats = { MaxHealth = 80, Attack = 9, Defense = 3, AttackSpeed = 1.0, CritChance = 0.03 },
 		Abilities = { { Id = "EmberBolt", Level = 1, Timer = 4 } },
 	},
-	LavaCrab = {
-		Id = "LavaCrab", DisplayName = "Lava Crab",
-		Look = { Shape = "Crab", Color = { 210, 80, 50 }, Size = 4 },
+	MagmaHound = {
+		Id = "MagmaHound", DisplayName = "Magma Hound",
+		Look = { Shape = "Beast", Color = { 230, 84, 38 }, Size = 4.2 },
 		IsBoss = false, DamageType = "Physical",
 		BaseStats = { MaxHealth = 110, Attack = 7, Defense = 9, AttackSpeed = 0.8, CritChance = 0.03 },
-		Abilities = { { Id = "ShellGuard", Level = 1, Timer = 4 } },
+		Abilities = { { Id = "FeralPounce", Level = 1, Timer = 4 } },
 	},
 	Imp = {
 		Id = "Imp", DisplayName = "Ember Imp",
@@ -334,3 +336,13 @@ return {
 		BaseStats = { MaxHealth = 1, Attack = 1, Defense = 1, AttackSpeed = 1, CritChance = 0 },
 	},
 }
+
+for _, enemy in pairs(Enemies) do
+	for _, stat in ipairs({ "MaxHealth", "Attack", "Defense" }) do
+		if enemy.BaseStats and enemy.BaseStats[stat] then
+			enemy.BaseStats[stat] *= Economy.NumberScale
+		end
+	end
+end
+
+return Enemies

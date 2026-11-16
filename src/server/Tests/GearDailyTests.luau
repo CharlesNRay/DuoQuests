@@ -128,7 +128,7 @@ return function(modulesOverride)
 	local geared = StatCalc.NewPartyMember("b", "B", "Warrior", 10, { Equipped = { Weapon = { Id = "x", Slot = "Weapon", Rarity = "Rare", Power = 20 }, Armor = { Id = "y", Slot = "Armor", Rarity = "Common", Power = 20 } } })
 	check("Gear adds attack and health", geared.Stats.Attack > plain.Stats.Attack and geared.Stats.MaxHealth > plain.Stats.MaxHealth)
 	local statName, value = Gear.StatOf({ Slot = "Weapon", Rarity = "Common", Power = 20 })
-	check("Weapon stat follows the formula", statName == "Attack" and math.abs(value - (0.3 + 0.05 * 20)) < 1e-9)
+	check("Weapon stat follows the formula", statName == "Attack" and math.abs(value - (0.3 + 0.05 * 20) * 10) < 1e-9)
 	local snap = Party.MakeSnapshot(profile, 1, "P", nil, 0)
 	profile.Season.Equipment.Equipped.Weapon = { Id = "w", Slot = "Weapon", Rarity = "Epic", Power = 9 }
 	local snap2 = Party.MakeSnapshot(profile, 1, "P", nil, 0)

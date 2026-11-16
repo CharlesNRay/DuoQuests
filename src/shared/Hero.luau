@@ -19,11 +19,13 @@ local function pct(value)
 	return ("%d%%"):format(math.floor(value * 100 + 0.5))
 end
 
+local NumberFormat = require(script.Parent.Util.NumberFormat)
+
 local function plain(value)
 	if value < 10 then
 		return ("%.1f"):format(value)
 	end
-	return tostring(math.floor(value + 0.5))
+	return NumberFormat.Short(value)
 end
 
 function Hero.Sheet(info)

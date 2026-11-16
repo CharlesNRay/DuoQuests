@@ -22,7 +22,7 @@
 
 return {
 	MaxLevel = 50,
-	XPPerLevel = 200, -- pet XP to go from level L to L+1 is this * L (pet food and fighting)
+	XPPerLevel = 4000, -- pet XP to go from level L to L+1 is this * L (pet food and fighting)
 	-- Duplicates are banked as copies (Permanent.PetCopies). The player spends RankCost[rank] copies to rank the
 	-- pet up by hand (Permanent.PetRanks), up to MaxRank. A rank adds RankBonus (a fraction) of the pet's stats and
 	-- raises its skill level by one. Pets level separately from food/fighting.

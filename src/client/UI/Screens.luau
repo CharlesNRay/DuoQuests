@@ -458,7 +458,7 @@ function Screens.DamageMeter(parent, stats, widthScale)
 		Kit.frame({ Size = UDim2.new(math.max(r.Damage / top, 0.01), 0, 1, 0), BackgroundColor3 = fill, BackgroundTransparency = if r.Kind == "Hero" then 0.25 else 0.5, Parent = bar })
 		local prefix = if r.Kind == "Pet" then "🐾 " elseif r.Kind == "Minion" then "💀 " else ""
 		Kit.label({ Size = UDim2.new(0.62, 0, 1, 0), Position = UDim2.fromOffset(6, 0), Text = prefix .. r.Name, TextSize = 12, TextWrapped = false, TextTruncate = Enum.TextTruncate.AtEnd, Parent = bar })
-		Kit.label({ Size = UDim2.new(0.38, -8, 1, 0), Position = UDim2.new(0.62, 0, 0, 0), TextXAlignment = Enum.TextXAlignment.Right, TextSize = 12, TextWrapped = false, Text = ("%.0f/s  %d%%"):format(r.Dps, math.floor(r.Share * 100 + 0.5)), Parent = bar })
+		Kit.label({ Size = UDim2.new(0.38, -8, 1, 0), Position = UDim2.new(0.62, 0, 0, 0), TextXAlignment = Enum.TextXAlignment.Right, TextSize = 12, TextWrapped = false, Text = ("%s/s  %d%%"):format(require(Shared.Util.NumberFormat).Short(r.Dps), math.floor(r.Share * 100 + 0.5)), Parent = bar })
 	end
 end
 

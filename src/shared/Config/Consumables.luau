@@ -49,13 +49,13 @@ return {
 			Price = { Base = 9000, PerStage = 600 }, Drop = 10,
 		},
 		PetFood = {
-			Id = "PetFood", DisplayName = "Pet Snack", Kind = "PetFood", Glyph = "🍖", Rarity = "Common", PetXP = 80,
-			Description = "Feed it to a pet for 80 pet XP.",
+			Id = "PetFood", DisplayName = "Pet Snack", Kind = "PetFood", Glyph = "🍖", Rarity = "Common", PetXP = 1600,
+			Description = "Feed it to a pet for 1600 pet XP.",
 			Price = { Base = 2400, PerStage = 180 }, Drop = 40,
 		},
 		GrandPetFood = {
-			Id = "GrandPetFood", DisplayName = "Pet Feast", Kind = "PetFood", Glyph = "🍗", Rarity = "Rare", PetXP = 500,
-			Description = "Feed it to a pet for 500 pet XP.",
+			Id = "GrandPetFood", DisplayName = "Pet Feast", Kind = "PetFood", Glyph = "🍗", Rarity = "Rare", PetXP = 10000,
+			Description = "Feed it to a pet for 10000 pet XP.",
 			Price = { Base = 13200, PerStage = 840 }, Drop = 6,
 		},
 		PetWish = {

@@ -330,4 +330,20 @@ return {
 	Order = { "Berserker", "Guardian", "Priest", "Templar", "Pyromancer", "FrostWeaver", "Sharpshooter", "Beastmaster", "Assassin", "Duelist", "Necromancer", "SpiritCaller",
 		-- tier 2 (level 90): the final form of the path you chose
 		"Warlord", "Paragon", "Archon", "Crusader", "Cataclysm", "Glacialist", "Marshal", "Wildlord", "Nightblade", "Swordsaint", "Lich", "AncestralSage" },
+	-- How a path changes the stats you gain each level AFTER you choose it: multipliers on the class's per-level growth.
+	-- Offensive paths grow Attack faster and Health / Defense slower, protective paths the other way round.
+	Growth = {
+		Berserker = { Attack = 1.6, Defense = 0.6, MaxHealth = 0.8 },
+		Guardian = { Attack = 0.6, Defense = 1.6, MaxHealth = 1.5 },
+		Priest = { Attack = 0.7, Defense = 0.9, MaxHealth = 1.2 },
+		Templar = { Attack = 1.4, Defense = 1.3, MaxHealth = 1.0 },
+		Pyromancer = { Attack = 1.7, Defense = 0.6, MaxHealth = 0.7 },
+		FrostWeaver = { Attack = 1.1, Defense = 1.4, MaxHealth = 1.1 },
+		Sharpshooter = { Attack = 1.7, Defense = 0.7, MaxHealth = 0.7 },
+		Beastmaster = { Attack = 0.9, Defense = 1.2, MaxHealth = 1.3 },
+		Assassin = { Attack = 1.7, Defense = 0.6, MaxHealth = 0.7 },
+		Duelist = { Attack = 1.3, Defense = 1.3, MaxHealth = 1.0 },
+		Necromancer = { Attack = 1.1, Defense = 0.9, MaxHealth = 1.3 },
+		SpiritCaller = { Attack = 0.8, Defense = 1.2, MaxHealth = 1.4 },
+	},
 }

@@ -14,13 +14,14 @@ local Passives = require(script.Parent.Parent.Passives)
 local Pets = require(script.Parent.Parent.Pets)
 local Gear = require(script.Parent.Parent.Gear)
 local Subclasses = require(script.Parent.Parent.Subclasses)
+local SubclassConfig = require(script.Parent.Parent.Config.Subclasses)
 local Minions = require(script.Parent.Parent.Config.Minions)
 local Entity = require(script.Parent.Entity)
 
 local StatCalc = {}
 
 -- Base class stats plus per-level growth.
-function StatCalc.ClassStats(classId, level)
+function StatCalc.ClassStats(classId, level, subclassId)
 	local class = Classes[classId]
 	assert(class ~= nil, "Unknown class: " .. tostring(classId))
 
@@ -28,6 +29,17 @@ function StatCalc.ClassStats(classId, level)
 	for statName, baseValue in pairs(class.BaseStats) do
 		local growth = class.GrowthPerLevel[statName] or 0
 		stats[statName] = baseValue + growth * (level - 1)
+	end
+	-- a path changes what each level after choosing it gives (offence paths: more Attack, less Health and Defense, and so on)
+	for _, def in ipairs(Subclasses.Chain(subclassId)) do
+		local mults = SubclassConfig.Growth[def.Id]
+		if mults then
+			local levels = math.max(0, level - def.UnlockLevel)
+			for statName, mult in pairs(mults) do
+				local growth = class.GrowthPerLevel[statName] or 0
+				stats[statName] = (stats[statName] or 0) + growth * (mult - 1) * levels
+			end
+		end
 	end
 	return stats
 end
@@ -94,7 +106,7 @@ function StatCalc.NewPartyMember(id, name, classId, level, options)
 	assert(class ~= nil, "Unknown class: " .. tostring(classId))
 	options = options or {}
 
-	local stats = StatCalc.ClassStats(classId, level)
+	local stats = StatCalc.ClassStats(classId, level, options.SubclassId)
 	applyPassives(stats, classId, options.PassiveIds, options.PassiveLevels)
 	if options.SubclassId then
 		applyMods(stats, Subclasses.Mods(options.SubclassId))

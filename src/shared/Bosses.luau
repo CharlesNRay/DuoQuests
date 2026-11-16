@@ -94,7 +94,7 @@ end
 
 -- what a typical party deals in one fight at this frontier (see Config.World.Tiers: thresholds are multiples of it)
 function Bosses.DamageScale(frontier)
-	return 260 * (1 + math.max(0, frontier - 1) * 0.22)
+	return 260 * require(script.Parent.Config.Economy).NumberScale * (1 + math.max(0, frontier - 1) * 0.22)
 end
 
 function Bosses.TiersReached(cfg, damage, frontier)
