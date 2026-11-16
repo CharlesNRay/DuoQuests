@@ -25,7 +25,7 @@
 	  BuyCosmetic(id) / EquipCosmetic(slot, id|nil)   auras, kill effects, name colours, titles (Sunstones)
 	  Inspect(userId)                   public card of a party member on this server
 	  ChooseSubclass(subclassId)        pick a subclass path (once per season)
-	  EquipGear(itemId, wornSlot?) / UnequipGear(slot) / SellGear(itemId)   equipment (8 worn slots)
+	  EquipGear(itemId, wornSlot?) / EquipBestGear() (highest Item Power of every type) / UnequipGear(slot) / SellGear(itemId)   equipment (8 worn slots)
 	  UseConsumable(id, petId?) / BuyConsumable(id, count)   the Stash: boosts, pet food, Merchant supplies
 	  ClaimDaily()                      today's login reward
 	  ClaimQuest(index) / ClaimQuestBonus() / ClaimWeeklyQuest(index) / ClaimWeeklyBonus() / BuyPremium(itemId) / ClaimPass(level|"All")   daily quests and the season pass
@@ -477,6 +477,14 @@ function handlers.EquipGear(player, profile, itemId, wornSlot)
 		afterBuildChange(player)
 	end
 	return ok, reason
+end
+
+function handlers.EquipBestGear(player, profile)
+	local ok, changed = Gear.EquipBest(profile)
+	if ok and changed > 0 then
+		afterBuildChange(player)
+	end
+	return ok, changed
 end
 
 function handlers.UnequipGear(player, profile, slotName)

@@ -23,6 +23,7 @@
 	  Gear.Replaced(equipped, type)         -> the worn item an item of that type would replace (nil if a slot is free)
 	  Gear.Migrate(profile)                 old saves: Trinket -> Amulet
 	  Gear.FormatStat(stat, value)          -> "+3.2% Crit" style text
+	  Gear.EquipBest(profile)               -> true, slots changed: wears the highest Item Power of each type
 	  Gear.Unequip(profile, slot)           reasons: "BadSlot", "Empty", "BagFull"
 	  Gear.Sell(profile, itemId)            -> true, gold   reasons: "NotFound"
 	  Gear.SellValue(item)                  -> gold
@@ -412,6 +413,99 @@ function Gear.Equip(profile, itemId, wornSlot)
 		table.insert(equipment.Inventory, previous)
 	end
 	return true
+end
+
+-- Wear the highest Item Power of every type: for each worn slot type (a type with two slots, rings, keeps the best two),
+-- the best items from the worn gear and the bag are put on and the rest go back in the bag. Ties keep what is already
+-- worn. Set bonuses are not counted, only Item Power. -> true, number of slots that changed
+function Gear.EquipBest(profile)
+	local equipment = bag(profile)
+	local worn, spare = {}, {}
+	for _, slotName in ipairs(Config.SlotOrder) do
+		local item = equipment.Equipped[slotName]
+		if item then
+			worn[item.Id] = slotName
+		end
+	end
+	local oldSlot = {}
+	for slotName, item in pairs(equipment.Equipped) do
+		oldSlot[slotName] = item
+	end
+	local pool = {}
+	for _, item in pairs(equipment.Equipped) do
+		table.insert(pool, item)
+	end
+	for _, item in ipairs(equipment.Inventory) do
+		table.insert(pool, item)
+	end
+	local newEquipped, used = {}, {}
+	local types = {}
+	for _, slotName in ipairs(Config.SlotOrder) do
+		local itemType = Config.WornType[slotName]
+		if not types[itemType] then
+			types[itemType] = {}
+		end
+		table.insert(types[itemType], slotName)
+	end
+	for itemType, slots in pairs(types) do
+		local candidates = {}
+		for _, item in ipairs(pool) do
+			if item.Slot == itemType then
+				table.insert(candidates, item)
+			end
+		end
+		table.sort(candidates, function(a, b)
+			local pa, pb = Gear.ItemPower(a), Gear.ItemPower(b)
+			if pa ~= pb then
+				return pa > pb
+			end
+			local wa, wb = worn[a.Id] ~= nil, worn[b.Id] ~= nil
+			if wa ~= wb then
+				return wa
+			end
+			return tostring(a.Id) < tostring(b.Id)
+		end)
+		for index, slotName in ipairs(slots) do
+			local item = candidates[index]
+			if item then
+				-- an item already worn in one of this type's slots stays where it is
+				newEquipped[slotName] = item
+				used[item.Id] = true
+			end
+		end
+		-- keep a worn item in its own slot when it is still among the chosen ones
+		for _, slotName in ipairs(slots) do
+			local current = oldSlot[slotName]
+			if current and used[current.Id] and newEquipped[slotName] ~= current then
+				for other, item in pairs(newEquipped) do
+					if item == current and Config.WornType[other] == itemType then
+						newEquipped[other] = newEquipped[slotName]
+						newEquipped[slotName] = current
+						break
+					end
+				end
+			end
+		end
+	end
+	for _, item in ipairs(equipment.Inventory) do
+		if not used[item.Id] then
+			table.insert(spare, item)
+		end
+	end
+	for _, item in pairs(oldSlot) do
+		if not used[item.Id] then
+			table.insert(spare, item)
+		end
+	end
+	local changed = 0
+	for _, slotName in ipairs(Config.SlotOrder) do
+		if newEquipped[slotName] ~= oldSlot[slotName] then
+			changed += 1
+		end
+	end
+	equipment.Equipped = newEquipped
+	equipment.Inventory = spare
+	return true, changed
 end
 
 function Gear.Unequip(profile, slotName)

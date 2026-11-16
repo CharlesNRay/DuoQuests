@@ -235,3 +235,6 @@ Newest first.
 - API: CreateCharacter (once), UpdateCharacter (free), RenameCharacter (100 Sunstones). A new player (or any existing player who has no character yet) lands in the creator; the 🧍 button reopens it as the Character screen.
 - The name shows in the HUD and the party. The look is drawn on the hero in the FIGHT scene (blocky body, or the Roblox avatar if the toggle is on). The plaza avatar is still the player's Roblox avatar.
 - Not built: switching class after creation (needs a rule for loadouts, party snapshots and class leaderboards), name uniqueness, a plaza avatar that matches the creator look.
+
+## Equip best gear (built)
+- Bag screen: "Equip best" wears the highest Item Power of every gear type (rings keep the best two); ties keep what is worn; nothing is lost. Set bonuses are not counted, only Item Power. `Gear.EquipBest`, API `EquipBestGear`, 7 tests.

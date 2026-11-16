@@ -314,7 +314,10 @@ function Screens.Bag(container, state, call, extra)
 		stashTab(container, state, call, extra)
 		return
 	end
-	Kit.label({ Size = UDim2.new(1, -330, 0, 32), Position = UDim2.fromOffset(190, 0), TextWrapped = true, Text = ("Bag %d/%d  -  strongest first.  Hover: green = better than what you wear."):format(#gear.Inventory, gear.Cap), TextColor3 = C.Dim, TextSize = 11, Parent = container })
+	Kit.label({ Size = UDim2.new(1, -470, 0, 32), Position = UDim2.fromOffset(190, 0), TextWrapped = true, Text = ("Bag %d/%d  -  strongest first.  Hover: green = better than what you wear."):format(#gear.Inventory, gear.Cap), TextColor3 = C.Dim, TextSize = 11, Parent = container })
+	Kit.button({ Name = "EquipBest", Size = UDim2.fromOffset(130, 30), Position = UDim2.new(1, -266, 0, 0), Text = "Equip best", BackgroundColor3 = C.Good, TextColor3 = C.Bg, Parent = container }, function()
+		call("EquipBestGear")
+	end)
 	Kit.button({ Size = UDim2.fromOffset(130, 30), Position = UDim2.new(1, -130, 0, 0), Text = if compact then "View: icons" else "View: list", Parent = container }, function()
 		extra.BagCompact = not compact
 		Screens.Bag(container, state, call, extra)
