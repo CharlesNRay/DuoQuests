@@ -9,7 +9,7 @@
 	                    the small buttons (Plaza, Home, Fight log, Battle view); bottom-centre menu dock
 	                    (Hero Skills Pets Party Gear Bag; passives live in Skills, Ranks at the plaza board)
 	  Combat  (only while watching a battle) stage pill, fight timer, toast, your skill bar and the
-	                    party ultimate gauge. "Hide HUD" in the watching bar hides all of Chrome.
+	                    party ultimate gauge. "Hide HUD" in the watching bar hides the map card and menu dock (party and currencies stay).
 
 	Everything is plain Frames (no art assets).
 
@@ -180,6 +180,7 @@ function Hud.new(root)
 
 	-- bottom-centre: the menu dock -----------------------------------------------
 	local dock = Kit.frame({ Size = UDim2.fromOffset(10, 48), AutomaticSize = Enum.AutomaticSize.X, Position = UDim2.new(0.5, 0, 1, -4), AnchorPoint = Vector2.new(0.5, 1), BackgroundTransparency = 1, NoCorner = true, Parent = chrome })
+	self.Dock = dock
 	Kit.new("UIListLayout", { Padding = UDim.new(0, 4), FillDirection = Enum.FillDirection.Horizontal, SortOrder = Enum.SortOrder.LayoutOrder, HorizontalAlignment = Enum.HorizontalAlignment.Center, Parent = dock })
 	self.Rails = { dock = dock, mini = mini }
 	self.NextOrder = 0
@@ -285,7 +286,11 @@ function Hud.new(root)
 	-- Hide / show everything that is not the battle itself (only meaningful while watching).
 	function self:SetHudHidden(hidden)
 		self.HudHidden = hidden
-		self.Chrome.Visible = not hidden
+		-- the party (top-left) and the currencies (top-right) stay; only the map card and the menu dock go
+		self.MapCard.Visible = not hidden
+		if self.Dock then
+			self.Dock.Visible = not hidden
+		end
 		self.HideButton.Text = if hidden then "Show HUD" else "Hide HUD"
 	end
 
