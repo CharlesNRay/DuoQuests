@@ -52,6 +52,7 @@ local Hero = require(Shared.Hero)
 local OfflineConfig = require(Shared.Config.Offline)
 local Seasons = require(Shared.Config.Seasons)
 local Character = require(Shared.Character)
+local Characters = require(Shared.Characters)
 
 -- The name the party shows: the character creator's name, or the Roblox name until one is chosen.
 local function nameOf(player, profile)
@@ -433,6 +434,19 @@ function PartyService.RenamePlayer(player, name)
 	end
 end
 
+-- How many players are online in this player's party right now (0 when not attached).
+function PartyService.OnlineCount(player)
+	local partyId = partyOf[player.UserId]
+	local entry = partyId and hosted[partyId]
+	local n = 0
+	if entry then
+		for _ in pairs(entry.Online) do
+			n += 1
+		end
+	end
+	return n
+end
+
 function PartyService.RefreshSnapshot(player)
 	local partyId = partyOf[player.UserId]
 	local entry = partyId and hosted[partyId]
@@ -753,7 +767,7 @@ local function tickEntry(entry, currentTime)
 
 	-- Nobody fights before everyone online has picked a class (the picker is the first thing a new player sees).
 	for _, online in pairs(entry.Online) do
-		if not Character.Get(online.Profile).Created then
+		if not Characters.Entered(online.Profile) then
 			return
 		end
 	end

@@ -359,3 +359,9 @@ two paths of 3 skills, a season prize pet (Arcanix, Skyhawk, Shadowcat, Spiritli
 - Gear stat rolls vary 0.85-1.15 per piece (Roll on the gear row).
 - Pet stat units rebalanced from measured value: Attack/MaxHealth/Defense strongest, then AttackSpeed, CritMultiplier, CritChance and Haste (weakest per point, so their per-point values were raised).
 - XPScale 0.8 plus per-subclass DamageDealt/MaxHealth autotune: level 90 targets about 65 online hours (7-10 days with idle). Harness: scratchpad balance90/autotune. Measured spread after 4 rounds is roughly 42-68h (3 seeds, noisy); re-run with more seeds before launch.
+
+### Main menu and characters (2026-11-16)
+- Players.CharacterAutoLoads is off: nobody spawns until they press Play on a character at the main menu (client/UI/MainMenu).
+- A character is just a class with its own season progress. Up to 2 per player (Characters.MAX). Permanent.Slots/ActiveSlot; profile.Season is always the active character's season, the other is stashed in its slot. Old profiles migrate into slot 1.
+- Server: MakeCharacter(classId), PlayCharacter(slot) (spawns, joins party; switching mid-session re-joins the party and is refused while a partner is online: LeavePartyFirst).
+- Not yet done: delete character, per-character names, Studio visual check, switching while partnered.

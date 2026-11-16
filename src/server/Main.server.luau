@@ -7,6 +7,7 @@
 ]]
 
 local Players = game:GetService("Players")
+Players.CharacterAutoLoads = false -- nobody spawns until they pick a character at the main menu
 
 local Services = script.Parent.Services
 local DataService = require(Services.DataService)
@@ -43,9 +44,7 @@ local function onPlayerAdded(player)
 		)
 	)
 
-	PartyService.OnPlayerReady(player, profile)
-	GuildService.OnPlayerReady(player, profile)
-	ApiService.ApplyLook(player, profile)
+	GuildService.OnPlayerReady(player, profile) -- the party and avatar start when they press Play
 end
 
 Players.PlayerAdded:Connect(onPlayerAdded)

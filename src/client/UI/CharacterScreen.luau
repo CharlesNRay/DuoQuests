@@ -20,6 +20,7 @@ local BAD = Color3.fromRGB(255, 130, 120)
 local REASONS = {
 	BadClass = "Pick a class you can play.",
 	AlreadyCreated = "You already chose your class.",
+	Full = "You already have the maximum number of characters.",
 }
 
 local CharacterScreen = {}
@@ -103,7 +104,7 @@ function CharacterScreen.Character(container, state, call, extra)
 	end
 	local classes = char.Classes
 	local mine = state.Player.ClassId
-	local creating = not char.Created
+	local creating = not char.Created or extra.MenuCreate == true
 	local pick = if creating then extra.PickClass else mine
 	if pick == nil then
 		pick = if creating then classes[1].Id else mine
@@ -178,17 +179,26 @@ function CharacterScreen.Character(container, state, call, extra)
 		}, function()
 			-- call() redraws the open screen from the new state when it succeeds
 			extra.CharMsg, extra.CharMsgBad = ("You are a %s!"):format(selected.Name), false
-			local ok, reason = call("ChooseClass", selected.Id)
-			if ok then
+			local ok, reason = call("MakeCharacter", selected.Id)
+			if ok and extra.PlaySlot then
 				clearPreviewTool() -- the server hands over the real weapon
 				extra.PickClass = nil
+				extra.MenuCreate = false
+				-- the new character is the last slot
+				local fresh = extra.State and extra.State.Player.Character.Characters or {}
+				extra.PlaySlot(#fresh)
 			else
 				extra.CharMsg, extra.CharMsgBad = REASONS[reason] or "Could not choose that class.", true
 				redraw()
 			end
 		end)
 	else
-		Kit.label({ Size = UDim2.new(1, -24, 0, 40), Position = UDim2.new(0, 12, 1, -50), Text = "Your weapon is in your backpack (press its number to wield it). Classes are chosen once per character.", TextSize = 12, TextColor3 = C.Dim, Parent = details })
+		Kit.label({ Size = UDim2.new(1, -24, 0, 40), Position = UDim2.new(0, 12, 1, -50), Text = "Your weapon is in your backpack (press its number to wield it). Each character is one class.", TextSize = 12, TextColor3 = C.Dim, Parent = details })
+		if extra.OpenMenu then
+			Kit.button({ Name = "MainMenuButton", Size = UDim2.fromOffset(120, 30), Position = UDim2.new(1, -132, 0, 168), Text = "Main menu", TextSize = 13, Parent = details }, function()
+				extra.OpenMenu()
+			end)
+		end
 	end
 end
 

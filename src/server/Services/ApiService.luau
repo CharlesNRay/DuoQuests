@@ -76,6 +76,7 @@ local Cosmetics = require(Shared.Cosmetics)
 local Codes = require(Shared.Codes)
 local Classes = require(Shared.Config.Classes)
 local Character = require(Shared.Character)
+local Characters = require(Shared.Characters)
 local WeaponService = require(script.Parent.WeaponService)
 local CharacterConfig = require(Shared.Config.Character)
 local TextService = game:GetService("TextService")
@@ -259,6 +260,7 @@ function characterOf(profile)
 	return {
 		Created = c.Created, Name = c.Name, Look = c.Look, UseAvatar = c.UseAvatar, Renames = c.Renames,
 		RenameCost = CharacterConfig.RenameCost, Classes = classes,
+		MaxCharacters = Characters.MAX, Characters = Characters.List(profile), Active = Characters.Active(profile), InGame = Characters.Entered(profile),
 		NameMin = CharacterConfig.Name.Min, NameMax = CharacterConfig.Name.Max,
 		Skins = CharacterConfig.Skins, Hairs = CharacterConfig.HairColors, Outfits = CharacterConfig.Outfits,
 	}
@@ -847,17 +849,60 @@ local function filterOk(player, text)
 	return result == text
 end
 
--- The class picker: the player chooses a class once; their Roblox name and avatar are used. Combat starts after this.
-function handlers.ChooseClass(player, profile, classId)
+-- Main menu: make a character (just a class choice, up to Characters.MAX). It does not start playing it.
+function handlers.MakeCharacter(player, profile, classId)
 	if type(classId) ~= "string" then
 		return false, "BadArgs"
 	end
-	local ok, reason = Character.ChooseClass(profile, classId)
-	if ok then
-		ApiService.ApplyLook(player, profile)
-		afterBuildChange(player)
+	local ok, result = Characters.Create(profile, classId)
+	if not ok then
+		return false, result
 	end
-	return ok, reason
+	return true, result
+end
+
+-- Main menu: play a character. The first time this session it spawns the player's avatar and joins their party;
+-- switching later re-joins the party as the other character (only when nobody else is online in it).
+function handlers.PlayCharacter(player, profile, slot)
+	if type(slot) ~= "number" then
+		return false, "BadArgs"
+	end
+	local wasIn = Characters.Entered(profile)
+	local before = Characters.Active(profile)
+	if wasIn and before ~= slot and PartyService.OnlineCount(player) > 1 then
+		return false, "LeavePartyFirst"
+	end
+	local ok, reason = Characters.Select(profile, slot)
+	if not ok then
+		return false, reason
+	end
+	Characters.Enter(profile)
+	if not wasIn then
+		PartyService.OnPlayerReady(player, profile)
+	elseif before ~= slot then
+		PartyService.OnPlayerLeaving(player)
+		PartyService.OnPlayerReady(player, profile)
+	end
+	ApiService.ApplyLook(player, profile)
+	if player.Character == nil then
+		task.spawn(function()
+			pcall(function()
+				player:LoadCharacter()
+			end)
+			ApiService.ApplyLook(player, profile) -- the weapon needs the new avatar
+		end)
+	end
+	afterBuildChange(player)
+	return true
+end
+
+-- Older clients: choosing a class makes a character and plays it.
+function handlers.ChooseClass(player, profile, classId)
+	local ok, slot = handlers.MakeCharacter(player, profile, classId)
+	if not ok then
+		return false, slot
+	end
+	return handlers.PlayCharacter(player, profile, slot)
 end
 
 function handlers.CreateCharacter(player, profile, name, classId, look, useAvatar)

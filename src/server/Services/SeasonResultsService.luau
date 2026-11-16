@@ -342,7 +342,7 @@ function SeasonResultsService.Init()
 			if not SeasonResultsService.Ended(seasonId) then -- scores stop counting once the season is over
 				for _, player in ipairs(Players:GetPlayers()) do
 					local profile = DataService.GetProfile(player)
-					if profile and profile.Season.SeasonId == seasonId then
+					if profile and profile.Season.SeasonId == seasonId and profile.Permanent.Character and profile.Permanent.Character.Created then
 						local ok, err = pcall(report, seasonId, player.UserId, math.max(0, math.floor(profile.Season.HighestStage)), profile.Season.ClassId)
 						if not ok then
 							warn("[SeasonResultsService] report failed: " .. tostring(err))

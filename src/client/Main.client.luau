@@ -205,6 +205,7 @@ function extra.RefreshBoss()
 end
 
 local offerPopup = nil
+local menu -- the main menu (built below)
 local open -- defined below; the pop-up's shop button needs it
 local function redraw()
 	if not state then return end
@@ -223,6 +224,9 @@ local function redraw()
 			extra.StoreTab = "Premium"
 			open("Store", "Store", true)
 		end)
+	end
+	if menu and menu.Visible then
+		menu:Render(state)
 	end
 	Hub.SetDailyReady(state.Player.Daily ~= nil and state.Player.Daily.CanClaim == true)
 	syncWorld()
@@ -268,7 +272,7 @@ local function redraw()
 	end
 end
 
-local QUIET_ACTIONS = { ChooseClass = true, CreateCharacter = true, RenameCharacter = true, UpdateCharacter = true }
+local QUIET_ACTIONS = { ChooseClass = true, MakeCharacter = true, PlayCharacter = true, CreateCharacter = true, RenameCharacter = true, UpdateCharacter = true }
 function call(action, ...)
 	local ok, data = api:InvokeServer(action, ...)
 	if action == "CreateCode" and ok then
@@ -584,9 +588,16 @@ for _ = 1, 40 do
 end
 redraw()
 refreshWorld()
--- a brand new player starts in the character creator
-if state and state.Player.Character and not state.Player.Character.Created then
-	extra.CharMsg = nil
-	extra.PickClass = nil
-	open("Character", "Choose your class")
+-- everyone starts at the main menu: nobody spawns until they press Play on a character
+menu = require(script.Parent.UI.MainMenu).new(root, call, extra, require(script.Parent.UI.CharacterScreen))
+extra.OpenMenu = function()
+	current = nil
+	lastDrawn = nil
+	panel.Visible = false
+	if state then
+		menu:Show(state)
+	end
+end
+if state then
+	menu:Show(state)
 end
