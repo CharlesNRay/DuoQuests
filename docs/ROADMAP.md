@@ -353,3 +353,9 @@ two paths of 3 skills, a season prize pet (Arcanix, Skyhawk, Shadowcat, Spiritli
 - Pets: ownership, level, XP and the equipped pet are account-wide (Permanent), levels 1-50 at 200 XP x level, buffed stats/rank bonus/damage.
 - Paragon: past level 120, XP fills Paragon levels (max 100, +0.4% Attack/Health/Defense each).
 - Pacing and class balance tuned with the balance harness (scratchpad), target: level 90 in 7-10 days.
+
+### Haste, gear rolls, pet stats and pacing (2026-11-16)
+- Haste stat (Add): slightly shortens ability cooldowns, capped at 50%. Pants roll it; some pets and subclasses grant it.
+- Gear stat rolls vary 0.85-1.15 per piece (Roll on the gear row).
+- Pet stat units rebalanced from measured value: Attack/MaxHealth/Defense strongest, then AttackSpeed, CritMultiplier, CritChance and Haste (weakest per point, so their per-point values were raised).
+- XPScale 0.8 plus per-subclass DamageDealt/MaxHealth autotune: level 90 targets about 65 online hours (7-10 days with idle). Harness: scratchpad balance90/autotune. Measured spread after 4 rounds is roughly 42-68h (3 seeds, noisy); re-run with more seeds before launch.

@@ -31,7 +31,7 @@ Pets.MaxLevel = Config.MaxLevel
 Pets.Defs = Config.Defs
 Pets.Order = Config.Order
 
-local STAT_LABELS = { MaxHealth = "Max Health", Attack = "Attack", Defense = "Defense", CritChance = "Crit Chance", AttackSpeed = "Attack Speed", CritMultiplier = "Crit Damage" }
+local STAT_LABELS = { MaxHealth = "Max Health", Attack = "Attack", Defense = "Defense", CritChance = "Crit Chance", AttackSpeed = "Attack Speed", CritMultiplier = "Crit Damage", Haste = "Haste" }
 
 -- Pet levels, pet XP and the equipped pet belong to the ACCOUNT (Permanent), so pets carry across seasons. Older saves kept
 -- them in Season; the first call folds them in (keeping the higher level).
@@ -119,7 +119,7 @@ function Pets.Describe(petId, level, rank)
 	local parts = {}
 	for _, mod in ipairs(Pets.Mods(petId, level, rank)) do
 		local label = STAT_LABELS[mod.Stat] or mod.Stat
-		if mod.Mode == "Mul" or mod.Stat == "CritChance" or mod.Stat == "CritMultiplier" then
+		if mod.Mode == "Mul" or mod.Stat == "CritChance" or mod.Stat == "CritMultiplier" or mod.Stat == "Haste" then
 			table.insert(parts, ("+%.1f%% %s"):format(mod.Value * 100, label))
 		else
 			table.insert(parts, ("+%d %s"):format(math.floor(mod.Value + 0.5), label))

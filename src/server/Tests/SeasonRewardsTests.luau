@@ -148,7 +148,7 @@ return function(modulesOverride)
 	local function peak(id) -- a pet's total stat power at level 1 rank 1
 		local total = 0
 		for _, mod in ipairs(Pets.Mods(id, 1, 1)) do
-			total += mod.Value
+			total += mod.Value / PetConfig.StatUnits[mod.Stat].Base -- in units of that stat's base size, so different stats compare fairly
 		end
 		return total
 	end

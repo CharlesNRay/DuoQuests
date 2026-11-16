@@ -51,6 +51,9 @@ function Hero.Sheet(info)
 			table.insert(stats, { Label = label, Key = key, Value = (if value >= 1 then "+" else "-") .. pct(math.abs(value - 1)), Good = good })
 		end
 	end
+	if (s.Haste or 0) > 0.0005 then
+		table.insert(stats, { Label = "Haste", Key = "Haste", Value = "+" .. pct(math.min(s.Haste, 0.5)), Good = true })
+	end
 	extra("Damage dealt", "DamageDealt", s.DamageDealt, true)
 	extra("Healing", "HealingDealt", s.HealingDealt, true)
 	extra("Damage taken", "DamageTaken", s.DamageTaken, false)

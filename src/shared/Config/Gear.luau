@@ -20,6 +20,8 @@ return {
 	-- with the level and with the stage the item dropped at. Gold is the only cost.
 	Upgrade = { MaxLevel = 10, ValuePerLevel = 0.06, BaseCost = 20, CostGrowth = 1.42, PowerCost = 1.2 },
 
+	-- every drop rolls its stat between Min and Max of the base value (a 'good roll' shows as a percentage on the item)
+	Roll = { Min = 0.85, Max = 1.15 },
 	InventoryCap = 30, -- starting bag size; a full bag sells new drops automatically
 	BagStep = 5, -- slots added by each bag upgrade (bought at the Merchant)
 	BagMaxUpgrades = 14, -- 30 -> 100 slots
@@ -30,7 +32,7 @@ return {
 		Weapon = { Stat = "Attack", Base = 0.3, PerStage = 0.05 },
 		Helmet = { Stat = "Defense", Base = 0.1, PerStage = 0.0175 },
 		Armor = { Stat = "MaxHealth", Base = 3, PerStage = 0.5 },
-		Pants = { Stat = "MaxHealth", Base = 2, PerStage = 0.35 },
+		Pants = { Stat = "Haste", Base = 0.003, PerStage = 0.0004 }, -- Haste: shorter skill cooldowns
 		Boots = { Stat = "AttackSpeed", Base = 0.008, PerStage = 0.0015 },
 		Ring = { Stat = "CritChance", Base = 0.003, PerStage = 0.0005 },
 		Amulet = { Stat = "DamageDealt", Base = 0.004, PerStage = 0.0008 },

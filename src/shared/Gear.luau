@@ -82,8 +82,8 @@ end
 Gear.WornSlots = Config.SlotOrder
 Gear.Types = Config.Types
 
-local STAT_LABELS_SHORT = { MaxHealth = "Health", Attack = "Attack", Defense = "Defense", AttackSpeed = "Atk speed", CritChance = "Crit chance", DamageDealt = "Damage" }
-local PERCENT_STATS = { CritChance = true, DamageDealt = true }
+local STAT_LABELS_SHORT = { Haste = "Haste", MaxHealth = "Health", Attack = "Attack", Defense = "Defense", AttackSpeed = "Atk speed", CritChance = "Crit chance", DamageDealt = "Damage" }
+local PERCENT_STATS = { CritChance = true, DamageDealt = true, Haste = true }
 
 function Gear.StatLabel(stat)
 	return STAT_LABELS_SHORT[stat] or stat
@@ -130,7 +130,7 @@ function Gear.StatOf(item)
 	end
 	local mult = Config.RarityMult[item.Rarity] or 1
 	local upgrade = 1 + Config.Upgrade.ValuePerLevel * (item.Upgrade or 0)
-	return slot.Stat, (slot.Base + slot.PerStage * item.Power) * mult * upgrade
+	return slot.Stat, (slot.Base + slot.PerStage * item.Power) * mult * upgrade * (item.Roll or 1)
 end
 
 -- Item Power: one number that compares any two items (a weapon against armour too), counting rarity,
@@ -224,7 +224,7 @@ function Gear.SetCounts(equipped)
 	return counts
 end
 
-local STAT_NAMES = { MaxHealth = "Health", AttackSpeed = "Attack speed", CritChance = "Crit chance", DamageDealt = "Damage dealt", HealingDealt = "Healing", DamageTaken = "Damage taken" }
+local STAT_NAMES = { Haste = "Haste", MaxHealth = "Health", AttackSpeed = "Attack speed", CritChance = "Crit chance", DamageDealt = "Damage dealt", HealingDealt = "Healing", DamageTaken = "Damage taken" }
 
 function Gear.DescribeMods(mods)
 	local parts = {}
@@ -320,7 +320,7 @@ function Gear.RollDrop(stage, isFrontier, itemRarityBonus, rand)
 	-- Set pieces are ordinary gear: some drops simply turn out to be a piece of the zone's set.
 	-- (They only come from the zone itself, on frontier fights and replays alike.)
 	if rand() < (if isBoss then Config.SetBossChance else Config.SetDropChance) then
-		return { Slot = slotFor(), Rarity = "Set", SetId = Zones.IndexForStage(stage) }
+		return { Slot = slotFor(), Rarity = "Set", SetId = Zones.IndexForStage(stage), Roll = Config.Roll.Min + rand() * (Config.Roll.Max - Config.Roll.Min) }
 	end
 	-- rarity roll: weights come from the stage (blended between the anchors in Config.Drop); the
 	-- ItemRarity bonus shifts weight from the lowest tier you can find towards the tiers above it
@@ -352,14 +352,14 @@ function Gear.RollDrop(stage, isFrontier, itemRarityBonus, rand)
 			break
 		end
 	end
-	return { Slot = slotFor(), Rarity = rarity }
+	return { Slot = slotFor(), Rarity = rarity, Roll = Config.Roll.Min + rand() * (Config.Roll.Max - Config.Roll.Min) }
 end
 
 -- Put a drop into the bag (or sell it if the bag is full).
 function Gear.Grant(profile, stage, drop)
 	local equipment = bag(profile)
 	equipment.NextId = (equipment.NextId or 0) + 1
-	local item = { Id = "g" .. equipment.NextId, Slot = drop.Slot, Rarity = drop.Rarity, Power = stage, SetId = drop.SetId }
+	local item = { Id = "g" .. equipment.NextId, Slot = drop.Slot, Rarity = drop.Rarity, Power = stage, SetId = drop.SetId, Roll = drop.Roll }
 	if #equipment.Inventory >= Gear.Cap(profile) then
 		local gold = Gear.SellValue(item)
 		profile.Season.Currencies.Gold += gold
@@ -560,7 +560,7 @@ local function row(item, classId)
 	return {
 		Id = item.Id, Slot = item.Slot, Rarity = item.Rarity, Name = Gear.Name(item, classId), Power = item.Power, Stat = stat, Value = value,
 		ItemPower = Gear.ItemPower(item), StatText = Gear.FormatStat(stat, value), SellValue = Gear.SellValue(item), SetId = item.SetId, SetName = setName,
-		Upgrade = item.Upgrade or 0, MaxUpgrade = Config.Upgrade.MaxLevel, UpgradeCost = cost, NextValue = nextValue,
+		Roll = item.Roll or 1, Upgrade = item.Upgrade or 0, MaxUpgrade = Config.Upgrade.MaxLevel, UpgradeCost = cost, NextValue = nextValue,
 	}
 end
 

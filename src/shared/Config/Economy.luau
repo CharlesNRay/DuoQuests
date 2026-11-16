@@ -19,7 +19,7 @@ return {
 	RewardScale = 0.1, -- one dial that scales gold and XP income (shards have their own numbers below)
 	GoldBase = 10,
 	GoldPerStage = 4,
-	XPScale = 0.9, -- multiplies XP only (the level pacing dial): lv10 ~12 min, lv20 ~27 min, lv30 ~1 h
+	XPScale = 0.8, -- multiplies XP only (the level pacing dial): lv10 ~12 min, lv20 ~27 min, lv30 ~1 h
 	XPRewardBase = 10,
 	XPRewardPerStage = 3,
 	PetXPPerClear = 12, -- XP the active pet earns from every won fight

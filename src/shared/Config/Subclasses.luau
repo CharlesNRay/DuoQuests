@@ -37,10 +37,10 @@ return {
 			Description = "All-out offense. Huge attack, attack speed and crits; a frenzy that makes the Warrior a damage dealer.",
 			Mods = {
 				{ Stat = "Attack", Mode = "Mul", Value = 0.25 },
-				{ Stat = "DamageDealt", Mode = "Mul", Value = 0.12 },
+				{ Stat = "DamageDealt", Mode = "Mul", Value = -0.313 },
 				{ Stat = "AttackSpeed", Mode = "Mul", Value = 0.08 },
 				{ Stat = "CritChance", Mode = "Add", Value = 0.05 },
-				{ Stat = "MaxHealth", Mode = "Mul", Value = 0.05 },
+				{ Stat = "MaxHealth", Mode = "Mul", Value = -0.240 },
 			},
 			Skills = { "BloodFrenzy", "Cleave", "ExecutionerStrike" },
 		},
@@ -52,10 +52,10 @@ return {
 			UnlockLevel = 30,
 			Description = "An immovable wall. Enormous health and defense, damage reduction and party-wide shields.",
 			Mods = {
-				{ Stat = "MaxHealth", Mode = "Mul", Value = 0.35 },
+				{ Stat = "MaxHealth", Mode = "Mul", Value = 0.093 },
 				{ Stat = "Defense", Mode = "Mul", Value = 0.3 },
 				{ Stat = "DamageTaken", Mode = "Mul", Value = -0.1 },
-				{ Stat = "Attack", Mode = "Mul", Value = 0.15 }, { Stat = "DamageDealt", Mode = "Mul", Value = 0.35 } },
+				{ Stat = "Attack", Mode = "Mul", Value = 0.15 }, { Stat = "DamageDealt", Mode = "Mul", Value = 0.142 } },
 			Skills = { "Bulwark", "Retribution", "UnbreakableVow" },
 		},
 		Priest = {
@@ -67,9 +67,9 @@ return {
 			Description = "A true healer. Much stronger healing, more health, and party-wide heals and wards.",
 			Mods = {
 				{ Stat = "HealingDealt", Mode = "Mul", Value = 0.3 },
-				{ Stat = "MaxHealth", Mode = "Mul", Value = 0.2 },
+				{ Stat = "MaxHealth", Mode = "Mul", Value = -0.188 },
 				{ Stat = "Defense", Mode = "Mul", Value = 0.12 },
-				{ Stat = "Attack", Mode = "Mul", Value = 0.2 }, { Stat = "DamageDealt", Mode = "Mul", Value = 0.5 } },
+				{ Stat = "Attack", Mode = "Mul", Value = 0.2 }, { Stat = "DamageDealt", Mode = "Mul", Value = -0.180 }, { Stat = "Haste", Mode = "Add", Value = 0.08 } },
 			Skills = { "Sanctuary", "Renewal", "HolyAegis" },
 		},
 		Templar = {
@@ -81,9 +81,9 @@ return {
 			Description = "A holy warrior. Big attack and holy damage; smites enemies and blesses the party.",
 			Mods = {
 				{ Stat = "Attack", Mode = "Mul", Value = 0.28 },
-				{ Stat = "DamageDealt", Mode = "Mul", Value = 0.15 },
+				{ Stat = "DamageDealt", Mode = "Mul", Value = -0.600 },
 				{ Stat = "CritChance", Mode = "Add", Value = 0.04 },
-				{ Stat = "MaxHealth", Mode = "Mul", Value = 0.08 },
+				{ Stat = "MaxHealth", Mode = "Mul", Value = -0.300 },
 			},
 			Skills = { "HolyWrath", "Judgment", "DivineSmite" },
 		},
@@ -96,10 +96,9 @@ return {
 			Description = "Fire and fury. Big attack and damage, with burning that keeps hurting; hits hard but stays fragile.",
 			Mods = {
 				{ Stat = "Attack", Mode = "Mul", Value = 0.24 },
-				{ Stat = "DamageDealt", Mode = "Mul", Value = 0.08 },
+				{ Stat = "DamageDealt", Mode = "Mul", Value = -0.504 },
 				{ Stat = "CritChance", Mode = "Add", Value = 0.04 },
-				{ Stat = "MaxHealth", Mode = "Mul", Value = 0.05 },
-			},
+				{ Stat = "MaxHealth", Mode = "Mul", Value = -0.240 }, { Stat = "Haste", Mode = "Add", Value = 0.06 } },
 			Skills = { "Ignite", "Inferno", "PhoenixFire" },
 		},
 		FrostWeaver = {
@@ -110,10 +109,10 @@ return {
 			UnlockLevel = 30,
 			Description = "Control. More health and defense, takes less damage; freezes and chills enemies and shields the party.",
 			Mods = {
-				{ Stat = "MaxHealth", Mode = "Mul", Value = 0.3 },
+				{ Stat = "MaxHealth", Mode = "Mul", Value = -0.096 },
 				{ Stat = "Defense", Mode = "Mul", Value = 0.25 },
 				{ Stat = "DamageTaken", Mode = "Mul", Value = -0.08 },
-				{ Stat = "Attack", Mode = "Mul", Value = 0.15 }, { Stat = "DamageDealt", Mode = "Mul", Value = 0.25 } },
+				{ Stat = "Attack", Mode = "Mul", Value = 0.15 }, { Stat = "DamageDealt", Mode = "Mul", Value = -0.410 }, { Stat = "Haste", Mode = "Add", Value = 0.06 } },
 			Skills = { "DeepFreeze", "FrostArmor", "Glacier" },
 		},
 		Sharpshooter = {
@@ -127,8 +126,7 @@ return {
 				{ Stat = "Attack", Mode = "Mul", Value = 0.25 },
 				{ Stat = "CritChance", Mode = "Add", Value = 0.1 },
 				{ Stat = "CritMultiplier", Mode = "Add", Value = 0.3 },
-				{ Stat = "DamageDealt", Mode = "Mul", Value = 0.08 },
-			},
+				{ Stat = "DamageDealt", Mode = "Mul", Value = -0.600 }, { Stat = "MaxHealth", Mode = "Mul", Value = -0.300 } },
 			Skills = { "DeadEye", "Headshot", "Barrage" },
 		},
 		Beastmaster = {
@@ -139,10 +137,11 @@ return {
 			UnlockLevel = 30,
 			Description = "Fights beside the wild. The equipped pet's bonuses are far stronger and its skill hits harder and sooner.",
 			Mods = {
-				{ Stat = "MaxHealth", Mode = "Mul", Value = 0.2 },
+				{ Stat = "MaxHealth", Mode = "Mul", Value = -0.236 },
 				{ Stat = "Defense", Mode = "Mul", Value = 0.2 },
 				{ Stat = "Attack", Mode = "Mul", Value = 0.15 },
 				{ Stat = "PetDamage", Mode = "Mul", Value = 1.2 }, -- the pet is the main damage dealer
+				{ Stat = "DamageDealt", Mode = "Mul", Value = -0.600 },
 			},
 			PetBoost = { Stats = 0.75, SkillLevels = 4 },
 			Skills = { "PackHowl", "Stampede", "NaturesBond" },
@@ -156,10 +155,9 @@ return {
 			Description = "Kills from the shadows. Huge crits and big single-target hits.",
 			Mods = {
 				{ Stat = "Attack", Mode = "Mul", Value = 0.28 },
-				{ Stat = "DamageDealt", Mode = "Mul", Value = 0.04 },
+				{ Stat = "DamageDealt", Mode = "Mul", Value = -0.600 },
 				{ Stat = "CritChance", Mode = "Add", Value = 0.05 },
-				{ Stat = "CritMultiplier", Mode = "Add", Value = 0.3 },
-			},
+				{ Stat = "CritMultiplier", Mode = "Add", Value = 0.3 }, { Stat = "MaxHealth", Mode = "Mul", Value = -0.300 } },
 			Skills = { "DeathMark", "Execute", "ShadowStrike" },
 		},
 		Duelist = {
@@ -170,11 +168,11 @@ return {
 			UnlockLevel = 30,
 			Description = "A blade-master who cannot be hit. More health and defense, less damage taken, faster attacks, and ripostes that heal.",
 			Mods = {
-				{ Stat = "MaxHealth", Mode = "Mul", Value = 0.25 },
+				{ Stat = "MaxHealth", Mode = "Mul", Value = -0.028 },
 				{ Stat = "Defense", Mode = "Mul", Value = 0.25 },
 				{ Stat = "DamageTaken", Mode = "Mul", Value = -0.1 },
 				{ Stat = "Attack", Mode = "Mul", Value = 0.12 },
-				{ Stat = "AttackSpeed", Mode = "Mul", Value = 0.08 }, { Stat = "DamageDealt", Mode = "Mul", Value = 0.12 } },
+				{ Stat = "AttackSpeed", Mode = "Mul", Value = 0.08 }, { Stat = "DamageDealt", Mode = "Mul", Value = -0.264 } },
 			Skills = { "Riposte", "Parry", "BladeDance" },
 		},
 		Necromancer = {
@@ -186,11 +184,10 @@ return {
 			Description = "Commands the dead. Stronger minions, ghouls that feed you life, plague and death magic; drains life from its victims.",
 			Mods = {
 				{ Stat = "Attack", Mode = "Mul", Value = 0.2 },
-				{ Stat = "DamageDealt", Mode = "Mul", Value = 0.02 },
-				{ Stat = "MaxHealth", Mode = "Mul", Value = 0.1 },
+				{ Stat = "DamageDealt", Mode = "Mul", Value = -0.600 },
+				{ Stat = "MaxHealth", Mode = "Mul", Value = -0.300 },
 				{ Stat = "MinionPower", Mode = "Add", Value = 0.15 },
-				{ Stat = "Lifesteal", Mode = "Add", Value = 0.05 },
-			},
+				{ Stat = "Lifesteal", Mode = "Add", Value = 0.05 }, { Stat = "Haste", Mode = "Add", Value = 0.05 } },
 			Skills = { "RaiseDead", "DeathCoil", "Plague" },
 		},
 		SpiritCaller = {
@@ -202,10 +199,9 @@ return {
 			Description = "Calls guardian spirits. Much stronger healing, more health, a spirit that mends allies, and party-wide shields.",
 			Mods = {
 				{ Stat = "HealingDealt", Mode = "Mul", Value = 0.25 },
-				{ Stat = "MaxHealth", Mode = "Mul", Value = 0.2 },
+				{ Stat = "MaxHealth", Mode = "Mul", Value = -0.090 },
 				{ Stat = "Defense", Mode = "Mul", Value = 0.12 },
-				{ Stat = "Attack", Mode = "Mul", Value = 0.1 },
-			},
+				{ Stat = "Attack", Mode = "Mul", Value = 0.1 }, { Stat = "DamageDealt", Mode = "Mul", Value = -0.405 }, { Stat = "Haste", Mode = "Add", Value = 0.08 } },
 			Skills = { "GuardianSpirit", "AncestralCall", "SpiritStorm" },
 		},
 		Warlord = {

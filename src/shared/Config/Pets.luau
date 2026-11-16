@@ -47,9 +47,10 @@ return {
 		MaxHealth = { Mode = "Mul", Base = 0.09, PerLevel = 0.008 },
 		Attack = { Mode = "Mul", Base = 0.09, PerLevel = 0.008 },
 		Defense = { Mode = "Mul", Base = 0.09, PerLevel = 0.008 },
-		AttackSpeed = { Mode = "Mul", Base = 0.05, PerLevel = 0.005 },
-		CritChance = { Mode = "Add", Base = 0.025, PerLevel = 0.002 },
-		CritMultiplier = { Mode = "Add", Base = 0.14, PerLevel = 0.01 },
+		AttackSpeed = { Mode = "Mul", Base = 0.08, PerLevel = 0.007 },
+		CritChance = { Mode = "Add", Base = 0.06, PerLevel = 0.005 },
+		CritMultiplier = { Mode = "Add", Base = 0.3, PerLevel = 0.02 },
+		Haste = { Mode = "Add", Base = 0.05, PerLevel = 0.004 },
 	},
 	RarityMult = { Common = 1, Rare = 1.5, Epic = 2.2, Legendary = 3.2 },
 
@@ -104,7 +105,7 @@ return {
 		Wisp = {
 			Id = "Wisp", DisplayName = "Spark Wisp", Rarity = "Rare", Wish = true,
 			Look = { Shape = "Wisp", Color = { 150, 210, 255 }, Size = 1 },
-			Stats = { { Stat = "CritChance", Share = 0.7 }, { Stat = "CritMultiplier", Share = 0.5 } },
+			Stats = { { Stat = "CritChance", Share = 0.7 }, { Stat = "Haste", Share = 0.5 } },
 			Skill = { Name = "Spark", Text = "Zaps an enemy with magic." },
 		},
 		Emberkit = {
@@ -122,7 +123,7 @@ return {
 		Zephyr = {
 			Id = "Zephyr", DisplayName = "Zephyr", Rarity = "Rare", Wish = true,
 			Look = { Shape = "Bird", Color = { 130, 200, 235 }, Size = 1.1 },
-			Stats = { { Stat = "AttackSpeed", Share = 0.7 }, { Stat = "CritChance", Share = 0.5 } },
+			Stats = { { Stat = "AttackSpeed", Share = 0.7 }, { Stat = "Haste", Share = 0.5 } },
 			Skill = { Name = "Tailwind", Text = "Speeds up its owner's attacks for a while." },
 		},
 		Frostwing = {
@@ -158,7 +159,7 @@ return {
 		Aurora = {
 			Id = "Aurora", DisplayName = "Aurora", Rarity = "Legendary", Wish = true,
 			Look = { Shape = "Wisp", Color = { 120, 255, 200 }, Size = 1.6 },
-			Stats = { { Stat = "CritChance", Share = 1.25 } },
+			Stats = { { Stat = "Haste", Share = 0.7 }, { Stat = "CritChance", Share = 0.5 } },
 			Skill = { Name = "Aurora Veil", Text = "Heals and shields the whole party." },
 		},
 		-- Guild pets (Guild = true): only from the Guild Wish (see Config/Guilds.Wish), never the Wishing Tree or shards
@@ -171,7 +172,7 @@ return {
 		Bannerling = {
 			Id = "Bannerling", DisplayName = "Bannerling", Rarity = "Rare", Guild = true,
 			Look = { Shape = "Wisp", Color = { 220, 70, 70 }, Size = 1.1 },
-			Stats = { { Stat = "Attack", Share = 0.7 }, { Stat = "AttackSpeed", Share = 0.5 } },
+			Stats = { { Stat = "Attack", Share = 0.7 }, { Stat = "Haste", Share = 0.5 } },
 			Skill = { Name = "Rallying Bolt", Text = "A bolt of banner-light hits one enemy." },
 		},
 		Vaultmimic = {
@@ -238,7 +239,7 @@ return {
 		Skyhawk = {
 			Id = "Skyhawk", DisplayName = "Skyhawk", Rarity = "Epic", Reward = true, Power = 2.0,
 			Look = { Shape = "Bird", Color = { 120, 190, 240 }, Size = 1.3 },
-			Stats = { { Stat = "AttackSpeed", Share = 0.7 }, { Stat = "CritChance", Share = 0.5 } },
+			Stats = { { Stat = "AttackSpeed", Share = 0.7 }, { Stat = "Haste", Share = 0.5 } },
 			Skill = { Name = "Hawk Strike", Text = "Dives on an enemy and marks it to take more damage." },
 		},
 		Shadowcat = {
