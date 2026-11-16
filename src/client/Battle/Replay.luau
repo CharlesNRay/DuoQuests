@@ -44,7 +44,7 @@ local ELEMENT_COLORS = {
 }
 
 function Replay.new(scene)
-	return setmetatable({ Scene = scene, Heroes = {}, Enemies = {}, Token = 0 }, Replay)
+	return setmetatable({ Scene = scene, Heroes = {}, Enemies = {}, Minions = {}, Token = 0 }, Replay)
 end
 
 local function floatText(scene, pos, text, color, size)
@@ -189,10 +189,14 @@ function Replay:_clearEnemies()
 		enemy:Destroy()
 	end
 	self.Enemies = {}
+	for _, minion in pairs(self.Minions) do
+		minion:Destroy()
+	end
+	self.Minions = {}
 end
 
 local function actorFor(self, id)
-	return self.Heroes[id] or self.Enemies[id]
+	return self.Heroes[id] or self.Enemies[id] or self.Minions[id]
 end
 
 -- chest positions of the living fighters on a side
@@ -219,6 +223,7 @@ end
 
 function Replay:Play(info, onDone)
 	self.Spawned = 0
+	self.SpawnedMinions = 0
 	self.Token += 1
 	local token = self.Token
 	self:_clearEnemies()
@@ -289,6 +294,13 @@ function Replay:_event(e)
 		if not (source and target) then
 			return
 		end
+		if e.Sacrifice or e.Devoured then
+			-- health paid for a dark spell, or a minion consumed: a dark puff and the number, no strike
+			target:SetHealth(e.TargetHealth or target.Health)
+			flash(scene, target:Pos(), Color3.fromRGB(150, 40, 70), 4)
+			floatText(scene, target:Pos() + Vector3.new(0, 1.5, 0), "-" .. math.floor((e.Amount or 0) + 0.5), Color3.fromRGB(190, 60, 100), 22)
+			return
+		end
 		source:Lunge(target.X)
 		local c = ELEMENT_COLORS[e.Element or "Physical"] or ELEMENT_COLORS.Physical
 		if e.Tag == "BasicAttack" then
@@ -324,7 +336,7 @@ function Replay:_event(e)
 			self.LastCast = self.LastCast or {}
 			self.LastCast[e.Source] = { Ability = e.Ability, T = e.T or 0 }
 			if SkillEffects.HasStyle(e.Ability) then
-				local isHero = self.Heroes[e.Source] ~= nil
+				local isHero = self.Heroes[e.Source] ~= nil or self.Minions[e.Source] ~= nil
 				safely(SkillEffects.Cast, scene, {
 					Ability = e.Ability, SourcePos = source:Pos(), SourceIsHero = isHero,
 					AllyPositions = positionsOf(if isHero then self.Heroes else self.Enemies),
@@ -345,7 +357,7 @@ function Replay:_event(e)
 		local target = actorFor(self, e.Target)
 		if target then
 			target:SetHealth(0)
-			if self.Enemies[e.Target] then
+			if self.Enemies[e.Target] or self.Minions[e.Target] then
 				CosmeticsVisuals.KillEffect(scene.Folder, target:Pos())
 				target:FadeOut()
 			else
@@ -353,9 +365,27 @@ function Replay:_event(e)
 			end
 		end
 	elseif t == "Spawn" then
-		-- a boss summoned a minion: it joins the enemy side
 		local entry = e.Entity
-		if entry and not self.Enemies[entry.Id] then
+		if entry and entry.Team == "Party" and not self.Minions[entry.Id] then
+			-- a summoner raised a minion: it joins our side, behind the heroes
+			self.SpawnedMinions = (self.SpawnedMinions or 0) + 1
+			local x = HERO_X[#HERO_X] - 5 - ((self.SpawnedMinions - 1) % 5) * 3.2
+			local actor = Actor.new(scene, Models.Enemy(entry.DefId), { Name = entry.Name, Facing = 1, MaxHealth = entry.MaxHealth })
+			actor:Place(x - 6)
+			self.Minions[entry.Id] = actor
+			task.spawn(function()
+				local t0 = os.clock()
+				while os.clock() - t0 < 0.35 and not actor.Destroyed do
+					actor:Place(x - 6 + 6 * ((os.clock() - t0) / 0.35))
+					task.wait()
+				end
+				if not actor.Destroyed then
+					actor:Place(x)
+				end
+			end)
+			flash(scene, actor:Pos(), Color3.fromRGB(150, 60, 190), 5)
+		elseif entry and entry.Team ~= "Party" and not self.Enemies[entry.Id] then
+			-- a boss summoned a minion: it joins the enemy side
 			self.Spawned = (self.Spawned or 0) + 1
 			local x = ENEMY_X[#ENEMY_X] + 4 + ((self.Spawned - 1) % 4) * 3.5
 			local actor = Actor.new(scene, Models.Enemy(entry.DefId), { Name = entry.Name, Facing = -1, MaxHealth = entry.MaxHealth })

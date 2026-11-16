@@ -133,6 +133,16 @@ function AbilityStats.Rows(ability, level)
 			if effect.PerLevel and effect.PerLevel.Strength then
 				add("Strength", pct(AbilityStats.Strength(ability, effect, level)))
 			end
+		elseif kind == "SpendHealth" then
+			add("Costs", pct(AbilityStats.Value(ability, effect, "Fraction", level)) .. " of your max HP")
+		elseif kind == "Raise" then
+			local def = require(script.Parent.Parent.Config.Minions)[effect.MinionId]
+			add("Summons", ("%d x %s (max %d)"):format(effect.Count or 1, def and def.DisplayName or effect.MinionId, effect.Max or 99))
+			if effect.PerLevel and effect.PerLevel.Power then
+				add("Minion power", pct(AbilityStats.Value(ability, effect, "Power", level)))
+			end
+		elseif kind == "Devour" then
+			add("Heals", pct(AbilityStats.Value(ability, effect, "PercentMaxHealth", level)) .. " max HP + " .. pct(AbilityStats.Value(ability, effect, "MinionLife", level)) .. " of its life")
 		elseif kind == "Revive" then
 			add("Revives at", pct(AbilityStats.Value(ability, effect, "HealthFraction", level)) .. " HP")
 		end

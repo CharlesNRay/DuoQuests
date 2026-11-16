@@ -9,6 +9,7 @@
 ]]
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Enemies = require(ReplicatedStorage:WaitForChild("Shared").Config.Enemies)
+local Minions = require(game:GetService("ReplicatedStorage"):WaitForChild("Shared").Config.Minions)
 local PetConfig = require(ReplicatedStorage:WaitForChild("Shared").Config.Pets)
 
 local Models = {}
@@ -63,7 +64,7 @@ function Models.Hero(classId, look)
 end
 
 function Models.Enemy(defId)
-	local def = Enemies[defId]
+	local def = Enemies[defId] or Minions[defId]
 	local look = (def and def.Look) or { Shape = "Ball", Color = { 200, 80, 80 }, Size = 3 }
 	local c = Color3.fromRGB(look.Color[1], look.Color[2], look.Color[3])
 	local s = look.Size

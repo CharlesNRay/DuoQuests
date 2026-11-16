@@ -104,9 +104,9 @@ function Hud.new(root)
 	local topRow = Kit.frame({ Size = UDim2.new(1, 0, 0, 110), BackgroundTransparency = 1, NoCorner = true, Parent = right })
 	local money = Kit.frame({ Size = UDim2.fromOffset(100, 108), BackgroundTransparency = 1, NoCorner = true, Parent = topRow })
 	local goldPill = pill(money, { Size = UDim2.new(1, 0, 0, 24), Position = UDim2.fromOffset(0, 0) })
-	local shardPill = pill(money, { Size = UDim2.new(1, 0, 0, 24), Position = UDim2.fromOffset(0, 28) })
-	local stonePill = pill(money, { Size = UDim2.new(1, 0, 0, 24), Position = UDim2.fromOffset(0, 56) })
-	local sunPill = pill(money, { Size = UDim2.new(1, 0, 0, 24), Position = UDim2.fromOffset(0, 84) })
+	local shardPill = pill(money, { Size = UDim2.new(1, 0, 0, 24), Position = UDim2.fromOffset(0, 28), Visible = false }) -- shards have no use for now, so the pill is hidden
+	local stonePill = pill(money, { Size = UDim2.new(1, 0, 0, 24), Position = UDim2.fromOffset(0, 28) })
+	local sunPill = pill(money, { Size = UDim2.new(1, 0, 0, 24), Position = UDim2.fromOffset(0, 56) })
 	self.GoldPill, self.ShardPill, self.StonePill, self.SunPill = goldPill, shardPill, stonePill, sunPill
 	-- the orange premium currency: tap the pill to open the Premium shop
 	self.Suns = Kit.label({ Size = UDim2.new(1, -6, 1, 0), Position = UDim2.fromOffset(6, 0), Text = "", TextSize = 13, Font = Enum.Font.GothamBold, TextColor3 = Color3.fromRGB(255, 165, 70), TextWrapped = false, Parent = sunPill })

@@ -280,3 +280,9 @@ two paths of 3 skills, a season prize pet (Arcanix, Skyhawk, Shadowcat, Spiritli
 - Quests/Season pass: red dots on Daily/Weekly/Season tabs; claimable rewards sort to the top.
 - Wishing Tree: themed banner per side (leafy green pets, violet skills), tinted cards, a "Pool" button per tier listing every pet/skill that tier can give by rarity, and a longer first-Legendary suspense sequence (gold heartbeat, held card, "NEW LEGENDARY" reveal).
 - Open: shards still have no use (recommended: subclass skills + shard cost on high gear upgrades).
+
+## Summoner rework: minions that cost health and can die
+- New `Config/Minions` (Imp, Skeleton, Wraith, Ghoul, Bone Titan, Guardian Spirit). Effects `SpendHealth` (pay a share of max HP, never lethal), `Raise` (minion joins the party; strength from the summoner's stats x MinionPower), `Devour` (consume the weakest minion to heal). Conditions `SelfHealthAbove`, `MinionsBelow`, `HasMinions`.
+- Minions are real party-side entities: enemies attack them (55% of hits while any live, taunting skeletons/titans take everything), they die, and they fall with their summoner. They never count as party survivors or the ultimate caster.
+- Recovery: Soul Leech, Devour, Death Coil, ghoul leech, Necromancer lifesteal, Vampirism passive (new `Lifesteal` stat), Guardian Spirit's Spirit Mend.
+- Shards: hidden from the HUD, daily/quest rewards and the skill unlock buttons for now (backend untouched).

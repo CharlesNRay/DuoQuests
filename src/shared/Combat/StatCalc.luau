@@ -14,6 +14,7 @@ local Passives = require(script.Parent.Parent.Passives)
 local Pets = require(script.Parent.Parent.Pets)
 local Gear = require(script.Parent.Parent.Gear)
 local Subclasses = require(script.Parent.Parent.Subclasses)
+local Minions = require(script.Parent.Parent.Config.Minions)
 local Entity = require(script.Parent.Entity)
 
 local StatCalc = {}
@@ -146,6 +147,32 @@ function StatCalc.NewEnemy(id, enemyId, scale)
 	})
 	entity.Flags.StunImmune = enemy.IsBoss == true
 	entity.Scale = scale -- summons copy their summoner's scale
+	return entity
+end
+
+-- A creature raised by `owner` (a living Entity). `statOf(entity, name)` reads current stats (Simulation.GetStat); power multiplies it all.
+function StatCalc.NewMinion(id, minionId, owner, statOf, power)
+	local def = Minions[minionId]
+	assert(def ~= nil, "Unknown minion: " .. tostring(minionId))
+	power = power or 1
+	local entity = Entity.new({
+		Id = id,
+		Name = def.DisplayName,
+		Team = owner.Team,
+		DefId = minionId,
+		DamageType = def.DamageType,
+		Stats = {
+			MaxHealth = math.max(8, math.floor(statOf(owner, "MaxHealth") * def.HealthFrac * power + 0.5)),
+			Attack = math.max(1, statOf(owner, "Attack") * def.AttackFrac * power),
+			Defense = statOf(owner, "Defense") * def.DefenseFrac,
+			AttackSpeed = def.AttackSpeed,
+			CritChance = 0,
+		},
+		Abilities = def.Abilities,
+	})
+	entity.Minion = true
+	entity.OwnerId = owner.Id
+	entity.Leech = def.Leech
 	return entity
 end
 

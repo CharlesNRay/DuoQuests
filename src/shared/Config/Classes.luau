@@ -17,7 +17,7 @@
 	                   with the choice stored as Season.SubclassId.
 
 	Six classes: Warrior (tank), Cleric (healer), and four damage classes: Mage (burst and control),
-	Ranger (steady ranged, pets), Rogue (fast, crits) and Summoner (spirits and drain).
+	Ranger (steady ranged, pets), Rogue (fast, crits) and Summoner (minions paid for in health, and life drain).
 ]]
 
 return {
@@ -220,7 +220,7 @@ return {
 	Summoner = {
 		Id = "Summoner",
 		DisplayName = "Summoner",
-		Blurb = "Calls spirits to curse, drain and protect. Paths: Necromancer (curses and plague) or Spirit Caller (shields and heals).",
+		Blurb = "Pays health to raise imps, skeletons and wraiths that fight and can die, casts dark spells and drains life to recover. Paths: Necromancer (ghouls, plague, lifesteal) or Spirit Caller (healing spirits).",
 		Weapon = { Name = "Spirit Tome", Text = "A tome that whispers with the voices of spirits." }, -- the tool a player wields (see Shared/ClassWeapons)
 		Role = "Damage",
 		DamageType = "Magical",
@@ -245,14 +245,14 @@ return {
 			"SummonImp",
 			"WraithSwarm",
 			"SoulLeech",
-			"SpiritWard",
+			"RaiseSkeleton",
 			"Haunt",
-			"SpectralPack",
+			"Devour",
 			"BoneArmor",
 			"CallTitan",
 		},
-		PassivePool = { "SpiritBond", "Tribute", "Dominion", "WardingCircle", "Occultist", "Medium" },
-		DefaultLoadout = { "SummonImp", "WraithSwarm", "SoulLeech", "Haunt" },
+		PassivePool = { "SpiritBond", "Tribute", "Dominion", "Vampirism", "Occultist", "Medium" },
+		DefaultLoadout = { "SummonImp", "RaiseSkeleton", "SoulLeech", "Haunt" },
 		Subclasses = {},
 	},
 }

@@ -116,11 +116,8 @@ function Screens.Skills(container, state, call)
 				call("EquipSkills", equipped)
 			end)
 		elseif not isOwned then
-			Kit.button({ Size = UDim2.fromOffset(50, 44), Position = UDim2.new(1, -164, 0.5, -22), Text = "Pick", Parent = r }, function()
+			Kit.button({ Size = UDim2.fromOffset(100, 44), Position = UDim2.new(1, -108, 0.5, -22), Text = "Unlock (pick)", Parent = r }, function()
 				call("UnlockSkillWithPick", id)
-			end)
-			Kit.button({ Size = UDim2.fromOffset(50, 44), Position = UDim2.new(1, -108, 0.5, -22), Text = "Shards", Parent = r }, function()
-				call("UnlockSkill", id)
 			end)
 		end
 	end
@@ -469,7 +466,7 @@ function Screens.Daily(container, state, call)
 	local r = row(scroll, 110)
 	local text = if daily.CanClaim then ("Day %d reward is ready!"):format(daily.NextDay) else ("Come back tomorrow for day %d."):format(daily.NextDay)
 	local reward = daily.Reward
-	local lines = { text, ("Gold %d   Shards %d%s"):format(reward.Gold, reward.Shards, reward.SkillPicks > 0 and ("   Skill pick " .. reward.SkillPicks) or ""), ("Current streak: %d day(s). Missing a day restarts at day 1."):format(daily.Streak) }
+	local lines = { text, ("Gold %d%s"):format(reward.Gold, reward.SkillPicks > 0 and ("   Skill pick " .. reward.SkillPicks) or ""), ("Current streak: %d day(s). Missing a day restarts at day 1."):format(daily.Streak) }
 	Kit.label({ Size = UDim2.new(1, -16, 0, 70), Position = UDim2.fromOffset(8, 4), Text = table.concat(lines, "\n"), Parent = r })
 	if daily.CanClaim then
 		Kit.button({ Size = UDim2.fromOffset(160, 40), Position = UDim2.fromOffset(8, 64), Text = "Claim", BackgroundColor3 = C.Accent, Parent = r }, function()

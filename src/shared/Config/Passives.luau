@@ -326,11 +326,11 @@ return {
 		SpiritBond = {
 			Id = "SpiritBond",
 			DisplayName = "Spirit Bond",
-			Description = "More attack.",
+			Description = "Your minions are stronger.",
 			Class = "Summoner",
 			Category = "Damage",
 			UnlockStage = 1,
-			Mods = { { Stat = "Attack", Mode = "Mult", Base = 0.03, PerLevel = 0.003 } },
+			Mods = { { Stat = "MinionPower", Mode = "Add", Base = 0.05, PerLevel = 0.005 } },
 		},
 		Tribute = {
 			Id = "Tribute",
@@ -350,14 +350,14 @@ return {
 			UnlockStage = 20,
 			Mods = { { Stat = "DamageDealt", Mode = "Mult", Base = 0.025, PerLevel = 0.0025 } },
 		},
-		WardingCircle = {
-			Id = "WardingCircle",
-			DisplayName = "Warding Circle",
-			Description = "Take less damage.",
+		Vampirism = {
+			Id = "Vampirism",
+			DisplayName = "Vampirism",
+			Description = "Heal for a share of the damage you deal.",
 			Class = "Summoner",
-			Category = "Defense",
+			Category = "Healing",
 			UnlockStage = 30,
-			Mods = { { Stat = "DamageTaken", Mode = "Mult", Base = -0.02, PerLevel = -0.002 } },
+			Mods = { { Stat = "Lifesteal", Mode = "Add", Base = 0.03, PerLevel = 0.004 } },
 		},
 		Occultist = {
 			Id = "Occultist",

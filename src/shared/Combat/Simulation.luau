@@ -41,7 +41,7 @@
 	  Cast    { Source, Ability, Level }
 	  Status  { Target, Status, Duration, Amount, Source }  applied or refreshed
 	  StatusEnd { Target, Status, Reason? }       Reason "Broken" = shield used up
-	  Spawn   { Source, Entity = { Id, Name, Team, DefId, MaxHealth } }   a summoned minion joined
+	  Spawn   { Source, Entity = { Id, Name, Team, DefId, MaxHealth, Owner? } }   a summoned minion joined
 	  Telegraph { Source, Ability, In }   a big enemy attack lands In seconds
 	  Death   { Target }
 	  Revive  { Source, Target, TargetHealth }    a fallen ally returned (Resurrection)
@@ -73,6 +73,7 @@ local Hooks = require(script.Parent.Hooks)
 local Abilities = require(script.Parent.Parent.Config.Abilities)
 local Statuses = require(script.Parent.Parent.Config.Statuses)
 local Ultimates = require(script.Parent.Parent.Config.Ultimates)
+local Minions = require(script.Parent.Parent.Config.Minions)
 local AbilityStats = require(script.Parent.AbilityStats)
 local StatCalc = require(script.Parent.StatCalc)
 
@@ -81,6 +82,7 @@ Simulation.__index = Simulation
 
 Simulation.TICK = 0.1 -- seconds of fight time per Step
 Simulation.DEFAULT_MAX_SECONDS = 180
+Simulation.MINION_AGGRO = 0.55 -- chance an enemy attack goes for a minion while any are alive
 
 local EPSILON = 1e-9 -- avoids float drift delaying an action by a whole tick
 
@@ -108,11 +110,22 @@ end
 
 local function anyAlive(list)
 	for _, entity in ipairs(list) do
-		if entity.Alive then
+		if entity.Alive and not entity.Minion then
 			return true
 		end
 	end
 	return false
+end
+
+-- living minions raised by `owner`, optionally only of one kind
+local function minionsOf(sim, owner, minionId)
+	local out = {}
+	for _, entity in ipairs(sim:_alliesOf(owner)) do
+		if entity.Minion and entity.Alive and entity.Health > 0 and entity.OwnerId == owner.Id and (minionId == nil or entity.DefId == minionId) then
+			table.insert(out, entity)
+		end
+	end
+	return out
 end
 
 -- Size of a Heal or Shield effect for one target. Each skill grows its own
@@ -143,6 +156,59 @@ Simulation.Effects = {
 				Entity = { Id = minion.Id, Name = minion.Name, Team = minion.Team, DefId = minion.DefId, MaxHealth = minion.Stats.MaxHealth },
 			})
 		end
+	end,
+
+	-- Pays health (a fraction of max health) as the cost of a dark spell. It cannot kill the caster.
+	SpendHealth = function(sim, castCtx, effect)
+		local caster = castCtx.Caster
+		local fraction = AbilityStats.Value(castCtx.Ability, effect, "Fraction", castCtx.Level) or 0
+		local amount = math.min(math.floor(sim:GetStat(caster, "MaxHealth") * fraction + 0.5), caster.Health - 1)
+		if amount > 0 then
+			caster.Health -= amount
+			sim:_record({ Type = "Damage", Source = caster.Id, Target = caster.Id, Amount = amount, Absorbed = 0, Crit = false, Tag = castCtx.Ability.Id, Element = "Shadow", TargetHealth = caster.Health, Sacrifice = true })
+		end
+	end,
+
+	-- Raises minions on the caster's side (see Config/Minions). Count minions, never more than Max of that kind alive.
+	Raise = function(sim, castCtx, effect)
+		local caster = castCtx.Caster
+		local power = (1 + sim:GetStat(caster, "MinionPower")) * (AbilityStats.Value(castCtx.Ability, effect, "Power", castCtx.Level) or 1)
+		local room = (effect.Max or 99) - #minionsOf(sim, caster, effect.MinionId)
+		for _ = 1, math.min(effect.Count or 1, room) do
+			sim.SummonCount += 1
+			local minion = StatCalc.NewMinion("m" .. sim.SummonCount, effect.MinionId, caster, function(entity, stat)
+				return sim:GetStat(entity, stat)
+			end, power)
+			table.insert(sim:_alliesOf(caster), minion)
+			sim:_record({
+				Type = "Spawn",
+				Source = caster.Id,
+				Entity = { Id = minion.Id, Name = minion.Name, Team = minion.Team, DefId = minion.DefId, MaxHealth = minion.Stats.MaxHealth, Owner = caster.Id },
+			})
+			if Minions[effect.MinionId].Taunt then
+				sim:ApplyStatus(minion, "Taunting", 9999, caster)
+			end
+		end
+	end,
+
+	-- Consumes the weakest of the caster's minions: heals the caster for a share of max health plus part of the minion's remaining life.
+	Devour = function(sim, castCtx, effect)
+		local caster = castCtx.Caster
+		local weakest = nil
+		for _, minion in ipairs(minionsOf(sim, caster)) do
+			if weakest == nil or minion.Health < weakest.Health then
+				weakest = minion
+			end
+		end
+		if weakest == nil then
+			return
+		end
+		local life = weakest.Health
+		weakest.Health = 0
+		sim:_record({ Type = "Damage", Source = caster.Id, Target = weakest.Id, Amount = life, Absorbed = 0, Crit = false, Tag = castCtx.Ability.Id, Element = "Shadow", TargetHealth = 0, Devoured = true })
+		local percent = AbilityStats.Value(castCtx.Ability, effect, "PercentMaxHealth", castCtx.Level) or 0
+		local share = AbilityStats.Value(castCtx.Ability, effect, "MinionLife", castCtx.Level) or 0
+		sim:Heal(caster, caster, percent * sim:GetStat(caster, "MaxHealth") + life * share, { Tag = castCtx.Ability.Id, Element = "Shadow" })
 	end,
 
 	Damage = function(sim, castCtx, effect)
@@ -214,6 +280,19 @@ Simulation.Conditions = {
 		return #livingOf(sim:_alliesOf(caster)) <= value
 	end,
 
+	-- Minions: at most Max living ones of kind Id (or of any kind when Id is omitted) belong to the caster.
+	MinionsBelow = function(sim, caster, value)
+		return #minionsOf(sim, caster, value.Id) < value.Max
+	end,
+
+	HasMinions = function(sim, caster, value)
+		return (#minionsOf(sim, caster) > 0) == value
+	end,
+
+	SelfHealthAbove = function(sim, caster, value)
+		return caster.Health / sim:GetStat(caster, "MaxHealth") > value
+	end,
+
 	MinEnemies = function(sim, caster, value)
 		return #livingOf(sim:_opponentsOf(caster)) >= value
 	end,
@@ -229,7 +308,7 @@ Simulation.Conditions = {
 	-- True when at least one ally has fallen (value = true).
 	AllyDead = function(sim, caster, value)
 		for _, ally in ipairs(sim:_alliesOf(caster)) do
-			if not ally.Alive then
+			if not ally.Alive and not ally.Minion then
 				return value
 			end
 		end
@@ -445,6 +524,22 @@ function Simulation:PickTarget(attacker)
 		end
 	end
 
+	-- enemies also go for the party's minions (unless something taunts): one roll picks a minion at random
+	if attacker.Team == "Enemy" and default ~= nil and not self:HasFlag(default, "Taunting") then
+		local minions = {}
+		for _, candidate in ipairs(candidates) do
+			if candidate.Minion then
+				table.insert(minions, candidate)
+			end
+		end
+		if #minions > 0 then
+			local roll = self.Rng()
+			if roll < Simulation.MINION_AGGRO then
+				default = minions[math.min(#minions, math.floor(roll / Simulation.MINION_AGGRO * #minions) + 1)]
+			end
+		end
+	end
+
 	local ctx = { Attacker = attacker, Candidates = candidates, Target = default }
 	self.Hooks:Fire("PickTarget", ctx)
 	return ctx.Target
@@ -463,7 +558,7 @@ function Simulation:ResolveTargets(castCtx, mode)
 		return livingOf(self:_alliesOf(caster))
 	elseif mode == "DeadAlly" then
 		for _, ally in ipairs(self:_alliesOf(caster)) do
-			if not ally.Alive then
+			if not ally.Alive and not ally.Minion then
 				return { ally }
 			end
 		end
@@ -570,6 +665,20 @@ function Simulation:DealDamage(source, target, amount, info)
 	end
 
 	self.Hooks:Fire("OnDamageDealt", ctx)
+
+	-- life drained from what was hurt: the attacker's own Lifesteal stat, and a minion's leech feeds its summoner
+	if final > 0 and source ~= target then
+		local steal = self:GetStat(source, "Lifesteal")
+		if steal > 0 and source.Health > 0 then
+			self:Heal(source, source, final * steal, { Tag = "Lifesteal", Element = "Shadow" })
+		end
+		if source.Minion and source.Leech then
+			local owner = self:_entityById(source.OwnerId)
+			if owner and owner.Health > 0 then
+				self:Heal(source, owner, final * source.Leech, { Tag = "Lifesteal", Element = "Shadow" })
+			end
+		end
+	end
 	return final
 end
 
@@ -755,7 +864,13 @@ function Simulation:_tryUltimate()
 	if ultimate == nil or ultimate.Charge < Ultimates.ChargeNeeded - EPSILON then
 		return false
 	end
-	local caster = livingOf(self.Party)[1]
+	local caster = nil
+	for _, member in ipairs(livingOf(self.Party)) do
+		if not member.Minion then
+			caster = member
+			break
+		end
+	end
 	if caster == nil then
 		return false
 	end
@@ -849,7 +964,7 @@ function Simulation:_checkEnd()
 
 	local survivors = {}
 	for _, entity in ipairs(self.Party) do
-		if entity.Alive then
+		if entity.Alive and not entity.Minion then
 			table.insert(survivors, entity.Id)
 		end
 	end
@@ -905,11 +1020,20 @@ function Simulation:Step()
 		end
 	end
 
-	for _, entity in ipairs(actors) do
-		if entity.Alive and entity.Health <= 0 then
-			entity.Alive = false
-			self:_record({ Type = "Death", Target = entity.Id })
-			self.Hooks:Fire("OnDeath", { Entity = entity })
+	-- deaths (including anything raised this tick); minions are bound to their summoner and fall with it
+	for _, list in ipairs({ self.Party, self.Enemies }) do
+		for _, entity in ipairs(list) do
+			if entity.Minion and entity.Alive and entity.Health > 0 then
+				local owner = self:_entityById(entity.OwnerId)
+				if owner == nil or owner.Health <= 0 then
+					entity.Health = 0
+				end
+			end
+			if entity.Alive and entity.Health <= 0 then
+				entity.Alive = false
+				self:_record({ Type = "Death", Target = entity.Id })
+				self.Hooks:Fire("OnDeath", { Entity = entity })
+			end
 		end
 	end
 
