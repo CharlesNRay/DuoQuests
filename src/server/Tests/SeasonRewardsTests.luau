@@ -12,13 +12,14 @@ local function loadModules(override)
 	local Shared = game:GetService("ReplicatedStorage"):WaitForChild("Shared")
 	return {
 		SeasonRewards = require(Shared.SeasonRewards), SeasonRewardsConfig = require(Shared.Config.SeasonRewards),
-		ProfileTemplate = require(Shared.ProfileTemplate), Premium = require(Shared.Premium), Consumables = require(Shared.Consumables),
+		ProfileTemplate = require(Shared.ProfileTemplate), Premium = require(Shared.Premium), Consumables = require(Shared.Consumables), Pets = require(Shared.Pets), PetConfig = require(Shared.Config.Pets),
 	}
 end
 
 return function(modulesOverride)
 	local m = loadModules(modulesOverride)
 	local SR, Config, ProfileTemplate, Premium, Consumables = m.SeasonRewards, m.SeasonRewardsConfig, m.ProfileTemplate, m.Premium, m.Consumables
+	local Pets, PetConfig = m.Pets, m.PetConfig
 	local warnFn = warn or print
 	local passed, failed = 0, 0
 	local function check(name, condition)
@@ -121,6 +122,33 @@ return function(modulesOverride)
 	local ok3, why3 = SR.Claim(q, 1, results, { UserId = 5, Score = 1, ClassId = "Warrior" })
 	check("Unranked players cannot claim", ok3 == false and why3 == "NotRanked" and Premium.Sunstones(q) == 0 and not SR.Claimed(q, 1))
 	check("Brackets list is complete", #SR.Brackets().Percentiles == 10 and #SR.Brackets().Ranks == 6 and #SR.Brackets().ClassRanks == 3)
+
+	-- non-Sunstone prizes
+	check("Rank 1 Warrior earns Crownling, Laurelwing and the class pet Bannerhound", #reward.Pets == 3 and table.find(reward.Pets, "Crownling") and table.find(reward.Pets, "Laurelwing") and table.find(reward.Pets, "Bannerhound"))
+	check("Rank 1 gets the gold aura and the Warrior aura", table.find(reward.Cosmetics, "Aura_Champion") ~= nil and table.find(reward.Cosmetics, "Aura_Warrior") ~= nil and table.find(reward.Cosmetics, "Kill_Sparks") ~= nil)
+	check("Prizes come with readable names for the screen", table.find(reward.Extras, "Pet: Crownling") ~= nil and table.find(reward.Extras, "Warrior aura") ~= nil and table.find(reward.Extras, "Champion aura") ~= nil)
+	check("Claim gives the pets and cosmetics", p.Permanent.Pets.Crownling == true and p.Permanent.Pets.Laurelwing == true and p.Permanent.Pets.Bannerhound == true and p.Permanent.Cosmetics.Aura_Warrior == true)
+	local mageResults = { Total = 100, Histogram = { [10] = 100 }, Top = {}, ClassTop = { Mage = { [5] = 1 } } }
+	local mageReward = SR.Reward(SR.Standing(mageResults, { UserId = 5, Score = 10, ClassId = "Mage" }))
+	check("A class with no prize pet yet just skips the pet", #mageReward.Pets == 0 and mageReward.Sunstones > 0)
+	local owned = ProfileTemplate.New()
+	owned.Permanent.Pets.Bannerhound = true
+	SR.Claim(owned, 1, results, { UserId = 11, Score = 12, ClassId = "Warrior" })
+	check("A prize pet you already own becomes a copy", Pets.Copies(owned, "Bannerhound") == 1)
+	local rewardPetsOk, wishable = true, false
+	for _, row in ipairs(Config.Ranks) do
+		rewardPetsOk = rewardPetsOk and (row.Pet == nil or (PetConfig.Defs[row.Pet] ~= nil and PetConfig.Defs[row.Pet].Reward == true))
+		wishable = wishable or (row.Pet ~= nil and PetConfig.Defs[row.Pet].Wish == true)
+	end
+	for _, petId in pairs(Config.ClassPets) do
+		rewardPetsOk = rewardPetsOk and PetConfig.Defs[petId] ~= nil and PetConfig.Defs[petId].Reward == true
+		wishable = wishable or PetConfig.Defs[petId].Wish == true
+	end
+	check("Every prize pet exists, is marked Reward and cannot be wished for", rewardPetsOk and not wishable)
+	local classHigher = Config.ClassRanks[1].Sunstones > Config.Ranks[1].Sunstones
+	check("Class awards are worth more than the matching overall rows", classHigher)
+	local rank50 = SR.Reward(SR.Standing({ Total = 1000, Histogram = { [12] = 1000 }, Top = { [1] = 30 }, ClassTop = {} }, { UserId = 1, Score = 12, ClassId = "Cleric" }))
+	check("Rank 21-50 gets a cosmetic and a title as well as Sunstones", #rank50.Cosmetics == 1 and #rank50.Titles == 1 and rank50.Sunstones > 0)
 
 	print(("SeasonRewardsTests done: %d passed, %d failed"):format(passed, failed))
 	return failed == 0

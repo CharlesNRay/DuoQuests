@@ -48,6 +48,7 @@ return {
 		"Wisp", "Emberkit", "Shellby", "Zephyr",
 		"Frostwing", "Starbun", "Thornback",
 		"EmberDrake", "Aurora", "Colossling",
+		"Crownling", "Laurelwing", "Bannerhound", "Haloette", -- season prizes (Reward = true): never from the Wishing Tree
 	},
 
 	Defs = {
@@ -146,6 +147,31 @@ return {
 			Look = { Shape = "Wisp", Color = { 120, 255, 200 }, Size = 1.6 },
 			Stats = { { Stat = "CritChance", Share = 1.25 } },
 			Skill = { Name = "Aurora Veil", Text = "Heals and shields the whole party." },
+		},
+		-- Season prizes (see Config/SeasonRewards): not wishable, only earned by placing at the end of a season.
+		Crownling = {
+			Id = "Crownling", DisplayName = "Crownling", Rarity = "Legendary", Reward = true,
+			Look = { Shape = "Drake", Color = { 255, 205, 70 }, Size = 1.6, Glow = true },
+			Stats = { { Stat = "Attack", Share = 0.7 }, { Stat = "CritChance", Share = 0.5 } },
+			Skill = { Name = "Royal Decree", Text = "Strikes every enemy and shields the party." },
+		},
+		Laurelwing = {
+			Id = "Laurelwing", DisplayName = "Laurelwing", Rarity = "Epic", Reward = true,
+			Look = { Shape = "Wisp", Color = { 160, 220, 110 }, Size = 1.4 },
+			Stats = { { Stat = "AttackSpeed", Share = 1.25 } },
+			Skill = { Name = "Victory March", Text = "Rallies the whole party's attack." },
+		},
+		Bannerhound = {
+			Id = "Bannerhound", DisplayName = "Bannerhound", Rarity = "Epic", Reward = true,
+			Look = { Shape = "Cat", Color = { 200, 80, 70 }, Size = 1.3 },
+			Stats = { { Stat = "Defense", Share = 0.7 }, { Stat = "MaxHealth", Share = 0.5 } },
+			Skill = { Name = "Banner Guard", Text = "Raises the whole party's defense." },
+		},
+		Haloette = {
+			Id = "Haloette", DisplayName = "Haloette", Rarity = "Epic", Reward = true,
+			Look = { Shape = "Wisp", Color = { 255, 240, 170 }, Size = 1.3, Glow = true },
+			Stats = { { Stat = "MaxHealth", Share = 0.7 }, { Stat = "CritMultiplier", Share = 0.5 } },
+			Skill = { Name = "Halo Mend", Text = "Heals the most hurt ally." },
 		},
 	},
 }

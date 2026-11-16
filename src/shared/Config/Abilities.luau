@@ -942,6 +942,70 @@ return {
 		},
 	},
 
+	Pet_Crownling = {
+		Id = "Pet_Crownling",
+		DisplayName = "Royal Decree",
+		Description = "Strikes every enemy and shields the party.",
+		Class = "Pet",
+		Pet = true,
+		Rarity = "Legendary",
+		Cooldown = 15,
+		CooldownPerLevel = -0.3,
+		MinCooldown = 8,
+		Effects = {
+			{ Type = "Damage", Target = "AllEnemies", Multiplier = 2.0, DamageType = "Magical", PerLevel = { Multiplier = 0.15 } },
+			{ Type = "Shield", Target = "AllAllies", Multiplier = 0.8, PercentMaxHealth = 0.05, Duration = 8, PerLevel = { Multiplier = 0.1, PercentMaxHealth = 0.01, Duration = 0.3 } },
+		},
+	},
+
+	Pet_Laurelwing = {
+		Id = "Pet_Laurelwing",
+		DisplayName = "Victory March",
+		Description = "Rallies the whole party's attack.",
+		Class = "Pet",
+		Pet = true,
+		Rarity = "Epic",
+		Cooldown = 16,
+		CooldownPerLevel = -0.3,
+		MinCooldown = 8,
+		Conditions = { SelfLacksStatus = "Rallied" },
+		Effects = {
+			{ Type = "ApplyStatus", Target = "AllAllies", Status = "Rallied", Duration = 7, PerLevel = { Duration = 0.4 } },
+		},
+	},
+
+	Pet_Bannerhound = {
+		Id = "Pet_Bannerhound",
+		DisplayName = "Banner Guard",
+		Description = "Raises the whole party's defense.",
+		Class = "Pet",
+		Pet = true,
+		Rarity = "Epic",
+		Cooldown = 17,
+		CooldownPerLevel = -0.3,
+		MinCooldown = 9,
+		Conditions = { SelfLacksStatus = "Fortified" },
+		Effects = {
+			{ Type = "ApplyStatus", Target = "AllAllies", Status = "Fortified", Duration = 7, PerLevel = { Duration = 0.4 } },
+		},
+	},
+
+	Pet_Haloette = {
+		Id = "Pet_Haloette",
+		DisplayName = "Halo Mend",
+		Description = "Heals the most hurt ally.",
+		Class = "Pet",
+		Pet = true,
+		Rarity = "Epic",
+		Cooldown = 9,
+		CooldownPerLevel = -0.3,
+		MinCooldown = 5,
+		Conditions = { AllyHealthBelow = 0.7 },
+		Effects = {
+			{ Type = "Heal", Target = "LowestAlly", Multiplier = 1.6, PerLevel = { Multiplier = 0.12 } },
+		},
+	},
+
 	Pet_Aurora = {
 		Id = "Pet_Aurora",
 		DisplayName = "Aurora Veil",

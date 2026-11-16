@@ -25,19 +25,20 @@ local function section(scroll, text)
 	Kit.label({ Size = UDim2.new(1, -8, 0, 22), Text = text, TextSize = 14, Font = Enum.Font.GothamBold, TextColor3 = C.Accent, Parent = scroll })
 end
 
-local function bracketRow(scroll, left, right, highlight)
-	local row = Kit.frame({ Size = UDim2.new(1, -8, 0, 24), BackgroundColor3 = if highlight then Color3.fromRGB(70, 58, 24) else C.PanelLight, Parent = scroll })
-	Kit.label({ Size = UDim2.new(0.5, -10, 1, 0), Position = UDim2.fromOffset(10, 0), Text = left, TextSize = 12, Font = if highlight then Enum.Font.GothamBold else Enum.Font.Gotham, TextColor3 = if highlight then ORANGE else C.Text, Parent = row })
-	Kit.label({ Size = UDim2.new(0.5, -10, 1, 0), Position = UDim2.new(0.5, 0, 0, 0), Text = right, TextSize = 12, TextXAlignment = Enum.TextXAlignment.Right, TextColor3 = ORANGE, Parent = row })
+local function bracketRow(scroll, left, right, highlight, extras)
+	local hasExtras = extras ~= nil and #extras > 0
+	local row = Kit.frame({ Size = UDim2.new(1, -8, 0, if hasExtras then 38 else 24), BackgroundColor3 = if highlight then Color3.fromRGB(70, 58, 24) else C.PanelLight, Parent = scroll })
+	Kit.label({ Size = UDim2.new(0.5, -10, 0, 24), Position = UDim2.fromOffset(10, 0), Text = left, TextSize = 12, Font = if highlight then Enum.Font.GothamBold else Enum.Font.Gotham, TextColor3 = if highlight then ORANGE else C.Text, Parent = row })
+	Kit.label({ Size = UDim2.new(0.5, -10, 0, 24), Position = UDim2.new(0.5, 0, 0, 0), Text = right, TextSize = 12, TextXAlignment = Enum.TextXAlignment.Right, TextColor3 = ORANGE, Parent = row })
+	if hasExtras then
+		Kit.label({ Size = UDim2.new(1, -20, 0, 14), Position = UDim2.fromOffset(10, 22), Text = table.concat(extras, "  -  "), TextSize = 10, TextColor3 = BLUE, TextTruncate = Enum.TextTruncate.AtEnd, Parent = row })
+	end
 end
 
 local function rewardText(r)
 	local parts = { "🔶 " .. commas(r.Sunstones) }
 	if r.Wishstones and r.Wishstones > 0 then
 		table.insert(parts, "💎 " .. commas(r.Wishstones))
-	end
-	if r.Title then
-		table.insert(parts, '"' .. r.Title .. '"')
 	end
 	return table.concat(parts, "   ")
 end
@@ -53,13 +54,13 @@ function SeasonScreen.Season(container, state, call, extra)
 
 	-- finished seasons waiting to be claimed
 	for _, pending in ipairs(data.Pending or {}) do
-		local row = Kit.frame({ Size = UDim2.new(1, -8, 0, 64), BackgroundColor3 = Color3.fromRGB(34, 70, 44), Parent = scroll })
+		local row = Kit.frame({ Size = UDim2.new(1, -8, 0, 74), BackgroundColor3 = Color3.fromRGB(34, 70, 44), Parent = scroll })
 		local lines = {}
 		for _, line in ipairs(pending.Reward.Lines) do
 			table.insert(lines, ("%s +%d"):format(line.Label, line.Sunstones))
 		end
 		Kit.label({ Size = UDim2.new(1, -170, 0, 20), Position = UDim2.fromOffset(10, 4), Text = (pending.Name .. " is over - your reward is ready!"), TextSize = 14, Font = Enum.Font.GothamBold, TextColor3 = GOOD, Parent = row })
-		Kit.label({ Size = UDim2.new(1, -170, 0, 34), Position = UDim2.fromOffset(10, 26), Text = ("%s  =  🔶 %s Sunstones, 💎 %s Wishstones"):format(table.concat(lines, ", "), commas(pending.Reward.Sunstones), commas(pending.Reward.Wishstones)), TextSize = 11, TextWrapped = true, TextYAlignment = Enum.TextYAlignment.Top, TextColor3 = C.Dim, Parent = row })
+		Kit.label({ Size = UDim2.new(1, -170, 0, 34), Position = UDim2.fromOffset(10, 26), Text = ("🔶 %s Sunstones, 💎 %s Wishstones"):format(commas(pending.Reward.Sunstones), commas(pending.Reward.Wishstones)) .. (if #pending.Reward.Extras > 0 then "  +  " .. table.concat(pending.Reward.Extras, ", ") else ""), TextSize = 11, TextWrapped = true, TextYAlignment = Enum.TextYAlignment.Top, TextColor3 = C.Dim, Parent = row })
 		Kit.button({ Size = UDim2.fromOffset(140, 40), Position = UDim2.new(1, -150, 0.5, -20), Text = "Claim", BackgroundColor3 = GOOD, TextColor3 = Color3.fromRGB(10, 40, 18), Parent = row }, function()
 			if call("ClaimSeasonRewards", pending.SeasonId) then
 				extra.SeasonMsg = "Claimed! Sunstones added to your balance."
@@ -96,15 +97,15 @@ function SeasonScreen.Season(container, state, call, extra)
 	-- every bracket, so nobody is left guessing
 	section(scroll, "Everyone who is ranked earns a share - the further you get, the more")
 	for _, row in ipairs(data.Brackets.Percentiles) do
-		bracketRow(scroll, row.Label, rewardText(row), live.Percentile == row.Label)
+		bracketRow(scroll, row.Label, rewardText(row), live.Percentile == row.Label, row.Extras)
 	end
 	section(scroll, "Ranks 1-50 earn extra on top - and every step below your rank adds too")
 	for _, row in ipairs(data.Brackets.Ranks) do
-		bracketRow(scroll, row.Label, rewardText(row), live.RankLabel == row.Label)
+		bracketRow(scroll, row.Label, rewardText(row), live.RankLabel == row.Label, row.Extras)
 	end
 	section(scroll, "Best of each class earn extra too (Warrior, Cleric and Mage boards)")
 	for _, row in ipairs(data.Brackets.ClassRanks) do
-		bracketRow(scroll, row.Label, rewardText(row), false)
+		bracketRow(scroll, row.Label, rewardText(row), false, row.Extras)
 	end
 	Kit.label({ Size = UDim2.new(1, -8, 0, 30), Text = ("Ranked by furthest stage this season (stage %d or higher counts). Ties share a bracket. Rewards are paid in Sunstones - earned, never random."):format(data.MinStage), TextSize = 10, TextWrapped = true, TextColor3 = C.Dim, Parent = scroll })
 end

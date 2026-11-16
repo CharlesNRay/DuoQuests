@@ -153,6 +153,8 @@ local PET_SKILL_LOOK = {
 	Tailwind = { rgb(120, 200, 190), "💨" }, ["Cold Snap"] = { rgb(120, 190, 235), "❄" }, ["Star Wish"] = { rgb(240, 220, 120), "🌠" },
 	["Thorn Armor"] = { rgb(90, 140, 70), "🌵" }, Dragonfire = { rgb(210, 70, 50), "🐲" }, ["Colossal Stomp"] = { rgb(150, 110, 80), "👣" },
 	["Aurora Veil"] = { rgb(140, 200, 220), "🌈" },
+	["Royal Decree"] = { rgb(240, 200, 80), "👑" }, ["Victory March"] = { rgb(150, 210, 110), "🏆" },
+	["Banner Guard"] = { rgb(210, 90, 80), "🚩" }, ["Halo Mend"] = { rgb(250, 235, 160), "⭐" },
 }
 function Icons.PetSkill(parent, petId, props)
 	local PetConfig = require(game:GetService("ReplicatedStorage"):WaitForChild("Shared").Config.Pets)
