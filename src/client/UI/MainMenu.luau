@@ -25,7 +25,7 @@ local REASONS = {
 function MainMenu.new(root, call, extra, CharacterScreen)
 	local self = setmetatable({ Visible = false, Creating = false, Message = nil }, MainMenu)
 	self.Call, self.Extra, self.CharacterScreen = call, extra, CharacterScreen
-	self.Frame = Kit.frame({ Name = "MainMenu", Size = UDim2.fromScale(1, 1), BackgroundColor3 = Color3.fromRGB(14, 16, 28), NoCorner = true, Visible = false, ZIndex = 60, Parent = root })
+	self.Frame = Kit.frame({ Name = "MainMenu", Size = UDim2.fromScale(1, 1), BackgroundColor3 = Color3.fromRGB(14, 16, 28), NoCorner = true, Visible = false, Active = true, ZIndex = 60, Parent = root })
 	Kit.new("UIGradient", { Color = ColorSequence.new(Color3.fromRGB(70, 60, 120), Color3.fromRGB(14, 16, 28)), Rotation = 90, Parent = self.Frame })
 	self.Body = Kit.frame({ Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1, NoCorner = true, ZIndex = 61, Parent = self.Frame })
 	extra.PlaySlot = function(slot)
@@ -58,78 +58,98 @@ function MainMenu:Play(slot)
 	return false, reason
 end
 
+local STAGE_W, STAGE_H = 700, 380
+
+local function divider(parent, y, z)
+	Kit.frame({ Size = UDim2.new(1, -28, 0, 1), Position = UDim2.fromOffset(14, y), BackgroundColor3 = C.Dim, BackgroundTransparency = 0.75, NoCorner = true, ZIndex = z, Parent = parent })
+end
+
+-- one "Label ........ value" row inside a card
+local function statRow(parent, y, label, value, z)
+	Kit.label({ Size = UDim2.new(0.5, -14, 0, 18), Position = UDim2.fromOffset(14, y), Text = label, TextSize = 12, TextColor3 = C.Dim, TextXAlignment = Enum.TextXAlignment.Left, ZIndex = z, Parent = parent })
+	Kit.label({ Size = UDim2.new(0.5, -14, 0, 18), Position = UDim2.new(0.5, 0, 0, y), Text = value, TextSize = 13, Font = Enum.Font.GothamBold, TextXAlignment = Enum.TextXAlignment.Right, ZIndex = z, Parent = parent })
+end
+
 function MainMenu:Render(state)
 	if not self.Visible or not state then
 		return
 	end
 	Kit.clear(self.Body)
 	local char = state.Player.Character
-	local body = self.Body
-	Kit.label({ Size = UDim2.new(1, 0, 0, 44), Position = UDim2.fromOffset(0, 18), Text = "DUO QUEST", TextSize = 40, Font = Enum.Font.GothamBlack, TextColor3 = C.Accent, TextXAlignment = Enum.TextXAlignment.Center, ZIndex = 62, Parent = body })
+	-- everything sits in one centered stage so the spacing is the same on any screen shape
+	local stage = Kit.frame({ Name = "Stage", Size = UDim2.fromOffset(STAGE_W, STAGE_H), AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.5), BackgroundTransparency = 1, NoCorner = true, ZIndex = 62, Parent = self.Body })
 
 	if self.Creating then
 		self.Extra.MenuCreate = true
-		Kit.label({ Size = UDim2.new(1, 0, 0, 22), Position = UDim2.fromOffset(0, 66), Text = "Create a character: pick your class", TextSize = 15, TextXAlignment = Enum.TextXAlignment.Center, TextColor3 = C.Dim, ZIndex = 62, Parent = body })
-		local holder = Kit.frame({ Size = UDim2.fromOffset(640, 340), Position = UDim2.new(0.5, -320, 0, 92), BackgroundTransparency = 1, NoCorner = true, ZIndex = 62, Parent = body })
-		self.CharacterScreen.Character(holder, state, self.Call, self.Extra)
-		Kit.button({ Size = UDim2.fromOffset(110, 32), Position = UDim2.fromOffset(16, 18), Text = "< Back", ZIndex = 63, Parent = body }, function()
+		Kit.button({ Size = UDim2.fromOffset(90, 30), Position = UDim2.fromOffset(30, 0), Text = "< Back", TextSize = 13, ZIndex = 63, Parent = stage }, function()
 			self.Creating = false
 			self.Extra.MenuCreate = false
 			self.Extra.CharMsg = nil
 			self:Render(self.Extra.State)
 		end)
+		Kit.label({ Size = UDim2.new(1, 0, 0, 30), Text = "NEW CHARACTER", TextSize = 20, Font = Enum.Font.GothamBlack, TextColor3 = C.Accent, TextXAlignment = Enum.TextXAlignment.Center, ZIndex = 62, Parent = stage })
+		local holder = Kit.frame({ Size = UDim2.fromOffset(640, 340), Position = UDim2.new(0.5, -320, 0, 38), BackgroundTransparency = 1, NoCorner = true, ZIndex = 62, Parent = stage })
+		self.CharacterScreen.Character(holder, state, self.Call, self.Extra)
 		return
 	end
 	self.Extra.MenuCreate = false
 
-	Kit.label({ Size = UDim2.new(1, 0, 0, 22), Position = UDim2.fromOffset(0, 66), Text = "Choose a character to play", TextSize = 15, TextXAlignment = Enum.TextXAlignment.Center, TextColor3 = C.Dim, ZIndex = 62, Parent = body })
+	-- title block
+	Kit.label({ Size = UDim2.new(1, 0, 0, 44), Position = UDim2.fromOffset(0, 0), Text = "DUO QUEST", TextSize = 38, Font = Enum.Font.GothamBlack, TextColor3 = C.Accent, TextXAlignment = Enum.TextXAlignment.Center, ZIndex = 62, Parent = stage })
+	Kit.label({ Size = UDim2.new(1, 0, 0, 18), Position = UDim2.fromOffset(0, 46), Text = "SELECT A CHARACTER", TextSize = 12, Font = Enum.Font.GothamBold, TextColor3 = C.Dim, TextXAlignment = Enum.TextXAlignment.Center, ZIndex = 62, Parent = stage })
+
 	local max = char and char.MaxCharacters or 2
 	local list = char and char.Characters or {}
 	local classes = {}
 	for _, class in ipairs(char and char.Classes or {}) do
 		classes[class.Id] = class
 	end
-	local cardW, gap = 230, 24
+	local cardW, cardH, gap, top = 290, 236, 28, 80
 	local total = max * cardW + (max - 1) * gap
+	local inGame = char and char.InGame
 	for index = 1, max do
-		local x = -total / 2 + (index - 1) * (cardW + gap)
+		local x = (STAGE_W - total) / 2 + (index - 1) * (cardW + gap)
 		local entry = list[index]
-		local card = Kit.frame({ Name = "Slot" .. index, Size = UDim2.fromOffset(cardW, 250), Position = UDim2.new(0.5, x, 0, 104), BackgroundColor3 = C.Panel, ZIndex = 62, Parent = body })
+		local card = Kit.frame({ Name = "Slot" .. index, Size = UDim2.fromOffset(cardW, cardH), Position = UDim2.fromOffset(x, top), BackgroundColor3 = C.Panel, ZIndex = 62, Parent = stage })
 		if entry then
 			local class = classes[entry.ClassId] or { Name = entry.ClassId }
 			local color = C[entry.ClassId] or C.Accent
+			local playing = entry.Active and inGame
 			Kit.new("UIStroke", { Color = color, Thickness = 2, Parent = card })
 			Kit.frame({ Size = UDim2.new(1, 0, 0, 6), BackgroundColor3 = color, NoCorner = true, ZIndex = 63, Parent = card })
-			Kit.label({ Size = UDim2.new(1, -20, 0, 30), Position = UDim2.fromOffset(10, 16), Text = class.Name, TextSize = 24, Font = Enum.Font.GothamBlack, TextColor3 = color, ZIndex = 63, Parent = card })
-			Kit.label({ Size = UDim2.new(1, -20, 0, 18), Position = UDim2.fromOffset(10, 48), Text = class.Role or "", TextSize = 12, TextColor3 = C.Dim, ZIndex = 63, Parent = card })
+			Kit.label({ Size = UDim2.new(1, -28, 0, 30), Position = UDim2.fromOffset(14, 16), Text = class.Name, TextSize = 26, Font = Enum.Font.GothamBlack, TextColor3 = color, TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 63, Parent = card })
+			Kit.label({ Size = UDim2.new(1, -28, 0, 16), Position = UDim2.fromOffset(14, 48), Text = (class.Role or ""):upper(), TextSize = 11, Font = Enum.Font.GothamBold, TextColor3 = C.Dim, TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 63, Parent = card })
+			if playing then
+				Kit.label({ Size = UDim2.fromOffset(80, 16), Position = UDim2.new(1, -94, 0, 22), Text = "PLAYING", TextSize = 11, Font = Enum.Font.GothamBlack, TextColor3 = GOOD, TextXAlignment = Enum.TextXAlignment.Right, ZIndex = 63, Parent = card })
+			end
+			divider(card, 76, 63)
 			local path
 			for _, p in ipairs(class.Paths or {}) do
 				if p.Id == entry.SubclassId then
 					path = p.Name
 				end
 			end
-			Kit.label({ Size = UDim2.new(1, -20, 0, 20), Position = UDim2.fromOffset(10, 82), Text = ("Level %d"):format(entry.Level), TextSize = 18, Font = Enum.Font.GothamBold, ZIndex = 63, Parent = card })
-			Kit.label({ Size = UDim2.new(1, -20, 0, 18), Position = UDim2.fromOffset(10, 106), Text = ("Furthest stage %d"):format(entry.HighestStage), TextSize = 13, TextColor3 = C.Dim, ZIndex = 63, Parent = card })
-			Kit.label({ Size = UDim2.new(1, -20, 0, 18), Position = UDim2.fromOffset(10, 126), Text = path and ("Path: " .. path) or "Path: chosen at level 30", TextSize = 13, TextColor3 = C.Dim, ZIndex = 63, Parent = card })
-			if entry.Active and state.Player.Character.InGame then
-				Kit.label({ Size = UDim2.new(1, -20, 0, 18), Position = UDim2.fromOffset(10, 150), Text = "Playing now", TextSize = 12, TextColor3 = GOOD, ZIndex = 63, Parent = card })
-			end
+			statRow(card, 90, "Level", tostring(entry.Level), 63)
+			statRow(card, 114, "Furthest stage", tostring(entry.HighestStage), 63)
+			statRow(card, 138, "Path", path or "At level 30", 63)
 			Kit.button({
-				Name = "Play" .. index, Size = UDim2.new(1, -24, 0, 44), Position = UDim2.new(0, 12, 1, -56), Text = if entry.Active and state.Player.Character.InGame then "Continue" else "Play",
-				BackgroundColor3 = GOOD, TextColor3 = Color3.fromRGB(10, 40, 18), TextSize = 18, ZIndex = 63, Parent = card,
+				Name = "Play" .. index, Size = UDim2.new(1, -28, 0, 40), Position = UDim2.new(0, 14, 1, -54), Text = if playing then "CONTINUE" else "PLAY",
+				BackgroundColor3 = GOOD, TextColor3 = Color3.fromRGB(10, 40, 18), TextSize = 16, ZIndex = 63, Parent = card,
 			}, function()
-				if entry.Active and state.Player.Character.InGame then
+				if playing then
 					self:Hide()
 				else
 					self:Play(entry.Slot)
 				end
 			end)
 		else
-			Kit.new("UIStroke", { Color = C.Dim, Thickness = 2, Transparency = 0.5, Parent = card })
-			Kit.label({ Size = UDim2.new(1, 0, 0, 60), Position = UDim2.fromOffset(0, 62), Text = "+", TextSize = 60, Font = Enum.Font.GothamBlack, TextColor3 = C.Dim, TextXAlignment = Enum.TextXAlignment.Center, ZIndex = 63, Parent = card })
-			Kit.label({ Size = UDim2.new(1, -20, 0, 40), Position = UDim2.fromOffset(10, 130), Text = "Empty slot.\nCreating a character is just picking a class.", TextSize = 12, TextColor3 = C.Dim, TextXAlignment = Enum.TextXAlignment.Center, ZIndex = 63, Parent = card })
+			Kit.new("UIStroke", { Color = C.Dim, Thickness = 1.5, Transparency = 0.6, Parent = card })
+			card.BackgroundTransparency = 0.35
+			Kit.label({ Size = UDim2.new(1, 0, 0, 56), Position = UDim2.fromOffset(0, 38), Text = "+", TextSize = 54, Font = Enum.Font.GothamBlack, TextColor3 = C.Dim, TextXAlignment = Enum.TextXAlignment.Center, ZIndex = 63, Parent = card })
+			Kit.label({ Size = UDim2.new(1, -40, 0, 18), Position = UDim2.fromOffset(20, 104), Text = "Empty slot", TextSize = 14, Font = Enum.Font.GothamBold, TextXAlignment = Enum.TextXAlignment.Center, ZIndex = 63, Parent = card })
+			Kit.label({ Size = UDim2.new(1, -40, 0, 32), Position = UDim2.fromOffset(20, 126), Text = "A character is just a class.\nPick one to begin.", TextSize = 12, TextColor3 = C.Dim, TextXAlignment = Enum.TextXAlignment.Center, ZIndex = 63, Parent = card })
 			Kit.button({
-				Name = "Create" .. index, Size = UDim2.new(1, -24, 0, 44), Position = UDim2.new(0, 12, 1, -56), Text = "Create character", TextSize = 16, ZIndex = 63, Parent = card,
+				Name = "Create" .. index, Size = UDim2.new(1, -28, 0, 40), Position = UDim2.new(0, 14, 1, -54), Text = "CREATE CHARACTER", TextSize = 14, ZIndex = 63, Parent = card,
 			}, function()
 				self.Creating = true
 				self.Message = nil
@@ -139,9 +159,10 @@ function MainMenu:Render(state)
 			end)
 		end
 	end
-	if self.Message then
-		Kit.label({ Size = UDim2.new(1, 0, 0, 22), Position = UDim2.fromOffset(0, 362), Text = self.Message, TextSize = 13, TextColor3 = BAD, TextXAlignment = Enum.TextXAlignment.Center, ZIndex = 62, Parent = body })
-	end
+
+	-- footer
+	local foot = if self.Message then self.Message else ("Up to %d characters per account. Each keeps its own progress."):format(max)
+	Kit.label({ Size = UDim2.new(1, 0, 0, 18), Position = UDim2.fromOffset(0, top + cardH + 14), Text = foot, TextSize = 12, TextColor3 = if self.Message then BAD else C.Dim, TextXAlignment = Enum.TextXAlignment.Center, ZIndex = 62, Parent = stage })
 end
 
 return MainMenu
