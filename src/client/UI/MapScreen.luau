@@ -95,6 +95,13 @@ function MapScreen.Map(container, state, call, extra)
 	end
 	Kit.label({ Size = UDim2.fromOffset(200, 18), Position = UDim2.fromOffset(10, 4), Text = "The Realm", Font = Enum.Font.GothamBlack, TextSize = 13, TextColor3 = INK, TextStrokeTransparency = 1, ZIndex = 2, Parent = map })
 
+	-- season rewards: a shortcut from the map
+	if extra.OpenSeason then
+		Kit.button({ Name = "SeasonButton", Size = UDim2.fromOffset(128, 24), Position = UDim2.new(1, -134, 0, 4), Text = "🏆 Season rewards", TextSize = 12, ZIndex = 5, Parent = map }, function()
+			extra.OpenSeason()
+		end)
+	end
+
 	-- the road
 	for index = 1, ZONES_PER_PAGE - 1 do
 		local a, b = nodePosition(index, width), nodePosition(index + 1, width)

@@ -609,6 +609,86 @@ function Screens.Pets(container, state, call)
 end
 
 -- Wishing Tree --------------------------------------------------------------
+local WISH_THEMES = {
+	Pet = {
+		Title = "🌳  THE WISHING TREE", Sub = "Companion wishes  -  find a loyal friend  🐾", C1 = Color3.fromRGB(26, 92, 78), C2 = Color3.fromRGB(122, 196, 98),
+		Card = Color3.fromRGB(24, 44, 40), Panel = Color3.fromRGB(18, 34, 32), Stroke = Color3.fromRGB(110, 214, 150), Mark = "🌳",
+	},
+	Skill = {
+		Title = "📜  THE ARCANE ARCHIVE", Sub = "Skill wishes  -  learn a new technique  ✨", C1 = Color3.fromRGB(58, 38, 140), C2 = Color3.fromRGB(70, 140, 230),
+		Card = Color3.fromRGB(34, 30, 64), Panel = Color3.fromRGB(24, 22, 48), Stroke = Color3.fromRGB(166, 146, 255), Mark = "📜",
+	},
+}
+local WISH_RARITIES = { "Legendary", "Epic", "Rare", "Common" }
+
+-- what a wish tier can give, grouped by the rarity of the pull: { { Rarity, Ids = {...} } }
+local function wishPool(kind, tier, state)
+	local groups = {}
+	if kind == "Pet" then
+		local PetCfg = require(Shared.Config.Pets)
+		for _, rarity in ipairs(WISH_RARITIES) do
+			if tier.Odds[rarity] then
+				local ids = {}
+				for _, id in ipairs(PetCfg.Order) do
+					local def = PetCfg.Defs[id]
+					if def and def.Wish and def.Rarity == rarity then
+						table.insert(ids, id)
+					end
+				end
+				table.insert(groups, { Rarity = rarity, Ids = ids })
+			end
+		end
+	else
+		local SkillsMod = require(Shared.Skills)
+		local SkillProg = require(Shared.SkillProgress)
+		local all = SkillsMod.Pool(state.Player.ClassId, state.Player.SubclassId)
+		for _, rarity in ipairs(WISH_RARITIES) do
+			if tier.Odds[rarity] then
+				local ids = {}
+				for _, id in ipairs(all) do
+					if Abilities[id] and (SkillProg.IsSubclassSkill(id) or SkillProg.TierRank[SkillProg.BaseTier(id)] <= SkillProg.TierRank[rarity]) then
+						table.insert(ids, id)
+					end
+				end
+				table.insert(groups, { Rarity = rarity, Ids = ids })
+			end
+		end
+	end
+	return groups
+end
+
+local function wishPoolOverlay(container, kind, tier, state, theme, onClose)
+	local overlay = Kit.frame({ Name = "WishPool", Size = UDim2.fromScale(1, 1), BackgroundColor3 = theme.Panel, ZIndex = 20, Parent = container })
+	Kit.new("UIStroke", { Color = theme.Stroke, Thickness = 2, Parent = overlay })
+	Kit.label({ Size = UDim2.new(1, -90, 0, 24), Position = UDim2.fromOffset(10, 4), Text = ("%s can give:"):format(tier.Name), TextSize = 16, Font = Enum.Font.GothamBold, TextColor3 = theme.Stroke, ZIndex = 21, Parent = overlay })
+	Kit.button({ Size = UDim2.fromOffset(70, 26), Position = UDim2.new(1, -78, 0, 4), Text = "Back", TextSize = 13, ZIndex = 21, Parent = overlay }, onClose)
+	local scroll = Kit.new("ScrollingFrame", { Size = UDim2.new(1, -16, 1, -36), Position = UDim2.fromOffset(8, 32), BackgroundTransparency = 1, BorderSizePixel = 0, CanvasSize = UDim2.new(), AutomaticCanvasSize = Enum.AutomaticSize.Y, ScrollBarThickness = 4, ZIndex = 21, Parent = overlay })
+	Kit.new("UIListLayout", { Padding = UDim.new(0, 6), Parent = scroll })
+	if kind == "Skill" then
+		Kit.label({ Size = UDim2.new(1, -8, 0, 28), Text = "A pull at a rarity can be any of these skills, received at that rarity. Subclass skills can always come up.", TextSize = 11, TextColor3 = C.Dim, ZIndex = 22, Parent = scroll })
+	end
+	for _, group in ipairs(wishPool(kind, tier, state)) do
+		Kit.label({ Size = UDim2.new(1, -8, 0, 18), Text = ("%s  -  %s%%"):format(group.Rarity, tostring(tier.Odds[group.Rarity])), TextSize = 13, Font = Enum.Font.GothamBold, TextColor3 = Kit.rarityColor(group.Rarity), ZIndex = 22, Parent = scroll })
+		local grid = Kit.frame({ Size = UDim2.new(1, -8, 0, 0), BackgroundTransparency = 1, NoCorner = true, AutomaticSize = Enum.AutomaticSize.Y, ZIndex = 22, Parent = scroll })
+		Kit.new("UIGridLayout", { CellSize = UDim2.fromOffset(44, 44), CellPadding = UDim2.fromOffset(5, 5), Parent = grid })
+		if #group.Ids == 0 then
+			Kit.label({ Size = UDim2.new(1, 0, 0, 18), Text = "Nothing at this rarity yet.", TextSize = 11, TextColor3 = C.Dim, ZIndex = 22, Parent = grid })
+		end
+		for _, id in ipairs(group.Ids) do
+			local cell = Kit.frame({ BackgroundTransparency = 1, NoCorner = true, ZIndex = 22, Parent = grid })
+			if kind == "Pet" then
+				local def = require(Shared.Config.Pets).Defs[id]
+				local tile = Icons.Pet(cell, id, { Size = UDim2.fromOffset(44, 44), Position = UDim2.new() })
+				Kit.Hover(tile, function() return ("<b>%s</b>\n%s: %s"):format(def.DisplayName, (def.Skill and def.Skill.Name) or "Skill", (def.Skill and def.Skill.Text) or "") end)
+			else
+				local def = Abilities[id]
+				local tile = Icons.Skill(cell, def, { Size = UDim2.fromOffset(44, 44), Position = UDim2.new(), Tier = group.Rarity })
+				Kit.Hover(tile, function() return Tips.Skill(def, 1) end)
+			end
+		end
+	end
+end
+
 local ODDS_SHORT = { Common = "C", Rare = "R", Epic = "E", Legendary = "L" }
 function Screens.Wish(container, state, call, extra)
 	Kit.clear(container)
@@ -625,6 +705,7 @@ function Screens.Wish(container, state, call, extra)
 		Kit.button({ Size = UDim2.fromOffset(130, 28), Position = UDim2.fromOffset((index - 1) * 136, 0), Text = name .. " wishes", TextSize = 13, BackgroundColor3 = if name == kind then C.Accent else C.Panel, TextColor3 = if name == kind then Color3.fromRGB(30, 24, 10) else C.Text, Parent = container }, function()
 			extra.WishKind = name
 			extra.WishResults = nil
+			extra.WishPool = nil
 			redraw()
 		end)
 	end
@@ -638,8 +719,20 @@ function Screens.Wish(container, state, call, extra)
 		end)
 	end
 
+	-- the banner: it matches the side you are on (green and leafy for pets, violet and starry for skills)
+	local theme = WISH_THEMES[kind]
+	local banner = Kit.frame({ Name = "WishBanner", Size = UDim2.new(1, 0, 0, 40), Position = UDim2.fromOffset(0, 34), BackgroundColor3 = Color3.new(1, 1, 1), ClipsDescendants = true, Parent = container })
+	local gradient = Kit.new("UIGradient", { Color = ColorSequence.new(theme.C1, theme.C2), Parent = banner })
+	Kit.new("UIStroke", { Color = theme.Stroke, Thickness = 2, Transparency = 0.2, Parent = banner })
+	TweenService:Create(gradient, TweenInfo.new(3.5, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), { Offset = Vector2.new(0.35, 0) }):Play()
+	Kit.label({ Size = UDim2.new(0.55, 0, 1, 0), Position = UDim2.fromOffset(14, 0), Text = theme.Title, TextSize = 19, Font = Enum.Font.GothamBlack, TextWrapped = false, TextColor3 = Color3.new(1, 1, 1), TextStrokeTransparency = 0.5, Parent = banner })
+	Kit.label({ Size = UDim2.new(0.45, -14, 1, 0), Position = UDim2.new(0.55, 0, 0, 0), Text = theme.Sub, TextSize = 12, TextXAlignment = Enum.TextXAlignment.Right, TextWrapped = false, TextColor3 = Color3.fromRGB(240, 250, 240), TextStrokeTransparency = 0.6, Parent = banner })
+	for i, glyph in ipairs({ "✦", "✧", "✦" }) do
+		Kit.label({ Size = UDim2.fromOffset(16, 16), Position = UDim2.new(0.5 + (i - 2) * 0.12, 0, 0, 4 + (i % 2) * 14), Text = glyph, TextSize = 12, TextColor3 = Color3.fromRGB(255, 255, 220), TextTransparency = 0.35, TextStrokeTransparency = 1, Parent = banner })
+	end
+
 	-- left: the three tiers
-	local left = Kit.frame({ Size = UDim2.new(0, 330, 1, -34), Position = UDim2.fromOffset(0, 34), BackgroundTransparency = 1, NoCorner = true, Parent = container })
+	local left = Kit.frame({ Size = UDim2.new(0, 330, 1, -80), Position = UDim2.fromOffset(0, 80), BackgroundTransparency = 1, NoCorner = true, Parent = container })
 	local function wish(tier, count)
 		extra.WishResults = nil
 		if extra.WishAnim and extra.WishAnim.Parent then
@@ -659,7 +752,8 @@ function Screens.Wish(container, state, call, extra)
 		end
 	end
 	for index, tier in ipairs(info.Tiers) do
-		local card = Kit.frame({ Size = UDim2.new(1, 0, 0, 62), Position = UDim2.fromOffset(0, (index - 1) * 68), BackgroundColor3 = Color3.fromRGB(30, 33, 50), Parent = left })
+		local card = Kit.frame({ Size = UDim2.new(1, 0, 0, 62), Position = UDim2.fromOffset(0, (index - 1) * 68), BackgroundColor3 = theme.Card, Parent = left })
+		Kit.new("UIStroke", { Color = theme.Stroke, Thickness = 1, Transparency = 0.55, Parent = card })
 		local odds = {}
 		for _, r in ipairs({ "Common", "Rare", "Epic", "Legendary" }) do
 			if tier.Odds[r] then
@@ -667,7 +761,11 @@ function Screens.Wish(container, state, call, extra)
 			end
 		end
 		local cost = if pay == "Ticket" then ("%d ticket"):format(tier.Tickets) else ("%d %s"):format(tier.Cost, info.CurrencyName)
-		Kit.label({ Size = UDim2.new(1, -150, 0, 20), Position = UDim2.fromOffset(8, 4), Text = tier.Name, TextSize = 14, Font = Enum.Font.GothamBold, TextColor3 = if tier.Unlocked then C.Text else C.Dim, Parent = card })
+		Kit.button({ Name = "PoolButton", Size = UDim2.fromOffset(56, 20), Position = UDim2.new(1, -206, 0, 5), Text = "📖 Pool", TextSize = 11, BackgroundColor3 = theme.C1, Parent = card }, function()
+			extra.WishPool = tier.Id
+			redraw()
+		end)
+		Kit.label({ Size = UDim2.new(1, -214, 0, 20), Position = UDim2.fromOffset(8, 4), Text = tier.Name, TextSize = 14, Font = Enum.Font.GothamBold, TextColor3 = if tier.Unlocked then C.Text else C.Dim, Parent = card })
 		Kit.label({ Size = UDim2.new(1, -150, 0, 34), Position = UDim2.fromOffset(8, 24), RichText = true, TextSize = 11, Text = if tier.Unlocked then (table.concat(odds, "  ") .. "\n" .. cost .. " each") else ("Reach stage %d to unlock"):format(tier.UnlockStage), TextColor3 = C.Dim, Parent = card })
 		if not tier.Unlocked then
 			card.BackgroundColor3 = Color3.fromRGB(22, 23, 34)
@@ -685,13 +783,25 @@ function Screens.Wish(container, state, call, extra)
 			b1.Active, b10.Active = canOne, canTen
 		end
 	end
+	if extra.WishPool then
+		for _, tier in ipairs(info.Tiers) do
+			if tier.Id == extra.WishPool then
+				wishPoolOverlay(container, kind, tier, extra.State or state, theme, function()
+					extra.WishPool = nil
+					redraw()
+				end)
+			end
+		end
+	end
 	local pityText = ("Guaranteed: Rare+ within %d wishes, Epic+ within %d%s"):format(info.LeftRare, info.LeftEpic, info.LeftLegendary and (", Legendary within " .. info.LeftLegendary) or "")
 	if kind == "Skill" then
 		pityText ..= ("\n%d skills not found yet - spare copies become skill XP"):format(info.Remaining or 0)
 	end
 	
 	-- right: what you just got
-	local right = Kit.frame({ Size = UDim2.new(1, -338, 1, -34), Position = UDim2.fromOffset(338, 34), BackgroundColor3 = Color3.fromRGB(24, 27, 42), Parent = container })
+	local right = Kit.frame({ Size = UDim2.new(1, -338, 1, -80), Position = UDim2.fromOffset(338, 80), BackgroundColor3 = theme.Panel, ClipsDescendants = true, Parent = container })
+	Kit.new("UIStroke", { Color = theme.Stroke, Thickness = 1, Transparency = 0.5, Parent = right })
+	Kit.label({ Size = UDim2.fromOffset(150, 150), AnchorPoint = Vector2.new(1, 1), Position = UDim2.new(1, -6, 1, 10), Text = theme.Mark, TextSize = 110, TextTransparency = 0.88, TextStrokeTransparency = 1, TextXAlignment = Enum.TextXAlignment.Center, Parent = right })
 	Kit.label({ Size = UDim2.new(1, -12, 0, 30), Position = UDim2.new(0, 6, 1, -32), Text = pityText, TextSize = 10, TextColor3 = C.Dim, TextYAlignment = Enum.TextYAlignment.Bottom, Parent = right })
 	local res = extra.WishResults
 	if not res or res.Kind ~= kind then

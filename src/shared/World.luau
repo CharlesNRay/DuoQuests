@@ -44,6 +44,7 @@ World.PlazaSpots = {
 	Blacksmith = { Angle = 38, Radius = 52 },
 	Map = { Angle = -100, Radius = 55 },
 	Rankings = { Angle = 100, Radius = 55 },
+	Season = { Angle = 126, Radius = 55 }, -- the season rewards board, next to the leaderboards
 	Daily = { Angle = 150, Radius = 52 },
 	Tree = { Angle = -150, Radius = 100 }, -- out on the grass beyond the paving (plaza radius 70, rim 71.5)
 }

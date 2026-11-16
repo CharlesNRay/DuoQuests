@@ -211,9 +211,14 @@ function Hud.new(root)
 	self.UltFill = Kit.frame({ Size = UDim2.fromScale(0, 1), BackgroundColor3 = Kit.Colors.Epic, Parent = self.UltBack })
 
 	-- the "watching" bar (top-centre): stop + hide-the-rest-of-the-HUD ---------------
-	self.Watching = pill(gui, { Size = UDim2.fromOffset(330, 32), Position = UDim2.new(0.5, -165, 0, 6) })
+	self.Watching = pill(gui, { Size = UDim2.fromOffset(420, 32), Position = UDim2.new(0.5, -210, 0, 6) })
 	self.Watching.Visible = false
-	self.WatchText = Kit.label({ Size = UDim2.new(1, -190, 1, 0), Position = UDim2.fromOffset(8, 0), Text = "", TextSize = 12, TextWrapped = false, TextTruncate = Enum.TextTruncate.AtEnd, Parent = self.Watching })
+	self.WatchText = Kit.label({ Size = UDim2.new(1, -280, 1, 0), Position = UDim2.fromOffset(8, 0), Text = "", TextSize = 12, TextWrapped = false, TextTruncate = Enum.TextTruncate.AtEnd, Parent = self.Watching })
+	self.LogButton = Kit.button({ Size = UDim2.fromOffset(76, 26), Position = UDim2.new(1, -270, 0, 3), Text = "📋 Log", TextSize = 12, Parent = self.Watching }, function()
+		if self.OnLog then
+			self.OnLog()
+		end
+	end)
 	self.HideButton = Kit.button({ Size = UDim2.fromOffset(86, 26), Position = UDim2.new(1, -182, 0, 3), Text = "Hide HUD", TextSize = 12, Parent = self.Watching }, function()
 		self:SetHudHidden(not self.HudHidden)
 	end)

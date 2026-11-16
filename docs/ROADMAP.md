@@ -273,3 +273,10 @@ two paths of 3 skills, a season prize pet (Arcanix, Skyhawk, Shadowcat, Spiritli
 - Auto-combat does not start until everyone online in the party has chosen a class (PartyService.tickEntry); it starts right after the pick.
 - Each class has a weapon (`Weapon` and `Blurb` in Config/Classes). `Shared/ClassWeapons` builds it as a Tool from parts. Tapping a class in the picker wields a local-only preview on the player's own character and shows a 3D view; choosing gives the real tool (server `WeaponService`, backpack + StarterGear) and equips it.
 - Not seen in Studio yet: weapon orientation in the hand (blades should point forward; the bow and tome may need grip tweaks), the picker layout.
+
+## HUD cleanup, Store, Season board, quests, Wishing Tree polish
+- HUD: one **Store** button (premium shop, redeem code, cosmetics tabs); no Character button; fight log lives in the battle (watching) bar; no Battle view button.
+- Season rewards is a plaza board next to the leaderboards and a button on the map; title only, with a hoverable "?" explaining cumulative rewards.
+- Quests/Season pass: red dots on Daily/Weekly/Season tabs; claimable rewards sort to the top.
+- Wishing Tree: themed banner per side (leafy green pets, violet skills), tinted cards, a "Pool" button per tier listing every pet/skill that tier can give by rarity, and a longer first-Legendary suspense sequence (gold heartbeat, held card, "NEW LEGENDARY" reveal).
+- Open: shards still have no use (recommended: subclass skills + shard cost on high gear upgrades).

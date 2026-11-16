@@ -9,7 +9,7 @@
 	  Map board, Rankings board, Daily gift chest
 	  Roads running north between the player lots, and a marker on every lot nobody has taken
 
-	  Hub.Build(handlers)       handlers = { Map, Ranks, Daily, Merchant, Blacksmith, Tree } (all functions)
+	  Hub.Build(handlers)       handlers = { Map, Ranks, Season, Daily, Merchant, Blacksmith, Tree } (all functions)
 	  Hub.SetDailyReady(bool)
 	  Hub.SetLots(taken)        taken = { [slot] = true }: lots without a party get an "Open lot" marker
 	  Hub.Update(dt)            animate the townsfolk and the fountain (called every frame by Main)
@@ -395,6 +395,9 @@ function Hub.Build(handlers)
 	-- boards and the daily chest
 	board(pointOf("Map"), centre, "WORLD MAP", Color3.fromRGB(40, 90, 150), "Open map", handlers.Map)
 	board(pointOf("Rankings"), centre, "RANKINGS", Color3.fromRGB(110, 50, 140), "View leaderboards", handlers.Ranks)
+	if handlers.Season then
+		board(pointOf("Season"), centre, "SEASON REWARDS", Color3.fromRGB(176, 120, 30), "View season rewards", handlers.Season)
+	end
 	local chest = Instance.new("Model")
 	chest.Name = "Daily Gift"
 	local base = part(chest, { Name = "Base", Size = Vector3.new(4, 2.4, 3), Position = Vector3.new(0, 1.2, 0), Color = Color3.fromRGB(150, 100, 56), Material = Enum.Material.Wood })

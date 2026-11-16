@@ -29,6 +29,7 @@ Screens.Premium = require(script.Parent.UI.PremiumScreen).Premium
 Screens.Season = require(script.Parent.UI.SeasonScreen).Season
 Screens.Cosmetics = require(script.Parent.UI.CosmeticsScreen).Cosmetics
 Screens.Codes = require(script.Parent.UI.CodesScreen).Codes
+Screens.Store = require(script.Parent.UI.StoreScreen).Store
 Screens.Character = require(script.Parent.UI.CharacterScreen).Character
 local CosmeticsVisuals = require(script.Parent.Battle.CosmeticsVisuals)
 CosmeticsVisuals.Init()
@@ -68,6 +69,7 @@ local liveLog = LiveLog.new(root, Screens.BuildLog)
 local fighting = false
 local arenas = Arenas.new(Players.LocalPlayer.UserId)
 
+local stopWatching -- defined below; the Plaza button needs it
 -- Teleports: "Home" stands you in front of your own arena (facing it); "Plaza" goes back to the fountain.
 local function teleport(cframe)
 	local character = Players.LocalPlayer.Character
@@ -142,7 +144,7 @@ end
 local PANEL_DEFAULT = Vector2.new(500, 286)
 local PANEL_SIZES = {
 	Map = Vector2.new(640, 298), Hero = Vector2.new(640, 298), Skills = Vector2.new(660, 344),
-	Merchant = Vector2.new(540, 292), Blacksmith = Vector2.new(540, 292), Wish = Vector2.new(640, 310), Boss = Vector2.new(640, 310), Quests = Vector2.new(640, 330), Premium = Vector2.new(640, 330), Season = Vector2.new(640, 330), Cosmetics = Vector2.new(640, 330), Codes = Vector2.new(540, 300), Character = Vector2.new(640, 340),
+	Merchant = Vector2.new(540, 292), Blacksmith = Vector2.new(540, 292), Wish = Vector2.new(640, 352), Store = Vector2.new(640, 336), Boss = Vector2.new(640, 310), Quests = Vector2.new(640, 330), Premium = Vector2.new(640, 330), Season = Vector2.new(640, 330), Cosmetics = Vector2.new(640, 330), Codes = Vector2.new(540, 300), Character = Vector2.new(640, 340),
 }
 local SHOP_NPC = { Merchant = "Merchant", Blacksmith = "Blacksmith", Wish = "Tree" }
 local panel = Kit.frame({ Name = "Panel", Size = UDim2.new(0, 500, 0, 286), Position = UDim2.new(0.5, -250, 0, 42), BackgroundColor3 = Kit.Colors.Bg, Visible = false, ZIndex = 5, Parent = root })
@@ -183,7 +185,8 @@ local function redraw()
 		offerPopup = require(script.Parent.UI.PremiumScreen).Popup(root, state, call, function(tab)
 			extra.PremiumTab = tab
 			extra.PremiumMsg = nil
-			open("Premium", "Premium Shop", true)
+			extra.StoreTab = "Premium"
+			open("Store", "Store", true)
 		end)
 	end
 	Hub.SetDailyReady(state.Player.Daily ~= nil and state.Player.Daily.CanClaim == true)
@@ -334,6 +337,10 @@ end
 extra.RefreshSeason = function()
 	showSeason(true)
 end
+extra.OpenSeason = function()
+	extra.SeasonMsg = nil
+	showSeason()
+end
 extra.ShowBoard = function(categoryId)
 	showBoard(categoryId, true)
 end
@@ -365,24 +372,35 @@ end
 Hub.Build({
 	Map = function() open("Map", "World Map", true) end,
 	Ranks = function() showBoard(extra.BoardCategory or "Stage") end,
+	Season = function() extra.OpenSeason() end,
 	Daily = function() open("Daily", "Daily Login", true) end,
 	Merchant = function() shopOpen("Merchant", "Merchant - sell gear") end,
 	Blacksmith = function() shopOpen("Blacksmith", "Blacksmith - upgrade gear") end,
 	Tree = function() open("Wish", "Wishing Tree", true) end,
 })
-hud:AddButton("Plaza", "mini", "⛲", "Plaza", goPlaza)
-hud:AddButton("Home", "mini", "🏠", "Home", goHome)
+hud:AddButton("Plaza", "mini", "⛲", "Plaza (leave the battle view)", function()
+	if BattleCamera.IsBattleView() then
+		stopWatching()
+	end
+	goPlaza()
+end)
+hud:AddButton("Home", "mini", "🏠", "Home: your arena and your battle", function()
+	goHome()
+	if extra.WatchMine then
+		extra.WatchMine()
+	end
+end)
 hud:AddButton("Boss", "mini", "👹", "Bosses", function()
 	extra.Boss = nil
 	open("Boss", "Bosses")
 end)
-hud:AddButton("Premium", "mini", "🔶", "Premium shop", function() open("Premium", "Premium Shop") end)
-hud:AddButton("Character", "mini", "🧍", "Your class and weapon", function() extra.CharMsg = nil open("Character", "Your class") end)
-hud:AddButton("Codes", "mini", "🎁", "Redeem a code", function() extra.CodeResult = nil open("Codes", "Redeem Code") end)
-hud:AddButton("Cosmetics", "mini", "🎨", "Cosmetics: auras, kill effects, name colours, titles", function() open("Cosmetics", "Cosmetics") end)
-hud:AddButton("Season", "mini", "🏆", "Season rewards", function() extra.SeasonMsg = nil showSeason() end)
+hud:AddButton("Store", "mini", "🛍️", "Store: premium shop, cosmetics, redeem a code", function()
+	extra.StoreTab = extra.StoreTab or "Premium"
+	open("Store", "Store")
+end)
 hud:AddButton("Quests", "mini", "📜", "Quests & Season Pass", function() open("Quests", "Quests & Season Pass") end)
-hud:AddButton("Log", "mini", "📋", "Fight log", function() open("Log", "Last Fight") end)
+-- the fight log lives in the battle view (its bar has a Log button)
+hud.OnLog = function() open("Log", "Last Fight") end
 
 push.OnClientEvent:Connect(function(kind, info)
 	if kind == "World" then
@@ -473,7 +491,7 @@ BattleCamera.Start()
 BattleCamera.SetBattleView(false) -- start walking around, not in the fixed battle view
 -- Camera: walk around, snap to your own battle, or watch someone else's.
 local watchingSlot = nil
-local function stopWatching()
+function stopWatching()
 	watchingSlot = nil
 	local mine = arenas:MySlot()
 	if mine then
@@ -481,7 +499,6 @@ local function stopWatching()
 	end
 	BattleCamera.SetBattleView(false)
 	hud:SetWatching(nil)
-	hud:SetButtonText("View", "🎥", "Battle view")
 end
 
 local function watch(slot, origin)
@@ -503,7 +520,6 @@ local function watch(slot, origin)
 		end
 	end
 	hud:SetWatching(label, stopWatching)
-	hud:SetButtonText("View", "🚶", "Walk")
 end
 arenas.OnWatch = watch
 function extra.WatchMine()
@@ -512,17 +528,6 @@ function extra.WatchMine()
 		watch(mine, arenas:OriginOf(mine))
 	end
 end
-
-hud:AddButton("View", "mini", "🎥", "Battle view", function()
-	if BattleCamera.IsBattleView() then
-		stopWatching()
-	else
-		local mine = arenas:MySlot()
-		if mine then
-			watch(mine, arenas:OriginOf(mine))
-		end
-	end
-end)
 
 -- first state (the server may still be loading the profile)
 for _ = 1, 40 do

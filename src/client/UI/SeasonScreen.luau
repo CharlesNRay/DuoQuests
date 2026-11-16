@@ -5,7 +5,8 @@
 	    extra.RefreshSeason  = function() re-fetches it and redraws
 
 	Shows finished seasons' rewards waiting to be claimed, the player's live standing and projected Sunstones,
-	and EVERY bracket (Top 10%..100%, the exact ranks, and the class awards) so everyone can see what they play for.
+	and every bracket (Top 10%..100%, the exact ranks, and the class awards). Only the season title is shown as text; a "?" icon
+	explains how the rewards add up.
 ]]
 local Kit = require(script.Parent.Kit)
 local C = Kit.Colors
@@ -76,10 +77,16 @@ function SeasonScreen.Season(container, state, call, extra)
 		Kit.label({ Size = UDim2.new(1, -8, 0, 18), Text = extra.SeasonMsg, TextSize = 12, TextColor3 = GOOD, Parent = scroll })
 	end
 
-	-- live standing
+	-- title row: the season and a "?" that explains how rewards add up
 	local live = data.Live or {}
 	local days = math.max(0, math.ceil(((data.Season.EndsAt or 0) - os.time()) / 86400))
-	section(scroll, ("%s  -  ends in %d day%s"):format(data.Season.Name ~= "" and data.Season.Name or "This season", days, days == 1 and "" or "s"))
+	local head = Kit.frame({ Size = UDim2.new(1, -8, 0, 30), BackgroundTransparency = 1, NoCorner = true, Parent = scroll })
+	Kit.label({ Size = UDim2.new(1, -44, 1, 0), Text = ("%s  -  ends in %d day%s"):format(data.Season.Name ~= "" and data.Season.Name or "This season", days, days == 1 and "" or "s"), TextSize = 16, Font = Enum.Font.GothamBold, TextColor3 = C.Accent, Parent = head })
+	local help = Kit.button({ Name = "HelpIcon", Size = UDim2.fromOffset(28, 28), Position = UDim2.new(1, -30, 0, 1), Text = "?", TextSize = 16, BackgroundColor3 = C.PanelLight, Parent = head })
+	Kit.corner(14).Parent = help
+	Kit.Hover(help, function()
+		return ("<b>How season rewards work</b>\nRewards are cumulative: you earn your Top % bracket, plus every rank row at or above your rank (rank 1 earns all of them), plus your class bracket on top.\nRanking is your furthest stage this season (stage %d or higher counts). Everything is paid in Sunstones, Wishstones, pets and cosmetics - earned, never random."):format(data.MinStage)
+	end)
 	local mine
 	if live.Ranked then
 		local bits = { ("Furthest stage %d"):format(live.Score), ("%s of %s players"):format(live.Percentile or "?", commas(live.Players or 0)) }
@@ -89,27 +96,23 @@ function SeasonScreen.Season(container, state, call, extra)
 		if live.ClassRank then
 			table.insert(bits, ("rank #%d as %s"):format(live.ClassRank, live.ClassId))
 		end
-		mine = table.concat(bits, "  -  ") .. ("\nIf the season ended now you would earn about 🔶 %s Sunstones."):format(commas(live.Projected or 0))
+		mine = table.concat(bits, "  -  ") .. ("  -  about 🔶 %s now"):format(commas(live.Projected or 0))
 	else
-		mine = ("Reach stage %d to be ranked (you are on stage %d). Everyone who gets there earns Sunstones at the end of the season."):format(data.MinStage, live.Score or 1)
+		mine = ("Reach stage %d to be ranked (you are on stage %d)."):format(data.MinStage, live.Score or 1)
 	end
-	local card = Kit.frame({ Size = UDim2.new(1, -8, 0, 46), BackgroundColor3 = C.Panel, Parent = scroll })
-	Kit.label({ Size = UDim2.new(1, -20, 1, -8), Position = UDim2.fromOffset(10, 4), Text = mine, TextSize = 12, TextWrapped = true, TextYAlignment = Enum.TextYAlignment.Top, TextColor3 = BLUE, Parent = card })
+	local card = Kit.frame({ Size = UDim2.new(1, -8, 0, 28), BackgroundColor3 = C.Panel, Parent = scroll })
+	Kit.label({ Size = UDim2.new(1, -20, 1, 0), Position = UDim2.fromOffset(10, 0), Text = mine, TextSize = 12, TextWrapped = false, TextTruncate = Enum.TextTruncate.AtEnd, TextColor3 = BLUE, Parent = card })
 
 	-- every bracket, so nobody is left guessing
-	section(scroll, "Everyone who is ranked earns a share - the further you get, the more")
 	for _, row in ipairs(data.Brackets.Percentiles) do
 		bracketRow(scroll, row.Label, rewardText(row), live.Percentile == row.Label, row.Extras)
 	end
-	section(scroll, "Ranks 1-50 earn extra on top - and every step below your rank adds too")
 	for _, row in ipairs(data.Brackets.Ranks) do
 		bracketRow(scroll, row.Label, rewardText(row), live.RankLabel == row.Label, row.Extras)
 	end
-	section(scroll, "Best of each class earn extra too (Warrior, Cleric and Mage boards)")
 	for _, row in ipairs(data.Brackets.ClassRanks) do
 		bracketRow(scroll, row.Label, rewardText(row), false, row.Extras)
 	end
-	Kit.label({ Size = UDim2.new(1, -8, 0, 30), Text = ("Ranked by furthest stage this season (stage %d or higher counts). Ties share a bracket. Rewards are paid in Sunstones - earned, never random."):format(data.MinStage), TextSize = 10, TextWrapped = true, TextColor3 = C.Dim, Parent = scroll })
 end
 
 return SeasonScreen

@@ -39,32 +39,48 @@ local function periodTab(area, opts, call)
 	local scroll = Kit.new("ScrollingFrame", { Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1, BorderSizePixel = 0, CanvasSize = UDim2.new(), AutomaticCanvasSize = Enum.AutomaticSize.Y, ScrollBarThickness = 4, Parent = area })
 	Kit.new("UIListLayout", { Padding = UDim.new(0, 6), Parent = scroll })
 	Kit.label({ Size = UDim2.new(1, -8, 0, 18), Text = opts.Intro, TextSize = 12, TextColor3 = C.Dim, Parent = scroll })
+	-- claimable rewards first, then quests still in progress, then claimed ones
+	local entries = {}
 	for _, quest in ipairs(daily.Quests) do
-		local row = Kit.frame({ Size = UDim2.new(1, -8, 0, 62), BackgroundColor3 = C.PanelLight, Parent = scroll })
-		Kit.label({ Size = UDim2.new(1, -150, 0, 20), Position = UDim2.fromOffset(10, 4), Text = quest.Text, TextSize = 14, Font = Enum.Font.GothamBold, Parent = row })
-		bar(row, quest.Progress / quest.Goal, UDim2.fromOffset(10, 28), UDim2.new(1, -170, 0, 10), if quest.Done then C.Up else C.Accent)
-		Kit.label({ Size = UDim2.new(1, -150, 0, 16), Position = UDim2.fromOffset(10, 42), Text = ("%d / %d      Reward: %s"):format(quest.Progress, quest.Goal, rewardText(daily.Reward)), TextSize = 11, TextColor3 = C.Dim, Parent = row })
-		if quest.Claimed then
-			Kit.label({ Size = UDim2.fromOffset(110, 40), Position = UDim2.new(1, -120, 0.5, -20), Text = "Claimed ✓", TextSize = 13, TextXAlignment = Enum.TextXAlignment.Center, TextColor3 = C.Up, Parent = row })
-		else
-			Kit.button({ Size = UDim2.fromOffset(110, 40), Position = UDim2.new(1, -120, 0.5, -20), Text = if quest.Done then "Claim" else "In progress", BackgroundColor3 = if quest.Done then C.Up else C.Panel, Parent = row }, function()
-				if quest.Done then
-					call(opts.ClaimQuest, quest.Index)
-				end
-			end)
-		end
+		table.insert(entries, { Kind = "Quest", Quest = quest, Rank = if quest.Done and not quest.Claimed then 1 elseif quest.Claimed then 3 else 2, Order = quest.Index or 0 })
 	end
-	local bonus = Kit.frame({ Size = UDim2.new(1, -8, 0, 56), BackgroundColor3 = C.PanelLight, Parent = scroll })
-	Kit.label({ Size = UDim2.new(1, -150, 0, 20), Position = UDim2.fromOffset(10, 6), Text = opts.BonusTitle, TextSize = 14, Font = Enum.Font.GothamBold, TextColor3 = C.Accent, Parent = bonus })
-	Kit.label({ Size = UDim2.new(1, -150, 0, 18), Position = UDim2.fromOffset(10, 30), Text = "Reward: " .. rewardText(daily.Bonus), TextSize = 11, TextColor3 = C.Dim, Parent = bonus })
-	if daily.BonusClaimed then
-		Kit.label({ Size = UDim2.fromOffset(110, 40), Position = UDim2.new(1, -120, 0.5, -20), Text = "Claimed ✓", TextSize = 13, TextXAlignment = Enum.TextXAlignment.Center, TextColor3 = C.Up, Parent = bonus })
-	else
-		Kit.button({ Size = UDim2.fromOffset(110, 40), Position = UDim2.new(1, -120, 0.5, -20), Text = if daily.BonusReady then "Claim" else opts.BonusButton, BackgroundColor3 = if daily.BonusReady then C.Up else C.Panel, Parent = bonus }, function()
-			if daily.BonusReady then
-				call(opts.ClaimBonus)
+	table.insert(entries, { Kind = "Bonus", Rank = if daily.BonusReady and not daily.BonusClaimed then 0 elseif daily.BonusClaimed then 4 else 2.5, Order = 100 })
+	table.sort(entries, function(a, b)
+		if a.Rank ~= b.Rank then
+			return a.Rank < b.Rank
+		end
+		return a.Order < b.Order
+	end)
+	for _, entry in ipairs(entries) do
+		if entry.Kind == "Quest" then
+			local quest = entry.Quest
+			local row = Kit.frame({ Size = UDim2.new(1, -8, 0, 62), BackgroundColor3 = if quest.Done and not quest.Claimed then Color3.fromRGB(34, 62, 44) else C.PanelLight, Parent = scroll })
+			Kit.label({ Size = UDim2.new(1, -150, 0, 20), Position = UDim2.fromOffset(10, 4), Text = quest.Text, TextSize = 14, Font = Enum.Font.GothamBold, Parent = row })
+			bar(row, quest.Progress / quest.Goal, UDim2.fromOffset(10, 28), UDim2.new(1, -170, 0, 10), if quest.Done then C.Up else C.Accent)
+			Kit.label({ Size = UDim2.new(1, -150, 0, 16), Position = UDim2.fromOffset(10, 42), Text = ("%d / %d      Reward: %s"):format(quest.Progress, quest.Goal, rewardText(daily.Reward)), TextSize = 11, TextColor3 = C.Dim, Parent = row })
+			if quest.Claimed then
+				Kit.label({ Size = UDim2.fromOffset(110, 40), Position = UDim2.new(1, -120, 0.5, -20), Text = "Claimed ✓", TextSize = 13, TextXAlignment = Enum.TextXAlignment.Center, TextColor3 = C.Up, Parent = row })
+			else
+				Kit.button({ Size = UDim2.fromOffset(110, 40), Position = UDim2.new(1, -120, 0.5, -20), Text = if quest.Done then "Claim" else "In progress", BackgroundColor3 = if quest.Done then C.Up else C.Panel, Parent = row }, function()
+					if quest.Done then
+						call(opts.ClaimQuest, quest.Index)
+					end
+				end)
 			end
-		end)
+		else
+			local bonus = Kit.frame({ Size = UDim2.new(1, -8, 0, 56), BackgroundColor3 = if daily.BonusReady and not daily.BonusClaimed then Color3.fromRGB(34, 62, 44) else C.PanelLight, Parent = scroll })
+			Kit.label({ Size = UDim2.new(1, -150, 0, 20), Position = UDim2.fromOffset(10, 6), Text = opts.BonusTitle, TextSize = 14, Font = Enum.Font.GothamBold, TextColor3 = C.Accent, Parent = bonus })
+			Kit.label({ Size = UDim2.new(1, -150, 0, 18), Position = UDim2.fromOffset(10, 30), Text = "Reward: " .. rewardText(daily.Bonus), TextSize = 11, TextColor3 = C.Dim, Parent = bonus })
+			if daily.BonusClaimed then
+				Kit.label({ Size = UDim2.fromOffset(110, 40), Position = UDim2.new(1, -120, 0.5, -20), Text = "Claimed ✓", TextSize = 13, TextXAlignment = Enum.TextXAlignment.Center, TextColor3 = C.Up, Parent = bonus })
+			else
+				Kit.button({ Size = UDim2.fromOffset(110, 40), Position = UDim2.new(1, -120, 0.5, -20), Text = if daily.BonusReady then "Claim" else opts.BonusButton, BackgroundColor3 = if daily.BonusReady then C.Up else C.Panel, Parent = bonus }, function()
+					if daily.BonusReady then
+						call(opts.ClaimBonus)
+					end
+				end)
+			end
+		end
 	end
 end
 
@@ -104,8 +120,27 @@ local function passTab(area, state, call, extra, redraw)
 	local scroll = Kit.new("ScrollingFrame", { Size = UDim2.new(1, 0, 1, -74), Position = UDim2.fromOffset(0, 74), BackgroundTransparency = 1, BorderSizePixel = 0, CanvasSize = UDim2.new(), AutomaticCanvasSize = Enum.AutomaticSize.Y, ScrollBarThickness = 4, Parent = area })
 	Kit.new("UIListLayout", { Padding = UDim.new(0, 4), Parent = scroll })
 	local gold = Color3.fromRGB(255, 200, 90)
-	for _, r in ipairs(pass.Rows) do
-		local row = Kit.frame({ Size = UDim2.new(1, -8, 0, 44), BackgroundColor3 = if r.Reached then C.PanelLight else C.Panel, Parent = scroll })
+	-- levels with something to claim first, then the levels still ahead, then fully claimed ones
+	local function passRank(r)
+		local free = r.Reached and not r.Claimed
+		local prem = r.Reached and pass.Premium and not r.PremiumClaimed
+		if free or prem then
+			return 1
+		elseif not r.Reached then
+			return 2
+		end
+		return 3
+	end
+	local sortedRows = table.clone(pass.Rows)
+	table.sort(sortedRows, function(a, b)
+		local ra, rb = passRank(a), passRank(b)
+		if ra ~= rb then
+			return ra < rb
+		end
+		return a.Level < b.Level
+	end)
+	for _, r in ipairs(sortedRows) do
+		local row = Kit.frame({ Size = UDim2.new(1, -8, 0, 44), BackgroundColor3 = if passRank(r) == 1 then Color3.fromRGB(34, 62, 44) elseif r.Reached then C.PanelLight else C.Panel, Parent = scroll })
 		Kit.label({ Size = UDim2.fromOffset(60, 44), Position = UDim2.fromOffset(8, 0), Text = "Lv " .. r.Level, TextSize = 14, Font = Enum.Font.GothamBold, TextColor3 = if r.Reached then C.Accent else C.Dim, Parent = row })
 		-- free column
 		Kit.label({ Size = UDim2.new(0.5, -170, 1, 0), Position = UDim2.fromOffset(70, 0), Text = rewardText(r.Reward), TextSize = 11, TextWrapped = true, TextColor3 = if r.Reached then C.Text else C.Dim, Parent = row })
@@ -136,11 +171,37 @@ function QuestScreen.Quests(container, state, call, extra)
 	local function redraw()
 		QuestScreen.Quests(container, extra.State or state, call, extra)
 	end
+	local function periodWaiting(data)
+		if not data then
+			return false
+		end
+		if data.BonusReady and not data.BonusClaimed then
+			return true
+		end
+		for _, q in ipairs(data.Quests or {}) do
+			if q.Done and not q.Claimed then
+				return true
+			end
+		end
+		return false
+	end
+	local pass = state.Player.Pass
+	local passWaiting = false
+	for _, r in ipairs(pass and pass.Rows or {}) do
+		if (r.Reached and not r.Claimed) or (r.Reached and pass.Premium and not r.PremiumClaimed) then
+			passWaiting = true
+		end
+	end
+	local waitingFor = { Daily = periodWaiting(state.Player.Quests), Weekly = periodWaiting(state.Player.WeeklyQuests), Pass = passWaiting }
 	for index, name in ipairs({ "Daily", "Weekly", "Pass" }) do
-		Kit.button({ Size = UDim2.fromOffset(150, 28), Position = UDim2.fromOffset((index - 1) * 156, 0), Text = if name == "Daily" then "Daily quests" elseif name == "Weekly" then "Weekly quests" else "Season pass", TextSize = 13, BackgroundColor3 = if name == tab then C.Accent else C.Panel, TextColor3 = if name == tab then Color3.fromRGB(30, 24, 10) else C.Text, Parent = container }, function()
+		local tabButton = Kit.button({ Size = UDim2.fromOffset(150, 28), Position = UDim2.fromOffset((index - 1) * 156, 0), Text = if name == "Daily" then "Daily quests" elseif name == "Weekly" then "Weekly quests" else "Season pass", TextSize = 13, BackgroundColor3 = if name == tab then C.Accent else C.Panel, TextColor3 = if name == tab then Color3.fromRGB(30, 24, 10) else C.Text, Parent = container }, function()
 			extra.QuestTab = name
 			redraw()
 		end)
+		if waitingFor[name] then
+			local dot = Kit.frame({ Name = "RedDot", Size = UDim2.fromOffset(13, 13), Position = UDim2.new(1, -9, 0, -4), BackgroundColor3 = C.Bad, ZIndex = 4, Parent = tabButton })
+			Kit.corner(7).Parent = dot
+		end
 	end
 	local area = Kit.frame({ Size = UDim2.new(1, 0, 1, -34), Position = UDim2.fromOffset(0, 34), BackgroundTransparency = 1, NoCorner = true, Parent = container })
 	if tab == "Daily" then

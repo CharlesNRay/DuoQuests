@@ -84,6 +84,13 @@ function WishAnim.Play(parent, kind, rows, onDone)
 		end
 	end
 	local bestColor = Kit.rarityColor(best)
+	-- the first time a Legendary is found is the big moment: a longer, quieter build-up and a held reveal
+	local firstLegend = false
+	for _, row in ipairs(rows) do
+		if row.Rarity == "Legendary" and row.New then
+			firstLegend = true
+		end
+	end
 	-- rarest last, so the best one is the finale
 	local order = {}
 	for index, row in ipairs(rows) do
@@ -97,7 +104,7 @@ function WishAnim.Play(parent, kind, rows, onDone)
 		return a.Index < b.Index
 	end)
 
-	local overlay = Kit.new("Frame", { Name = "WishAnim", Size = UDim2.fromScale(1, 1), BackgroundColor3 = Color3.fromRGB(8, 8, 20), BackgroundTransparency = 0.04, BorderSizePixel = 0, ZIndex = 30, ClipsDescendants = true, Active = true, Parent = parent })
+	local overlay = Kit.new("Frame", { Name = "WishAnim", Size = UDim2.fromScale(1, 1), BackgroundColor3 = if kind == "Pet" then Color3.fromRGB(6, 20, 18) else Color3.fromRGB(14, 10, 32), BackgroundTransparency = 0.04, BorderSizePixel = 0, ZIndex = 30, ClipsDescendants = true, Active = true, Parent = parent })
 	Kit.new("UICorner", { CornerRadius = UDim.new(0, 8), Parent = overlay })
 	local stage = Kit.new("Frame", { Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1, ZIndex = 31, Parent = overlay })
 	local flash = Kit.new("Frame", { Size = UDim2.fromScale(1, 1), BackgroundColor3 = WHITE, BackgroundTransparency = 1, BorderSizePixel = 0, ZIndex = 38, Parent = overlay })
@@ -172,6 +179,40 @@ function WishAnim.Play(parent, kind, rows, onDone)
 		if not alive() then
 			return
 		end
+		-- 2b. first Legendary: everything goes quiet, the light turns gold and slowly beats
+		if firstLegend and not skipped then
+			local gold = Kit.Colors.Legendary
+			hint.Text = "..."
+			tween(overlay, 0.6, { BackgroundColor3 = Color3.fromRGB(14, 10, 4) })
+			tween(orb, 1.2, { BackgroundColor3 = gold, Size = UDim2.fromOffset(74, 74) })
+			tween(glow, 1.2, { Color = gold, Thickness = 12 })
+			for beat = 1, 4 do
+				if skipped or not alive() then
+					break
+				end
+				ring(stage, 0, -10, gold, 120 + beat * 60, 0.9)
+				orb.Position = UDim2.new(0.5, math.random(-2, 2), 0.5, -10 + math.random(-2, 2))
+				pause(0.28 - beat * 0.04)
+				sparkles(stage, 0, -10, gold, 4 + beat * 2, 40 + beat * 20, 0.8)
+				pause(0.55 - beat * 0.08)
+			end
+			-- one held breath, then a very fast flicker before the burst
+			pause(0.6)
+			for _ = 1, 6 do
+				if skipped or not alive() then
+					break
+				end
+				flash.BackgroundColor3 = gold
+				flash.BackgroundTransparency = 0.7
+				pause(0.04)
+				flash.BackgroundTransparency = 1
+				pause(0.04)
+			end
+			hint.Text = "Tap to skip"
+		end
+		if not alive() then
+			return
+		end
 		-- 3. burst
 		orb:Destroy()
 		flash.BackgroundColor3 = if RANK[best] >= 4 then Kit.Colors.Legendary else WHITE
@@ -226,6 +267,20 @@ function WishAnim.Play(parent, kind, rows, onDone)
 			-- drop in, then flip
 			tween(card, 0.18, { Position = UDim2.new(0.5, cx, 0.5, cy) }, Enum.EasingStyle.Back)
 			pause(0.2)
+			if alive() and rarity == "Legendary" and row.New and not skipped then
+				-- the card trembles face-down with a gold edge before it turns over
+				stroke.Color = Kit.Colors.Legendary
+				stroke.Thickness = 4
+				back.TextColor3 = Kit.Colors.Legendary
+				for beat = 1, 3 do
+					if skipped or not alive() then
+						break
+					end
+					ring(stage, cx, cy, Kit.Colors.Legendary, cw + 80, 0.7)
+					pause(0.45)
+				end
+				pause(0.35)
+			end
 			if alive() then
 				tween(card, 0.1, { Size = UDim2.fromOffset(0, ch) })
 				pause(0.1)
@@ -243,7 +298,14 @@ function WishAnim.Play(parent, kind, rows, onDone)
 						flash.BackgroundColor3 = Kit.Colors.Legendary
 						flash.BackgroundTransparency = 0.45
 						tween(flash, 0.6, { BackgroundTransparency = 1 })
-						for _ = 1, 5 do
+						if row.New then
+							flash.BackgroundTransparency = 0.1
+							tween(flash, 1.1, { BackgroundTransparency = 1 })
+							sparkles(stage, cx, cy, Kit.Colors.Legendary, 36, 190, 1.2)
+							ring(stage, cx, cy, WHITE, cw + 220, 0.9)
+							Kit.label({ Size = UDim2.new(1, 0, 0, 24), Position = UDim2.new(0, 0, 0, 10), Text = "✦  NEW LEGENDARY  ✦", TextSize = 20, Font = Enum.Font.GothamBlack, TextColor3 = Kit.Colors.Legendary, TextXAlignment = Enum.TextXAlignment.Center, ZIndex = 40, Parent = stage })
+						end
+						for _ = 1, if row.New then 10 else 5 do
 							if skipped or not alive() then
 								break
 							end
