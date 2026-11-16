@@ -26,7 +26,13 @@ function ClassWeapons.Info(classId)
 	return { Name = def.Weapon.Name, Text = def.Weapon.Text, Blurb = def.Blurb, Role = def.Role }
 end
 
--- { Size, Pos (offset from the grip), Color, Material?, Shape?, Rot? (CFrame.Angles args), Neon? }
+-- a straight piece running from point a to point b (grip space), used for curved limbs, strings and shafts
+local function seg(a, b, thickness, color, material)
+	local mid = (a + b) / 2
+	return { Vector3.new(thickness, thickness, (b - a).Magnitude), mid, color, material, nil, nil, CFrame.lookAt(mid, b) }
+end
+
+-- { Size, Pos (offset from the grip), Color, Material?, Shape?, Rot? (CFrame.Angles args), CFrame? (replaces Pos and Rot) }
 local function recipe(classId)
 	local WOOD = Color3.fromRGB(110, 76, 48)
 	local STEEL = Color3.fromRGB(205, 210, 225)
@@ -53,11 +59,25 @@ local function recipe(classId)
 			{ Vector3.new(0.14, 1.3, 0.14), Vector3.new(-0.5, 0, -3.5), GOLD, Enum.Material.Metal },
 		}
 	elseif classId == "Ranger" then
+		-- a held bow stands upright in front of the archer (the handle's Y axis is up, -Z is toward the target).
+		-- The grip bulges toward the target and both limbs curve back toward the archer, where the string joins the two tips.
+		local LIMB = Color3.fromRGB(135, 95, 55)
+		local CORD = Color3.fromRGB(240, 235, 210)
+		local tipUp, tipDown = Vector3.new(0, 2.05, 0.62), Vector3.new(0, -2.05, 0.62)
 		return {
-			{ Vector3.new(0.3, 1.0, 0.3), Vector3.new(0, 0, 0), WOOD },
-			{ Vector3.new(0.22, 1.7, 0.22), Vector3.new(0, 1.3, -0.35), Color3.fromRGB(135, 95, 55), nil, nil, { -0.35, 0, 0 } },
-			{ Vector3.new(0.22, 1.7, 0.22), Vector3.new(0, -1.3, -0.35), Color3.fromRGB(135, 95, 55), nil, nil, { 0.35, 0, 0 } },
-			{ Vector3.new(0.05, 3.7, 0.05), Vector3.new(0, 0, 0.1), Color3.fromRGB(240, 235, 210) },
+			{ Vector3.new(0.3, 1.0, 0.34), Vector3.new(0, 0, 0), WOOD },
+			seg(Vector3.new(0, 0.45, -0.02), Vector3.new(0, 1.3, 0.2), 0.24, LIMB),
+			seg(Vector3.new(0, 1.3, 0.2), tipUp, 0.2, LIMB),
+			seg(Vector3.new(0, -0.45, -0.02), Vector3.new(0, -1.3, 0.2), 0.24, LIMB),
+			seg(Vector3.new(0, -1.3, 0.2), tipDown, 0.2, LIMB),
+			{ Vector3.new(0.3, 0.3, 0.3), tipUp, GOLD, Enum.Material.Metal, Enum.PartType.Ball }, -- nocks on the tips hold the string
+			{ Vector3.new(0.3, 0.3, 0.3), tipDown, GOLD, Enum.Material.Metal, Enum.PartType.Ball },
+			seg(tipUp, tipDown, 0.05, CORD),
+			-- an arrow resting on the grip, nocked on the string
+			seg(Vector3.new(0.2, 0.1, 0.62), Vector3.new(0.2, 0.1, -1.4), 0.07, Color3.fromRGB(200, 170, 120)),
+			{ Vector3.new(0.16, 0.16, 0.34), Vector3.new(0.2, 0.1, -1.55), STEEL, Enum.Material.Metal },
+			{ Vector3.new(0.04, 0.3, 0.3), Vector3.new(0.2, 0.1, 0.45), Color3.fromRGB(210, 80, 70) },
+			{ Vector3.new(0.3, 0.04, 0.3), Vector3.new(0.2, 0.1, 0.45), Color3.fromRGB(235, 235, 235) },
 		}
 	elseif classId == "Rogue" then
 		return {
@@ -112,7 +132,7 @@ function ClassWeapons.Build(classId)
 		else
 			part.Name = "Part" .. index
 			local rot = spec[6] or { 0, 0, 0 }
-			part.CFrame = handle.CFrame * CFrame.new(spec[2]) * CFrame.Angles(rot[1], rot[2], rot[3])
+			part.CFrame = handle.CFrame * (spec[7] or (CFrame.new(spec[2]) * CFrame.Angles(rot[1], rot[2], rot[3])))
 			part.Parent = tool
 			local weld = Instance.new("WeldConstraint")
 			weld.Part0, weld.Part1 = handle, part
@@ -120,6 +140,69 @@ function ClassWeapons.Build(classId)
 		end
 	end
 	return tool
+end
+
+-- Things worn on the back: the Ranger carries a quiver of arrows. Attached to the character's torso (replaces any earlier one).
+ClassWeapons.BACK_NAME = "ClassBack"
+local function backParts(classId)
+	if classId == "Ranger" then
+		local LEATHER = Color3.fromRGB(120, 80, 50)
+		local list = {
+			-- the sack: a leaning leather tube, a darker mouth ring and a strap over the shoulder
+			{ Vector3.new(1.9, 0.62, 0.62), CFrame.new(0.28, 0.1, 0.75) * CFrame.Angles(0, 0, math.rad(90 + 14)), LEATHER, Enum.Material.Leather, Enum.PartType.Cylinder },
+			{ Vector3.new(0.18, 0.74, 0.74), CFrame.new(0.5, 1.02, 0.75) * CFrame.Angles(0, 0, math.rad(90 + 14)), Color3.fromRGB(80, 54, 34), Enum.Material.Leather, Enum.PartType.Cylinder },
+			{ Vector3.new(0.18, 2.3, 0.1), CFrame.new(0, 0.1, 0.56) * CFrame.Angles(0, 0, math.rad(-38)), Color3.fromRGB(85, 58, 38), Enum.Material.Leather },
+			{ Vector3.new(0.18, 2.3, 0.1), CFrame.new(0, 0.1, -0.56) * CFrame.Angles(0, 0, math.rad(-38)), Color3.fromRGB(85, 58, 38), Enum.Material.Leather },
+		}
+		-- a bundle of arrows sticking out of the top: shafts with coloured fletching
+		local fletch = { Color3.fromRGB(210, 80, 70), Color3.fromRGB(235, 235, 235), Color3.fromRGB(90, 160, 90), Color3.fromRGB(235, 200, 90), Color3.fromRGB(210, 80, 70), Color3.fromRGB(235, 235, 235) }
+		for i = 1, 6 do
+			local dx = (i - 3.5) * 0.13
+			local tilt = math.rad(14 - (i - 3.5) * 5)
+			local cf = CFrame.new(0.5 + dx, 1.45, 0.75 + ((i % 2) - 0.5) * 0.28) * CFrame.Angles(0, 0, tilt)
+			table.insert(list, { Vector3.new(0.07, 1.0, 0.07), cf, Color3.fromRGB(205, 175, 125) })
+			table.insert(list, { Vector3.new(0.28, 0.32, 0.05), cf * CFrame.new(0, 0.5, 0), fletch[i] })
+		end
+		return list
+	end
+	return nil
+end
+
+function ClassWeapons.AttachBack(character, classId, name)
+	name = name or ClassWeapons.BACK_NAME
+	if character == nil then
+		return nil
+	end
+	local old = character:FindFirstChild(name)
+	if old then
+		old:Destroy()
+	end
+	local list = backParts(classId)
+	local torso = character:FindFirstChild("UpperTorso") or character:FindFirstChild("Torso")
+	if list == nil or torso == nil then
+		return nil
+	end
+	local model = Instance.new("Model")
+	model.Name = name
+	for index, spec in ipairs(list) do
+		local part = Instance.new("Part")
+		part.Name = "Piece" .. index
+		part.Size = spec[1]
+		part.Color = spec[3]
+		part.Material = spec[4] or Enum.Material.SmoothPlastic
+		part.Shape = spec[5] or Enum.PartType.Block
+		part.CanCollide = false
+		part.CanTouch = false
+		part.CanQuery = false
+		part.Massless = true
+		part.CFrame = torso.CFrame * spec[2]
+		part.Parent = model
+		local weld = Instance.new("WeldConstraint")
+		weld.Part0, weld.Part1 = torso, part
+		weld.Parent = part
+	end
+	model.Parent = character
+	return model
 end
 
 return ClassWeapons

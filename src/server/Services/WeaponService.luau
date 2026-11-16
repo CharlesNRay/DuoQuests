@@ -19,6 +19,13 @@ local function holders(player)
 	return { player:FindFirstChildOfClass("Backpack"), player:FindFirstChild("StarterGear"), player.Character }
 end
 
+-- the class's back item (a Ranger's quiver) on the character; called every time, since a respawn gives a fresh character
+function WeaponService.Wear(player, classId)
+	if player.Character then
+		ClassWeapons.AttachBack(player.Character, classId)
+	end
+end
+
 function WeaponService.Clear(player)
 	for _, holder in ipairs(holders(player)) do
 		if holder then
@@ -43,6 +50,7 @@ function WeaponService.Give(player, classId)
 			end
 		end
 	end
+	WeaponService.Wear(player, classId)
 	if have then
 		return true
 	end

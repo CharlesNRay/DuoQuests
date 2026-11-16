@@ -33,6 +33,11 @@ local function clearPreviewTool()
 		end)
 		previewTool = nil
 	end
+	local character = Players.LocalPlayer.Character
+	local back = character and character:FindFirstChild("ClassBackPreview")
+	if back then
+		back:Destroy()
+	end
 end
 
 -- Wield the class weapon on the player's own character (local only; the server gives the real one when the class is chosen).
@@ -51,6 +56,7 @@ local function wield(classId)
 	end
 	tool.Parent = backpack
 	previewTool = tool
+	ClassWeapons.AttachBack(player.Character, classId, "ClassBackPreview")
 	local humanoid = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
 	if humanoid then
 		pcall(function()
