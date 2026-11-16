@@ -179,16 +179,25 @@ function CharacterScreen.Character(container, state, call, extra)
 		}, function()
 			-- call() redraws the open screen from the new state when it succeeds
 			extra.CharMsg, extra.CharMsgBad = ("You are a %s!"):format(selected.Name), false
-			local ok, reason = call("MakeCharacter", selected.Id)
+			local ok, slot = call("MakeCharacter", selected.Id) -- on success the second value is the new character's slot
 			if ok and extra.PlaySlot then
 				clearPreviewTool() -- the server hands over the real weapon
 				extra.PickClass = nil
 				extra.MenuCreate = false
-				-- the new character is the last slot
-				local fresh = extra.State and extra.State.Player.Character.Characters or {}
-				extra.PlaySlot(#fresh)
+				local entered, why = extra.PlaySlot(slot)
+				for attempt = 1, 4 do -- the server limits back-to-back requests: try again shortly
+					if entered ~= false or why ~= "TooFast" then
+						break
+					end
+					task.wait(0.15 * attempt)
+					entered, why = extra.PlaySlot(slot)
+				end
+				if entered == false then
+					extra.CharMsg, extra.CharMsgBad = REASONS[why] or "Could not start that character.", true
+					redraw()
+				end
 			else
-				extra.CharMsg, extra.CharMsgBad = REASONS[reason] or "Could not choose that class.", true
+				extra.CharMsg, extra.CharMsgBad = REASONS[slot] or "Could not choose that class.", true
 				redraw()
 			end
 		end)
