@@ -131,13 +131,13 @@ function StatCalc.NewPartyMember(id, name, classId, level, options)
 end
 
 -- `scale` multiplies MaxHealth and Attack (stage difficulty comes later).
-function StatCalc.NewEnemy(id, enemyId, scale)
+function StatCalc.NewEnemy(id, enemyId, scale, healthMult)
 	local enemy = Enemies[enemyId]
 	assert(enemy ~= nil, "Unknown enemy: " .. tostring(enemyId))
 	scale = scale or 1
 
 	local stats = table.clone(enemy.BaseStats)
-	stats.MaxHealth = math.floor(stats.MaxHealth * scale)
+	stats.MaxHealth = math.floor(stats.MaxHealth * scale * (healthMult or 1))
 	stats.Attack = stats.Attack * scale
 
 	local entity = Entity.new({

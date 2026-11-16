@@ -38,6 +38,15 @@ function Stages.Scale(stage)
 	return scale
 end
 
+-- Ordinary (non-boss) enemies get extra health only, so fights last long enough to watch (about 10-16 s) without hitting harder.
+function Stages.HealthMult(stage)
+	local ramp = Config.NormalHealth
+	if not ramp or Stages.IsBoss(stage) then
+		return 1
+	end
+	return 1 + (ramp.Max - 1) * math.clamp((stage - ramp.From) / ramp.Span, 0, 1)
+end
+
 function Stages.Build(stage)
 	assert(type(stage) == "number" and stage >= 1 and stage == math.floor(stage), "Stage must be a whole number >= 1")
 	local scale = Stages.Scale(stage)
@@ -52,7 +61,7 @@ function Stages.Build(stage)
 		for index = 1, count do
 			local pool = Config.ZonePools[((stage - 1) // Config.BossEvery) % #Config.ZonePools + 1] or Config.EnemyPool
 			local enemyId = pool[(stage + index) % #pool + 1]
-			table.insert(enemies, { Id = "e" .. index, EnemyId = enemyId, Scale = scale })
+			table.insert(enemies, { Id = "e" .. index, EnemyId = enemyId, Scale = scale, HealthMult = Stages.HealthMult(stage) })
 		end
 	end
 
@@ -63,7 +72,7 @@ function Stages.NewEnemies(stage)
 	local built = Stages.Build(stage)
 	local enemies = {}
 	for _, entry in ipairs(built.Enemies) do
-		table.insert(enemies, StatCalc.NewEnemy(entry.Id, entry.EnemyId, entry.Scale))
+		table.insert(enemies, StatCalc.NewEnemy(entry.Id, entry.EnemyId, entry.Scale, entry.HealthMult))
 	end
 	return enemies
 end
