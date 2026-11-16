@@ -109,8 +109,8 @@ return function(modulesOverride)
 
 	local lv = ProfileTemplate.New()
 	check("Cannot level a slot without gold", select(2, Economy.LevelSlot(lv, "Warrior", 1)) == "NotEnough" and lv.Season.SlotLevels.Warrior[1] == 1)
-	lv.Season.Currencies.Gold = 1000
-	check("Levelling a slot spends gold and raises only that slot", Economy.LevelSlot(lv, "Warrior", 2) and lv.Season.SlotLevels.Warrior[2] == 2 and lv.Season.SlotLevels.Warrior[1] == 1 and lv.Season.Currencies.Gold == 1000 - Economy.SlotLevelCost(1))
+	lv.Season.Currencies.Gold = 1000000
+	check("Levelling a slot spends gold and raises only that slot", Economy.LevelSlot(lv, "Warrior", 2) and lv.Season.SlotLevels.Warrior[2] == 2 and lv.Season.SlotLevels.Warrior[1] == 1 and lv.Season.Currencies.Gold == 1000000 - Economy.SlotLevelCost(1))
 	check("Bad slot numbers are rejected", select(2, Economy.LevelSlot(lv, "Warrior", 0)) == "BadSlot" and select(2, Economy.LevelSlot(lv, "Warrior", 5)) == "BadSlot" and select(2, Economy.LevelSlot(lv, "Warrior", 1.5)) == "BadSlot")
 	lv.Season.Currencies.Gold = 1e9
 	lv.Season.SlotLevels.Warrior[3] = Skills.MAX_SLOT_LEVEL

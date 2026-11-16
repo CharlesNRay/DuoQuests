@@ -107,9 +107,9 @@ return function(modulesOverride)
 	check("Equipping unlocked passives within the slots works", ok == true and p.Season.PassiveLoadouts.Warrior[2] == "TreasureSense")
 	ok, reason = Economy.LevelPassiveSlot(p, "Warrior", 1)
 	check("Levelling needs gold", ok == false and reason == "NotEnough")
-	p.Season.Currencies.Gold = 1000
+	p.Season.Currencies.Gold = 1000000
 	ok = Economy.LevelPassiveSlot(p, "Warrior", 1)
-	check("Levelling a passive slot costs gold and raises the level", ok == true and p.Season.PassiveSlotLevels.Warrior[1] == 2 and p.Season.Currencies.Gold == 1000 - Economy.PassiveSlotLevelCost(1))
+	check("Levelling a passive slot costs gold and raises the level", ok == true and p.Season.PassiveSlotLevels.Warrior[1] == 2 and p.Season.Currencies.Gold == 1000000 - Economy.PassiveSlotLevelCost(1))
 	ok, reason = Economy.LevelPassiveSlot(p, "Warrior", 3)
 	check("A slot that is not unlocked yet cannot be levelled", ok == false and reason == "BadSlot")
 

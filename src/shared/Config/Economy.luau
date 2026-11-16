@@ -17,8 +17,8 @@ return {
 
 	-- Stage clear rewards (earned at the frontier) --------------------------
 	RewardScale = 0.1, -- one dial that scales gold and XP income (shards have their own numbers below)
-	GoldBase = 10,
-	GoldPerStage = 4,
+	-- Gold per clear: Base * Growth^stage + PerStage * stage. It climbs fast on purpose: thousands early, millions later.
+	GoldCurve = { Base = 60, Growth = 1.065, PerStage = 8 },
 	XPScale = 0.8, -- multiplies XP only (the level pacing dial): lv10 ~12 min, lv20 ~27 min, lv30 ~1 h
 	-- Early game (up to the first boss, stage 10) pays extra XP (levels only, no gold) so the opening is quick; the bonus fades out over the next few stages.
 	EarlyGame = { LastFullStage = 10, FadeStages = 4, XP = 1.8, LevelCost = 0.65, LastCheapLevel = 9, LevelFade = 6 },
@@ -47,9 +47,9 @@ return {
 	UnlockCost = { Common = 180, Rare = 360, Epic = 630 },
 
 	-- Levelling a slot (Gold): cost to go from level L to L+1 is SlotCostPerLevel * L
-	SlotCostPerLevel = 90,
+	SlotCostPerLevel = 5400,
 
 	-- Levelling a passive slot (Gold): cost to go from level L to L+1 is
 	-- PassiveCostPerLevel * L. Passives are unlocked by reaching stages.
-	PassiveCostPerLevel = 110,
+	PassiveCostPerLevel = 6600,
 }

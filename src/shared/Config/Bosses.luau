@@ -43,8 +43,8 @@ return {
 		},
 		-- thresholds are multiples of the scale for your frontier (one typical fight's damage)
 		Tiers = {
-			{ Id = 1, Damage = 1, Name = "Scratched it", Rewards = { Gold = 150, Items = { PetFood = 2 } } },
-			{ Id = 2, Damage = 3, Name = "Bruised it", Rewards = { Gold = 250, Items = { XPTonic = 2 } } },
+			{ Id = 1, Damage = 1, Name = "Scratched it", Rewards = { Gold = 9000, Items = { PetFood = 2 } } },
+			{ Id = 2, Damage = 3, Name = "Bruised it", Rewards = { Gold = 15000, Items = { XPTonic = 2 } } },
 			{ Id = 3, Damage = 6, Name = "Hurt it", Rewards = { Items = { SkillWish = 1, PowerElixir = 1 } } },
 			{ Id = 4, Damage = 10, Name = "Staggered it", Rewards = { Items = { PetWish = 1, HasteDraught = 1, PetFood = 3 } } },
 			{ Id = 5, Damage = 16, Name = "Wounded it", Rewards = { Items = { PetWish = 2, XPTonic = 2, SkillWish = 1 } } },
@@ -72,7 +72,7 @@ return {
 		SyncSeconds = 20,
 		-- Pct = health remaining when it triggers (1 = full health); the last one is death
 		Thresholds = {
-			{ Id = "p90", Pct = 0.90, Name = "90% health", Rewards = { Gold = 400, Items = { PetFood = 3, XPTonic = 1 } } },
+			{ Id = "p90", Pct = 0.90, Name = "90% health", Rewards = { Gold = 24000, Items = { PetFood = 3, XPTonic = 1 } } },
 			{ Id = "p75", Pct = 0.75, Name = "75% health", Rewards = { Items = { PetWish = 1, XPTonic = 2 } } },
 			{ Id = "p50", Pct = 0.50, Name = "Half health", Rewards = { Items = { SkillWish = 2, PetWish = 1, PowerElixir = 2 } } },
 			{ Id = "p25", Pct = 0.25, Name = "25% health", Rewards = { Items = { PetWish = 2, GrandPetFood = 2, HasteDraught = 2 } } },

@@ -79,6 +79,7 @@ local Character = require(Shared.Character)
 local Characters = require(Shared.Characters)
 local Tutorial = require(Shared.Tutorial)
 local Activities = require(Shared.Activities)
+local Market = require(Shared.Market)
 local WeaponService = require(script.Parent.WeaponService)
 local CharacterConfig = require(Shared.Config.Character)
 local TextService = game:GetService("TextService")
@@ -196,6 +197,7 @@ local function buildState(player)
 			IP = Power.Hero(profile),
 			Tutorial = Tutorial.Of(profile),
 			Activities = Activities.Of(profile, os.time()),
+			Market = Market.Of(profile, os.time(), SeasonConfig.CurrentSeasonId),
 			PetShards = Pets.Shards(profile),
 			PetShardInfo = { PetCost = require(Shared.Config.Pets).Shards.PetCost, CondenseCost = require(Shared.Config.Pets).Shards.CondenseCost },
 			PetCollection = (function() local c = Pets.Collection(profile) return { Points = c.Points, Percent = c.Percent } end)(),
@@ -465,6 +467,17 @@ function handlers.BossChallenge(player, profile, which)
 		afterBuildChange(player)
 	end
 	return ok, data
+end
+
+function handlers.MarketBuy(player, profile, id)
+	if type(id) ~= "string" then
+		return false, "BadArgs"
+	end
+	local ok, lines = Market.Buy(profile, id, os.time(), SeasonConfig.CurrentSeasonId)
+	if ok then
+		afterBuildChange(player)
+	end
+	return ok, lines
 end
 
 -- Dungeons and expeditions (see Shared/Activities). A dungeon run plays its last floor in the boss arena.

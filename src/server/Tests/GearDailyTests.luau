@@ -207,9 +207,9 @@ return function(modulesOverride)
 	local bagger = ProfileTemplate.New()
 	check("A fresh bag has the starting size", Gear.Cap(bagger) == GearConfig.InventoryCap and Gear.BagUpgradeCost(bagger) == GearConfig.BagCost.Base)
 	check("A bag upgrade needs gold", select(2, Gear.UpgradeBag(bagger)) == "NotEnough")
-	bagger.Season.Currencies.Gold = 100000
+	bagger.Season.Currencies.Gold = 100000000
 	local okBag, newCap = Gear.UpgradeBag(bagger)
-	check("Upgrading the bag adds slots and costs gold", okBag and newCap == GearConfig.InventoryCap + GearConfig.BagStep and bagger.Season.Currencies.Gold < 100000 and Gear.BagUpgradeCost(bagger) > GearConfig.BagCost.Base)
+	check("Upgrading the bag adds slots and costs gold", okBag and newCap == GearConfig.InventoryCap + GearConfig.BagStep and bagger.Season.Currencies.Gold < 100000000 and Gear.BagUpgradeCost(bagger) > GearConfig.BagCost.Base)
 	for _ = 1, 30 do Gear.UpgradeBag(bagger) end
 	check("The bag stops growing at the maximum", select(2, Gear.UpgradeBag(bagger)) == "MaxBag" and Gear.BagUpgradeCost(bagger) == nil and Gear.Cap(bagger) == GearConfig.InventoryCap + GearConfig.BagMaxUpgrades * GearConfig.BagStep)
 	local okWorse, count2 = Gear.SellBulk(shop, "Worse")

@@ -165,7 +165,7 @@ function Hud.new(root)
 	Kit.new("UIListLayout", { Padding = UDim.new(0, 3), FillDirection = Enum.FillDirection.Horizontal, SortOrder = Enum.SortOrder.LayoutOrder, HorizontalAlignment = Enum.HorizontalAlignment.Right, Parent = self.BuffRow })
 	self.BuffChips = {}
 	-- while watching a fight the buffs live in the combat layer (above the skill bar), so hiding the HUD keeps them
-	self.CombatBuffRow = Kit.frame({ Size = UDim2.fromOffset(300, 22), Position = UDim2.new(0.5, -150, 1, -138), BackgroundTransparency = 1, NoCorner = true, Parent = combat })
+	self.CombatBuffRow = Kit.frame({ Size = UDim2.fromOffset(300, 22), Position = UDim2.new(0.5, -150, 1, -158), BackgroundTransparency = 1, NoCorner = true, Parent = combat })
 	Kit.new("UIListLayout", { Padding = UDim.new(0, 3), FillDirection = Enum.FillDirection.Horizontal, SortOrder = Enum.SortOrder.LayoutOrder, HorizontalAlignment = Enum.HorizontalAlignment.Center, Parent = self.CombatBuffRow })
 	task.spawn(function()
 		while gui.Parent do
@@ -213,7 +213,7 @@ function Hud.new(root)
 	self.FightFill = Kit.frame({ Size = UDim2.fromScale(0, 1), BackgroundColor3 = C.Accent, Parent = self.Fight })
 	self.Toast = Kit.label({ Size = UDim2.new(0, 400, 0, 20), Position = UDim2.new(0.5, -200, 0, 135), Text = "", TextSize = 14, TextXAlignment = Enum.TextXAlignment.Center, TextColor3 = C.Accent, Parent = combat })
 
-	self.Bar = pill(combat, { Size = UDim2.fromOffset(340, 56), Position = UDim2.new(0.5, -170, 1, -108) })
+	self.Bar = pill(combat, { Size = UDim2.fromOffset(340, 56), Position = UDim2.new(0.5, -170, 1, -128) })
 	self.Slots = Kit.frame({ Size = UDim2.fromOffset(250, 48), Position = UDim2.fromOffset(8, 4), BackgroundTransparency = 1, NoCorner = true, Parent = self.Bar })
 	Kit.new("UIListLayout", { FillDirection = Enum.FillDirection.Horizontal, Padding = UDim.new(0, 12), VerticalAlignment = Enum.VerticalAlignment.Center, Parent = self.Slots })
 	self.UltSlot = Kit.frame({ Size = UDim2.fromOffset(66, 48), Position = UDim2.new(1, -74, 0, 4), BackgroundTransparency = 1, NoCorner = true, Parent = self.Bar })
@@ -308,6 +308,11 @@ function Hud.new(root)
 			self.Dock.Visible = not hidden
 		end
 		self.HideButton.Text = if hidden then "Show HUD" else "Hide HUD"
+		-- the skill bar sits above the menu dock; with the dock hidden it drops to the bottom edge
+		local drop = if hidden then 66 else 0
+		local info = TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+		TweenService:Create(self.Bar, info, { Position = UDim2.new(0.5, -170, 1, -128 + drop) }):Play()
+		TweenService:Create(self.CombatBuffRow, info, { Position = UDim2.new(0.5, -150, 1, -158 + drop) }):Play()
 	end
 
 	-- text = nil: not watching. The combat layer (skill bar, stage pill, timer) shows only while watching.

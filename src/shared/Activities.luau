@@ -22,6 +22,7 @@ local StageRunner = require(script.Parent.StageRunner)
 local Stages = require(script.Parent.Stages)
 local Bosses = require(script.Parent.Bosses)
 local Quests = require(script.Parent.Quests)
+local Progression = require(script.Parent.Progression)
 
 local Activities = {}
 
@@ -86,8 +87,13 @@ function Activities.FloorStage(frontier, dungeon, floor)
 	return math.max(1, math.floor(frontier * 0.8)) + dungeon.Lift + floor - 1
 end
 
+-- gold is paid in "clears": what one frontier stage clear pays right now
+local function clearGold(frontier)
+	return Progression.ClearRewards(math.max(1, frontier), true, nil).Gold
+end
+
 local function chestFor(frontier, floors, full)
-	local rewards = { Gold = math.floor((120 + frontier * 30) * floors), Items = { PetFood = floors } }
+	local rewards = { Gold = math.floor(clearGold(frontier) * 18 * floors), Items = { PetFood = floors } }
 	if floors >= 2 then
 		rewards.Items.XPTonic = 1
 	end
@@ -164,7 +170,7 @@ function Activities.CollectExpedition(profile, now)
 	a.Expedition = nil
 	local frontier = profile.Season.HighestStage
 	local rewards = {
-		Gold = math.floor((200 + frontier * 40) * def.Power),
+		Gold = math.floor(clearGold(frontier) * 120 * def.Power),
 		Items = { PetFood = math.max(1, math.floor(def.Power * 2)), XPTonic = math.max(1, math.floor(def.Power)) },
 	}
 	if def.Power >= 3 then

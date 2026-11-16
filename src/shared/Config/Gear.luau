@@ -18,14 +18,14 @@
 return {
 	-- Blacksmith upgrades: each level adds ValuePerLevel of the item's base stat. The cost grows
 	-- with the level and with the stage the item dropped at. Gold is the only cost.
-	Upgrade = { MaxLevel = 10, ValuePerLevel = 0.06, BaseCost = 20, CostGrowth = 1.42, PowerCost = 1.2 },
+	Upgrade = { MaxLevel = 10, ValuePerLevel = 0.06, BaseCost = 1200, CostGrowth = 1.42, PowerCost = 72 },
 
 	-- every drop rolls its stat between Min and Max of the base value (a 'good roll' shows as a percentage on the item)
 	Roll = { Min = 0.85, Max = 1.15 },
 	InventoryCap = 30, -- starting bag size; a full bag sells new drops automatically
 	BagStep = 5, -- slots added by each bag upgrade (bought at the Merchant)
 	BagMaxUpgrades = 14, -- 30 -> 100 slots
-	BagCost = { Base = 150, Growth = 1.32 }, -- gold for upgrade n (0-based): Base * Growth^n
+	BagCost = { Base = 9000, Growth = 1.32 }, -- gold for upgrade n (0-based): Base * Growth^n
 
 	-- Item TYPES. Each gives one stat: (Base + PerStage * stage) * rarity * upgrades.
 	Slots = {
@@ -103,8 +103,8 @@ return {
 	ClassWeaponNoun = { Warrior = "Blade", Ranger = "Longbow", Mage = "Staff", Cleric = "Mace", Rogue = "Daggers", Summoner = "Grimoire" },
 
 	RarityMult = { Common = 1, Uncommon = 1.25, Rare = 1.55, Epic = 2.2, Legendary = 3.2, Set = 1.8 },
-	SellValue = { Common = 2, Uncommon = 4, Rare = 8, Epic = 18, Legendary = 45 }, -- gold per item (before stage scaling)
-	SellPerStage = 0.2, -- extra gold per stage of Power
+	SellValue = { Common = 50, Uncommon = 100, Rare = 200, Epic = 450, Legendary = 1100 }, -- gold per item (before stage scaling)
+	SellPerStage = 5, -- extra gold per stage of Power
 
 	-- SET GEAR (ordinary wearable gear, not a separate loot roll). Every zone (10 stages) has its own 3-piece set. Pieces only drop while you
 	-- fight a stage in that zone (frontier or replay), so a player stuck in a zone can farm

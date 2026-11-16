@@ -20,7 +20,7 @@
 local DAY = 86400
 
 return {
-	CreateGold = 5000,
+	CreateGold = 300000,
 	CreateMinLevel = 10,
 	NameMin = 3, NameMax = 20, TagMin = 2, TagMax = 4, DescMax = 80,
 	BaseMembers = 20, MaxMembers = 50,

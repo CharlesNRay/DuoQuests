@@ -91,7 +91,7 @@ function Progression.ClearRewards(stage, isFrontier, bonuses)
 		shards += Economy.BossShardBonus
 	end
 	return {
-		Gold = math.max(1, math.floor((Economy.GoldBase + Economy.GoldPerStage * stage) * factor * goldFactor)),
+		Gold = math.max(1, math.floor((Economy.GoldCurve.Base * Economy.GoldCurve.Growth ^ stage + Economy.GoldCurve.PerStage * stage) * replay * goldFactor)),
 		XP = math.max(1, math.floor((Economy.XPRewardBase + Economy.XPRewardPerStage * stage) * factor * xpFactor * (Economy.XPScale or 1))),
 		Shards = math.max(1, math.floor(shards * replay)), -- shards ignore RewardScale: unlock costs are tuned for them
 	}

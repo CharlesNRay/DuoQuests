@@ -449,7 +449,7 @@ hud:AddButton("Battle", "mini", "⚔️", "Battle: bosses, dungeons, expeditions
 	open("Battle", "Battle")
 end)
 hud:AddButton("Store", "mini", "🛍️", "Store", function()
-	extra.StoreTab = extra.StoreTab or "Premium"
+	extra.StoreTab = extra.StoreTab or "Market"
 	open("Store", "Store")
 end)
 hud:AddButton("Quests", "mini", "📜", "Quests & Season Pass", function() open("Quests", "Quests & Season Pass") end)

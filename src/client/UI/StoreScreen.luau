@@ -7,9 +7,11 @@ local Kit = require(script.Parent.Kit)
 local PremiumScreen = require(script.Parent.PremiumScreen)
 local CosmeticsScreen = require(script.Parent.CosmeticsScreen)
 local CodesScreen = require(script.Parent.CodesScreen)
+local Market = require(script.Parent.MarketScreen)
 local C = Kit.Colors
 
 local TABS = {
+	{ Id = "Market", Text = "🪙 Market" },
 	{ Id = "Premium", Text = "🔶 Premium shop" },
 	{ Id = "Cosmetics", Text = "🎨 Cosmetics" },
 	{ Id = "Codes", Text = "🎁 Redeem a code" },
@@ -25,7 +27,7 @@ function StoreScreen.Store(container, state, call, extra)
 	end
 	for index, def in ipairs(TABS) do
 		Kit.button({
-			Name = "Tab_" .. def.Id, Size = UDim2.fromOffset(170, 30), Position = UDim2.fromOffset((index - 1) * 176, 0), Text = def.Text, TextSize = 13,
+			Name = "Tab_" .. def.Id, Size = UDim2.fromOffset(150, 30), Position = UDim2.fromOffset((index - 1) * 156, 0), Text = def.Text, TextSize = 13,
 			BackgroundColor3 = if def.Id == tab then C.Accent else C.Panel, TextColor3 = if def.Id == tab then Color3.fromRGB(30, 24, 10) else C.Text, Parent = container,
 		}, function()
 			extra.StoreTab = def.Id
@@ -36,7 +38,9 @@ function StoreScreen.Store(container, state, call, extra)
 		end)
 	end
 	local area = Kit.frame({ Name = "StoreArea", Size = UDim2.new(1, 0, 1, -38), Position = UDim2.fromOffset(0, 38), BackgroundTransparency = 1, NoCorner = true, Parent = container })
-	if tab == "Cosmetics" then
+	if tab == "Market" then
+		Market.Market(area, state, call, extra)
+	elseif tab == "Cosmetics" then
 		CosmeticsScreen.Cosmetics(area, state, call, extra)
 	elseif tab == "Codes" then
 		CodesScreen.Codes(area, state, call, extra)
