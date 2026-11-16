@@ -77,6 +77,7 @@ local Codes = require(Shared.Codes)
 local Classes = require(Shared.Config.Classes)
 local Character = require(Shared.Character)
 local Characters = require(Shared.Characters)
+local Tutorial = require(Shared.Tutorial)
 local WeaponService = require(script.Parent.WeaponService)
 local CharacterConfig = require(Shared.Config.Character)
 local TextService = game:GetService("TextService")
@@ -192,6 +193,7 @@ local function buildState(player)
 			PassiveSlots = Passives.SlotsAt(season.HighestStage),
 			Pets = Pets.List(profile),
 			IP = Power.Hero(profile),
+			Tutorial = Tutorial.Of(profile),
 			PetShards = Pets.Shards(profile),
 			PetShardInfo = { PetCost = require(Shared.Config.Pets).Shards.PetCost, CondenseCost = require(Shared.Config.Pets).Shards.CondenseCost },
 			PetCollection = (function() local c = Pets.Collection(profile) return { Points = c.Points, Percent = c.Percent } end)(),
@@ -683,6 +685,19 @@ function handlers.DevLevel(player, profile)
 	end
 	afterBuildChange(player)
 	return true, profile.Season.Level
+end
+
+-- the guided first session: the client moves through the steps, the server keeps the place and pays once
+function handlers.TutorialAdvance(_, profile, step)
+	return Tutorial.Advance(profile, step)
+end
+
+function handlers.TutorialSkip(_, profile)
+	return Tutorial.Skip(profile)
+end
+
+function handlers.TutorialFinish(_, profile)
+	return Tutorial.Finish(profile)
 end
 
 function handlers.ClaimDaily(_, profile)

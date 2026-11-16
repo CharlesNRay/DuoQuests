@@ -55,7 +55,7 @@ function Stages.Build(stage)
 	if Stages.IsBoss(stage) then
 		local bossNumber = stage // Config.BossEvery
 		local enemyId = Config.BossPool[(bossNumber - 1) % #Config.BossPool + 1]
-		table.insert(enemies, { Id = "e1", EnemyId = enemyId, Scale = scale * (Config.BossScaleMult or 1) })
+		table.insert(enemies, { Id = "e1", EnemyId = enemyId, Scale = scale * (Config.BossScaleMult or 1) * (if bossNumber == 1 then Config.FirstBossMult or 1 else 1) })
 	else
 		local count = math.min(Config.MaxEnemies, 1 + (stage - 1) // 2)
 		for index = 1, count do

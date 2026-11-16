@@ -206,6 +206,7 @@ end
 
 local offerPopup = nil
 local menu -- the main menu (built below)
+local tutorial -- the guided first session (built below)
 local open -- defined below; the pop-up's shop button needs it
 local function redraw()
 	if not state then return end
@@ -311,6 +312,9 @@ function open(name, label, keep)
 	end
 	current = name
 	lastDrawn = nil
+	if tutorial then
+		tutorial:Opened(name)
+	end
 	title.Text = label
 	local size = PANEL_SIZES[name] or PANEL_DEFAULT
 	panel.Size = UDim2.fromOffset(size.X, size.Y)
@@ -590,6 +594,9 @@ redraw()
 refreshWorld()
 -- everyone starts at the main menu: nobody spawns until they press Play on a character
 menu = require(script.Parent.UI.MainMenu).new(root, call, extra, require(script.Parent.UI.CharacterScreen))
+tutorial = require(script.Parent.UI.Tutorial).new(root, hud, call, function()
+	return state, (menu ~= nil and menu.Visible) or panel.Visible
+end)
 extra.OpenMenu = function()
 	current = nil
 	lastDrawn = nil

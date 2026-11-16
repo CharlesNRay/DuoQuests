@@ -150,6 +150,7 @@ function ProfileTemplate.Defaults()
 			Character = { Created = false, Name = "", Look = { Skin = 2, Hair = 2, Outfit = 6 }, UseAvatar = false, Renames = 0 }, -- see Shared/Character
 			Slots = {}, -- the main menu's characters (see Shared/Characters)
 			ActiveSlot = 0,
+			Tutorial = { Step = 1, Done = false, Rewarded = false }, -- see Shared/Tutorial
 			Titles = {},
 			Achievements = {},
 			LegacyPoints = 0,

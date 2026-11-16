@@ -33,5 +33,6 @@ return {
 	-- (subclass at level 30, and so on). Each tier multiplies enemy scale from its stage on.
 	Tiers = { { From = 31, Mult = 1.1 }, { From = 61, Mult = 1.1 } },
 	NormalHealth = { From = 5, Span = 25, Max = 1.6 }, -- ordinary enemies: extra health only, ramping from stage 5 to full at stage 30
+	FirstBossMult = 0.6, -- the first boss (stage 10) ends the tutorial, so it is much softer than the later ones
 	BossScaleMult = 1.1, -- extra multiplier on boss health and attack (bosses are the real hurdle)
 }
