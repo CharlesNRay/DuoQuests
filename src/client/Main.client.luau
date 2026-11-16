@@ -160,9 +160,16 @@ local PANEL_SIZES = {
 }
 local SHOP_NPC = { Merchant = "Merchant", Blacksmith = "Blacksmith", Wish = "Tree" }
 local panel = Kit.frame({ Name = "Panel", Size = UDim2.new(0, 500, 0, 286), Position = UDim2.new(0.5, -250, 0, 42), BackgroundColor3 = Kit.Colors.Bg, Visible = false, ZIndex = 5, Parent = root })
+Kit.new("UIStroke", { Color = Color3.fromRGB(90, 98, 140), Thickness = 2, Parent = panel })
+Kit.new("UIGradient", { Color = ColorSequence.new(Color3.fromRGB(255, 255, 255), Color3.fromRGB(205, 208, 225)), Rotation = 90, Parent = panel })
+do -- a banner across the top of every window
+	local header = Kit.frame({ Size = UDim2.new(1, 0, 0, 44), BackgroundColor3 = Color3.fromRGB(46, 52, 84), ZIndex = 1, Parent = panel })
+	Kit.new("UIGradient", { Color = ColorSequence.new(Color3.fromRGB(255, 255, 255), Color3.fromRGB(170, 176, 205)), Rotation = 90, Parent = header })
+	Kit.new("UIStroke", { Color = Color3.fromRGB(255, 196, 70), Thickness = 1.5, Transparency = 0.55, Parent = header })
+end
 body = Kit.new("Frame", { Size = UDim2.new(1, -16, 1, -62), Position = UDim2.fromOffset(8, 50), BackgroundTransparency = 1, Parent = panel })
-local title = Kit.label({ Size = UDim2.new(1, -70, 0, 36), Position = UDim2.fromOffset(12, 6), Text = "", TextSize = 20, Font = Enum.Font.GothamBold, Parent = panel })
-Kit.button({ Size = UDim2.fromOffset(44, 36), Position = UDim2.new(1, -52, 0, 6), Text = "X", Parent = panel }, function()
+local title = Kit.label({ Size = UDim2.new(1, -70, 0, 36), Position = UDim2.fromOffset(12, 6), Text = "", TextSize = 20, Font = Enum.Font.GothamBlack, TextStrokeTransparency = 0.4, Parent = panel })
+Kit.button({ Size = UDim2.fromOffset(44, 36), Position = UDim2.new(1, -52, 0, 6), Text = "X", BackgroundColor3 = Color3.fromRGB(200, 70, 70), Parent = panel }, function()
 	current = nil
 	lastDrawn = nil
 	panel.Visible = false
@@ -228,7 +235,7 @@ local function redraw()
 		end
 		-- redrawing a panel (after an upgrade, say) must not throw the player back to the top of its lists
 		local saved
-		if lastDrawn == current then
+		if lastDrawn == current and not extra.SkillsScrollTop then
 			saved = {}
 			for _, d in ipairs(body:GetDescendants()) do
 				if d:IsA("ScrollingFrame") then
@@ -238,6 +245,7 @@ local function redraw()
 		end
 		lastDrawn = current
 		Screens[current](body, state, call, extra)
+		extra.SkillsScrollTop = nil
 		if saved and #saved > 0 then
 			local frames = {}
 			for _, d in ipairs(body:GetDescendants()) do

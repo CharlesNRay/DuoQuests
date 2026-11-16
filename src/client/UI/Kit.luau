@@ -108,6 +108,9 @@ function Kit.button(props, onClick)
 	end
 	local b = Kit.new("TextButton", p)
 	Kit.corner(8).Parent = b
+	-- chunky cartoon-RPG look: a soft top-to-bottom shade and a dark rim, like the buttons in Go Go Muffin
+	Kit.new("UIGradient", { Color = ColorSequence.new(Color3.new(1, 1, 1), Color3.fromRGB(190, 192, 205)), Rotation = 90, Parent = b })
+	Kit.new("UIStroke", { Color = Color3.fromRGB(14, 16, 26), Thickness = 1.5, Transparency = 0.25, ApplyStrokeMode = Enum.ApplyStrokeMode.Border, Parent = b })
 	if onClick then
 		b.Activated:Connect(onClick)
 	end

@@ -125,8 +125,8 @@ function Economy.Equip(profile, classId, abilityIds)
 	if not ok then
 		return false, reason
 	end
-	if #abilityIds ~= Skills.SLOTS then
-		return false, "NeedFullLoadout"
+	if #abilityIds < 1 then
+		return false, "NeedOneSkill" -- you can unequip skills, but keep at least one
 	end
 	profile.Season.Loadouts[classId] = table.clone(abilityIds)
 	return true

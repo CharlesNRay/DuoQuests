@@ -177,8 +177,23 @@ function SkillsScreen.Skills(container, state, call, extra)
 		end)
 		b.Active = enabled
 	end
+	-- which list leads the pool: clicking Skills or Passives puts that kind at the top
+	local focus = extra.SkillsFocus or "Skills"
+	if isPartner then
+		focus = "Skills"
+	end
+	for index, name in ipairs({ "Skills", "Passives" }) do
+		local on = name == focus
+		local b = Kit.button({ Size = UDim2.fromOffset(86, 24), Position = UDim2.new(1, -(2 - index + 1) * 90 + 4, 0, 0), Text = (if name == "Skills" then "⚔ " else "✦ ") .. name, TextSize = 12, BackgroundColor3 = if on then C.Accent else C.Panel, TextColor3 = if on then Color3.fromRGB(30, 24, 10) else C.Text, Parent = container }, function()
+			extra.SkillsFocus = name
+			extra.SkillSel = if name == "Skills" then { Slot = 1 } else { PSlot = 1 }
+			extra.SkillsScrollTop = true
+			redraw()
+		end)
+		b.Active = not isPartner
+	end
 	if not partner then
-		Kit.label({ Size = UDim2.new(1, -250, 0, 24), Position = UDim2.fromOffset(246, 0), Text = "Join a party to edit a partner's skills.", TextSize = 11, TextColor3 = C.Dim, Parent = container })
+		Kit.label({ Size = UDim2.new(1, -440, 0, 24), Position = UDim2.fromOffset(246, 0), Text = "Join a party to edit a partner's skills.", TextSize = 11, TextColor3 = C.Dim, TextWrapped = false, Parent = container })
 	end
 	local area = Kit.frame({ Size = UDim2.new(1, 0, 1, -30), Position = UDim2.fromOffset(0, 30), BackgroundTransparency = 1, NoCorner = true, Parent = container })
 
@@ -245,11 +260,33 @@ function SkillsScreen.Skills(container, state, call, extra)
 			end
 		end
 	end
+	for slot = 1, Skills.SLOTS do -- the slot plates sit behind the icons, so an empty slot is still a place to drop a skill
+		local plate = Kit.frame({ Size = UDim2.fromOffset(56, 56), Position = UDim2.fromOffset((slot - 1) * 58 - 2, 14), BackgroundColor3 = Color3.fromRGB(20, 22, 36), Parent = main })
+		Kit.new("UIStroke", { Color = if sel and sel.Slot == slot then Color3.new(1, 1, 1) else Color3.fromRGB(70, 76, 104), Thickness = 1.5, Parent = plate })
+		if not equipped[slot] and not isPartner then
+			slotTiles[slot] = plate
+			Kit.label({ Size = UDim2.fromScale(1, 1), Text = "+", TextSize = 26, TextColor3 = Color3.fromRGB(90, 98, 130), TextXAlignment = Enum.TextXAlignment.Center, TextYAlignment = Enum.TextYAlignment.Center, Parent = plate })
+			local hit = Kit.new("TextButton", { Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1, Text = "", Parent = plate })
+			hit.Activated:Connect(function()
+				extra.SkillSel = { Target = math.min(slot, #equipped + 1) }
+				redraw()
+			end)
+		end
+	end
 	for slot, id in ipairs(equipped) do
 		local def = Abilities[id]
 		if def then
 			local tile = Icons.Skill(main, def, skillProps(me, id, { Size = UDim2.fromOffset(52, 52), Position = UDim2.fromOffset((slot - 1) * 58, 16), Level = levels[slot] }))
 			slotTiles[slot] = tile
+			if not isPartner and #equipped > 1 then -- unequip
+				local x = Kit.button({ Size = UDim2.fromOffset(18, 18), Position = UDim2.fromOffset((slot - 1) * 58 + 36, 8), Text = "✕", TextSize = 10, BackgroundColor3 = C.Down, ZIndex = 12, Parent = main }, function()
+					table.remove(equipped, slot)
+					extra.SkillSel = { Slot = math.min(slot, #equipped) }
+					save(equipped)
+				end)
+				x.Active = true
+				Kit.Hover(x, function() return "Unequip this skill" end)
+			end
 			Kit.Hover(tile, function() return Tips.Skill(def, levels[slot] or 1) end)
 			attach(tile, def, sel.Slot == slot, function()
 				extra.SkillSel = { Slot = slot }
@@ -277,6 +314,14 @@ function SkillsScreen.Skills(container, state, call, extra)
 				Kit.Hover(tile, function() return Tips.Passive(pdef, (me.PassiveLevels or {})[slot] or 1) end)
 			end
 			passiveTiles[slot] = tile
+			if pdef then
+				local x = Kit.button({ Size = UDim2.fromOffset(16, 16), Position = UDim2.fromOffset(244 + (slot - 1) * 50 + 32, 14), Text = "✕", TextSize = 9, BackgroundColor3 = C.Down, ZIndex = 12, Parent = main }, function()
+					table.remove(pEquipped, slot)
+					extra.SkillSel = { PSlot = math.max(1, math.min(slot, #pEquipped)) }
+					equipPassives()
+				end)
+				Kit.Hover(x, function() return "Unequip this passive" end)
+			end
 			attach(tile, nil, sel.PSlot == slot, function()
 				extra.SkillSel = { PSlot = slot }
 				redraw()
@@ -353,6 +398,17 @@ function SkillsScreen.Skills(container, state, call, extra)
 			end
 		end
 	end
+	local TIER_RANK = { Legendary = 4, Epic = 3, Rare = 2, Common = 1 }
+	local function tierOf(id)
+		local info = (me.SkillInfo or {})[id]
+		return info and TIER_RANK[info.Tier] or 0
+	end
+	table.sort(owned, function(a, b)
+		if tierOf(a) ~= tierOf(b) then
+			return tierOf(a) > tierOf(b)
+		end
+		return a < b
+	end)
 	section(if isPartner then "THEIR SKILLS  (drag onto a slot)" else "UNLOCKED  (drag onto a slot)")
 	if #owned == 0 then
 		Kit.label({ Size = UDim2.new(1, 0, 0, 16), Text = "Everything they own is equipped", TextSize = 11, TextColor3 = C.Dim, LayoutOrder = nextOrder(), Parent = pool })
@@ -368,6 +424,7 @@ function SkillsScreen.Skills(container, state, call, extra)
 			end, function(pointer)
 				local to = dropOnSlot(pointer)
 				if to then
+					to = math.min(to, #equipped + 1)
 					equipped[to] = id
 					extra.SkillSel = { Slot = to }
 					save(equipped)
@@ -389,10 +446,21 @@ function SkillsScreen.Skills(container, state, call, extra)
 		end
 	end
 	if not isPartner then
+		if focus == "Passives" then
+			order = -1000 -- the passive list leads the pool when the Passives tab is picked
+		end
 		section("PASSIVES")
 		local g = iconGrid()
 		local any = false
-		for _, id in ipairs(Passives.Pool(me.ClassId)) do
+		local passivePool = table.clone(Passives.Pool(me.ClassId))
+		table.sort(passivePool, function(a, b) -- unlocked first, then by the stage that opens them
+			local ua, ub = Passives.IsUnlocked(a, me.Frontier), Passives.IsUnlocked(b, me.Frontier)
+			if ua ~= ub then
+				return ua
+			end
+			return (PassiveCfg.Defs[a].UnlockStage or 1) < (PassiveCfg.Defs[b].UnlockStage or 1)
+		end)
+		for _, id in ipairs(passivePool) do
 			if not table.find(pEquipped, id) then
 				any = true
 				local pdef = PassiveCfg.Defs[id]
@@ -454,7 +522,12 @@ function SkillsScreen.Skills(container, state, call, extra)
 				if cost then
 					call("LevelPassiveSlot", slot)
 				end
-			end).Position = UDim2.new(0, 8, 1, -64)
+			end).Position = UDim2.new(0, 8, 1, -96)
+			actionButton(right, "Unequip", 0, C.Down, function()
+				table.remove(pEquipped, slot)
+				extra.SkillSel = { PSlot = math.max(1, math.min(slot, #pEquipped)) }
+				equipPassives()
+			end).Position = UDim2.new(0, 8, 1, -62)
 			note(right, "Pick an unlocked passive to swap it in.", -30)
 		elseif Passives.IsUnlocked(pdef.Id, me.Frontier) then
 			local target = math.clamp(sel.Target or (#pEquipped + 1), 1, math.min(#pEquipped + 1, math.max(me.PassiveSlots or 1, 1)))
@@ -537,14 +610,21 @@ function SkillsScreen.Skills(container, state, call, extra)
 		if not isPartner then
 			progressButtons()
 		end
-		note(right, "Drag icons to reorder, or drag a pool skill onto this slot. Spare copies are banked - consume them for XP.", -46, 44)
+		if not isPartner and #equipped > 1 then
+			actionButton(right, "Unequip", 0, C.Down, function()
+				table.remove(equipped, sel.Slot)
+				extra.SkillSel = { Slot = math.min(sel.Slot, #equipped) }
+				save(equipped)
+			end).Position = UDim2.new(0, 8, 1, -50)
+		end
+		note(right, "Drag icons to reorder or onto a slot. Spare copies are banked - consume them for XP.", -20, 18)
 	elseif isOwned then
-		local target = math.clamp(sel.Target or #equipped, 1, #equipped)
+		local target = math.clamp(sel.Target or (#equipped + 1), 1, math.min(#equipped + 1, Skills.SLOTS))
 		local swapOut = Abilities[equipped[target]]
 		if not isPartner then
 			progressButtons()
 		end
-		actionButton(right, ("Equip in slot %d"):format(target), 0, C.Up, function()
+		actionButton(right, if swapOut then ("Equip in slot %d (swap)"):format(target) else ("Equip in slot %d"):format(target), 0, C.Up, function()
 			equipped[target] = selectedId
 			extra.SkillSel = { Slot = target }
 			save(equipped)

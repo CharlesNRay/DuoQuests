@@ -331,3 +331,7 @@ two paths of 3 skills, a season prize pet (Arcanix, Skyhawk, Shadowcat, Spiritli
 
 ## Pet damage
 - Every pet hit (its strike and its skill, tag `Pet_*`) is multiplied by `Config/Pets.DamageScale` (4.5) in `Simulation:DealDamage`, and by the owner's `PetDamage` stat. Beastmaster adds +200% PetDamage (Wildlord +100% more), so the pet out-damages the Ranger (measured ~60-70% of the pair's damage vs ~40-45% for a normal build). `XPScale` retuned to 11 so level pacing still holds.
+
+## Skills / Passives menu pass
+- Skills and passives can be unequipped (a skill loadout needs at least one skill; empty slots show a "+" plate you can drop onto). The Skills / Passives tabs put that list at the top of the pool; owned skills sort by the tier you hold.
+- Global look pass (Go Go Muffin style): chunky shaded buttons with a dark rim, a banner across the top of every window, stroked panels. A full per-menu layout redo (card grids, detail popups) is still to do for the other screens.
