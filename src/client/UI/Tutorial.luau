@@ -61,14 +61,14 @@ function TutorialUI.new(root, hud, call, getContext)
 		self:_run("TutorialAdvance", self.Step)
 	end)
 
-	-- a pulsing outline on whatever the step points at
-	self.Pulse = Kit.frame({ Size = UDim2.new(1, 6, 1, 6), Position = UDim2.fromOffset(-3, -3), BackgroundTransparency = 1, NoCorner = true, Visible = false, ZIndex = 30 })
-	Kit.corner(10).Parent = self.Pulse
-	self.PulseStroke = Kit.new("UIStroke", { Color = GOLD, Thickness = 2.5, Parent = self.Pulse })
+	-- a pulsing outline on whatever the step points at (rebuilt when the HUD clears and redraws its widgets)
 	RunService.Heartbeat:Connect(function()
-		local wave = math.sin(os.clock() * 4) * 0.5 + 0.5
-		self.PulseStroke.Transparency = 0.15 + wave * 0.6
-		self.PulseStroke.Thickness = 2 + wave * 2
+		local stroke = self.PulseStroke
+		if stroke and stroke.Parent then
+			local wave = math.sin(os.clock() * 4) * 0.5 + 0.5
+			stroke.Transparency = 0.15 + wave * 0.6
+			stroke.Thickness = 2 + wave * 2
+		end
 	end)
 
 	-- the little "tutorial complete" banner
@@ -117,17 +117,25 @@ function TutorialUI:_celebrate(reward)
 end
 
 function TutorialUI:_point(target)
-	if self.Target == target then
-		return
-	end
-	self.Target = target
+	local pulse = self.Pulse
 	if target == nil or not target.Parent then
-		self.Pulse.Visible = false
-		self.Pulse.Parent = nil
+		if pulse then
+			pulse:Destroy()
+			self.Pulse, self.PulseStroke = nil, nil
+		end
 		return
 	end
-	self.Pulse.Parent = target
-	self.Pulse.Visible = true
+	if pulse and pulse.Parent == target then
+		return
+	end
+	if pulse then
+		pulse:Destroy()
+	end
+	pulse = Kit.frame({ Name = "TutorialPulse", Size = UDim2.new(1, 6, 1, 6), Position = UDim2.fromOffset(-3, -3), BackgroundTransparency = 1, NoCorner = true, ZIndex = 30 })
+	Kit.corner(10).Parent = pulse
+	self.PulseStroke = Kit.new("UIStroke", { Color = GOLD, Thickness = 2.5, Parent = pulse })
+	pulse.Parent = target
+	self.Pulse = pulse
 end
 
 function TutorialUI:_slide(show)

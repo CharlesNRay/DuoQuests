@@ -20,7 +20,7 @@ Tutorial.Reward = { Wishstones = 6, SkillPicks = 1 }
 
 Tutorial.Steps = {
 	{ Id = "Welcome", Title = "Welcome to Duo Quest", Text = "You and your partner fight on your own. Your party sits in the top left. Everything you do from here makes the pair stronger.", Target = "Party", Kind = "next" },
-	{ Id = "Fight", Title = "The battle runs itself", Text = "Fights play out automatically and every win moves you on a stage. Watch your stage in the top right climb.", Target = "Stage", Kind = "frontier", Goal = 3 },
+	{ Id = "Fight", Title = "The battle runs itself", Text = "Fights play out automatically and every win moves you on a stage. Watch your stage in the top right climb.", Target = "Stage", Kind = "frontier", Goal = 5 },
 	{ Id = "Skills", Title = "Choose your skills", Text = "Open Skills. The four equipped skills fire in order, left to right. Upgrade them whenever a skill is ready.", Target = "Skills", Kind = "open", Goal = "Skills" },
 	{ Id = "Hero", Title = "Gear and stats", Text = "Open Hero to see your stats and equipment. Better gear from the Blacksmith and drops makes every fight faster.", Target = "Hero", Kind = "open", Goal = "Hero" },
 	{ Id = "Pets", Title = "Your pet fights too", Text = "Open Pets. The pet you equip strikes on its own and adds bonus stats. You can wish for more at the Wishing Tree.", Target = "Pets", Kind = "open", Goal = "Pets" },
