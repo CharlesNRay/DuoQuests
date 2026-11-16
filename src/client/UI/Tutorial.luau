@@ -16,7 +16,7 @@ local Tutorial = require(ReplicatedStorage:WaitForChild("Shared").Tutorial)
 
 local C = Kit.Colors
 local GOLD = Color3.fromRGB(255, 196, 70)
-local WIDTH = 262
+local WIDTH = 340
 
 local TutorialUI = {}
 TutorialUI.__index = TutorialUI
@@ -41,33 +41,67 @@ function TutorialUI.new(root, hud, call, getContext)
 	Kit.new("UIStroke", { Color = GOLD, Thickness = 1.2, Transparency = 0.55, Parent = card })
 	Kit.frame({ Size = UDim2.new(0, 3, 1, -16), Position = UDim2.fromOffset(0, 8), BackgroundColor3 = GOLD, NoCorner = true, ZIndex = 21, Parent = card })
 	self.Card = card
-	self.StepLabel = Kit.label({ Size = UDim2.new(1, -90, 0, 14), Position = UDim2.fromOffset(14, 8), Text = "", TextSize = 10, Font = Enum.Font.GothamBold, TextColor3 = GOLD, TextWrapped = false, TextStrokeTransparency = 1, ZIndex = 21, Parent = card })
+	self.StepLabel = Kit.label({ Size = UDim2.new(1, -110, 0, 16), Position = UDim2.fromOffset(14, 8), Text = "", TextSize = 12, Font = Enum.Font.GothamBold, TextColor3 = GOLD, TextWrapped = false, TextStrokeTransparency = 1, ZIndex = 21, Parent = card })
 	self.SkipButton = Kit.new("TextButton", {
-		Size = UDim2.fromOffset(70, 14), Position = UDim2.new(1, -78, 0, 8), BackgroundTransparency = 1, Text = "Skip tutorial", TextSize = 10,
+		Size = UDim2.fromOffset(90, 16), Position = UDim2.new(1, -98, 0, 8), BackgroundTransparency = 1, Text = "Skip tutorial", TextSize = 12,
 		Font = Enum.Font.GothamMedium, TextColor3 = C.Dim, TextXAlignment = Enum.TextXAlignment.Right, ZIndex = 22, Parent = card,
 	})
 	self.SkipButton.Activated:Connect(function()
 		self:_run("TutorialSkip")
 	end)
-	self.Title = Kit.label({ Size = UDim2.new(1, -26, 0, 20), Position = UDim2.fromOffset(14, 24), Text = "", TextSize = 15, Font = Enum.Font.GothamBold, TextWrapped = false, TextStrokeTransparency = 1, ZIndex = 21, Parent = card })
-	self.Body = Kit.label({ Size = UDim2.new(1, -28, 0, 44), Position = UDim2.fromOffset(14, 46), Text = "", TextSize = 12, TextColor3 = Color3.fromRGB(196, 202, 222), TextYAlignment = Enum.TextYAlignment.Top, TextStrokeTransparency = 1, ZIndex = 21, Parent = card })
+	self.Title = Kit.label({ Size = UDim2.new(1, -26, 0, 28), Position = UDim2.fromOffset(14, 26), Text = "", TextSize = 22, Font = Enum.Font.GothamBold, TextWrapped = false, TextStrokeTransparency = 1, ZIndex = 21, Parent = card })
+	self.Body = Kit.label({ Size = UDim2.new(1, -28, 0, 44), Position = UDim2.fromOffset(14, 58), Text = "", TextSize = 17, TextColor3 = Color3.fromRGB(196, 202, 222), TextYAlignment = Enum.TextYAlignment.Top, TextStrokeTransparency = 1, ZIndex = 21, Parent = card })
 
 	-- progress bar for "reach a stage" steps
-	self.Bar = Kit.frame({ Size = UDim2.new(1, -28, 0, 5), Position = UDim2.new(0, 14, 1, -22), BackgroundColor3 = Color3.fromRGB(36, 40, 62), NoCorner = true, Visible = false, ZIndex = 21, Parent = card })
+	self.Bar = Kit.frame({ Size = UDim2.new(1, -28, 0, 8), Position = UDim2.new(0, 14, 1, -34), BackgroundColor3 = Color3.fromRGB(36, 40, 62), NoCorner = true, Visible = false, ZIndex = 21, Parent = card })
 	self.Fill = Kit.frame({ Size = UDim2.fromScale(0, 1), BackgroundColor3 = GOLD, NoCorner = true, ZIndex = 22, Parent = self.Bar })
-	self.BarText = Kit.label({ Size = UDim2.new(1, -28, 0, 12), Position = UDim2.new(0, 14, 1, -16), Text = "", TextSize = 10, TextColor3 = C.Dim, TextWrapped = false, TextStrokeTransparency = 1, Visible = false, ZIndex = 21, Parent = card })
+	self.BarText = Kit.label({ Size = UDim2.new(1, -28, 0, 14), Position = UDim2.new(0, 14, 1, -20), Text = "", TextSize = 12, TextColor3 = C.Dim, TextWrapped = false, TextStrokeTransparency = 1, Visible = false, ZIndex = 21, Parent = card })
 
-	self.Next = Kit.button({ Size = UDim2.fromOffset(76, 24), Position = UDim2.new(1, -90, 1, -32), Text = "Next", TextSize = 12, BackgroundColor3 = Color3.fromRGB(214, 160, 44), TextColor3 = Color3.fromRGB(30, 22, 6), Visible = false, ZIndex = 22, Parent = card }, function()
+	self.Next = Kit.button({ Size = UDim2.fromOffset(110, 32), Position = UDim2.new(1, -124, 1, -42), Text = "Next", TextSize = 16, BackgroundColor3 = Color3.fromRGB(214, 160, 44), TextColor3 = Color3.fromRGB(30, 22, 6), Visible = false, ZIndex = 22, Parent = card }, function()
 		self:_run("TutorialAdvance", self.Step)
 	end)
 
-	-- a pulsing outline on whatever the step points at (rebuilt when the HUD clears and redraws its widgets)
+	-- big, obvious guidance: a bouncing arrow beside whatever the step points at, plus a glowing fill and outline on it
+	-- (rebuilt when the HUD clears and redraws its widgets)
+	self.Arrow = Kit.label({
+		Name = "TutorialArrow", Size = UDim2.fromOffset(80, 80), AnchorPoint = Vector2.new(0.5, 0.5), Text = "▼", TextSize = 72, Font = Enum.Font.GothamBlack,
+		TextColor3 = GOLD, TextStrokeColor3 = Color3.fromRGB(40, 24, 0), TextStrokeTransparency = 0, TextXAlignment = Enum.TextXAlignment.Center,
+		TextYAlignment = Enum.TextYAlignment.Center, TextWrapped = false, Visible = false, ZIndex = 80, Parent = root,
+	})
+	self.Tap = Kit.label({
+		Name = "TutorialTap", Size = UDim2.fromOffset(110, 24), AnchorPoint = Vector2.new(0.5, 0.5), Text = "TAP HERE", TextSize = 18, Font = Enum.Font.GothamBlack,
+		TextColor3 = Color3.new(1, 1, 1), TextStrokeColor3 = Color3.fromRGB(40, 24, 0), TextStrokeTransparency = 0, TextXAlignment = Enum.TextXAlignment.Center,
+		TextWrapped = false, Visible = false, ZIndex = 80, Parent = root,
+	})
 	RunService.Heartbeat:Connect(function()
-		local stroke = self.PulseStroke
+		local wave = math.sin(os.clock() * 4) * 0.5 + 0.5
+		local stroke, pulse = self.PulseStroke, self.Pulse
 		if stroke and stroke.Parent then
-			local wave = math.sin(os.clock() * 4) * 0.5 + 0.5
-			stroke.Transparency = 0.15 + wave * 0.6
-			stroke.Thickness = 2 + wave * 2
+			stroke.Transparency = 0.05 + wave * 0.4
+			stroke.Thickness = 3 + wave * 3
+		end
+		local target = pulse and pulse.Parent
+		local visible = target ~= nil and target:IsA("GuiObject") and target.AbsoluteSize.X > 0 and self.Shown
+		if pulse and pulse.Parent then
+			pulse.BackgroundColor3 = GOLD
+			pulse.BackgroundTransparency = 0.72 + wave * 0.2
+		end
+		self.Arrow.Visible, self.Tap.Visible = visible, visible and self.PointsAtButton == true
+		if visible then
+			local origin = root.AbsolutePosition
+			local center = target.AbsolutePosition + target.AbsoluteSize / 2 - origin
+			local below = center.Y < root.AbsoluteSize.Y * 0.5 -- targets in the top half get an arrow underneath, pointing up
+			local bounce = math.abs(math.sin(os.clock() * 5)) * 10
+			local halfH = target.AbsoluteSize.Y / 2 + 42
+			if below then
+				self.Arrow.Text = "▲"
+				self.Arrow.Position = UDim2.fromOffset(center.X, center.Y + halfH + bounce)
+				self.Tap.Position = UDim2.fromOffset(center.X, center.Y + halfH + 44 + bounce)
+			else
+				self.Arrow.Text = "▼"
+				self.Arrow.Position = UDim2.fromOffset(center.X, center.Y - halfH - bounce)
+				self.Tap.Position = UDim2.fromOffset(center.X, center.Y - halfH - 44 - bounce)
+			end
 		end
 	end)
 
@@ -131,9 +165,9 @@ function TutorialUI:_point(target)
 	if pulse then
 		pulse:Destroy()
 	end
-	pulse = Kit.frame({ Name = "TutorialPulse", Size = UDim2.new(1, 6, 1, 6), Position = UDim2.fromOffset(-3, -3), BackgroundTransparency = 1, NoCorner = true, ZIndex = 30 })
+	pulse = Kit.frame({ Name = "TutorialPulse", Size = UDim2.new(1, 8, 1, 8), Position = UDim2.fromOffset(-4, -4), BackgroundColor3 = GOLD, BackgroundTransparency = 0.8, NoCorner = true, ZIndex = 30 })
 	Kit.corner(10).Parent = pulse
-	self.PulseStroke = Kit.new("UIStroke", { Color = GOLD, Thickness = 2.5, Parent = pulse })
+	self.PulseStroke = Kit.new("UIStroke", { Color = GOLD, Thickness = 3, Parent = pulse })
 	pulse.Parent = target
 	self.Pulse = pulse
 end
@@ -202,9 +236,10 @@ function TutorialUI:Update(state, hidden)
 		self.Fill.Size = UDim2.fromScale(frac, 1)
 		self.BarText.Text = ("Stage %d of %d"):format(math.min(frontier, def.Goal), def.Goal)
 	end
-	local lines = math.ceil(#def.Text / 40)
-	self.Body.Size = UDim2.new(1, -28, 0, lines * 15)
-	self.Card.Size = UDim2.fromOffset(WIDTH, 52 + lines * 15 + (if def.Kind == "next" then 38 elseif showBar then 24 else 10))
+	local lines = math.ceil(#def.Text / 32)
+	self.Body.Size = UDim2.new(1, -28, 0, lines * 22)
+	self.Card.Size = UDim2.fromOffset(WIDTH, 62 + lines * 22 + (if def.Kind == "next" then 48 elseif showBar then 40 else 12))
+	self.PointsAtButton = def.Kind == "open"
 	self:_slide(not hidden)
 	self:_point(if hidden then nil else targetOf(self.Hud, def.Target))
 end
