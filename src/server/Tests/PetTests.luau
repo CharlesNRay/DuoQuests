@@ -69,7 +69,7 @@ return function(modulesOverride)
 		Pets.AddDuplicate(profile, "Slimey")
 		Pets.RankUp(profile, "Slimey")
 	end
-	check("Rank stops at the max; extra duplicates give pet XP", Pets.Rank(profile, "Slimey") == PetConfig.MaxRank and select(1, Pets.AddDuplicate(profile, "Slimey")) == "XP" and select(2, Pets.RankUp(profile, "Slimey")) == "MaxRank")
+	check("Rank stops at the max; extra duplicates become pet shards", Pets.Rank(profile, "Slimey") == PetConfig.MaxRank and select(1, Pets.AddDuplicate(profile, "Slimey")) == "Shard" and select(2, Pets.RankUp(profile, "Slimey")) == "MaxRank")
 	local total = 0
 	for r = 1, PetConfig.MaxRank - 1 do
 		total += PetConfig.RankCost[r]
@@ -132,8 +132,50 @@ return function(modulesOverride)
 	for _, petId in ipairs(PetConfig.Order) do if #PetConfig.Defs[petId].Stats == 2 then two += 1 end end
 	check("Some pets (not all) give two stats", two >= 3 and two < #PetConfig.Order)
 	local withSkill = StatCalc.NewPartyMember("e", "E", "Warrior", 10, { PetId = "Emberkit", PetLevel = 1, PetRank = 3 })
-	local last = withSkill.Abilities[#withSkill.Abilities]
-	check("A pet's skill joins its owner's abilities at the pet's rank", last.Id == "Pet_Emberkit" and last.Level == 3 and plain.Abilities[#plain.Abilities].Id ~= "Pet_Emberkit")
+	local function slotOf(entity, id)
+		for _, slot in ipairs(entity.Abilities) do
+			if slot.Id == id then
+				return slot
+			end
+		end
+		return nil
+	end
+	local last = slotOf(withSkill, "Pet_Emberkit")
+	check("A pet's skill joins its owner's abilities at the pet's rank", last ~= nil and last.Level == 3 and slotOf(plain, "Pet_Emberkit") == nil)
+	check("Every pet also gets a strike of its rarity at its rank", slotOf(withSkill, "Pet_Strike_Rare") ~= nil and slotOf(withSkill, "Pet_Strike_Rare").Level == 3 and slotOf(plain, "Pet_Strike_Rare") == nil)
+
+	-- shards ------------------------------------------------------------------------------------------
+	local sp = ProfileTemplate.New()
+	sp.Permanent.Pets = { Slimey = true, Foxling = true }
+	local cost = PetConfig.Shards.PetCost
+	local needed = Pets.CopiesWanted(sp, "Slimey")
+	local kinds = {}
+	for _ = 1, needed + 3 do
+		table.insert(kinds, (Pets.AddDuplicate(sp, "Slimey")))
+	end
+	check("Copies bank until they cover max rank, then duplicates become shards", kinds[needed] == "Copy" and kinds[needed + 1] == "Shard" and Pets.Shards(sp).Common == 3)
+	check("Shards are per rarity", Pets.Shards(sp).Rare == 0)
+	check("Not enough shards buys nothing", select(2, Pets.BuyWithShards(sp, "Mossback")) == "NotEnoughShards" and not (sp.Permanent.Pets.Mossback == true))
+	sp.Permanent.PetShards.Common = cost
+	check("Shards of a rarity buy a pet of that rarity", Pets.BuyWithShards(sp, "Mossback") and sp.Permanent.Pets.Mossback == true and Pets.Shards(sp).Common == 0)
+	sp.Permanent.PetShards.Common = cost
+	check("Only the right rarity of shard works", select(2, Pets.BuyWithShards(sp, "Wisp")) == "NotEnoughShards")
+	check("Season prize pets cannot be bought with shards", select(2, Pets.BuyWithShards(sp, "Crownling")) == "NotBuyable")
+	sp.Permanent.Pets.Chirpy = true
+	sp.Permanent.PetRanks = { Chirpy = PetConfig.MaxRank }
+	check("A maxed pet cannot be bought again", select(2, Pets.BuyWithShards(sp, "Chirpy")) == "PetMaxed")
+	sp.Permanent.PetShards = { Common = PetConfig.Shards.CondenseCost * 2 + 3, Rare = PetConfig.Shards.CondenseCost - 2 }
+	local made = select(2, Pets.Condense(sp, "All"))
+	check("Condense all turns commons into rares and carries upward", Pets.Shards(sp).Common == 3 and Pets.Shards(sp).Rare == 0 and Pets.Shards(sp).Epic == 1 and made.Made.Rare == 2)
+	check("Nothing to condense says so", select(2, Pets.Condense(sp, "Common")) == "NothingToCondense")
+
+	-- collecting counts --------------------------------------------------------------------------------
+	local c0 = Pets.Collection(ProfileTemplate.New())
+	local c1 = Pets.Collection(sp)
+	check("No pets, no collection bonus", c0.Points == 0 and #c0.Mods == 0)
+	check("Owning pets gives a small permanent bonus that grows with rank", c1.Points > 0 and c1.Percent > 0 and c1.Percent < 25)
+	sp.Permanent.PetRanks = { Chirpy = PetConfig.MaxRank, Slimey = 6 }
+	check("Ranking a pet up raises the collection bonus", Pets.Collection(sp).Points > c1.Points)
 	check("A snapshot carries the pet rank", snap.PetRank == 1)
 
 	print(("PetTests done: %d passed, %d failed"):format(passed, failed))

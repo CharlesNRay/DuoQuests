@@ -70,13 +70,36 @@ function GearVisuals.Apply(model, look)
 	end
 	if look.Weapon and hand then
 		local color = rarityColor(look.Weapon)
-		local blade = add(model, hand, CFrame.new(0, -0.2, -1.6), Vector3.new(0.25, 0.25, 3.2), color, look.Weapon)
-		add(model, hand, CFrame.new(0, -0.2, -0.1), Vector3.new(0.9, 0.3, 0.3), Color3.fromRGB(90, 70, 50), "Common")
-		if shiny(look.Weapon) then
+		local wood, steel = Color3.fromRGB(110, 78, 46), Color3.fromRGB(190, 195, 205)
+		local rarity = look.Weapon
+		local glow
+		local class = look.ClassId
+		if class == "Ranger" then
+			-- a bow held upright: curved limbs, a string, grip in the hand
+			add(model, hand, CFrame.new(0, -0.2, -0.6) * CFrame.Angles(math.rad(20), 0, 0), Vector3.new(0.18, 1.5, 0.18), wood, "Common")
+			add(model, hand, CFrame.new(0, 0.55, -0.35) * CFrame.Angles(math.rad(-25), 0, 0), Vector3.new(0.18, 1.3, 0.18), wood, "Common")
+			add(model, hand, CFrame.new(0, -0.95, -0.35) * CFrame.Angles(math.rad(25), 0, 0), Vector3.new(0.18, 1.3, 0.18), wood, "Common")
+			glow = add(model, hand, CFrame.new(0, -0.2, -0.05), Vector3.new(0.06, 3.3, 0.06), color, rarity)
+		elseif class == "Mage" or class == "Summoner" then
+			add(model, hand, CFrame.new(0, -0.2, -0.2), Vector3.new(0.2, 0.2, 3.4), wood, "Common")
+			glow = add(model, hand, CFrame.new(0, -0.2, -2.1), Vector3.new(0.55, 0.55, 0.55), color, rarity, Enum.PartType.Ball)
+		elseif class == "Cleric" then
+			add(model, hand, CFrame.new(0, -0.2, -0.4), Vector3.new(0.22, 0.22, 2.2), wood, "Common")
+			glow = add(model, hand, CFrame.new(0, -0.2, -1.7), Vector3.new(0.6, 0.6, 0.6), color, rarity, Enum.PartType.Ball)
+		elseif class == "Rogue" then
+			glow = add(model, hand, CFrame.new(0, -0.2, -0.8), Vector3.new(0.15, 0.4, 1.4), color, rarity)
+			add(model, hand, CFrame.new(0, -0.2, 0), Vector3.new(0.3, 0.3, 0.3), wood, "Common")
+			add(model, hand, CFrame.new(0.5, -0.2, -0.6), Vector3.new(0.12, 0.35, 1.1), color, rarity)
+		else
+			glow = add(model, hand, CFrame.new(0, -0.2, -1.6), Vector3.new(0.25, 0.25, 3.2), color, rarity)
+			add(model, hand, CFrame.new(0, -0.2, -0.1), Vector3.new(0.9, 0.3, 0.3), Color3.fromRGB(90, 70, 50), "Common")
+		end
+		if shiny(look.Weapon) and glow then
 			local light = Instance.new("PointLight")
 			light.Color, light.Range, light.Brightness = color, 7, 1.2
-			light.Parent = blade
+			light.Parent = glow
 		end
+		_ = steel
 	end
 	if look.Armor then
 		local color = rarityColor(look.Armor)

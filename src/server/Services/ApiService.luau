@@ -30,6 +30,7 @@
 	  ClaimDaily()                      today's login reward
 	  ClaimQuest(index) / ClaimQuestBonus() / ClaimWeeklyQuest(index) / ClaimWeeklyBonus() / BuyPremium(itemId) / ClaimPass(level|"All")   daily quests and the season pass
 	  EquipPet(petId)  the companion that follows you and its bonus
+	  BuyPetWithShards(petId) / CondensePetShards(rarity|"All")   pet shards (duplicates past max rank)
 	  SetStage(stage)                   pick any unlocked stage from the map (either member)
 	  Advance()                         step up one stage after a loss held the party back
 	  SetGhostLoadout(ids)              edit the PARTNER's ghost skills
@@ -147,6 +148,7 @@ local function heroSheetOf(profile)
 		PetId = petId,
 		PetLevel = petLevel,
 		PetRank = petRank,
+		ExtraMods = Pets.Collection(profile).Mods,
 	})
 end
 
@@ -183,6 +185,9 @@ local function buildState(player)
 			PassiveLevels = table.clone(season.PassiveSlotLevels[classId]),
 			PassiveSlots = Passives.SlotsAt(season.HighestStage),
 			Pets = Pets.List(profile),
+			PetShards = Pets.Shards(profile),
+			PetShardInfo = { PetCost = require(Shared.Config.Pets).Shards.PetCost, CondenseCost = require(Shared.Config.Pets).Shards.CondenseCost },
+			PetCollection = (function() local c = Pets.Collection(profile) return { Points = c.Points, Percent = c.Percent } end)(),
 			Wishing = { Pet = Wishing.Info(profile, "Pet"), Skill = Wishing.Info(profile, "Skill") },
 			ActivePet = (Pets.Active(profile)),
 			SubclassId = Subclasses.Current(profile, classId),
@@ -371,7 +376,7 @@ end
 local REPLAYED = { Damage = true, Heal = true, Cast = true, Death = true, Revive = true, Ultimate = true, End = true, Spawn = true, Telegraph = true, Status = true, StatusEnd = true }
 local pushRemote
 
--- A boss strike is a real fight in YOUR arena: the party's normal fights pause, you (and anyone near) watch it.
+-- A boss challenge is a real fight in YOUR arena: the party's normal fights pause, you (and anyone near) watch it.
 local function playBossFight(player, fight, label, damage)
 	local partyState = PartyService.GetState(player)
 	local slot = partyState and WorldService.SlotOf(partyState.PartyId)
@@ -394,11 +399,11 @@ local function playBossFight(player, fight, label, damage)
 	pushRemote:FireClient(player, "BossFight", payload)
 end
 
-function handlers.BossStrike(player, profile, which)
+function handlers.BossChallenge(player, profile, which)
 	if which ~= "World" and which ~= "Season" then
 		return false, "BadArgs"
 	end
-	local ok, data = BossService.Strike(player, profile, which, PartyService.GetPartnerSnapshot(player))
+	local ok, data = BossService.Challenge(player, profile, which, PartyService.GetPartnerSnapshot(player))
 	if ok then
 		local fight = data.Fight
 		data.Fight = nil
@@ -460,6 +465,25 @@ function handlers.LevelPassiveSlot(player, profile, slotIndex)
 		afterBuildChange(player)
 	end
 	return ok, reason
+end
+
+-- Pet shards: buy a pet (or a copy of one) of a rarity, and condense shards into the next rarity.
+function handlers.BuyPetWithShards(player, profile, petId)
+	if type(petId) ~= "string" then
+		return false, "BadArgs"
+	end
+	local ok, reason = Pets.BuyWithShards(profile, petId)
+	if ok then
+		afterBuildChange(player)
+	end
+	return ok, reason
+end
+
+function handlers.CondensePetShards(_, profile, rarity)
+	if type(rarity) ~= "string" then
+		return false, "BadArgs"
+	end
+	return Pets.Condense(profile, rarity)
 end
 
 function handlers.EquipPet(player, profile, petId)
@@ -595,6 +619,18 @@ function handlers.DevGrant(player, profile)
 	end
 	afterBuildChange(player)
 	return true
+end
+
+-- Studio-only: level up (5 levels per press) to test progression quickly.
+function handlers.DevLevel(player, profile)
+	if not game:GetService("RunService"):IsStudio() then
+		return false, "Forbidden"
+	end
+	for _ = 1, 5 do
+		Progression.AddXP(profile.Season, Progression.XPToNext(profile.Season.Level))
+	end
+	afterBuildChange(player)
+	return true, profile.Season.Level
 end
 
 function handlers.ClaimDaily(_, profile)
@@ -1037,7 +1073,7 @@ function ApiService.Init()
 					Wait = waitSeconds,
 					Roster = outcome.Roster,
 					Events = events,
-					Reward = reward and { Gold = reward.Gold, XP = reward.XP, Shards = reward.Shards, Wishstones = reward.Wishstones, Item = reward.Item and Gear.Name(reward.Item) or nil, Pets = reward.PetsGained } or nil,
+					Reward = reward and { Gold = reward.Gold, XP = reward.XP, Shards = reward.Shards, Wishstones = reward.Wishstones, Item = reward.Item and Gear.Name(reward.Item, member.Profile and member.Profile.Season.ClassId) or nil, Pets = reward.PetsGained } or nil,
 				})
 			end
 		end

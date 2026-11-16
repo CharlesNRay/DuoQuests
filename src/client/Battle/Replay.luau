@@ -332,7 +332,9 @@ function Replay:_event(e)
 		local source = actorFor(self, e.Source)
 		local def = Abilities[e.Ability]
 		if source and def then
-			floatText(scene, source:Pos() + Vector3.new(0, 3, 0), def.DisplayName, Color3.fromRGB(255, 230, 150), 16)
+			if not def.Quiet then
+				floatText(scene, source:Pos() + Vector3.new(0, 3, 0), def.DisplayName, Color3.fromRGB(255, 230, 150), 16)
+			end
 			self.LastCast = self.LastCast or {}
 			self.LastCast[e.Source] = { Ability = e.Ability, T = e.T or 0 }
 			if SkillEffects.HasStyle(e.Ability) then

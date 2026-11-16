@@ -66,6 +66,9 @@ function StageRunner.NewParty(members)
 			subclassId = season.Subclasses and season.Subclasses[classId] or nil
 			equipped = season.Equipment and season.Equipment.Equipped
 			extraMods = Consumables.Mods(member.Profile, os.time())
+			for _, mod in ipairs(Pets.Collection(member.Profile).Mods) do -- the permanent bonus for the pets you have collected
+				table.insert(extraMods, mod)
+			end
 		else
 			local snapshot = member.Snapshot
 			classId, level = snapshot.ClassId, snapshot.Level
@@ -75,6 +78,7 @@ function StageRunner.NewParty(members)
 			petId, petLevel, petRank = snapshot.PetId, snapshot.PetLevel, snapshot.PetRank
 			subclassId = snapshot.SubclassId
 			equipped = snapshot.Gear
+			extraMods = snapshot.CollectionMods
 		end
 		table.insert(
 			party,
@@ -146,6 +150,7 @@ function StageRunner.Run(members, stage, seed, ultimate, record)
 				worn = member.Snapshot.Gear
 			end
 			looks[member.Id] = Gear.Look(worn)
+			looks[member.Id].ClassId = member.Snapshot and member.Snapshot.ClassId or (member.Profile and member.Profile.Season.ClassId) or nil
 		end
 		for _, team in ipairs({ sim.Party, sim.Enemies }) do
 			for _, entity in ipairs(team) do

@@ -29,7 +29,16 @@ return {
 	MaxRank = 6,
 	RankCost = { 1, 1, 2, 2, 3 }, -- copies to go from rank r to r+1 (9 copies for a max rank pet)
 	RankBonus = 0.25,
-	DupFallbackXP = 80, -- pet XP when a duplicate comes in after the pet is already at max rank
+	DupFallbackXP = 80, -- (old) pet XP for a duplicate of a maxed pet; duplicates past what ranking needs are now shards
+	-- Pet shards: once a pet has all the copies it needs to reach max rank, every further duplicate becomes one shard of
+	-- its rarity. PetCost shards of a rarity buy a pet of that rarity (a copy, or the pet itself if not owned yet).
+	-- CondenseCost shards of one rarity make one shard of the next rarity up.
+	Shards = { PetCost = 30, CondenseCost = 10, Order = { "Common", "Rare", "Epic", "Legendary" } },
+	-- Collecting counts: every owned pet adds points (more for rarer pets, times its rank) and each point is a small permanent
+	-- bonus to Attack and Max Health, whether or not that pet is equipped.
+	Collection = { Points = { Common = 1, Rare = 2, Epic = 4, Legendary = 8 }, PerPoint = 0.001, Stats = { "Attack", "MaxHealth" } },
+	-- Every equipped pet also strikes on its own (ability Pet_Strike_<Rarity>, level = rank).
+	Strike = { Cooldown = 3.5 },
 	-- Stat sizes at Share 1 for a Common pet; Share splits them (a one-stat pet gets 1.25, a two-stat pet 0.7 + 0.5,
 	-- so the single-stat pet is better at its stat). Mul = +fraction, Add = raw number.
 	StatUnits = {

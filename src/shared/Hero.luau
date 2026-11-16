@@ -35,6 +35,7 @@ function Hero.Sheet(info)
 		PetId = info.PetId,
 		PetLevel = info.PetLevel,
 		PetRank = info.PetRank,
+		ExtraMods = info.ExtraMods,
 	})
 	local s = entity.Stats
 	local stats = {

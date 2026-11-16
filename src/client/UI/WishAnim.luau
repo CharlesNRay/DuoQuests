@@ -73,6 +73,9 @@ local function tagText(row)
 	elseif row.Copies then
 		return "+1 copy"
 	end
+	if row.Shard then
+		return "+" .. tostring(row.Shards or 1) .. " shard"
+	end
 	return ("+%d xp"):format(row.DupXP or 0)
 end
 

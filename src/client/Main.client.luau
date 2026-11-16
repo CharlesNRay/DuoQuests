@@ -47,6 +47,17 @@ local StarterGui = game:GetService("StarterGui")
 pcall(function()
 	StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.PlayerList, false) -- we have our own rankings
 end)
+-- the class weapon is only a cosmetic: keep Roblox's hotbar (which would list it over our HUD) off
+task.spawn(function()
+	for _ = 1, 20 do
+		if pcall(function()
+			StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.Backpack, false)
+		end) then
+			break
+		end
+		task.wait(0.5)
+	end
+end)
 
 -- The UI fills the whole screen (below Roblox's top bar). A UIScale sizes everything for the
 -- screen, and the root is stretched by the inverse so the edges really are the screen edges.
@@ -65,7 +76,7 @@ Kit.SetupTooltips(root, scale)
 
 local hud = Hud.new(root)
 local state
-local liveLog = LiveLog.new(root, Screens.BuildLog)
+local liveLog = LiveLog.new(root, Screens.BuildLog, Screens.DamageMeter)
 local fighting = false
 local arenas = Arenas.new(Players.LocalPlayer.UserId)
 
@@ -358,6 +369,7 @@ hud:AddButton("Party", "dock", "👥", "Party", function() open("Party", "Party"
 
 -- Studio only: a test button that grants gold, boosts and gear so every screen can be exercised.
 if RunService:IsStudio() then
+	hud:AddButton("DevLevel", "mini", "⬆", "+5 levels (Studio only)", function() call("DevLevel") end)
 	hud:AddButton("Dev", "mini", "🧪", "Test items (Studio only)", function() call("DevGrant") end)
 	hud:AddButton("DevPremium", "mini", "★", "Toggle premium pass (Studio only)", function() call("DevPremium") end)
 end
@@ -394,7 +406,7 @@ hud:AddButton("Boss", "mini", "👹", "Bosses", function()
 	extra.Boss = nil
 	open("Boss", "Bosses")
 end)
-hud:AddButton("Store", "mini", "🛍️", "Store: premium shop, cosmetics, redeem a code", function()
+hud:AddButton("Store", "mini", "🛍️", "Store", function()
 	extra.StoreTab = extra.StoreTab or "Premium"
 	open("Store", "Store")
 end)

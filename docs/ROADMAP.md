@@ -286,3 +286,21 @@ two paths of 3 skills, a season prize pet (Arcanix, Skyhawk, Shadowcat, Spiritli
 - Minions are real party-side entities: enemies attack them (55% of hits while any live, taunting skeletons/titans take everything), they die, and they fall with their summoner. They never count as party survivors or the ultimate caster.
 - Recovery: Soul Leech, Devour, Death Coil, ghoul leech, Necromancer lifesteal, Vampirism passive (new `Lifesteal` stat), Guardian Spirit's Spirit Mend.
 - Shards: hidden from the HUD, daily/quest rewards and the skill unlock buttons for now (backend untouched).
+
+## Pet shards, collection bonus and pet damage
+- Duplicates beyond a pet's max rank become rarity shards. 30 shards buy a chosen pet (wish pets only); 10 condense into 1 of the next rarity ("Condense all" on the Pets screen). Deviation from the request: condense is 10:1, not 30:1 (tunable in Config/Pets `Shards`).
+- Collection bonus: every owned pet gives rarity points x rank (Common 1, Rare 2, Epic 4, Legendary 8); each point adds 0.1% Attack and Health.
+- All pets now also cast a basic "Pet Strike" every 3.5s; existing pet damage skills were buffed x1.6.
+
+## Daily calendar
+- The daily gift is a 7-day calendar (claimed / today / upcoming).
+
+## Boss challenge rework
+- The strike/charges mechanic is gone. A boss is a very hard normal auto-combat fight (Config/Bosses `Abilities`, `AttackMult`). Challenge whenever (20s cooldown); only your best damage ever counts toward the boss. Tier thresholds still need real-gear tuning (test parties without gear reach roughly 1-3x).
+
+## Combat log, DPS meter, buffs, gear
+- Pet hits are logged as the pet, not the owner. `FightStats` builds a damage meter (players in their own colours, pets and minions as separate rows); shown in the Log screen and live in the combat log ("DPS" toggle).
+- Buffs show in the combat view (above the skill bar) so they stay visible with the HUD hidden.
+- Roblox's default Backpack hotbar is disabled (the class weapon is cosmetic only).
+- Gear names are class themed (Config/Gear `ClassNames`); in-battle weapon model is per class; the Hero screen shows the equipped pet.
+- Studio-only dev button "+5 levels" (DevLevel).

@@ -8,7 +8,7 @@
 	  Pool entry   { Id, Event, Goal, Text }   Event is one of:
 	               Clear (any won fight), Frontier (a first clear of a stage), Boss (a boss stage won),
 	               Wish (wishes made at the Tree, a ten-pull counts as ten), Feed (pet food given), Gear (gear found),
-	               Strike (a boss strike, world or season)
+	               Strike (a boss challenge, world or season)
 	  QuestReward  per quest   { GoldClears (gold = this many frontier clears), Wishstones, PassXP }
 	  BonusReward  all three claimed { Wishstones, PassXP, Tickets = { PetWish = n } }
 
@@ -91,7 +91,7 @@ return {
 		{ Id = "Wish5", Event = "Wish", Goal = 5, Text = "Make 5 wishes at the Wishing Tree" },
 		{ Id = "Feed2", Event = "Feed", Goal = 2, Text = "Feed your pet 2 times" },
 		{ Id = "Gear3", Event = "Gear", Goal = 3, Text = "Find 3 pieces of gear" },
-		{ Id = "Strike1", Event = "Strike", Goal = 1, Text = "Strike a boss once" },
+		{ Id = "Strike1", Event = "Strike", Goal = 1, Text = "Challenge a boss once" },
 	},
 	QuestsPerDay = 3,
 	QuestReward = { GoldClears = 6, Wishstones = 2, PassXP = 40 },
@@ -107,7 +107,7 @@ return {
 			{ Id = "WWish15", Event = "Wish", Goal = 15, Text = "Make 15 wishes at the Wishing Tree" },
 			{ Id = "WFeed10", Event = "Feed", Goal = 10, Text = "Feed your pet 10 times" },
 			{ Id = "WGear20", Event = "Gear", Goal = 20, Text = "Find 20 pieces of gear" },
-			{ Id = "WStrike4", Event = "Strike", Goal = 4, Text = "Strike a boss 4 times" },
+			{ Id = "WStrike4", Event = "Strike", Goal = 4, Text = "Challenge a boss 4 times" },
 		},
 		QuestsPerWeek = 4,
 		QuestReward = { Wishstones = 6, PassXP = 120, Items = { GrandPetFood = 1 } },

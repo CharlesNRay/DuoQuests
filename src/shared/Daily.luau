@@ -8,7 +8,7 @@
 	Permanent.Login = { Streak = n, LastDay = dayNumber }  (absent until first claim)
 
 	  Daily.DayNumber(now)                 -> whole days since the epoch (UTC)
-	  Daily.Status(profile, now)           -> { CanClaim, Streak, NextDay, Reward }
+	  Daily.Status(profile, now)           -> { CanClaim, Streak, NextDay, Reward, Week = { { Day, Reward, State = "Claimed"|"Today"|"Upcoming" } } }
 	                                          NextDay is 1..7 (the cycle day you would get)
 	  Daily.Claim(profile, now)            -> true, summary | false, "AlreadyClaimed"
 	                                          summary = { Day, Streak, Gold, Shards, SkillPicks, PetLevel }
@@ -59,7 +59,17 @@ function Daily.Status(profile, now)
 	local claimed = state.LastDay == today
 	local streak = if claimed then state.Streak else nextStreak(state, today)
 	local day = cycleDay(streak)
+	-- the whole cycle as a calendar: what each day pays and where you are in it
+	local week = {}
+	for d = 1, Config.CycleLength do
+		table.insert(week, {
+			Day = d,
+			Reward = Daily.RewardFor(profile, d),
+			State = if d < day or (claimed and d == day) then "Claimed" elseif d == day then "Today" else "Upcoming",
+		})
+	end
 	return {
+		Week = week,
 		CanClaim = not claimed,
 		Streak = if claimed then state.Streak else state.Streak, -- current streak before today's claim
 		NextStreak = streak,

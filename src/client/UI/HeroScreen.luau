@@ -114,6 +114,14 @@ local function turntable(parent, info, size)
 	camera.CFrame = CFrame.lookAt(Vector3.new(0, 0, -height * 2.1), Vector3.new(0, 0, 0))
 	camera.Parent = viewport
 	viewport.CurrentCamera = camera
+	-- the equipped pet stands beside the hero, so changing pets changes what you see
+	local petModel
+	if info.PetId then
+		petModel = Models.Pet(info.PetId)
+		petModel.Parent = viewport
+		local bcf, ext = petModel:GetBoundingBox()
+		petModel:PivotTo(CFrame.new(height * 0.42, -height / 2 + ext.Y / 2, -height * 0.12) * CFrame.Angles(0, math.rad(200), 0) * bcf:ToObjectSpace(petModel:GetPivot()))
+	end
 	local base = model:GetPivot()
 	local angle = math.rad(200)
 	local connection

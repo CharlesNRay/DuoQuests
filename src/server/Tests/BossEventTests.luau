@@ -32,9 +32,11 @@ return function(modulesOverride)
 	end
 
 	local p = ProfileTemplate.New()
-	local damage = Bosses.Strike({ { Id = "1", Name = "A", Profile = p } }, Cfg.World, 1, 1)
-	check("A strike deals damage", damage > 0)
-	check("A strike is repeatable (same seed, same damage)", damage == Bosses.Strike({ { Id = "1", Name = "A", Profile = p } }, Cfg.World, 1, 1))
+	local damage, seconds = Bosses.Challenge({ { Id = "1", Name = "A", Profile = p } }, Cfg.World, 1, 1)
+	check("A challenge deals damage", damage > 0)
+	check("A challenge is repeatable (same seed, same damage)", damage == Bosses.Challenge({ { Id = "1", Name = "A", Profile = p } }, Cfg.World, 1, 1))
+	check("A fresh player falls to the boss well before the time limit", seconds < Cfg.World.FightSeconds)
+	check("The boss uses its abilities (it is a real fight)", #Cfg.World.Abilities >= 3 and #Cfg.Season.Abilities >= 3)
 
 	local scale = Bosses.DamageScale(1)
 	check("No damage reaches no tier", #Bosses.TiersReached(Cfg.World, 0, 1) == 0)
@@ -65,23 +67,18 @@ return function(modulesOverride)
 	check("Past the end stays dead", hp == 0)
 	check("Thresholds cross in order", #Bosses.SeasonCrossed(S, 0.8) == 1 and #Bosses.SeasonCrossed(S, 0.2) == 4 and #Bosses.SeasonCrossed(S, 0) == 6)
 
-	-- charges
+	-- only your best fight counts
 	local q = ProfileTemplate.New()
-	local c = Bosses.Charges(q, 1, 1000, 100, 3)
-	check("Fresh player has full charges", c == 3)
-	check("Spend a charge", Bosses.SpendCharge(q, 1, 1000, 100, 3) == true and Bosses.Charges(q, 1, 1000, 100, 3) == 2)
-	Bosses.SpendCharge(q, 1, 1000, 100, 3) Bosses.SpendCharge(q, 1, 1000, 100, 3)
-	check("Out of charges is refused", select(2, Bosses.SpendCharge(q, 1, 1000, 100, 3)) == "NoCharges")
-	local cc, wait = Bosses.Charges(q, 1, 1040, 100, 3)
-	check("Next charge countdown", cc == 0 and math.abs(wait - 60) < 1e-6)
-	check("A charge regenerates", Bosses.Charges(q, 1, 1105, 100, 3) == 1)
-	check("Charges cap at max", Bosses.Charges(q, 1, 99999, 100, 3) == 3)
+	check("The first challenge counts in full", Bosses.RecordBest(q, 1, 1000) == 1000 and Bosses.Record(q, 1).Best == 1000)
+	check("A worse fight takes nothing off the boss", Bosses.RecordBest(q, 1, 400) == 0 and Bosses.Record(q, 1).Best == 1000)
+	check("A better fight takes only the improvement", Bosses.RecordBest(q, 1, 1500) == 500 and Bosses.Record(q, 1).Best == 1500)
+	check("Every challenge is counted", Bosses.Record(q, 1).Challenges == 3)
 
 	-- claims
 	local r = ProfileTemplate.New()
 	check("Nothing claimable without contributing", #Bosses.Claimable(r, 1, S, 0.5) == 0)
 	check("Claim refused without contribution", select(2, Bosses.Claim(r, 1, S, "p90", 0.5, 5)) == "NoContribution")
-	Bosses.Record(r, 1).Strikes = 1
+	Bosses.Record(r, 1).Challenges = 1
 	check("Claimable after contributing", #Bosses.Claimable(r, 1, S, 0.5) == 3)
 	check("Claim a crossed threshold", Bosses.Claim(r, 1, S, "p90", 0.5, 5) == true and Consumables.Count(r, "PetFood") == 3)
 	check("No double claim", select(2, Bosses.Claim(r, 1, S, "p90", 0.5, 5)) == "AlreadyClaimed")
@@ -91,7 +88,7 @@ return function(modulesOverride)
 	check("Death claim gives an egg", Bosses.Claim(r, 1, S, "dead", 0, 5) == true and Bosses.Record(r, 1).Egg == true)
 	local ok, pet = Bosses.Hatch(r, 1, S)
 	check("The egg hatches into the baby boss", ok == true and pet == S.EggPet and r.Permanent.Pets[S.EggPet] == true and Bosses.Record(r, 1).Egg == false)
-	check("A new season resets the record", Bosses.Record(r, 2).Strikes == 0 and next(Bosses.Record(r, 2).Claimed) == nil)
+	check("A new season resets the record", Bosses.Record(r, 2).Challenges == 0 and next(Bosses.Record(r, 2).Claimed) == nil)
 
 	print(("BossEventTests done: %d passed, %d failed"):format(passed, failed))
 end

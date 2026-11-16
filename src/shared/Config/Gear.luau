@@ -52,6 +52,54 @@ return {
 		Amulet = { Common = "Lucky Charm", Uncommon = "Fox Talisman", Rare = "Jade Amulet", Epic = "Star Pendant", Legendary = "Heart of the World" },
 	},
 
+	-- Item names by CLASS (the bag shows what suits the class you play). Rings and amulets are shared.
+	ClassNames = {
+		Warrior = {
+			Weapon = { Common = "Iron Sword", Uncommon = "Hunter's Blade", Rare = "Steel Blade", Epic = "Dragonfang", Legendary = "Moonsteel Saber" },
+			Helmet = { Common = "Leather Cap", Uncommon = "Hardened Helm", Rare = "Iron Helm", Epic = "Crown of Valor", Legendary = "Halo of Ages" },
+			Armor = { Common = "Leather Vest", Uncommon = "Studded Armor", Rare = "Chain Mail", Epic = "Aegis Plate", Legendary = "Mythic Bulwark" },
+			Pants = { Common = "Cloth Pants", Uncommon = "Reinforced Pants", Rare = "Mail Leggings", Epic = "Titan Greaves", Legendary = "Giantstride Greaves" },
+			Boots = { Common = "Worn Boots", Uncommon = "Trailblazer Boots", Rare = "Swift Boots", Epic = "Windrunners", Legendary = "Skystep Treads" },
+		},
+		Ranger = {
+			Weapon = { Common = "Short Bow", Uncommon = "Hunter's Bow", Rare = "Longbow", Epic = "Stormstring Bow", Legendary = "Windpiercer" },
+			Helmet = { Common = "Hunter's Hood", Uncommon = "Scout's Cowl", Rare = "Ranger's Hood", Epic = "Eagle-eye Cowl", Legendary = "Crown of the Wild" },
+			Armor = { Common = "Hide Jerkin", Uncommon = "Scout's Leathers", Rare = "Ranger's Cloak", Epic = "Stalker's Mantle", Legendary = "Mantle of the Wild" },
+			Pants = { Common = "Hide Leggings", Uncommon = "Scout's Breeches", Rare = "Ranger's Trousers", Epic = "Stalker's Leggings", Legendary = "Wildstride Leggings" },
+			Boots = { Common = "Soft Boots", Uncommon = "Trailwalker Boots", Rare = "Quiet Boots", Epic = "Fleetfoot Boots", Legendary = "Skystep Treads" },
+		},
+		Mage = {
+			Weapon = { Common = "Oak Staff", Uncommon = "Apprentice Staff", Rare = "Crystal Staff", Epic = "Arcane Scepter", Legendary = "Staff of Stars" },
+			Helmet = { Common = "Cloth Hat", Uncommon = "Apprentice Hat", Rare = "Wizard Hat", Epic = "Archmage Circlet", Legendary = "Crown of Stars" },
+			Armor = { Common = "Cloth Robe", Uncommon = "Apprentice Robe", Rare = "Silk Robe", Epic = "Archmage Robe", Legendary = "Starweave Vestments" },
+			Pants = { Common = "Cloth Skirt", Uncommon = "Apprentice Legwraps", Rare = "Silk Leggings", Epic = "Archmage Leggings", Legendary = "Starweave Leggings" },
+			Boots = { Common = "Cloth Slippers", Uncommon = "Apprentice Shoes", Rare = "Silk Slippers", Epic = "Stormwalkers", Legendary = "Cloudstep Slippers" },
+		},
+		Cleric = {
+			Weapon = { Common = "Wooden Mace", Uncommon = "Blessed Mace", Rare = "Silver Mace", Epic = "Dawnbringer", Legendary = "Scepter of Light" },
+			Helmet = { Common = "Cloth Coif", Uncommon = "Blessed Coif", Rare = "Silver Circlet", Epic = "Seraph's Circlet", Legendary = "Halo of Ages" },
+			Armor = { Common = "Linen Vestment", Uncommon = "Blessed Vestment", Rare = "Temple Mail", Epic = "Seraph's Vestment", Legendary = "Mantle of Grace" },
+			Pants = { Common = "Linen Skirt", Uncommon = "Blessed Leggings", Rare = "Temple Greaves", Epic = "Seraph's Greaves", Legendary = "Graceful Greaves" },
+			Boots = { Common = "Pilgrim Sandals", Uncommon = "Blessed Sandals", Rare = "Temple Boots", Epic = "Seraph's Boots", Legendary = "Lightstep Boots" },
+		},
+		Rogue = {
+			Weapon = { Common = "Rusty Daggers", Uncommon = "Alley Daggers", Rare = "Steel Daggers", Epic = "Nightfang Daggers", Legendary = "Shadowbite Daggers" },
+			Helmet = { Common = "Rag Mask", Uncommon = "Alley Hood", Rare = "Shadow Mask", Epic = "Nightveil Mask", Legendary = "Mask of a Thousand Faces" },
+			Armor = { Common = "Dark Vest", Uncommon = "Alley Leathers", Rare = "Shadow Leathers", Epic = "Nightveil Garb", Legendary = "Mantle of Shadows" },
+			Pants = { Common = "Dark Trousers", Uncommon = "Alley Breeches", Rare = "Shadow Trousers", Epic = "Nightveil Leggings", Legendary = "Shadowstep Leggings" },
+			Boots = { Common = "Soft Soles", Uncommon = "Alley Boots", Rare = "Silent Boots", Epic = "Nightstalkers", Legendary = "Voidstep Boots" },
+		},
+		Summoner = {
+			Weapon = { Common = "Bone Wand", Uncommon = "Grave Wand", Rare = "Skull Scepter", Epic = "Soulbinder Grimoire", Legendary = "Grimoire of the Dead" },
+			Helmet = { Common = "Bone Circlet", Uncommon = "Grave Hood", Rare = "Skull Crown", Epic = "Soulbinder Crown", Legendary = "Crown of the Dead" },
+			Armor = { Common = "Gravecloth Robe", Uncommon = "Tattered Shroud", Rare = "Necro Robe", Epic = "Soulbinder Robe", Legendary = "Shroud of the Dead" },
+			Pants = { Common = "Gravecloth Wraps", Uncommon = "Tattered Leggings", Rare = "Necro Leggings", Epic = "Soulbinder Leggings", Legendary = "Deathwalk Leggings" },
+			Boots = { Common = "Bone Sandals", Uncommon = "Grave Boots", Rare = "Necro Boots", Epic = "Soulbinder Boots", Legendary = "Deathwalk Boots" },
+		},
+	},
+	-- the weapon noun used for a zone SET weapon, per class ("Meadow Warden Longbow")
+	ClassWeaponNoun = { Warrior = "Blade", Ranger = "Longbow", Mage = "Staff", Cleric = "Mace", Rogue = "Daggers", Summoner = "Grimoire" },
+
 	RarityMult = { Common = 1, Uncommon = 1.25, Rare = 1.55, Epic = 2.2, Legendary = 3.2, Set = 1.8 },
 	SellValue = { Common = 2, Uncommon = 4, Rare = 8, Epic = 18, Legendary = 45 }, -- gold per item (before stage scaling)
 	SellPerStage = 0.2, -- extra gold per stage of Power

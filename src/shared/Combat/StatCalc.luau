@@ -58,6 +58,10 @@ function StatCalc.WithPetSkill(slots, petId, rank)
 	if skillId then
 		table.insert(slots, { Id = skillId, Level = Skills.ClampSlotLevel(rank or 1) })
 	end
+	local def = petId and Pets.Defs[petId]
+	if def then -- every pet also fights: a steady strike scaled by its rarity and rank
+		table.insert(slots, { Id = "Pet_Strike_" .. def.Rarity, Level = Skills.ClampSlotLevel(rank or 1), Timer = 1.5 })
+	end
 	return slots
 end
 

@@ -278,12 +278,13 @@ function Wishing.Wish(profile, kind, tierId, method, count, rng)
 			profile.Permanent.Pets = profile.Permanent.Pets or {}
 			if profile.Permanent.Pets[id] then
 				row.New = false
-				-- a duplicate is banked as a copy (pet XP once it is at max rank)
+				-- a duplicate is banked as a copy; once the pet has every copy it needs, it becomes a shard of its rarity
 				local got, amount = Pets.AddDuplicate(profile, id)
 				if got == "Copy" then
 					row.Copies = amount
 				else
-					row.DupXP = amount
+					row.Shard = true
+					row.Shards = amount
 				end
 			else
 				profile.Permanent.Pets[id] = true

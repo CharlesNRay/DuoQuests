@@ -792,7 +792,7 @@ function Simulation:Cast(caster, slot)
 
 	slot.Uses = (slot.Uses or 0) + 1
 	self:_record({ Type = "Cast", Source = caster.Id, Ability = def.Id, Level = slot.Level })
-	if caster.Team == "Party" and not slot.IsUltimate then
+	if caster.Team == "Party" and not slot.IsUltimate and not def.NoCharge then
 		self:AddUltimateCharge(Ultimates.ChargePerCast)
 	end
 

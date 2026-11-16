@@ -161,6 +161,9 @@ function Hud.new(root)
 	self.BuffRow = Kit.frame({ Size = UDim2.new(1, 0, 0, 22), BackgroundTransparency = 1, NoCorner = true, Parent = right })
 	Kit.new("UIListLayout", { Padding = UDim.new(0, 3), FillDirection = Enum.FillDirection.Horizontal, SortOrder = Enum.SortOrder.LayoutOrder, HorizontalAlignment = Enum.HorizontalAlignment.Right, Parent = self.BuffRow })
 	self.BuffChips = {}
+	-- while watching a fight the buffs live in the combat layer (above the skill bar), so hiding the HUD keeps them
+	self.CombatBuffRow = Kit.frame({ Size = UDim2.fromOffset(300, 22), Position = UDim2.new(0.5, -150, 1, -140), BackgroundTransparency = 1, NoCorner = true, Parent = combat })
+	Kit.new("UIListLayout", { Padding = UDim.new(0, 3), FillDirection = Enum.FillDirection.Horizontal, SortOrder = Enum.SortOrder.LayoutOrder, HorizontalAlignment = Enum.HorizontalAlignment.Center, Parent = self.CombatBuffRow })
 	task.spawn(function()
 		while gui.Parent do
 			for _, chip in ipairs(self.BuffChips) do
@@ -287,6 +290,7 @@ function Hud.new(root)
 	function self:SetWatching(text, onStop)
 		self.Watching.Visible = text ~= nil
 		self.Combat.Visible = text ~= nil
+		self.BuffRow.Visible = text == nil
 		self.WatchText.Text = text or ""
 		if text == nil then
 			self:SetHudHidden(false)
@@ -361,12 +365,15 @@ function Hud.new(root)
 		self.StoneExact = me.Wishstones or 0
 
 		Kit.clear(self.BuffRow)
+		Kit.clear(self.CombatBuffRow)
 		self.BuffChips = {}
 		for _, buff in ipairs(me.Buffs or {}) do
-			local f = pill(self.BuffRow, { Size = UDim2.fromOffset(64, 22), Position = UDim2.new() })
-			local l = Kit.label({ Size = UDim2.new(1, -4, 1, 0), Position = UDim2.fromOffset(4, 0), Text = "", TextSize = 12, TextWrapped = false, Parent = f })
-			Kit.Hover(f, function() return ("<b>%s</b>\n%s"):format(buff.Name, buff.Description) end)
-			table.insert(self.BuffChips, { Frame = f, Label = l, Glyph = buff.Glyph, EndsAt = os.clock() + buff.Remaining })
+			for _, rowFrame in ipairs({ self.BuffRow, self.CombatBuffRow }) do
+				local f = pill(rowFrame, { Size = UDim2.fromOffset(64, 22), Position = UDim2.new() })
+				local l = Kit.label({ Size = UDim2.new(1, -4, 1, 0), Position = UDim2.fromOffset(4, 0), Text = "", TextSize = 12, TextWrapped = false, Parent = f })
+				Kit.Hover(f, function() return ("<b>%s</b>\n%s"):format(buff.Name, buff.Description) end)
+				table.insert(self.BuffChips, { Frame = f, Label = l, Glyph = buff.Glyph, EndsAt = os.clock() + buff.Remaining })
+			end
 		end
 
 		self:SetBadge("Skills", (me.SkillPicks or 0) > 0 or #(me.SubclassChoices or {}) > 0 or me.SkillReady == true)

@@ -97,7 +97,7 @@ function MapScreen.Map(container, state, call, extra)
 
 	-- season rewards: a shortcut from the map
 	if extra.OpenSeason then
-		Kit.button({ Name = "SeasonButton", Size = UDim2.fromOffset(128, 24), Position = UDim2.new(1, -134, 0, 4), Text = "🏆 Season rewards", TextSize = 12, ZIndex = 5, Parent = map }, function()
+		Kit.button({ Name = "SeasonButton", Size = UDim2.fromOffset(128, 24), Position = UDim2.fromOffset(86, 3), Text = "🏆 Season rewards", TextSize = 12, ZIndex = 5, Parent = map }, function()
 			extra.OpenSeason()
 		end)
 	end

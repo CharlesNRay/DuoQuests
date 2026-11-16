@@ -13,7 +13,7 @@
 	  Gear.StatOf(item)                     -> stat name, value
 	  Gear.ItemPower(item)                  -> one comparable number for any item (stat / base stat * 10)
 	  Gear.EnsureStarter(profile)           gives a wooden-sword-level Common weapon if you own no weapon at all
-	  Gear.Name(item)                       -> display name
+	  Gear.Name(item, classId?)             -> display name (class themed)
 	  Gear.Mods(equipped)                   -> list of { Stat, Mode = "Add", Value } for StatCalc
 	  Gear.RollDrop(stage, isFrontier, itemRarityBonus, rand)  -> { Slot, Rarity } or nil
 	  Gear.Cap(profile) / Gear.BagUpgradeCost(profile) / Gear.UpgradeBag(profile)   bag size and its Merchant upgrade
@@ -236,13 +236,18 @@ function Gear.DescribeMods(mods)
 	return table.concat(parts, ", ")
 end
 
-function Gear.Name(item)
+function Gear.Name(item, classId)
 	if item.SetId then
 		local def, loop = Gear.SetFor(item.SetId)
 		local piece = def.Pieces[item.Slot] or (def.Name .. " " .. item.Slot)
+		local noun = classId and Config.ClassWeaponNoun[classId]
+		if item.Slot == "Weapon" and noun then
+			piece = def.Name .. " " .. noun
+		end
 		return if loop > 1 then piece .. " " .. loop else piece
 	end
-	local names = Config.Names[item.Slot]
+	local byClass = classId and Config.ClassNames[classId]
+	local names = (byClass and byClass[item.Slot]) or Config.Names[item.Slot]
 	return names and names[item.Rarity] or (item.Rarity .. " " .. item.Slot)
 end
 
@@ -537,7 +542,7 @@ function Gear.Sell(profile, itemId)
 	return true, gold
 end
 
-local function row(item)
+local function row(item, classId)
 	local stat, value = Gear.StatOf(item)
 	local setName
 	if item.SetId then
@@ -553,7 +558,7 @@ local function row(item)
 		nextValue = v
 	end
 	return {
-		Id = item.Id, Slot = item.Slot, Rarity = item.Rarity, Name = Gear.Name(item), Power = item.Power, Stat = stat, Value = value,
+		Id = item.Id, Slot = item.Slot, Rarity = item.Rarity, Name = Gear.Name(item, classId), Power = item.Power, Stat = stat, Value = value,
 		ItemPower = Gear.ItemPower(item), StatText = Gear.FormatStat(stat, value), SellValue = Gear.SellValue(item), SetId = item.SetId, SetName = setName,
 		Upgrade = item.Upgrade or 0, MaxUpgrade = Config.Upgrade.MaxLevel, UpgradeCost = cost, NextValue = nextValue,
 	}
@@ -675,12 +680,13 @@ end
 
 function Gear.List(profile)
 	local equipment = bag(profile)
+	local classId = profile.Season and profile.Season.ClassId
 	local result = { Equipped = {}, Inventory = {}, Cap = Gear.Cap(profile), BagCost = Gear.BagUpgradeCost(profile), BagStep = Config.BagStep, Sets = Gear.Sets(profile) }
 	for slotName, item in pairs(equipment.Equipped) do
-		result.Equipped[slotName] = row(item)
+		result.Equipped[slotName] = row(item, classId)
 	end
 	for _, item in ipairs(equipment.Inventory) do
-		table.insert(result.Inventory, row(item))
+		table.insert(result.Inventory, row(item, classId))
 	end
 	-- strongest first, so upgrades are at the top left of the bag
 	table.sort(result.Inventory, function(a, b)

@@ -84,9 +84,20 @@ function SeasonScreen.Season(container, state, call, extra)
 	Kit.label({ Size = UDim2.new(1, -44, 1, 0), Text = ("%s  -  ends in %d day%s"):format(data.Season.Name ~= "" and data.Season.Name or "This season", days, days == 1 and "" or "s"), TextSize = 16, Font = Enum.Font.GothamBold, TextColor3 = C.Accent, Parent = head })
 	local help = Kit.button({ Name = "HelpIcon", Size = UDim2.fromOffset(28, 28), Position = UDim2.new(1, -30, 0, 1), Text = "?", TextSize = 16, BackgroundColor3 = C.PanelLight, Parent = head })
 	Kit.corner(14).Parent = help
+	local helpText = ("<b>How season rewards work</b>\nRewards are cumulative: you earn your Top %% bracket, plus every rank row at or above your rank (rank 1 earns all of them), plus your class bracket on top.\nRanking is your furthest stage this season (stage %d or higher counts). Everything is paid in Sunstones, Wishstones, pets and cosmetics - earned, never random."):format(data.MinStage)
 	Kit.Hover(help, function()
-		return ("<b>How season rewards work</b>\nRewards are cumulative: you earn your Top % bracket, plus every rank row at or above your rank (rank 1 earns all of them), plus your class bracket on top.\nRanking is your furthest stage this season (stage %d or higher counts). Everything is paid in Sunstones, Wishstones, pets and cosmetics - earned, never random."):format(data.MinStage)
+		return helpText
 	end)
+	help.Activated:Connect(function() -- clicking (or tapping) opens the explanation right on the page, and again closes it
+		Kit.HideTip()
+		extra.SeasonHelp = not extra.SeasonHelp
+		SeasonScreen.Season(container, state, call, extra)
+	end)
+	if extra.SeasonHelp then
+		local box = Kit.frame({ Size = UDim2.new(1, -8, 0, 0), AutomaticSize = Enum.AutomaticSize.Y, BackgroundColor3 = C.PanelLight, Parent = scroll })
+		Kit.new("UIPadding", { PaddingTop = UDim.new(0, 8), PaddingBottom = UDim.new(0, 8), PaddingLeft = UDim.new(0, 10), PaddingRight = UDim.new(0, 10), Parent = box })
+		Kit.label({ Size = UDim2.new(1, 0, 0, 0), AutomaticSize = Enum.AutomaticSize.Y, RichText = true, Text = helpText, TextSize = 13, TextYAlignment = Enum.TextYAlignment.Top, TextWrapped = true, Parent = box })
+	end
 	local mine
 	if live.Ranked then
 		local bits = { ("Furthest stage %d"):format(live.Score), ("%s of %s players"):format(live.Percentile or "?", commas(live.Players or 0)) }

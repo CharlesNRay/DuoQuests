@@ -683,6 +683,28 @@ return {
 		Effects = { { Type = "ApplyStatus", Target = "Self", Status = "Enraged", Duration = 90 } },
 	},
 
+	BossStomp = {
+		Id = "BossStomp",
+		DisplayName = "Earthshaker Stomp",
+		Description = "Slams the ground and hurts the whole party.",
+		Enemy = true,
+		Rarity = "Common",
+		Cooldown = 14,
+		Telegraph = 2,
+		Effects = { { Type = "Damage", Target = "AllEnemies", Multiplier = 1.6, PerLevel = { Multiplier = 0 } } },
+	},
+
+	Berserk = {
+		Id = "Berserk",
+		DisplayName = "Berserk",
+		Description = "After a while the boss loses all restraint: it hits much harder and faster.",
+		Enemy = true,
+		Rarity = "Common",
+		Cooldown = 1,
+		UsesPerCombat = 1,
+		Effects = { { Type = "ApplyStatus", Target = "Self", Status = "Enraged", Duration = 999 } },
+	},
+
 	SporeBurst = {
 		Id = "SporeBurst",
 		DisplayName = "Spore Burst",
@@ -706,6 +728,74 @@ return {
 	},
 
 	-- Pet skills (cast automatically by a pet's owner; level = pet rank; see Config/Pets, Shared/Pets) ----------
+	-- every equipped pet strikes on its own (level = the pet's rank): see Config/Pets Strike
+	Pet_Strike_Common = {
+		Id = "Pet_Strike_Common",
+		DisplayName = "Pet Strike",
+		Description = "Your pet joins the fight and strikes an enemy.",
+		Class = "Pet",
+		Pet = true,
+		Quiet = true,
+		NoCharge = true,
+		CastTime = 0,
+		Rarity = "Common",
+		Cooldown = 3.5,
+		Effects = {
+			{ Type = "Damage", Target = "Primary", Multiplier = 0.4, PerLevel = { Multiplier = 0.05 } },
+		},
+	},
+
+	-- every equipped pet strikes on its own (level = the pet's rank): see Config/Pets Strike
+	Pet_Strike_Rare = {
+		Id = "Pet_Strike_Rare",
+		DisplayName = "Pet Strike",
+		Description = "Your pet joins the fight and strikes an enemy.",
+		Class = "Pet",
+		Pet = true,
+		Quiet = true,
+		NoCharge = true,
+		CastTime = 0,
+		Rarity = "Rare",
+		Cooldown = 3.5,
+		Effects = {
+			{ Type = "Damage", Target = "Primary", Multiplier = 0.55, PerLevel = { Multiplier = 0.07 } },
+		},
+	},
+
+	-- every equipped pet strikes on its own (level = the pet's rank): see Config/Pets Strike
+	Pet_Strike_Epic = {
+		Id = "Pet_Strike_Epic",
+		DisplayName = "Pet Strike",
+		Description = "Your pet joins the fight and strikes an enemy.",
+		Class = "Pet",
+		Pet = true,
+		Quiet = true,
+		NoCharge = true,
+		CastTime = 0,
+		Rarity = "Epic",
+		Cooldown = 3.5,
+		Effects = {
+			{ Type = "Damage", Target = "Primary", Multiplier = 0.8, PerLevel = { Multiplier = 0.1 } },
+		},
+	},
+
+	-- every equipped pet strikes on its own (level = the pet's rank): see Config/Pets Strike
+	Pet_Strike_Legendary = {
+		Id = "Pet_Strike_Legendary",
+		DisplayName = "Pet Strike",
+		Description = "Your pet joins the fight and strikes an enemy.",
+		Class = "Pet",
+		Pet = true,
+		Quiet = true,
+		NoCharge = true,
+		CastTime = 0,
+		Rarity = "Legendary",
+		Cooldown = 3.5,
+		Effects = {
+			{ Type = "Damage", Target = "Primary", Multiplier = 1.1, PerLevel = { Multiplier = 0.14 } },
+		},
+	},
+
 	Pet_Slimey = {
 		Id = "Pet_Slimey",
 		DisplayName = "Goo Bubble",
@@ -733,7 +823,7 @@ return {
 		CooldownPerLevel = -0.3,
 		MinCooldown = 3,
 		Effects = {
-			{ Type = "Damage", Target = "Primary", Multiplier = 1.3, PerLevel = { Multiplier = 0.1 } },
+			{ Type = "Damage", Target = "Primary", Multiplier = 2.08, PerLevel = { Multiplier = 0.16 } },
 		},
 	},
 
@@ -765,7 +855,7 @@ return {
 		MinCooldown = 5,
 		Conditions = { MinEnemies = 2 },
 		Effects = {
-			{ Type = "Damage", Target = "AllEnemies", Multiplier = 0.8, PerLevel = { Multiplier = 0.1 } },
+			{ Type = "Damage", Target = "AllEnemies", Multiplier = 1.28, PerLevel = { Multiplier = 0.16 } },
 		},
 	},
 
@@ -812,7 +902,7 @@ return {
 		CooldownPerLevel = -0.3,
 		MinCooldown = 4,
 		Effects = {
-			{ Type = "Damage", Target = "Primary", Multiplier = 1.8, DamageType = "Magical", PerLevel = { Multiplier = 0.1 } },
+			{ Type = "Damage", Target = "Primary", Multiplier = 2.88, DamageType = "Magical", PerLevel = { Multiplier = 0.16 } },
 		},
 	},
 
@@ -827,7 +917,7 @@ return {
 		CooldownPerLevel = -0.3,
 		MinCooldown = 4,
 		Effects = {
-			{ Type = "Damage", Target = "Primary", Multiplier = 2.2, PerLevel = { Multiplier = 0.1 } },
+			{ Type = "Damage", Target = "Primary", Multiplier = 3.52, PerLevel = { Multiplier = 0.16 } },
 		},
 	},
 
@@ -874,7 +964,7 @@ return {
 		CooldownPerLevel = -0.3,
 		MinCooldown = 6,
 		Effects = {
-			{ Type = "Damage", Target = "AllEnemies", Multiplier = 1.2, DamageType = "Magical", PerLevel = { Multiplier = 0.1 } },
+			{ Type = "Damage", Target = "AllEnemies", Multiplier = 1.92, DamageType = "Magical", PerLevel = { Multiplier = 0.16 } },
 			{ Type = "ApplyStatus", Target = "Primary", Status = "Chilled", Duration = 4, PerLevel = { Duration = 0.4 } },
 		},
 	},
@@ -922,7 +1012,7 @@ return {
 		CooldownPerLevel = -0.3,
 		MinCooldown = 7,
 		Effects = {
-			{ Type = "Damage", Target = "AllEnemies", Multiplier = 2.4, DamageType = "Magical", PerLevel = { Multiplier = 0.15 } },
+			{ Type = "Damage", Target = "AllEnemies", Multiplier = 3.84, DamageType = "Magical", PerLevel = { Multiplier = 0.24 } },
 		},
 	},
 
@@ -937,7 +1027,7 @@ return {
 		CooldownPerLevel = -0.3,
 		MinCooldown = 8,
 		Effects = {
-			{ Type = "Damage", Target = "AllEnemies", Multiplier = 1.8, PerLevel = { Multiplier = 0.15 } },
+			{ Type = "Damage", Target = "AllEnemies", Multiplier = 2.88, PerLevel = { Multiplier = 0.24 } },
 			{ Type = "ApplyStatus", Target = "Self", Status = "Fortified", Duration = 6, PerLevel = { Duration = 0.4 } },
 		},
 	},
@@ -953,7 +1043,7 @@ return {
 		CooldownPerLevel = -0.3,
 		MinCooldown = 7,
 		Effects = {
-			{ Type = "Damage", Target = "AllEnemies", Multiplier = 3.0, DamageType = "Magical", PerLevel = { Multiplier = 0.2 } },
+			{ Type = "Damage", Target = "AllEnemies", Multiplier = 4.8, DamageType = "Magical", PerLevel = { Multiplier = 0.32 } },
 			{ Type = "Shield", Target = "AllAllies", Multiplier = 1.2, PercentMaxHealth = 0.08, Duration = 8, PerLevel = { Multiplier = 0.1, PercentMaxHealth = 0.01, Duration = 0.3 } },
 		},
 	},
@@ -1893,7 +1983,7 @@ return {
 		CooldownPerLevel = -0.3,
 		MinCooldown = 5,
 		Effects = {
-			{ Type = "Damage", Target = "AllEnemies", Multiplier = 0.9, PerLevel = { Multiplier = 0.1 } },
+			{ Type = "Damage", Target = "AllEnemies", Multiplier = 1.44, PerLevel = { Multiplier = 0.16 } },
 		},
 	},
 
@@ -1908,7 +1998,7 @@ return {
 		CooldownPerLevel = -0.3,
 		MinCooldown = 5,
 		Effects = {
-			{ Type = "Damage", Target = "Primary", Multiplier = 1.8, PerLevel = { Multiplier = 0.12 } },
+			{ Type = "Damage", Target = "Primary", Multiplier = 2.88, PerLevel = { Multiplier = 0.19 } },
 			{ Type = "ApplyStatus", Target = "Primary", Status = "Marked", Duration = 6, PerLevel = { Duration = 0.3 } },
 		},
 	},
@@ -1924,7 +2014,7 @@ return {
 		CooldownPerLevel = -0.3,
 		MinCooldown = 5,
 		Effects = {
-			{ Type = "Damage", Target = "Primary", Multiplier = 2.2, PerLevel = { Multiplier = 0.15 } },
+			{ Type = "Damage", Target = "Primary", Multiplier = 3.52, PerLevel = { Multiplier = 0.24 } },
 			{ Type = "ApplyStatus", Target = "Self", Status = "Hasted", Duration = 4, PerLevel = { Duration = 0.2 } },
 		},
 	},

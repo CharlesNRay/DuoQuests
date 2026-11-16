@@ -6,13 +6,13 @@
 
 	  BossService.Init(push, getProfile)
 	  BossService.GetState(player, profile)       -> table for the client's Boss window
-	  BossService.Strike(player, profile, which)  "World" | "Season" -> true, { Damage, ... } | false, reason
+	  BossService.Challenge(player, profile, which)  "World" | "Season" -> true, { Damage, ... } | false, reason
 	  BossService.Claim(player, profile, id)      -> true, lines | false, reason
 	  BossService.Hatch(player, profile)          -> true, petId | false, reason
 
-	WORLD BOSS  a giant that stands by the plaza on a timer; everyone strikes it; at the end of its timer
-	            players get every damage tier they reached (this server only).
-	SEASON BOSS shared by all servers: each server batches its players' damage and adds it to one
+	WORLD BOSS  a giant that stands by the plaza on a timer; everyone challenges it as often as they like and their best fight
+	            counts; at the end of its timer players get every damage tier that best reached (this server only).
+	SEASON BOSS shared by all servers: each server batches its players' IMPROVEMENTS on their personal best and adds them to one
 	            DataStore counter every few seconds (UpdateAsync); the shared total is the boss's permanent
 	            health loss. In Studio (no DataStore access) it falls back to a local counter.
 ]]
@@ -41,14 +41,15 @@ local worldModel, colossusModel, hpLabel
 local rng = Random.new()
 
 -- world boss state ----------------------------------------------------------------------------------
-local world = { Active = false, StartsAt = 0, EndsAt = 0, Totals = {}, Strikes = {}, LastStrike = {}, Frontier = {} }
+local world = { Active = false, StartsAt = 0, EndsAt = 0, Totals = {}, Strikes = {}, LastStrike = {}, Frontier = {} } -- Totals = each player's best fight
 
 local function firstSpawn() return IS_STUDIO and WORLD.StudioFirstSpawn or WORLD.FirstSpawnSeconds end
 local function interval() return IS_STUDIO and WORLD.StudioInterval or WORLD.IntervalSeconds end
 local function duration() return IS_STUDIO and WORLD.StudioDuration or WORLD.DurationSeconds end
 
 -- season boss state ---------------------------------------------------------------------------------
-local season = { GlobalDamage = 0, Pending = 0, Strikes = 0 }
+local season = { GlobalDamage = 0, Pending = 0 }
+local lastSeasonChallenge = {}
 local store
 
 local function glowPart(parent, name, size, position, color, shape, material)
@@ -275,17 +276,14 @@ function BossService.GetState(player, profile)
 		Active = world.Active,
 		EndsIn = world.Active and math.max(0, world.EndsAt - now) or 0,
 		NextIn = (not world.Active) and math.max(0, (world.NextAt or now) - now) or 0,
-		Damage = my,
-		Strikes = world.Strikes[player.UserId] or 0,
-		MaxStrikes = WORLD.MaxStrikes,
-		CooldownLeft = math.max(0, math.ceil(WORLD.StrikeCooldown - sinceStrike)),
+		Damage = my, -- your best fight
+		Challenges = world.Strikes[player.UserId] or 0,
+		CooldownLeft = math.max(0, math.ceil(WORLD.ChallengeCooldown - sinceStrike)),
 		Tiers = describeTiers(profile),
 		Reached = #Bosses.TiersReached(WORLD, my, frontier),
 	}
 
 	local hp, fraction = seasonHealth()
-	local chargeSeconds = IS_STUDIO and SEASON.StudioChargeSeconds or SEASON.ChargeSeconds
-	local charges, nextIn = Bosses.Charges(profile, seasonId, now, chargeSeconds, SEASON.MaxCharges)
 	local record = Bosses.Record(profile, seasonId)
 	local thresholds = {}
 	local crossed = {}
@@ -305,11 +303,9 @@ function BossService.GetState(player, profile)
 		Fraction = fraction,
 		Dead = hp <= 0,
 		EndsIn = math.max(0, seasonInfo.EndsAt - now),
-		Damage = record.Damage,
-		Strikes = record.Strikes,
-		Charges = charges,
-		MaxCharges = SEASON.MaxCharges,
-		NextChargeIn = math.ceil(nextIn),
+		Damage = record.Best, -- your best fight: the part of the boss's health you have taken
+		Challenges = record.Challenges,
+		CooldownLeft = math.max(0, math.ceil(SEASON.ChallengeCooldown - (os.clock() - (lastSeasonChallenge[player.UserId] or -1e9)))),
 		Egg = record.Egg,
 		Hatched = record.Hatched,
 		Thresholds = thresholds,
@@ -324,50 +320,44 @@ local function runFight(profile, player, cfg, frontier, partner)
 	if partner then
 		table.insert(members, { Id = partner.Id, Name = partner.Name, Snapshot = partner.Snapshot })
 	end
-	local damage, _, fight = Bosses.Strike(members, cfg, frontier, rng:NextInteger(1, 1e9), true)
+	local damage, _, fight = Bosses.Challenge(members, cfg, frontier, rng:NextInteger(1, 1e9), true)
 	return damage, fight
 end
 
-function BossService.Strike(player, profile, which, partner)
+function BossService.Challenge(player, profile, which, partner)
 	local frontier = profile.Season.HighestStage
 	if which == "World" then
 		if not world.Active then
 			return false, "NotActive"
 		end
 		local userId = player.UserId
-		if (world.Strikes[userId] or 0) >= WORLD.MaxStrikes then
-			return false, "NoStrikesLeft"
-		end
-		if os.clock() - (world.LastStrike[userId] or -1e9) < WORLD.StrikeCooldown then
+		if os.clock() - (world.LastStrike[userId] or -1e9) < WORLD.ChallengeCooldown then
 			return false, "Cooldown"
 		end
 		world.LastStrike[userId] = os.clock()
 		world.Strikes[userId] = (world.Strikes[userId] or 0) + 1
 		local damage, fight = runFight(profile, player, WORLD, frontier, partner)
 		Quests.Record(profile, "Strike", 1)
-		world.Totals[userId] = (world.Totals[userId] or 0) + damage
-		return true, { Damage = damage, Total = world.Totals[userId], Reached = #Bosses.TiersReached(WORLD, world.Totals[userId], frontier), Fight = fight, Label = WORLD.Name }
+		world.Totals[userId] = math.max(world.Totals[userId] or 0, damage) -- only your best fight counts
+		return true, { Damage = damage, Best = world.Totals[userId], Total = world.Totals[userId], Reached = #Bosses.TiersReached(WORLD, world.Totals[userId], frontier), Fight = fight, Label = WORLD.Name }
 	elseif which == "Season" then
 		local _, fraction = seasonHealth()
 		if fraction <= 0 then
 			return false, "Defeated"
 		end
-		local chargeSeconds = IS_STUDIO and SEASON.StudioChargeSeconds or SEASON.ChargeSeconds
-		local ok, reason = Bosses.SpendCharge(profile, seasonId, os.time(), chargeSeconds, SEASON.MaxCharges)
-		if not ok then
-			return false, reason
+		if os.clock() - (lastSeasonChallenge[player.UserId] or -1e9) < SEASON.ChallengeCooldown then
+			return false, "Cooldown"
 		end
+		lastSeasonChallenge[player.UserId] = os.clock()
 		local damage, fight = runFight(profile, player, SEASON, frontier, partner)
-		-- the season boss is much tougher, so a strike is worth a lot more of its health bar
-		damage = math.floor(damage * (SEASON.DamageMult or 1))
 		Quests.Record(profile, "Strike", 1)
-		local record = Bosses.Record(profile, seasonId)
-		record.Damage += damage
-		record.Strikes += 1
-		season.Pending += damage
+		-- only a new personal best moves the boss, and only by the improvement
+		local gain = Bosses.RecordBest(profile, seasonId, math.floor(damage))
+		season.Pending += gain
 		refreshColossus()
 		local _, after = seasonHealth()
-		return true, { Damage = damage, Fraction = after, Fight = fight, Label = SEASON.Name }
+		local record = Bosses.Record(profile, seasonId)
+		return true, { Damage = math.floor(damage), Best = record.Best, Gain = gain, Fraction = after, Fight = fight, Label = SEASON.Name }
 	end
 	return false, "BadArgs"
 end

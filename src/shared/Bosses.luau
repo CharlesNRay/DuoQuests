@@ -4,16 +4,16 @@
 
 	Rules for the world boss and the season boss (data in Config/Bosses). Pure functions, headless-testable.
 
-	  Bosses.Strike(members, cfg, frontier, seed)   -> damage, survived seconds
+	  Bosses.Challenge(members, cfg, frontier, seed)   -> damage, seconds fought
+	        a real fight with the normal auto combat, to the death or the time limit (cfg.FightSeconds); the damage dealt is the score.
 	        members as StageRunner.NewParty takes them; cfg is Config.World or Config.Season
-	  Bosses.DamageScale(frontier)                  -> number: one "typical strike" worth of damage
+	  Bosses.DamageScale(frontier)                  -> number: the damage a typical fight deals at this frontier (tiers are multiples of it)
 	  Bosses.TiersReached(cfg, damage, frontier)    -> list of tiers (every tier up to the best reached)
 	  Bosses.GrantRewards(profile, rewards, stage)  -> text lines; applies gold / items / gear
 	  Bosses.SeasonHealth(cfg, damageTotal, now, seasonStart, seasonEnd) -> remaining, fraction (0..1)
 	  Bosses.SeasonCrossed(cfg, fraction)           -> list of threshold defs the boss has passed
 	  Bosses.Record(profile, seasonId)              -> the player's Permanent.SeasonBoss row (reset on a new season)
-	  Bosses.Charges(profile, seasonId, now, chargeSeconds) -> charges now (regenerated), seconds to the next
-	  Bosses.SpendCharge(profile, seasonId, now, chargeSeconds) -> true | false, "NoCharges"
+	  Bosses.RecordBest(profile, seasonId, damage)  -> the amount added to the boss's health loss (only a new personal best counts, and only the improvement)
 	  Bosses.Claimable(profile, seasonId, cfg, fraction)  -> thresholds crossed, not yet claimed, if you contributed
 	  Bosses.Claim(profile, seasonId, cfg, thresholdId, fraction, stage) -> true, lines | false, reason
 	  Bosses.Hatch(profile, seasonId, cfg)          -> true, petId | false, reason ("NoEgg")
@@ -31,7 +31,7 @@ local Bosses = {}
 
 local HUGE = 1e12
 
-function Bosses.Strike(members, cfg, frontier, seed, record)
+function Bosses.Challenge(members, cfg, frontier, seed, record)
 	local reference = Stages.NewEnemies(math.max(1, frontier))[1]
 	local boss = Entity.new({
 		Id = "boss", Name = cfg.Name or "Boss", Team = "Enemy", DefId = cfg.DefId or "Boss",
@@ -42,12 +42,14 @@ function Bosses.Strike(members, cfg, frontier, seed, record)
 			AttackSpeed = cfg.AttackSpeed,
 			CritChance = 0,
 		},
+		Abilities = cfg.Abilities, -- telegraphed big hits, a party-wide stomp and a berserk phase make it a real fight
 	})
+	boss.Flags.StunImmune = true
 	local sim = Simulation.new({
 		Party = StageRunner.NewParty(members),
 		Enemies = { boss },
 		Seed = seed or 1,
-		MaxSeconds = cfg.FightSeconds,
+		MaxSeconds = cfg.FightSeconds, -- the party fights until it falls or this runs out
 		RecordEvents = record == true,
 		SpawnEnemy = require(script.Parent.Combat.StatCalc).NewEnemy,
 	})
@@ -66,7 +68,7 @@ function Bosses.Strike(members, cfg, frontier, seed, record)
 		local roster = {}
 		for _, team in ipairs({ sim.Party, sim.Enemies }) do
 			for _, entity in ipairs(team) do
-				-- the boss's bar is drawn against a few typical strikes so it visibly drains in one fight
+				-- the boss's bar is drawn against a few typical fights' worth of damage so it visibly drains
 				local maxHealth = entity.Stats.MaxHealth
 				if entity.Team == "Enemy" then
 					maxHealth = math.max(1, math.floor(Bosses.DamageScale(frontier) * 3))
@@ -90,7 +92,7 @@ function Bosses.Strike(members, cfg, frontier, seed, record)
 	return damage, result.Duration, fight
 end
 
--- one "typical strike" at this frontier (see Config.World.Tiers: thresholds are multiples of it)
+-- what a typical party deals in one fight at this frontier (see Config.World.Tiers: thresholds are multiples of it)
 function Bosses.DamageScale(frontier)
 	return 260 * (1 + math.max(0, frontier - 1) * 0.22)
 end
@@ -120,7 +122,7 @@ function Bosses.GrantRewards(profile, rewards, stage)
 	end
 	if rewards.Gear then
 		local item = Gear.Grant(profile, (stage or 1) + (rewards.Gear.Bonus or 0), { Slot = Gear.Types[(((stage or 1) + 2) % #Gear.Types) + 1], Rarity = rewards.Gear.Rarity })
-		table.insert(lines, Gear.Name(item))
+		table.insert(lines, Gear.Name(item, profile.Season.ClassId))
 	end
 	return lines
 end
@@ -180,49 +182,26 @@ function Bosses.Record(profile, seasonId)
 	local perm = profile.Permanent
 	local record = perm.SeasonBoss
 	if record == nil or record.SeasonId ~= seasonId then
-		record = { SeasonId = seasonId, Damage = 0, Strikes = 0, Claimed = {}, Charges = nil, ChargeAt = 0, Egg = false, Hatched = false }
+		record = { SeasonId = seasonId, Best = 0, Challenges = 0, Claimed = {}, Egg = false, Hatched = false }
 		perm.SeasonBoss = record
 	end
 	return record
 end
 
-function Bosses.Charges(profile, seasonId, now, chargeSeconds, maxCharges)
+-- A finished challenge. Only your highest damage ever counts against the boss's health: beat your best and the boss loses the
+-- difference, otherwise it loses nothing. Returns how much health the boss loses.
+function Bosses.RecordBest(profile, seasonId, damage)
 	local record = Bosses.Record(profile, seasonId)
-	if record.Charges == nil then
-		record.Charges = maxCharges
-		record.ChargeAt = now
-	end
-	if record.Charges < maxCharges then
-		local gained = math.floor((now - record.ChargeAt) / chargeSeconds)
-		if gained > 0 then
-			record.Charges = math.min(maxCharges, record.Charges + gained)
-			record.ChargeAt += gained * chargeSeconds
-		end
-	end
-	if record.Charges >= maxCharges then
-		record.ChargeAt = now
-		return record.Charges, 0
-	end
-	return record.Charges, math.max(0, record.ChargeAt + chargeSeconds - now)
-end
-
-function Bosses.SpendCharge(profile, seasonId, now, chargeSeconds, maxCharges)
-	local charges = Bosses.Charges(profile, seasonId, now, chargeSeconds, maxCharges)
-	if charges < 1 then
-		return false, "NoCharges"
-	end
-	local record = Bosses.Record(profile, seasonId)
-	if record.Charges >= maxCharges then
-		record.ChargeAt = now
-	end
-	record.Charges -= 1
-	return true
+	record.Challenges += 1
+	local gain = math.max(0, damage - record.Best)
+	record.Best += gain
+	return gain
 end
 
 function Bosses.Claimable(profile, seasonId, cfg, fraction)
 	local record = Bosses.Record(profile, seasonId)
 	local out = {}
-	if record.Strikes < cfg.MinContribution then
+	if record.Challenges < cfg.MinContribution then
 		return out
 	end
 	for _, threshold in ipairs(Bosses.SeasonCrossed(cfg, fraction)) do
@@ -235,7 +214,7 @@ end
 
 function Bosses.Claim(profile, seasonId, cfg, thresholdId, fraction, stage)
 	local record = Bosses.Record(profile, seasonId)
-	if record.Strikes < cfg.MinContribution then
+	if record.Challenges < cfg.MinContribution then
 		return false, "NoContribution"
 	end
 	local threshold

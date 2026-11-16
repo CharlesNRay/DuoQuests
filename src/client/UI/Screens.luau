@@ -11,6 +11,8 @@ local UltCfg = require(Shared.Config.Ultimates)
 local AbilityStats = require(Shared.Combat.AbilityStats)
 local Passives = require(Shared.Passives)
 local Skills = require(Shared.Skills)
+local FightStats = require(Shared.FightStats)
+local PetsLib = require(Shared.Pets)
 local Zones = require(game:GetService("ReplicatedStorage"):WaitForChild("Shared").Zones)
 local Stages = require(game:GetService("ReplicatedStorage"):WaitForChild("Shared").Stages)
 local TweenService = game:GetService("TweenService")
@@ -366,10 +368,14 @@ local function clock(t)
 end
 
 local function buildLog(fight, everyHit)
-	local names, teams = {}, {}
+	local names, teams, petNames = {}, {}, {}
 	for _, entry in ipairs(fight.Roster or {}) do
 		names[entry.Id] = entry.Name
 		teams[entry.Id] = entry.Team
+		local petDef = entry.PetId and PetsLib.Defs[entry.PetId]
+		if petDef then
+			petNames[entry.Id] = petDef.DisplayName .. " (" .. entry.Name .. "'s pet)"
+		end
 	end
 	for _, e in ipairs(fight.Events or {}) do
 		if e.Type == "Spawn" and e.Entity then
@@ -380,6 +386,13 @@ local function buildLog(fight, everyHit)
 	local function who(id)
 		local name = names[id] or tostring(id)
 		return Kit.tint(name, if teams[id] == "Party" then C.Rare else C.Bad)
+	end
+	-- a pet's skill is cast by its owner in the sim, but it reads as the pet acting
+	local function whoFor(id, abilityId)
+		if type(abilityId) == "string" and abilityId:sub(1, 4) == "Pet_" and petNames[id] then
+			return Kit.tint(petNames[id], C.Good)
+		end
+		return who(id)
 	end
 	local function ability(id)
 		local def = Abilities[id] or (UltCfg.Defs and UltCfg.Defs[id])
@@ -395,7 +408,7 @@ local function buildLog(fight, everyHit)
 		local t = e.T or 0
 		local kind = e.Type
 		if kind == "Cast" then
-			add(t, ("%s casts %s (Lv %d)"):format(who(e.Source), Kit.tint(ability(e.Ability), C.Accent), e.Level or 1))
+			add(t, ("%s casts %s (Lv %d)"):format(whoFor(e.Source, e.Ability), Kit.tint(ability(e.Ability), C.Accent), e.Level or 1))
 		elseif kind == "Telegraph" then
 			table.insert(bigHits, clock(t + (e["In"] or 0)))
 			add(t, ("%s  %s winds up %s - lands in %.1fs"):format(Kit.tint("WARNING", C.Bad), who(e.Source), Kit.tint(ability(e.Ability), C.Bad), e["In"] or 0))
@@ -416,7 +429,7 @@ local function buildLog(fight, everyHit)
 			local enemySource = teams[e.Source] ~= "Party"
 			if everyHit or (enemySource and not isBasic) then
 				local absorbed = (e.Absorbed or 0) > 0 and ("  (" .. math.floor(e.Absorbed + 0.5) .. " absorbed)") or ""
-				add(t, ("%s hits %s for %d%s%s%s"):format(who(e.Source), who(e.Target), math.floor((e.Amount or 0) + 0.5), e.Crit and " CRIT" or "", isBasic and "" or (" [" .. ability(e.Tag) .. "]"), absorbed))
+				add(t, ("%s hits %s for %d%s%s%s"):format(whoFor(e.Source, e.Tag), who(e.Target), math.floor((e.Amount or 0) + 0.5), e.Crit and " CRIT" or "", isBasic and "" or (" [" .. ability(e.Tag) .. "]"), absorbed))
 			end
 		elseif kind == "Heal" and everyHit and (e.Amount or 0) > 0 then
 			add(t, ("%s heals %s for %d%s"):format(who(e.Source), who(e.Target), math.floor((e.Amount or 0) + 0.5), e.Tag and e.Tag ~= "BasicAttack" and (" [" .. ability(e.Tag) .. "]") or ""))
@@ -427,6 +440,25 @@ local function buildLog(fight, everyHit)
 	return lines, bigHits, times
 end
 Screens.BuildLog = buildLog
+
+-- Damage meter: one bar per hero, pet and minion group, players in their own colours -----
+function Screens.DamageMeter(parent, stats, widthScale)
+	local top = stats.Rows[1] and math.max(stats.Rows[1].Damage, 1) or 1
+	Kit.label({
+		Size = UDim2.new(1, -8, 0, 18), RichText = true, TextSize = 12, TextColor3 = C.Dim,
+		Text = ("Party damage %s  -  %s DPS"):format(Kit.tint(tostring(stats.Total), C.Text), Kit.tint(("%.0f"):format(stats.Dps), C.Accent)),
+		Parent = parent, LayoutOrder = 0,
+	})
+	for i, r in ipairs(stats.Rows) do
+		local color = FightStats.PlayerColor(r.Color)
+		local fill = if r.Kind == "Hero" then color else color:Lerp(Color3.new(1, 1, 1), 0.35)
+		local bar = Kit.frame({ Size = UDim2.new(1, -8, 0, 22), BackgroundColor3 = Color3.fromRGB(26, 30, 48), LayoutOrder = i, Parent = parent })
+		Kit.frame({ Size = UDim2.new(math.max(r.Damage / top, 0.01), 0, 1, 0), BackgroundColor3 = fill, BackgroundTransparency = if r.Kind == "Hero" then 0.25 else 0.5, Parent = bar })
+		local prefix = if r.Kind == "Pet" then "🐾 " elseif r.Kind == "Minion" then "💀 " else ""
+		Kit.label({ Size = UDim2.new(0.62, 0, 1, 0), Position = UDim2.fromOffset(6, 0), Text = prefix .. r.Name, TextSize = 12, TextWrapped = false, TextTruncate = Enum.TextTruncate.AtEnd, Parent = bar })
+		Kit.label({ Size = UDim2.new(0.38, -8, 1, 0), Position = UDim2.new(0.62, 0, 0, 0), TextXAlignment = Enum.TextXAlignment.Right, TextSize = 12, TextWrapped = false, Text = ("%.0f/s  %d%%"):format(r.Dps, math.floor(r.Share * 100 + 0.5)), Parent = bar })
+	end
+end
 
 function Screens.Log(container, state, call, extra)
 	local scroll = list(container)
@@ -448,6 +480,9 @@ function Screens.Log(container, state, call, extra)
 		extra.LogAll = not everyHit
 		Screens.Log(container, state, call, extra)
 	end)
+	local meter = Kit.frame({ Size = UDim2.new(1, -8, 0, 0), AutomaticSize = Enum.AutomaticSize.Y, BackgroundTransparency = 1, NoCorner = true, Parent = scroll })
+	Kit.new("UIListLayout", { Padding = UDim.new(0, 2), SortOrder = Enum.SortOrder.LayoutOrder, Parent = meter })
+	Screens.DamageMeter(meter, FightStats.Compute(fight))
 	local shown = 0
 	for _, text in ipairs(lines) do
 		shown += 1
@@ -460,18 +495,37 @@ function Screens.Log(container, state, call, extra)
 end
 
 -- Daily --------------------------------------------------------------------
+-- A seven day login calendar: one card per day with what it pays, ticked once claimed, today lit up. The cycle repeats and
+-- missing a day starts it again at day 1.
 function Screens.Daily(container, state, call)
 	local daily = state.Player.Daily
 	local scroll = list(container)
-	local r = row(scroll, 110)
-	local text = if daily.CanClaim then ("Day %d reward is ready!"):format(daily.NextDay) else ("Come back tomorrow for day %d."):format(daily.NextDay)
-	local reward = daily.Reward
-	local lines = { text, ("Gold %d%s"):format(reward.Gold, reward.SkillPicks > 0 and ("   Skill pick " .. reward.SkillPicks) or ""), ("Current streak: %d day(s). Missing a day restarts at day 1."):format(daily.Streak) }
-	Kit.label({ Size = UDim2.new(1, -16, 0, 70), Position = UDim2.fromOffset(8, 4), Text = table.concat(lines, "\n"), Parent = r })
+	local head = row(scroll, 74)
+	local text = if daily.CanClaim then ("Day %d reward is ready!"):format(daily.NextDay) else ("Claimed today. Come back tomorrow for day %d."):format(daily.NextDay % #daily.Week + 1)
+	Kit.label({ Size = UDim2.new(1, -190, 0, 28), Position = UDim2.fromOffset(10, 6), Text = text, TextSize = 17, Font = Enum.Font.GothamBold, TextColor3 = if daily.CanClaim then C.Accent else C.Text, Parent = head })
+	Kit.label({ Size = UDim2.new(1, -190, 0, 36), Position = UDim2.fromOffset(10, 34), Text = ("Login streak: %d day%s. The week repeats; missing a day starts it again at day 1."):format(daily.Streak, daily.Streak == 1 and "" or "s"), TextSize = 12, TextColor3 = C.Dim, Parent = head })
 	if daily.CanClaim then
-		Kit.button({ Size = UDim2.fromOffset(160, 40), Position = UDim2.fromOffset(8, 64), Text = "Claim", BackgroundColor3 = C.Accent, Parent = r }, function()
+		Kit.button({ Size = UDim2.fromOffset(160, 44), Position = UDim2.new(1, -170, 0.5, -22), Text = "Claim day " .. daily.NextDay, BackgroundColor3 = C.Accent, TextColor3 = Color3.fromRGB(30, 24, 10), Parent = head }, function()
 			call("ClaimDaily")
 		end)
+	end
+
+	local grid = Kit.frame({ Size = UDim2.new(1, -8, 0, 0), AutomaticSize = Enum.AutomaticSize.Y, BackgroundTransparency = 1, NoCorner = true, Parent = scroll })
+	Kit.new("UIGridLayout", { CellSize = UDim2.fromOffset(112, 118), CellPadding = UDim2.fromOffset(6, 6), SortOrder = Enum.SortOrder.LayoutOrder, Parent = grid })
+	for _, entry in ipairs(daily.Week) do
+		local today, done = entry.State == "Today", entry.State == "Claimed"
+		local card = Kit.frame({ BackgroundColor3 = if today then Color3.fromRGB(70, 58, 26) elseif done then Color3.fromRGB(26, 44, 34) else C.Panel, LayoutOrder = entry.Day, Parent = grid })
+		Kit.new("UIStroke", { Color = if today then C.Accent elseif done then C.Good else Color3.fromRGB(70, 76, 104), Thickness = if today then 3 else 1, Parent = card })
+		Kit.label({ Size = UDim2.new(1, 0, 0, 20), Position = UDim2.fromOffset(0, 4), Text = ("Day %d"):format(entry.Day), TextSize = 13, Font = Enum.Font.GothamBold, TextXAlignment = Enum.TextXAlignment.Center, TextColor3 = if today then C.Accent else C.Text, Parent = card })
+		local lines = { ("💰 %s"):format(tostring(entry.Reward.Gold)) }
+		if (entry.Reward.Wishstones or 0) > 0 then
+			table.insert(lines, ("🌠 %d wishstones"):format(entry.Reward.Wishstones))
+		end
+		if (entry.Reward.SkillPicks or 0) > 0 then
+			table.insert(lines, ("🎁 %d skill pick"):format(entry.Reward.SkillPicks))
+		end
+		Kit.label({ Size = UDim2.new(1, -8, 0, 62), Position = UDim2.fromOffset(4, 26), Text = table.concat(lines, "\n"), TextSize = 12, TextXAlignment = Enum.TextXAlignment.Center, TextYAlignment = Enum.TextYAlignment.Top, Parent = card })
+		Kit.label({ Size = UDim2.new(1, 0, 0, 20), Position = UDim2.new(0, 0, 1, -24), Text = if done then "✔ Claimed" elseif today then "Today" else "", TextSize = 12, Font = Enum.Font.GothamBold, TextXAlignment = Enum.TextXAlignment.Center, TextColor3 = if done then C.Good else C.Accent, Parent = card })
 	end
 end
 
@@ -558,6 +612,40 @@ end
 function Screens.Pets(container, state, call)
 	local scroll = list(container)
 	Kit.label({ Size = UDim2.new(1, 0, 0, 30), Text = "Pets follow you, add stats and cast their own skill in fights. Win them at the Wishing Tree. Duplicates are saved as copies - spend them to rank a pet up yourself (stronger stats and skill). Feed them (Bag > Stash) and fight to level them.", TextColor3 = C.Dim, TextSize = 12, Parent = scroll })
+	-- shards: spare copies of maxed pets; collection bonus for owning and ranking pets
+	local shards, info, coll = state.Player.PetShards or {}, state.Player.PetShardInfo or { PetCost = 30, CondenseCost = 10 }, state.Player.PetCollection
+	local panel = row(scroll, 118)
+	local order = { "Common", "Rare", "Epic", "Legendary" }
+	local parts = {}
+	for _, rarity in ipairs(order) do
+		table.insert(parts, ("%s %d"):format(Kit.tint(rarity, Kit.rarityColor(rarity)), shards[rarity] or 0))
+	end
+	Kit.label({
+		Size = UDim2.new(1, -150, 0, 60), Position = UDim2.fromOffset(10, 4), RichText = true, TextSize = 12,
+		Text = ("<b>Pet shards</b>  (spare copies of a max-rank pet)\n%s\n%d shards buy a pet of that rarity  -  %d condense into 1 of the next rarity.\nCollection bonus: %s"):format(
+			table.concat(parts, "   "), info.PetCost, info.CondenseCost, coll and ("+%.1f%% Attack and Health (%d points)"):format(coll.Percent or 0, coll.Points or 0) or "none yet"),
+		Parent = panel,
+	})
+	Kit.button({ Size = UDim2.fromOffset(130, 30), Position = UDim2.new(1, -140, 0, 6), Text = "Condense all", TextSize = 12, BackgroundColor3 = C.Accent, TextColor3 = Color3.fromRGB(30, 24, 10), Parent = panel }, function()
+		call("CondensePetShards", "All")
+	end)
+	-- buy: one button per unmaxed wish pet of a rarity you can afford
+	local shop = Kit.frame({ Size = UDim2.new(1, -16, 0, 48), Position = UDim2.fromOffset(8, 66), BackgroundTransparency = 1, NoCorner = true, Parent = panel })
+	Kit.new("UIListLayout", { FillDirection = Enum.FillDirection.Horizontal, Padding = UDim.new(0, 4), Parent = shop })
+	local offered = 0
+	for _, pet in ipairs(state.Player.Pets or {}) do
+		if pet.Wish and (shards[pet.Rarity] or 0) >= info.PetCost and (pet.Rank or 1) < (pet.MaxRank or 1) and offered < 8 then
+			offered += 1
+			local b = Kit.button({ Size = UDim2.fromOffset(46, 46), Text = "", BackgroundColor3 = C.PanelLight, Parent = shop }, function()
+				call("BuyPetWithShards", pet.Id)
+			end)
+			Icons.Pet(b, pet.Id, { Size = UDim2.fromOffset(38, 38), Position = UDim2.fromOffset(4, 4) })
+			Kit.Hover(b, function() return ("Get %s for %d %s shards"):format(pet.Name, info.PetCost, pet.Rarity) end)
+		end
+	end
+	if offered == 0 then
+		Kit.label({ Size = UDim2.new(1, 0, 0, 30), Text = ("Collect %d shards of one rarity to choose a pet of it."):format(info.PetCost), TextColor3 = C.Dim, TextSize = 12, Parent = shop })
+	end
 	local rows = table.clone(state.Player.Pets or {})
 	local rank = { Legendary = 4, Epic = 3, Rare = 2, Common = 1 }
 	table.sort(rows, function(a, b)
@@ -581,7 +669,7 @@ function Screens.Pets(container, state, call)
 			local title = ("%s  %s  Lv %d/%d  [%s]%s"):format(pet.Name, stars, pet.Level, pet.MaxLevel, pet.Rarity, pet.Active and "  (equipped)" or "")
 			local skill = if pet.Skill then ("\nSkill: %s (Lv %d) - %s"):format(pet.Skill.Name, pet.Rank or 1, pet.Skill.Text) else ""
 			local maxed = (pet.Rank or 1) >= (pet.MaxRank or 1)
-			local copyLine = if maxed then "\nMax rank - spare copies become pet XP" else ("\nCopies: %d / %d for the next rank"):format(pet.Copies or 0, pet.RankCost or 1)
+			local copyLine = if maxed then "\nMax rank - spare copies become shards" else ("\nCopies: %d / %d for the next rank"):format(pet.Copies or 0, pet.RankCost or 1)
 			Kit.label({ Size = UDim2.new(1, -150, 1, 0), Position = UDim2.fromOffset(60, 0), Text = title .. "\n" .. pet.Text .. skill .. copyLine, TextColor3 = Kit.rarityColor(pet.Rarity), TextSize = 12, Parent = r })
 			local canRank = not maxed and (pet.Copies or 0) >= (pet.RankCost or 1)
 			local rankBtn = Kit.button({ Size = UDim2.fromOffset(80, 32), Position = UDim2.new(1, -90, 0, 6), Text = if maxed then "Max" elseif canRank then "Rank up!" else "Rank up", TextSize = 12, BackgroundColor3 = if canRank then C.Accent else C.Panel, TextColor3 = if canRank then Color3.fromRGB(30, 24, 10) else C.Dim, Parent = r }, function()
@@ -821,7 +909,7 @@ function Screens.Wish(container, state, call, extra)
 		Kit.label({ Size = UDim2.new(1, 4, 0, 10), Position = UDim2.fromOffset(-2, 46), Text = shown or "", TextSize = 9, TextXAlignment = Enum.TextXAlignment.Center, TextWrapped = false, TextTruncate = Enum.TextTruncate.AtEnd, ZIndex = 3, Parent = cell })
 		tile.BackgroundTransparency = 1
 		TweenService:Create(tile, TweenInfo.new(0.25 + index * 0.06), { BackgroundTransparency = 0 }):Play()
-		Kit.label({ Size = UDim2.new(1, 0, 0, 16), Position = UDim2.fromOffset(0, 55), Text = if rowData.New then "NEW!" elseif rowData.Upgrade then ("▲ " .. rowData.Rarity) elseif rowData.Copies then "+1 copy" else ("+%d xp"):format(rowData.DupXP or 0), TextSize = 10, TextXAlignment = Enum.TextXAlignment.Center, TextWrapped = false, TextColor3 = if rowData.New or rowData.Upgrade then Kit.rarityColor(rowData.Rarity) else C.Dim, Font = Enum.Font.GothamBold, Parent = cell })
+		Kit.label({ Size = UDim2.new(1, 0, 0, 16), Position = UDim2.fromOffset(0, 55), Text = if rowData.New then "NEW!" elseif rowData.Upgrade then ("▲ " .. rowData.Rarity) elseif rowData.Copies then "+1 copy" elseif rowData.Shard then "+1 shard" else ("+%d xp"):format(rowData.DupXP or 0), TextSize = 10, TextXAlignment = Enum.TextXAlignment.Center, TextWrapped = false, TextColor3 = if rowData.New or rowData.Upgrade then Kit.rarityColor(rowData.Rarity) else C.Dim, Font = Enum.Font.GothamBold, Parent = cell })
 	end
 end
 
@@ -1040,17 +1128,17 @@ function Screens.Boss(container, state, call, extra)
 		if w.Active then
 			local left_s = w.EndsIn - age
 			Kit.label({ Size = UDim2.new(1, -16, 0, 34), Position = UDim2.fromOffset(8, 30), Text = ("It is roaming the plaza!\nEnds in %s"):format(clock(left_s)), TextSize = 12, TextColor3 = C.Good, TextWrapped = true, Parent = left })
-			Kit.label({ Size = UDim2.new(1, -16, 0, 34), Position = UDim2.fromOffset(8, 68), Text = ("Your damage: %d\nStrikes: %d / %d"):format(w.Damage, w.Strikes, w.MaxStrikes), TextSize = 12, Parent = left })
+			Kit.label({ Size = UDim2.new(1, -16, 0, 34), Position = UDim2.fromOffset(8, 68), Text = ("Your best fight: %d damage\nChallenges: %d"):format(w.Damage, w.Challenges), TextSize = 12, Parent = left })
 			local wait = math.max(0, w.CooldownLeft - age)
-			local can = wait <= 0 and w.Strikes < w.MaxStrikes
-			local text = if w.Strikes >= w.MaxStrikes then "No strikes left" elseif wait > 0 then ("Ready in %ds"):format(math.ceil(wait)) else "Strike!"
+			local can = wait <= 0
+			local text = if wait > 0 then ("Ready in %ds"):format(math.ceil(wait)) else "Challenge!"
 			local b = Kit.button({ Size = UDim2.new(1, -16, 0, 40), Position = UDim2.fromOffset(8, 110), Text = text, TextSize = 15, BackgroundColor3 = if can then C.Accent else C.Panel, TextColor3 = if can then Color3.fromRGB(30, 24, 10) else C.Text, Parent = left }, function()
-				local ok, data = call("BossStrike", "World")
-				extra.BossMsg = if ok then nil else ("Could not strike: " .. tostring(data))
+				local ok, data = call("BossChallenge", "World")
+				extra.BossMsg = if ok then nil else ("Could not challenge: " .. tostring(data))
 				refresh()
 			end)
 			b.Active = can
-			Kit.label({ Size = UDim2.new(1, -16, 0, 40), Position = UDim2.fromOffset(8, 156), Text = "Each strike is a 45 second fight in your arena. Rewards arrive when the timer ends.", TextSize = 10, TextColor3 = C.Dim, TextWrapped = true, Parent = left })
+			Kit.label({ Size = UDim2.new(1, -16, 0, 40), Position = UDim2.fromOffset(8, 156), Text = "A very hard fight in your arena: your party battles it until it falls. Only your best fight counts. Rewards arrive when the timer ends.", TextSize = 10, TextColor3 = C.Dim, TextWrapped = true, Parent = left })
 		else
 			Kit.label({ Size = UDim2.new(1, -16, 0, 60), Position = UDim2.fromOffset(8, 34), Text = ("Not here right now.\nNext one in about %s"):format(clock(w.NextIn - age)), TextSize = 13, TextColor3 = C.Dim, TextWrapped = true, Parent = left })
 		end
@@ -1065,12 +1153,13 @@ function Screens.Boss(container, state, call, extra)
 		local bar = Kit.frame({ Size = UDim2.new(1, -16, 0, 16), Position = UDim2.fromOffset(8, 32), BackgroundColor3 = Color3.fromRGB(20, 22, 30), Parent = left })
 		Kit.frame({ Size = UDim2.fromScale(math.clamp(s.Fraction, 0, 1), 1), BackgroundColor3 = if s.Dead then C.Dim else C.Good, Parent = bar })
 		Kit.label({ Size = UDim2.new(1, -16, 0, 30), Position = UDim2.fromOffset(8, 52), Text = if s.Dead then "Defeated! Thank you, everyone." else ("%d%% health  -  all servers\nIt withers away in %s"):format(math.ceil(s.Fraction * 100), clock(s.EndsIn - age)), TextSize = 11, TextColor3 = C.Dim, TextWrapped = true, Parent = left })
-		Kit.label({ Size = UDim2.new(1, -16, 0, 34), Position = UDim2.fromOffset(8, 84), Text = ("Your damage: %d\nStrikes: %d  (need %d to share rewards)"):format(s.Damage, s.Strikes, s.MinContribution), TextSize = 11, TextWrapped = true, Parent = left })
-		local can = s.Charges > 0 and not s.Dead
-		local text = if s.Dead then "Defeated" elseif s.Charges > 0 then ("Strike  (%d / %d)"):format(s.Charges, s.MaxCharges) else ("Next charge in %s"):format(clock(s.NextChargeIn - age))
+		Kit.label({ Size = UDim2.new(1, -16, 0, 34), Position = UDim2.fromOffset(8, 84), Text = ("Your best fight: %d damage\nChallenges: %d  (need %d to share rewards)"):format(s.Damage, s.Challenges, s.MinContribution), TextSize = 11, TextWrapped = true, Parent = left })
+		local wait = math.max(0, s.CooldownLeft - age)
+		local can = wait <= 0 and not s.Dead
+		local text = if s.Dead then "Defeated" elseif wait > 0 then ("Ready in %ds"):format(math.ceil(wait)) else "Challenge!"
 		local b = Kit.button({ Size = UDim2.new(1, -16, 0, 36), Position = UDim2.fromOffset(8, 124), Text = text, TextSize = 14, BackgroundColor3 = if can then C.Accent else C.Panel, TextColor3 = if can then Color3.fromRGB(30, 24, 10) else C.Text, Parent = left }, function()
-			local ok, data = call("BossStrike", "Season")
-			extra.BossMsg = if ok then nil else ("Could not strike: " .. tostring(data))
+			local ok, data = call("BossChallenge", "Season")
+			extra.BossMsg = if ok then nil else ("Could not challenge: " .. tostring(data))
 			refresh()
 		end)
 		b.Active = can
@@ -1087,9 +1176,9 @@ function Screens.Boss(container, state, call, extra)
 			local color = if t.Claimed then C.Dim elseif t.Reached then C.Good else C.Text
 			local r = tierRow(("%s  -  %s"):format(t.Name, status), t.Rewards, t.Reached, color)
 			if t.Reached and not t.Claimed then
-				local btn = Kit.button({ Size = UDim2.fromOffset(64, 30), Position = UDim2.new(1, -72, 0.5, -15), Text = "Claim", TextSize = 12, BackgroundColor3 = if s.Strikes >= s.MinContribution then C.Accent else C.Panel, TextColor3 = Color3.fromRGB(30, 24, 10), Parent = r }, function()
+				local btn = Kit.button({ Size = UDim2.fromOffset(64, 30), Position = UDim2.new(1, -72, 0.5, -15), Text = "Claim", TextSize = 12, BackgroundColor3 = if s.Challenges >= s.MinContribution then C.Accent else C.Panel, TextColor3 = Color3.fromRGB(30, 24, 10), Parent = r }, function()
 					local ok, data = call("BossClaim", t.Id)
-					extra.BossMsg = if ok then ("Claimed: " .. table.concat(data, ", ")) else (if data == "NoContribution" then "Strike the boss at least once to share the rewards." else "Could not claim: " .. tostring(data))
+					extra.BossMsg = if ok then ("Claimed: " .. table.concat(data, ", ")) else (if data == "NoContribution" then "Challenge the boss at least once to share the rewards." else "Could not claim: " .. tostring(data))
 					refresh()
 				end)
 				btn.Active = true

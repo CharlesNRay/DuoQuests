@@ -159,8 +159,16 @@ return function(modulesOverride)
 	local petless = StatCalc.NewPartyMember("n", "N", "Ranger", 20, { SubclassId = "Beastmaster" })
 	local beastPetless = StatCalc.NewPartyMember("n2", "N2", "Ranger", 20, {})
 	local plainSub = StatCalc.NewPartyMember("s", "S", "Ranger", 20, { SubclassId = "Beastmaster", PetId = "Arcanix", PetLevel = 5, PetRank = 1 })
-	local petSlot = beast.Abilities[#beast.Abilities]
-	check("A Beastmaster's pet skill is stronger (more levels)", petSlot.Id == "Pet_Arcanix" and petSlot.Level > plain.Abilities[#plain.Abilities].Level)
+	local function slotOf(entity, id)
+		for _, slot in ipairs(entity.Abilities) do
+			if slot.Id == id then
+				return slot
+			end
+		end
+		return nil
+	end
+	local petSlot = slotOf(beast, "Pet_Arcanix")
+	check("A Beastmaster's pet skill is stronger (more levels)", petSlot ~= nil and slotOf(plain, "Pet_Arcanix") ~= nil and petSlot.Level > slotOf(plain, "Pet_Arcanix").Level)
 	check("A Beastmaster with no pet just gets its own bonuses", petless.Stats.Attack > beastPetless.Stats.Attack)
 	check("The pet bonus on top of the path is larger than the path alone", plainSub.Stats.Attack > petless.Stats.Attack)
 

@@ -4,17 +4,19 @@
 
 	Two boss events that live in the plaza.
 
-	WORLD BOSS  appears on every server on a timer and walks around the plaza. Everyone on the server can
-	  strike it (each strike is a 45 second fight run by the server; the damage you deal is added to your
-	  total). When the timer ends, every player who struck gets rewards for each damage tier they reached,
-	  AND all the tiers below it. Tier thresholds are multiplied by DamageScale(frontier) so a fresh player
-	  and a veteran aim at tiers that suit them.
+	Both bosses are very hard, real fights in your arena using the normal auto combat: your party fights until it falls (or
+	  FightSeconds runs out), and the damage you dealt is your score. Challenge as often as you like (ChallengeCooldown apart);
+	  only your HIGHEST damage ever counts.
 
-	SEASON BOSS shared by ALL servers. Damage is added to one global total, which is also the boss's
-	  PERMANENT health loss. The boss also weakens by itself over the last part of the season (the Finale),
-	  so it always falls near the end. Crossing health thresholds gives everyone who contributed a reward
-	  (claimed from the Boss window); when it dies, everyone who contributed gets a Colossus Egg that
-	  hatches into a baby of the boss.
+	WORLD BOSS  appears on every server on a timer and walks around the plaza. When the timer ends, every player who challenged
+	  gets rewards for each damage tier their best fight reached, AND all the tiers below it. Tier thresholds are multiplied by
+	  DamageScale(frontier) so a fresh player and a veteran aim at tiers that suit them.
+
+	SEASON BOSS shared by ALL servers. Every player's best damage is added up into one global total, which is the boss's
+	  PERMANENT health loss (beat your best and the boss loses the difference). The boss also weakens by itself over the last
+	  part of the season (the Finale), so it always falls near the end. Crossing health thresholds gives everyone who contributed
+	  a reward (claimed from the Boss window); when it dies, everyone who contributed gets a Colossus Egg that hatches into a
+	  baby of the boss.
 
 	Every number is a PLACEHOLDER to be tuned.
 ]]
@@ -29,13 +31,17 @@ return {
 		StudioFirstSpawn = 25,
 		StudioInterval = 90,
 		StudioDuration = 240,
-		FightSeconds = 45, -- length of one strike
-		StrikeCooldown = 52, -- seconds between your strikes (a strike is a 45s fight, then a short rest)
-		MaxStrikes = 10,
-		AttackMult = 1.6, -- of a stage-appropriate monster
+		FightSeconds = 120, -- the longest one fight can last
+		ChallengeCooldown = 20, -- seconds between your challenges
+		AttackMult = 2.4, -- of a stage-appropriate monster
 		DefenseMult = 1.5,
 		AttackSpeed = 0.9,
-		-- thresholds are in "typical strikes": multiplied by the scale for your frontier
+		Abilities = { -- a telegraphed single-target blow, a party-wide stomp, and a berserk phase after a minute
+			{ Id = "CrushingBlow", Level = 1, Timer = 6 },
+			{ Id = "BossStomp", Level = 1, Timer = 14 },
+			{ Id = "Berserk", Level = 1, Timer = 60 },
+		},
+		-- thresholds are multiples of the scale for your frontier (one typical fight's damage)
 		Tiers = {
 			{ Id = 1, Damage = 1, Name = "Scratched it", Rewards = { Gold = 150, Items = { PetFood = 2 } } },
 			{ Id = 2, Damage = 3, Name = "Bruised it", Rewards = { Gold = 250, Items = { XPTonic = 2 } } },
@@ -49,17 +55,20 @@ return {
 	Season = {
 		Name = "Verdant Colossus", DefId = "Colossus",
 		Look = { Color = { 70, 140, 90 }, Height = 90 },
-		MaxHealth = 30000000,
+		MaxHealth = 3000000, -- the total of every player's best fight
 		-- the last FinaleShare of the season: the boss withers faster and faster, reaching 0 at the end
 		FinaleShare = 0.2,
-		FightSeconds = 45,
-		AttackMult = 2.0,
+		FightSeconds = 150,
+		ChallengeCooldown = 20,
+		AttackMult = 3.2,
 		DefenseMult = 1.8,
 		AttackSpeed = 0.8,
-		MaxCharges = 3,
-		ChargeSeconds = 1200, -- one strike charge back every 20 minutes
-		StudioChargeSeconds = 45,
-		MinContribution = 1, -- strikes needed to share rewards
+		Abilities = {
+			{ Id = "CrushingBlow", Level = 1, Timer = 5 },
+			{ Id = "BossStomp", Level = 1, Timer = 12 },
+			{ Id = "Berserk", Level = 1, Timer = 45 },
+		},
+		MinContribution = 1, -- challenges needed to share rewards
 		SyncSeconds = 20,
 		-- Pct = health remaining when it triggers (1 = full health); the last one is death
 		Thresholds = {
