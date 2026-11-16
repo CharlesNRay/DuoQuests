@@ -19,7 +19,7 @@ Tutorial.BossStage = 10
 Tutorial.Reward = { Wishstones = 6, SkillPicks = 1 }
 
 Tutorial.Steps = {
-	{ Id = "Welcome", Title = "Welcome to Duo Quest", Text = "Duo Quest is a two-player idle adventure. You and a partner fight on your own, even while you are away. This short guide covers everything you need to beat the first boss.", Target = "Party", Kind = "next" },
+	{ Id = "Welcome", Title = "Welcome to Duo Quest!", Text = "You and a partner fight side by side, even while you are away. Press Next and we will show you around.", Target = nil, Kind = "next" },
 	{ Id = "Party", Title = "Your party", Text = "The two cards at the top left are you and your partner. Each shows a name, level, class and item power (IP), the total strength of that hero. Tap a card to inspect it.", Target = "Party", Kind = "next" },
 	{ Id = "Fight", Title = "Fights run themselves", Text = "Every win moves you up a stage and drops gold, experience and gear. Stay put and watch the stage counter in the top right climb to stage 3.", Target = "Stage", Kind = "frontier", Goal = 3 },
 	{ Id = "Watch", Title = "Watching a fight", Text = "Home takes you to your arena to watch your battle up close. Plaza takes you back to the town square. Your progress is the same in both places.", Target = "Home", Kind = "next" },

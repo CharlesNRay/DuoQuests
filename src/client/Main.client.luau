@@ -603,7 +603,7 @@ refreshWorld()
 -- everyone starts at the main menu: nobody spawns until they press Play on a character
 menu = require(script.Parent.UI.MainMenu).new(root, call, extra, require(script.Parent.UI.CharacterScreen))
 tutorial = require(script.Parent.UI.Tutorial).new(root, hud, call, function()
-	return state, (menu ~= nil and menu.Visible) or panel.Visible
+	return state, menu ~= nil and menu.Visible -- the card stays up while a panel is open, so the "open this" and info steps can be read
 end)
 extra.OpenMenu = function()
 	current = nil
