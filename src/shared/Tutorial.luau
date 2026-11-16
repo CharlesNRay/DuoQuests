@@ -34,7 +34,7 @@ Tutorial.Steps = {
 	{ Id = "QuestsOpen", Title = "Quests", Text = "Open Quests for daily goals and the season pass.", Target = "Quests", Kind = "open", Goal = "Quests" },
 	{ Id = "QuestsInfo", Title = "Rewards worth taking", Text = "Finished quests pay Wishstones, gold and Sunstones. Claim your daily login reward too. It adds up quickly.", Target = "Quests", Kind = "next" },
 	{ Id = "Level", Title = "Keep climbing", Text = "Fight on to stage 8. You should level up several times on the way. Check Skills and Gear after each level, since new skills and upgrades unlock.", Target = "Stage", Kind = "frontier", Goal = 8 },
-	{ Id = "BossPrep", Title = "Boss ahead", Text = "Stage 10 is a boss. It hits harder and has more health than normal enemies, so the fight takes longer. Equip your best gear and upgrade your skills first.", Target = "Boss", Kind = "next" },
+	{ Id = "BossPrep", Title = "Boss ahead", Text = "The Battle button also holds dungeons, expeditions and the world boss. Stage 10 is a boss. It hits harder and has more health than normal enemies, so the fight takes longer. Equip your best gear and upgrade your skills first.", Target = "Battle", Kind = "next" },
 	{ Id = "Boss", Title = "Beat the stage 10 boss", Text = "Keep fighting until the boss falls. Clearing it ends the tutorial and pays a reward.", Target = "Stage", Kind = "frontier", Goal = 11 },
 }
 

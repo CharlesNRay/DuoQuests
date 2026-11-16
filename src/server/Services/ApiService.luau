@@ -78,6 +78,7 @@ local Classes = require(Shared.Config.Classes)
 local Character = require(Shared.Character)
 local Characters = require(Shared.Characters)
 local Tutorial = require(Shared.Tutorial)
+local Activities = require(Shared.Activities)
 local WeaponService = require(script.Parent.WeaponService)
 local CharacterConfig = require(Shared.Config.Character)
 local TextService = game:GetService("TextService")
@@ -194,6 +195,7 @@ local function buildState(player)
 			Pets = Pets.List(profile),
 			IP = Power.Hero(profile),
 			Tutorial = Tutorial.Of(profile),
+			Activities = Activities.Of(profile, os.time()),
 			PetShards = Pets.Shards(profile),
 			PetShardInfo = { PetCost = require(Shared.Config.Pets).Shards.PetCost, CondenseCost = require(Shared.Config.Pets).Shards.CondenseCost },
 			PetCollection = (function() local c = Pets.Collection(profile) return { Points = c.Points, Percent = c.Percent } end)(),
@@ -431,7 +433,7 @@ local REPLAYED = { Damage = true, Heal = true, Cast = true, Death = true, Revive
 local pushRemote
 
 -- A boss challenge is a real fight in YOUR arena: the party's normal fights pause, you (and anyone near) watch it.
-local function playBossFight(player, fight, label, damage)
+local function playBossFight(player, fight, label, damage, extraInfo)
 	local partyState = PartyService.GetState(player)
 	local slot = partyState and WorldService.SlotOf(partyState.PartyId)
 	if not slot then
@@ -444,7 +446,7 @@ local function playBossFight(player, fight, label, damage)
 		end
 	end
 	PartyService.HoldFights(player, fight.Duration + 14)
-	local payload = { Slot = slot, PartyId = partyState.PartyId, Stage = partyState.Stage, Won = fight.Won, Duration = fight.Duration, Roster = fight.Roster, Events = events, Label = label, Damage = damage }
+	local payload = { Slot = slot, PartyId = partyState.PartyId, Stage = partyState.Stage, Won = fight.Won, Duration = fight.Duration, Roster = fight.Roster, Events = events, Label = label, Damage = damage, Extra = extraInfo }
 	-- the fight is played in a private boss arena on the challenger's screen, so nobody else watches it
 	pushRemote:FireClient(player, "BossFight", payload)
 end
@@ -463,6 +465,40 @@ function handlers.BossChallenge(player, profile, which)
 		afterBuildChange(player)
 	end
 	return ok, data
+end
+
+-- Dungeons and expeditions (see Shared/Activities). A dungeon run plays its last floor in the boss arena.
+function handlers.DungeonRun(player, profile, id)
+	if type(id) ~= "string" then
+		return false, "BadArgs"
+	end
+	local members = { { Id = tostring(player.UserId), Name = player.Name, Profile = profile } }
+	local partner = PartyService.GetPartnerSnapshot(player)
+	if partner then
+		table.insert(members, { Id = partner.Id, Name = partner.Name, Snapshot = partner.Snapshot })
+	end
+	local ok, result = Activities.RunDungeon(profile, members, id, math.random(1, 1e9), os.time(), true)
+	if ok then
+		local fight = result.Fight
+		result.Fight = nil
+		if fight then
+			playBossFight(player, fight, result.Name, 0, { Floors = result.Floors, Cleared = result.Cleared, Lines = result.Lines })
+		end
+		afterBuildChange(player)
+	end
+	return ok, result
+end
+
+function handlers.ExpeditionStart(_, profile, id)
+	return Activities.StartExpedition(profile, id, os.time())
+end
+
+function handlers.ExpeditionCollect(player, profile)
+	local ok, lines = Activities.CollectExpedition(profile, os.time())
+	if ok then
+		afterBuildChange(player)
+	end
+	return ok, lines
 end
 
 function handlers.BossClaim(player, profile, thresholdId)

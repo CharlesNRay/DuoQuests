@@ -25,6 +25,7 @@ Screens.Blacksmith = Shops.Blacksmith
 Screens.Hero = HeroScreen.Hero
 Screens.Map = MapScreen.Map
 Screens.Quests = require(script.Parent.UI.QuestScreen).Quests
+Screens.Battle = require(script.Parent.UI.BattleScreen).Battle
 Screens.Guild = require(script.Parent.UI.GuildScreen).Guild
 Screens.Premium = require(script.Parent.UI.PremiumScreen).Premium
 Screens.Season = require(script.Parent.UI.SeasonScreen).Season
@@ -157,7 +158,7 @@ end
 local PANEL_DEFAULT = Vector2.new(500, 286)
 local PANEL_SIZES = {
 	Map = Vector2.new(640, 298), Hero = Vector2.new(640, 298), Skills = Vector2.new(660, 344),
-	Merchant = Vector2.new(540, 292), Blacksmith = Vector2.new(540, 292), Wish = Vector2.new(640, 352), Store = Vector2.new(640, 336), Boss = Vector2.new(640, 310), Quests = Vector2.new(640, 330), Premium = Vector2.new(640, 330), Season = Vector2.new(640, 330), Cosmetics = Vector2.new(640, 330), Codes = Vector2.new(540, 300), Character = Vector2.new(640, 340), Guild = Vector2.new(720, 340),
+	Merchant = Vector2.new(540, 292), Blacksmith = Vector2.new(540, 292), Wish = Vector2.new(640, 352), Store = Vector2.new(640, 336), Boss = Vector2.new(640, 310), Battle = Vector2.new(640, 330), Quests = Vector2.new(640, 330), Premium = Vector2.new(640, 330), Season = Vector2.new(640, 330), Cosmetics = Vector2.new(640, 330), Codes = Vector2.new(540, 300), Character = Vector2.new(640, 340), Guild = Vector2.new(720, 340),
 }
 local SHOP_NPC = { Merchant = "Merchant", Blacksmith = "Blacksmith", Wish = "Tree" }
 local panel = Kit.frame({ Name = "Panel", Size = UDim2.new(0, 500, 0, 286), Position = UDim2.new(0.5, -250, 0, 42), BackgroundColor3 = Kit.Colors.Bg, Visible = false, ZIndex = 5, Parent = root })
@@ -234,7 +235,7 @@ local function redraw()
 	Hub.SetDailyReady(state.Player.Daily ~= nil and state.Player.Daily.CanClaim == true)
 	syncWorld()
 	if current then
-		if current == "Boss" and extra.Boss == nil then
+		if (current == "Boss" or current == "Battle") and extra.Boss == nil then
 			extra.RefreshBoss()
 		end
 		if current == "Guild" and extra.Guild == nil then
@@ -383,6 +384,9 @@ local function showSeason(keep)
 	extra.SeasonData = if ok then data else nil
 	open("Season", "Season Rewards", keep)
 end
+extra.OpenPanel = function(name, label)
+	open(name, label, true)
+end
 extra.RefreshSeason = function()
 	showSeason(true)
 end
@@ -440,13 +444,9 @@ hud:AddButton("Home", "travel", "🏠", "Home", function()
 		extra.WatchMine()
 	end
 end)
-hud:AddButton("Boss", "mini", "👹", "Bosses", function()
-	extra.Boss = nil
-	open("Boss", "Bosses")
-end)
-hud:AddButton("Guild", "mini", "🛡️", "Guild", function()
-	extra.Guild, extra.GuildMsg, extra.GuildResults = nil, nil, nil
-	open("Guild", "Guild")
+hud:AddButton("Battle", "mini", "⚔️", "Battle: bosses, dungeons, expeditions", function()
+	extra.BattleTab = nil
+	open("Battle", "Battle")
 end)
 hud:AddButton("Store", "mini", "🛍️", "Store", function()
 	extra.StoreTab = extra.StoreTab or "Premium"
@@ -496,7 +496,7 @@ push.OnClientEvent:Connect(function(kind, info)
 				if ok and fresh then state = fresh end
 				extra.Boss = nil
 				extra.RefreshBoss()
-				open("Boss", "Bosses", true)
+				open("Battle", "Battle", true)
 			end)
 			if not started then
 				hud:Notify(("You dealt %d damage to %s!"):format(info.Damage or 0, tostring(info.Label)))

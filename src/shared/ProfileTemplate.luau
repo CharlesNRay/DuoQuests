@@ -151,6 +151,7 @@ function ProfileTemplate.Defaults()
 			Slots = {}, -- the main menu's characters (see Shared/Characters)
 			ActiveSlot = 0,
 			Tutorial = { Step = 1, Done = false, Rewarded = false }, -- see Shared/Tutorial
+			Activities = { Day = 0, Keys = 3 }, -- dungeon keys and the running expedition, see Shared/Activities
 			Titles = {},
 			Achievements = {},
 			LegacyPoints = 0,

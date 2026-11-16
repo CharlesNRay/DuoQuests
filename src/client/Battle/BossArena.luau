@@ -80,15 +80,20 @@ local function showResults(info, onClose)
 	gui.Parent = Players.LocalPlayer:WaitForChild("PlayerGui")
 	resultGui = gui
 
-	local won = info.Won == true
+	local extra = info.Extra
+	local won = if extra then extra.Cleared >= extra.Floors else info.Won == true
+	local headline = if won then "VICTORY" elseif extra and extra.Cleared > 0 then "FLOORS CLEARED" else "DEFEATED"
+	local summary = if extra then ("Floors  %d / %d     Time  %ds"):format(extra.Cleared, extra.Floors, math.floor(info.Duration or 0)) else ("Damage dealt  %s     Time  %ds"):format(commas(info.Damage or 0), math.floor(info.Duration or 0))
+	local prize = if extra and #(extra.Lines or {}) > 0 then "Rewards: " .. table.concat(extra.Lines, ", ") else nil
+	local prizeHeight = if prize then 16 * math.ceil(#prize / 46) + 6 else 0
 	local accent = if won then Color3.fromRGB(96, 214, 130) else Color3.fromRGB(235, 90, 90)
 	local rows = FightStats.Compute({ Roster = info.Roster, Events = info.Events, Duration = info.Duration }).Rows
-	local card = Kit.frame({ Size = UDim2.fromOffset(340, 120 + math.min(#rows, 4) * 30 + 56), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = Color3.fromRGB(16, 19, 32), Parent = gui })
+	local card = Kit.frame({ Size = UDim2.fromOffset(340, 120 + math.min(#rows, 4) * 30 + 56 + prizeHeight), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = Color3.fromRGB(16, 19, 32), Parent = gui })
 	Kit.new("UIStroke", { Color = accent, Thickness = 2, Parent = card })
 	Kit.frame({ Size = UDim2.new(1, 0, 0, 4), BackgroundColor3 = accent, NoCorner = true, Parent = card })
-	Kit.label({ Size = UDim2.new(1, -20, 0, 30), Position = UDim2.fromOffset(10, 12), Text = if won then "VICTORY" else "DEFEATED", TextSize = 26, Font = Enum.Font.GothamBlack, TextColor3 = accent, TextXAlignment = Enum.TextXAlignment.Center, TextWrapped = false, Parent = card })
+	Kit.label({ Size = UDim2.new(1, -20, 0, 30), Position = UDim2.fromOffset(10, 12), Text = headline, TextSize = 26, Font = Enum.Font.GothamBlack, TextColor3 = accent, TextXAlignment = Enum.TextXAlignment.Center, TextWrapped = false, Parent = card })
 	Kit.label({ Size = UDim2.new(1, -20, 0, 18), Position = UDim2.fromOffset(10, 44), Text = tostring(info.Label or "Boss"), TextSize = 14, Font = Enum.Font.GothamBold, TextXAlignment = Enum.TextXAlignment.Center, TextWrapped = false, Parent = card })
-	Kit.label({ Size = UDim2.new(1, -20, 0, 20), Position = UDim2.fromOffset(10, 66), Text = ("Damage dealt  %s     Time  %ds"):format(commas(info.Damage or 0), math.floor(info.Duration or 0)), TextSize = 13, TextColor3 = GOLD, TextXAlignment = Enum.TextXAlignment.Center, TextWrapped = false, Parent = card })
+	Kit.label({ Size = UDim2.new(1, -20, 0, 20), Position = UDim2.fromOffset(10, 66), Text = summary, TextSize = 13, TextColor3 = GOLD, TextXAlignment = Enum.TextXAlignment.Center, TextWrapped = false, Parent = card })
 	for i = 1, math.min(#rows, 4) do
 		local row = rows[i]
 		local y = 98 + (i - 1) * 30
@@ -96,6 +101,9 @@ local function showResults(info, onClose)
 		Kit.frame({ Size = UDim2.fromScale(math.clamp(row.Share or 0, 0.02, 1), 1), BackgroundColor3 = FightStats.PlayerColor(row.Color), BackgroundTransparency = 0.45, Parent = bar })
 		Kit.label({ Size = UDim2.new(0.6, 0, 1, 0), Position = UDim2.fromOffset(8, 0), Text = row.Name, TextSize = 12, TextWrapped = false, TextStrokeTransparency = 1, Parent = bar })
 		Kit.label({ Size = UDim2.new(0.4, -8, 1, 0), Position = UDim2.fromScale(0.6, 0), Text = commas(row.Damage or 0), TextSize = 12, TextXAlignment = Enum.TextXAlignment.Right, TextWrapped = false, TextStrokeTransparency = 1, Parent = bar })
+	end
+	if prize then
+		Kit.label({ Size = UDim2.new(1, -24, 0, prizeHeight), Position = UDim2.new(0, 12, 1, -52 - prizeHeight), Text = prize, TextSize = 12, TextColor3 = Color3.fromRGB(196, 202, 222), TextWrapped = true, TextYAlignment = Enum.TextYAlignment.Top, Parent = card })
 	end
 	Kit.button({ Size = UDim2.new(1, -24, 0, 34), Position = UDim2.new(0, 12, 1, -46), Text = "Continue", TextSize = 15, BackgroundColor3 = accent, TextColor3 = Color3.fromRGB(10, 24, 14), Parent = card }, function()
 		restore()
