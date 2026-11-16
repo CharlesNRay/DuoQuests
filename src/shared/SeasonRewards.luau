@@ -68,6 +68,20 @@ local function bestRow(rows, rank)
 	return nil
 end
 
+-- Every row the rank qualifies for, tightest first (a rank-1 player qualifies for all of them).
+local function rowsFor(rows, rank)
+	local out = {}
+	if rank == nil then
+		return out
+	end
+	for _, row in ipairs(rows) do
+		if rank <= row.MaxRank then
+			table.insert(out, row)
+		end
+	end
+	return out
+end
+
 function SeasonRewards.Standing(results, info)
 	local standing = { Ranked = false, Score = info.Score, ClassId = info.ClassId }
 	local percent = SeasonRewards.Percent(results, info.Score)
@@ -79,9 +93,11 @@ function SeasonRewards.Standing(results, info)
 	standing.Percentile = percentileRow(percent)
 	standing.Rank = results.Top and results.Top[info.UserId] or nil
 	standing.RankReward = bestRow(Config.Ranks, standing.Rank)
+	standing.RankRewards = if Config.StackRanks then rowsFor(Config.Ranks, standing.Rank) else { standing.RankReward }
 	local classTop = results.ClassTop and results.ClassTop[info.ClassId]
 	standing.ClassRank = classTop and classTop[info.UserId] or nil
 	standing.ClassReward = bestRow(Config.ClassRanks, standing.ClassRank)
+	standing.ClassRewards = if Config.StackRanks then rowsFor(Config.ClassRanks, standing.ClassRank) else { standing.ClassReward }
 	return standing
 end
 
@@ -104,17 +120,17 @@ function SeasonRewards.Reward(standing)
 		if row.Title then
 			table.insert(reward.Titles, (row.Title:gsub("%%s", className(standing.ClassId))))
 		end
-		if row.Cosmetic then
+		if row.Cosmetic and not table.find(reward.Cosmetics, row.Cosmetic) then
 			table.insert(reward.Cosmetics, row.Cosmetic)
 		end
 		table.insert(reward.Lines, { Label = label, Sunstones = row.Sunstones or 0 })
 	end
 	add(standing.Percentile, standing.Percentile.Label)
-	if standing.RankReward then
-		add(standing.RankReward, standing.RankReward.Label)
+	for _, row in ipairs(standing.RankRewards or {}) do
+		add(row, row.Label)
 	end
-	if standing.ClassReward then
-		add(standing.ClassReward, (standing.ClassReward.Label:gsub("%%s", className(standing.ClassId))))
+	for _, row in ipairs(standing.ClassRewards or {}) do
+		add(row, (row.Label:gsub("%%s", className(standing.ClassId))))
 	end
 	return reward
 end

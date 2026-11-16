@@ -55,10 +55,18 @@ return function(modulesOverride)
 	check("Rank 1 gets the Champion row", top.Ranked and top.RankReward.Label == "Champion" and top.Percentile.Label == "Top 10%")
 	check("Rank 1 is also best Warrior", top.ClassReward ~= nil and top.ClassReward.MaxRank == 1)
 	local reward = SR.Reward(top)
-	local expected = Config.Percentiles[1].Sunstones + Config.Ranks[1].Sunstones + Config.ClassRanks[1].Sunstones
+	local expected = Config.Percentiles[1].Sunstones
+	for _, row in ipairs(Config.Ranks) do
+		expected += row.Sunstones
+	end
+	for _, row in ipairs(Config.ClassRanks) do
+		expected += row.Sunstones
+	end
+	check("Rank 1 gets every rank row and every class row plus the percentile (StackRanks)", Config.StackRanks == true)
 	check("Layers add together (percentile + rank + class)", reward.Sunstones == expected)
 	check("Rank 1 gets a title, the class title and an aura", table.find(reward.Titles, "Champion") ~= nil and table.find(reward.Titles, "Grandmaster Warrior") ~= nil and table.find(reward.Cosmetics, "Aura_Champion") ~= nil)
-	check("Lines list every layer", #reward.Lines == 3)
+	check("Lines list every row (1 percentile + 6 rank + 3 class)", #reward.Lines == 10)
+	check("Rank 1 gets every title below too", table.find(reward.Titles, "Elite Fifty") ~= nil and table.find(reward.Titles, "Podium") ~= nil)
 
 	local everyRank = true
 	for rank = 1, Config.TopKept do
@@ -67,6 +75,8 @@ return function(modulesOverride)
 	check("Every rank from 1 to 50 gets a rank reward", everyRank)
 	check("Rank 51 gets none", SR.Standing({ Total = 1000, Histogram = { [12] = 1000 }, Top = { [1] = 51 }, ClassTop = {} }, { UserId = 1, Score = 12, ClassId = "Cleric" }).RankReward == nil)
 	check("Rank 7 fits Top 10", SR.Standing(results, { UserId = 44, Score = 10, ClassId = "Cleric" }).RankReward.MaxRank == 10)
+	local seven = SR.Reward(SR.Standing(results, { UserId = 44, Score = 10, ClassId = "Cleric" }))
+	check("Rank 7 also gets Top 20 and Top 50 rows, not the podium", #seven.Lines == 4 and table.find(seven.Titles, "Elite Ten") ~= nil and table.find(seven.Titles, "Elite Fifty") ~= nil and table.find(seven.Titles, "Podium") == nil)
 	check("Rank 15 fits Top 20", SR.Standing(results, { UserId = 55, Score = 10, ClassId = "Cleric" }).RankReward.MaxRank == 20)
 	check("Rank 40 fits Top 50", SR.Standing(results, { UserId = 66, Score = 9, ClassId = "Cleric" }).RankReward.MaxRank == 50)
 	local plain = SR.Standing(results, { UserId = 999, Score = 5, ClassId = "Cleric" })
@@ -97,7 +107,11 @@ return function(modulesOverride)
 	check("Claim succeeds", ok == true)
 	check("Claim adds Sunstones", Premium.Sunstones(p) == expected)
 	check("Claim adds Wishstones", p.Season.Currencies.Wishstones == 5 + Config.Percentiles[1].Wishstones)
-	check("Claim adds tickets", Consumables.Count(p, "PetWish") == (Config.Percentiles[1].Tickets.PetWish + Config.Ranks[1].Tickets.PetWish))
+	local petTickets = Config.Percentiles[1].Tickets.PetWish
+	for _, row in ipairs(Config.Ranks) do
+		petTickets += (row.Tickets and row.Tickets.PetWish) or 0
+	end
+	check("Claim adds tickets from every row", Consumables.Count(p, "PetWish") == petTickets)
 	check("Claim records titles and cosmetics", p.Permanent.Titles["Champion"] == true and p.Permanent.Cosmetics["Aura_Champion"] == true)
 	check("Claim writes season history", p.Permanent.SeasonHistory["1"] ~= nil and p.Permanent.SeasonHistory["1"].Rank == 1)
 	local ok2, why = SR.Claim(p, 1, results, { UserId = 11, Score = 12, ClassId = "Warrior" })

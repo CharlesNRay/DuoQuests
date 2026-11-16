@@ -10,7 +10,7 @@
 	Sunstones here are EARNED (never random), so they do not touch the paid-random-item rules.
 
 	All numbers are first guesses for tuning. For scale: Premium Pass = 400 Sunstones. The #1 player who is also the best of a class
-	gets both rank 1 and class 1 rewards (200 + 1000 + 300 Sunstones) on purpose.
+	gets both rank 1 and class 1 rewards on purpose. With StackRanks every lower row adds too.
 ]]
 
 return {
@@ -32,8 +32,12 @@ return {
 		{ Top = 1.00, Label = "Top 100%", Sunstones = 15, Wishstones = 6 },
 	},
 
+	-- true: a player also gets EVERY lower rank row they qualify for (rank 1 gets Champion + Runner-up + Third place + Top 10 +
+	-- Top 20 + Top 50), the same for the class rows. false: only the tightest row.
+	StackRanks = true,
+
 	-- Exact rank rewards on top of the percentile reward. These rows are MILESTONES: every rank from 1 to 50 gets a reward,
-	-- and a player gets the tightest row they fit (rank 4-10 gets the Top 10 row, 11-20 the Top 20 row, 21-50 the Top 50 row).
+	-- (rank 4-10 gets the Top 10 row and everything below it, 11-20 the Top 20 row and below, 21-50 the Top 50 row; see StackRanks).
 	-- Title / Cosmetic ids are granted into Permanent.Titles / Permanent.Cosmetics (the cosmetics shop shows them).
 	Ranks = {
 		{ MaxRank = 1, Label = "Champion", Sunstones = 1000, Title = "Champion", Cosmetic = "Aura_Champion", Tickets = { PetWish = 3, SkillWish = 3 } },
