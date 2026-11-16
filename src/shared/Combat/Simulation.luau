@@ -1019,12 +1019,28 @@ function Simulation:_tryCast(caster)
 			local def = self.AbilityDefs[slot.Id]
 			assert(def ~= nil, "Unknown ability: " .. tostring(slot.Id))
 			local spent = def.UsesPerCombat ~= nil and (slot.Uses or 0) >= def.UsesPerCombat
+			if def.Pet and def.NoCharge and tostring(def.Id):sub(1, 10) == "Pet_Strike" then
+				spent = true -- the pet's own strike is cast apart from the owner's skills (see _tryPetStrike)
+			end
 			if not spent and self:_conditionsMet(caster, def) and self:Cast(caster, slot) then
 				return true
 			end
 		end
 	end
 	return false
+end
+
+-- A pet strikes on its own timer, whatever its owner is doing (casting, stunned or busy with other skills).
+function Simulation:_tryPetStrike(caster)
+	for _, slot in ipairs(caster.Abilities) do
+		if slot.Timer <= EPSILON then
+			local def = self.AbilityDefs[slot.Id]
+			if def and def.Pet and def.NoCharge and tostring(def.Id):sub(1, 10) == "Pet_Strike" then
+				self:Cast(caster, slot)
+				return
+			end
+		end
+	end
 end
 
 -- Counts down cooldowns and status durations by one tick.
@@ -1138,6 +1154,9 @@ function Simulation:Step()
 	self:_tryUltimate()
 
 	for _, entity in ipairs(actors) do
+		if entity.Team == "Party" then
+			self:_tryPetStrike(entity)
+		end
 		self:_tryCast(entity)
 
 		entity.AttackTimer += Simulation.TICK

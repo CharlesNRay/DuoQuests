@@ -13,16 +13,16 @@ local C = Kit.Colors
 local LiveLog = {}
 LiveLog.__index = LiveLog
 
-local OPEN_H, BAR_H = 150, 24
+local OPEN_H, BAR_H, WIDTH = 116, 22, 250
 
 function LiveLog.new(parent, buildLog, buildMeter)
-	local self = setmetatable({ BuildLog = buildLog, BuildMeter = buildMeter, MeterOn = false, Lines = {}, Times = {}, Shown = 0, Open = true }, LiveLog)
+	local self = setmetatable({ BuildLog = buildLog, BuildMeter = buildMeter, MeterOn = true, Lines = {}, Times = {}, Shown = 0, Open = true }, LiveLog)
 	local frame = Kit.frame({
-		Name = "LiveLog", Size = UDim2.fromOffset(300, OPEN_H), AnchorPoint = Vector2.new(1, 1),
+		Name = "LiveLog", Size = UDim2.fromOffset(WIDTH, OPEN_H), AnchorPoint = Vector2.new(1, 1),
 		Position = UDim2.new(1, -10, 1, -78), BackgroundColor3 = Color3.fromRGB(14, 16, 28), BackgroundTransparency = 0.2,
 		Visible = false, ZIndex = 3, Parent = parent,
 	})
-	Kit.label({ Size = UDim2.new(1, -40, 0, BAR_H), Position = UDim2.fromOffset(8, 0), Text = "Combat log", TextSize = 13, Font = Enum.Font.GothamBold, TextColor3 = C.Dim, TextWrapped = false, Parent = frame })
+	Kit.label({ Size = UDim2.new(1, -40, 0, BAR_H), Position = UDim2.fromOffset(8, 0), Text = "Combat", TextSize = 12, Font = Enum.Font.GothamBold, TextColor3 = C.Dim, TextWrapped = false, Parent = frame })
 	local toggle = Kit.button({
 		Size = UDim2.fromOffset(26, 18), Position = UDim2.new(1, -32, 0, 3), Text = "-", TextSize = 16, BackgroundColor3 = C.PanelLight, Parent = frame,
 	}, function() self:SetOpen(not self.Open) end)
@@ -41,7 +41,7 @@ function LiveLog.new(parent, buildLog, buildMeter)
 	Kit.new("UIListLayout", { SortOrder = Enum.SortOrder.LayoutOrder, Padding = UDim.new(0, 2), Parent = meter })
 	self.Meter = meter
 	self.MeterButton = Kit.button({
-		Size = UDim2.fromOffset(52, 18), Position = UDim2.new(1, -90, 0, 3), Text = "DPS", TextSize = 12, BackgroundColor3 = C.PanelLight, Parent = frame,
+		Size = UDim2.fromOffset(58, 18), Position = UDim2.new(1, -94, 0, 2), Text = "Log", TextSize = 11, BackgroundColor3 = C.PanelLight, Parent = frame,
 	}, function()
 		self.MeterOn = not self.MeterOn
 		self:_Layout()
@@ -57,7 +57,7 @@ function LiveLog.new(parent, buildLog, buildMeter)
 		while self.Shown < #self.Lines and self.Times[self.Shown + 1] <= now do
 			self.Shown += 1
 			Kit.label({
-				Size = UDim2.new(1, -6, 0, 0), AutomaticSize = Enum.AutomaticSize.Y, Text = self.Lines[self.Shown], TextSize = 12,
+				Size = UDim2.new(1, -6, 0, 0), AutomaticSize = Enum.AutomaticSize.Y, Text = self.Lines[self.Shown], TextSize = 11,
 				RichText = true, LayoutOrder = self.Shown, Parent = scroll,
 			})
 			scroll.CanvasPosition = Vector2.new(0, 1e6)
@@ -69,7 +69,7 @@ end
 function LiveLog:_Layout()
 	self.Scroll.Visible = self.Open and not self.MeterOn
 	self.Meter.Visible = self.Open and self.MeterOn
-	self.MeterButton.Text = if self.MeterOn then "Log" else "DPS"
+	self.MeterButton.Text = if self.MeterOn then "Log" else "Damage"
 end
 
 function LiveLog:_RefreshMeter(force, now)
@@ -93,7 +93,7 @@ function LiveLog:SetOpen(open)
 	self.Open = open
 	self:_Layout()
 	self.Toggle.Text = if open then "-" else "+"
-	self.Frame.Size = UDim2.fromOffset(300, if open then OPEN_H else BAR_H)
+	self.Frame.Size = UDim2.fromOffset(WIDTH, if open then OPEN_H else BAR_H)
 end
 
 function LiveLog:Play(fight, delay)

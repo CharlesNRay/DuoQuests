@@ -40,6 +40,7 @@ local Zones = require(Shared.Zones)
 local Arenas = require(script.Parent.Battle.Arenas)
 local Hub = require(script.Parent.Battle.Hub)
 local BossArena = require(script.Parent.Battle.BossArena)
+local PetFollower = require(script.Parent.Battle.PetFollower)
 local BattleCamera = require(script.Parent.Battle.BattleCamera)
 
 local folder = ReplicatedStorage:WaitForChild(Remotes.FolderName)
@@ -384,6 +385,10 @@ local function showSeason(keep)
 	extra.SeasonData = if ok then data else nil
 	open("Season", "Season Rewards", keep)
 end
+PetFollower.new(function()
+	local pet = state and state.Player and state.Player.ActivePet
+	return if pet then { pet } else {}
+end)
 extra.OpenPanel = function(name, label)
 	open(name, label, true)
 end

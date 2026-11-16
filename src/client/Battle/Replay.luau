@@ -428,7 +428,18 @@ function Replay:_event(e)
 				-- a monster skill has its own motion (the hit that follows still lunges)
 				source:Attack(def.Anim or "Cast", source.X - 1)
 			end
-			if SkillEffects.HasStyle(e.Ability) then
+			local heroActor = self.Heroes[e.Source]
+			if def.Pet and heroActor and heroActor.Pet then
+				-- the pet itself darts in at the enemies and strikes
+				local nearest
+				for _, enemy in pairs(self.Enemies) do
+					if nearest == nil or enemy.X < nearest.X then
+						nearest = enemy
+					end
+				end
+				heroActor.Pet:Attack("Lunge", if nearest then nearest.X else heroActor.X + 8)
+				flash(scene, heroActor.Pet:Pos() + Vector3.new(0, 1.5, 0), Color3.fromRGB(255, 240, 170), 2)
+			elseif SkillEffects.HasStyle(e.Ability) then
 				local isHero = self.Heroes[e.Source] ~= nil or self.Minions[e.Source] ~= nil
 				safely(SkillEffects.Cast, scene, {
 					Ability = e.Ability, SourcePos = source:Pos(), SourceIsHero = isHero,

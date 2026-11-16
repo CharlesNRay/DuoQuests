@@ -913,7 +913,7 @@ return {
 		NoCharge = true,
 		CastTime = 0,
 		Rarity = "Common",
-		Cooldown = 3.5,
+		Cooldown = 2.2,
 		Effects = {
 			{ Type = "Damage", Target = "Primary", Multiplier = 0.4, PerLevel = { Multiplier = 0.05 } },
 		},
@@ -930,7 +930,7 @@ return {
 		NoCharge = true,
 		CastTime = 0,
 		Rarity = "Rare",
-		Cooldown = 3.5,
+		Cooldown = 2.2,
 		Effects = {
 			{ Type = "Damage", Target = "Primary", Multiplier = 0.55, PerLevel = { Multiplier = 0.07 } },
 		},
@@ -947,7 +947,7 @@ return {
 		NoCharge = true,
 		CastTime = 0,
 		Rarity = "Epic",
-		Cooldown = 3.5,
+		Cooldown = 2.2,
 		Effects = {
 			{ Type = "Damage", Target = "Primary", Multiplier = 0.8, PerLevel = { Multiplier = 0.1 } },
 		},
@@ -964,7 +964,7 @@ return {
 		NoCharge = true,
 		CastTime = 0,
 		Rarity = "Legendary",
-		Cooldown = 3.5,
+		Cooldown = 2.2,
 		Effects = {
 			{ Type = "Damage", Target = "Primary", Multiplier = 1.1, PerLevel = { Multiplier = 0.14 } },
 		},
