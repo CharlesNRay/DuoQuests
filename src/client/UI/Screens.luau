@@ -653,6 +653,9 @@ function Screens.Pets(container, state, call)
 		if a.Owned ~= b.Owned then
 			return a.Owned
 		end
+		if a.Active ~= b.Active then
+			return a.Active == true
+		end
 		if rank[a.Rarity] ~= rank[b.Rarity] then
 			return rank[a.Rarity] > rank[b.Rarity]
 		end
@@ -661,6 +664,7 @@ function Screens.Pets(container, state, call)
 	for _, pet in ipairs(rows) do
 		if pet.Owned then
 			local r = row(scroll, 92)
+			Kit.new("UIStroke", { Color = if pet.Active then C.Accent else Kit.rarityColor(pet.Rarity), Thickness = if pet.Active then 3 else 2, Transparency = if pet.Active then 0 else 0.35, ApplyStrokeMode = Enum.ApplyStrokeMode.Border, Parent = r })
 			Icons.Pet(r, pet.Id, { Size = UDim2.fromOffset(40, 40), Position = UDim2.fromOffset(10, 6) })
 			if pet.Skill then
 				local skillIcon = Icons.PetSkill(r, pet.Id, { Size = UDim2.fromOffset(32, 32), Position = UDim2.fromOffset(14, 52), Level = pet.Rank or 1 })
