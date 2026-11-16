@@ -143,7 +143,7 @@ function TutorialUI:_run(action, ...)
 end
 
 function TutorialUI:_celebrate(reward)
-	self.DoneText.Text = ("+%d Wishstones   +%d Skill Pick"):format(reward.Wishstones or 0, reward.SkillPicks or 0)
+	self.DoneText.Text = ("+%d Pet Wishes   +%d Skill Wishes"):format(reward.PetWish or 0, reward.SkillWish or 0)
 	self.DoneCard.Visible = true
 	task.delay(5, function()
 		self.DoneCard.Visible = false

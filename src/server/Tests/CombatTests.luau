@@ -146,7 +146,7 @@ return function(modulesOverride)
 	end
 	local actedAfterDeath = false
 	for _, e in ipairs(fight.Events) do
-		if e.Type == "Damage" and deathTimes[e.Source] and e.T > deathTimes[e.Source] then
+		if e.Type == "Damage" and not e.Dot and deathTimes[e.Source] and e.T > deathTimes[e.Source] then
 			actedAfterDeath = true
 		end
 	end

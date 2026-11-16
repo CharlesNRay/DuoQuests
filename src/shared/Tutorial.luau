@@ -13,10 +13,12 @@
 	  Tutorial.Skip(profile)               ends the tutorial without the reward
 	  Tutorial.Finish(profile)             -> ok, reward   pays once, after the first boss is beaten
 ]]
+local Consumables = require(script.Parent.Consumables)
+
 local Tutorial = {}
 
 Tutorial.BossStage = 10
-Tutorial.Reward = { Wishstones = 6, SkillPicks = 1 }
+Tutorial.Reward = { PetWish = 10, SkillWish = 10 } -- wish tickets (Consumables), paid once for beating the first boss
 
 Tutorial.Steps = {
 	{ Id = "Welcome", Title = "Welcome to Duo Quest!", Text = "You and a partner fight together, even while you are away.", Target = nil, Kind = "next" },
@@ -27,7 +29,7 @@ Tutorial.Steps = {
 	{ Id = "PetsOpen", Title = "Your pet", Text = "Tap Pets. Your pet fights for you too.", Target = "Pets", Kind = "open", Goal = "Pets" },
 	{ Id = "QuestsOpen", Title = "Quests", Text = "Tap Quests to collect free rewards.", Target = "Quests", Kind = "open", Goal = "Quests" },
 	{ Id = "Level", Title = "Keep climbing", Text = "Let the fights run. Reach stage 8.", Target = "Stage", Kind = "frontier", Goal = 8 },
-	{ Id = "Boss", Title = "Beat the boss!", Text = "Stage 10 is a boss. Win to finish and get a reward.", Target = "Stage", Kind = "frontier", Goal = 11 },
+	{ Id = "Boss", Title = "Beat the boss!", Text = "Stage 10 is a boss. Win to finish and get 10 pet wishes and 10 skill wishes.", Target = "Stage", Kind = "frontier", Goal = 11 },
 }
 
 local function stateOf(profile)
@@ -74,9 +76,9 @@ function Tutorial.Finish(profile)
 		return false, "BossNotBeaten"
 	end
 	t.Done, t.Rewarded = true, true
-	local currencies = profile.Season.Currencies
-	currencies.Wishstones = (currencies.Wishstones or 0) + Tutorial.Reward.Wishstones
-	currencies.SkillPicks = (currencies.SkillPicks or 0) + Tutorial.Reward.SkillPicks
+	for ticketId, count in pairs(Tutorial.Reward) do
+		Consumables.Grant(profile, ticketId, count)
+	end
 	return true, Tutorial.Reward
 end
 

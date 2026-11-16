@@ -33,7 +33,7 @@ local Passes = require(script.Parent.Passes)
 local Progression = {}
 
 function Progression.XPToNext(level)
-	local need = (Economy.XPBase + Economy.XPPerLevel * (level - 1)) * (Economy.XPNumber or 1)
+	local need = (Economy.XPBase + Economy.XPCurve * level ^ Economy.XPPower) * (Economy.XPNumber or 1)
 	local early = Economy.EarlyGame
 	if early and early.LevelCost then
 		-- the first levels are cheaper, fading back to the full cost a few levels later

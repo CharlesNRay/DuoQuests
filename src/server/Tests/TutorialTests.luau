@@ -9,7 +9,7 @@ return function(modulesOverride)
 	local m = modulesOverride
 	if m == nil then
 		local Shared = game:GetService("ReplicatedStorage"):WaitForChild("Shared")
-		m = { Tutorial = require(Shared.Tutorial), ProfileTemplate = require(Shared.ProfileTemplate) }
+		m = { Tutorial = require(Shared.Tutorial), ProfileTemplate = require(Shared.ProfileTemplate), Consumables = require(Shared.Consumables) }
 	end
 	local Tutorial, ProfileTemplate = m.Tutorial, m.ProfileTemplate
 	local warnFn = warn or print
@@ -45,12 +45,12 @@ return function(modulesOverride)
 
 	check("The reward is refused before the boss is beaten", select(2, Tutorial.Finish(p)) == "BossNotBeaten" and not Tutorial.Of(p).Done)
 	p.Season.HighestStage = Tutorial.BossStage + 1
-	local before = p.Season.Currencies.Wishstones or 0
-	local picks = p.Season.Currencies.SkillPicks or 0
+	local Consumables = m.Consumables
+	local petBefore, skillBefore = Consumables.Count(p, "PetWish"), Consumables.Count(p, "SkillWish")
 	local ok, reward = Tutorial.Finish(p)
-	check("Beating the first boss finishes it and pays", ok == true and Tutorial.Of(p).Done and Tutorial.Of(p).Rewarded and reward.Wishstones == Tutorial.Reward.Wishstones)
-	check("The reward lands in the wallet", (p.Season.Currencies.Wishstones or 0) == before + Tutorial.Reward.Wishstones and p.Season.Currencies.SkillPicks == picks + Tutorial.Reward.SkillPicks)
-	check("It pays only once", select(2, Tutorial.Finish(p)) == "AlreadyRewarded" and (p.Season.Currencies.Wishstones or 0) == before + Tutorial.Reward.Wishstones)
+	check("Beating the first boss finishes it and pays", ok == true and Tutorial.Of(p).Done and Tutorial.Of(p).Rewarded and reward.PetWish == 10 and reward.SkillWish == 10)
+	check("10 pet wishes and 10 skill wishes land in the stash", Consumables.Count(p, "PetWish") == petBefore + 10 and Consumables.Count(p, "SkillWish") == skillBefore + 10)
+	check("It pays only once", select(2, Tutorial.Finish(p)) == "AlreadyRewarded" and Consumables.Count(p, "PetWish") == petBefore + 10)
 	check("A finished tutorial cannot advance", select(2, Tutorial.Advance(p, 1)) == "Done")
 
 	local q = ProfileTemplate.New()

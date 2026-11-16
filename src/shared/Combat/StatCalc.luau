@@ -17,6 +17,7 @@ local Subclasses = require(script.Parent.Parent.Subclasses)
 local SubclassConfig = require(script.Parent.Parent.Config.Subclasses)
 local Minions = require(script.Parent.Parent.Config.Minions)
 local Entity = require(script.Parent.Entity)
+local EconomyConfig = require(script.Parent.Parent.Config.Economy)
 
 local StatCalc = {}
 
@@ -38,6 +39,16 @@ function StatCalc.ClassStats(classId, level, subclassId)
 			for statName, mult in pairs(mults) do
 				local growth = class.GrowthPerLevel[statName] or 0
 				stats[statName] = (stats[statName] or 0) + growth * (mult - 1) * levels
+			end
+		end
+	end
+	-- low-level heroes are weaker (see Economy.EarlyWeak)
+	local weak = EconomyConfig.EarlyWeak
+	if weak then
+		local factor = weak.Start + (1 - weak.Start) * math.clamp((level - 1) / math.max(weak.FullLevel - 1, 1), 0, 1)
+		for _, statName in ipairs({ "MaxHealth", "Attack", "Defense" }) do
+			if stats[statName] then
+				stats[statName] *= factor
 			end
 		end
 	end

@@ -15,8 +15,14 @@ return {
 	-- XPNumber does the same for experience (needed to level, earned per fight) so levels fly by in bigger numbers.
 	XPNumber = 20,
 	MaxLevel = 120,
-	XPBase = 50, -- XP needed to go from level 1 to 2
-	XPPerLevel = 25, -- each later level needs this much more
+	-- XP to go from level L to L+1 = XPBase + XPCurve * L ^ XPPower (then times XPNumber). A power curve like most RPGs / idle games:
+	-- the first levels fly by, the later ones take far longer.
+	XPBase = 30,
+	XPCurve = 0.9,
+	XPPower = 1.8,
+	-- Low-level heroes are weaker: Health, Attack and Defense from the class are multiplied by Start at level 1, rising in a straight
+	-- line to full strength at FullLevel. So the first stages cannot be skipped at a low level; you have to grow into them.
+	EarlyWeak = { Start = 0.55, FullLevel = 60 },
 	-- Past the level cap, XP fills Paragon levels (Season.Paragon): each is a small permanent bonus to Attack, Health and Defense for the season.
 	Paragon = { Max = 100, XPFactor = 3, PerLevel = 0.004 },
 
@@ -24,9 +30,9 @@ return {
 	RewardScale = 0.1, -- one dial that scales gold and XP income (shards have their own numbers below)
 	-- Gold per clear: Base * Growth^stage + PerStage * stage. It climbs fast on purpose: thousands early, millions later.
 	GoldCurve = { Base = 60, Growth = 1.065, PerStage = 8 },
-	XPScale = 0.8, -- multiplies XP only (the level pacing dial): lv10 ~12 min, lv20 ~27 min, lv30 ~1 h
+	XPScale = 1.0, -- multiplies XP only (the level pacing dial): lv10 ~12 min, lv20 ~27 min, lv30 ~1 h
 	-- Early game (up to the first boss, stage 10) pays extra XP (levels only, no gold) so the opening is quick; the bonus fades out over the next few stages.
-	EarlyGame = { LastFullStage = 10, FadeStages = 4, XP = 1.8, LevelCost = 0.65, LastCheapLevel = 9, LevelFade = 6 },
+	EarlyGame = { LastFullStage = 10, FadeStages = 8, XP = 4, LevelCost = 1, LastCheapLevel = 9, LevelFade = 6 },
 	XPRewardBase = 10,
 	XPRewardPerStage = 3,
 	PetXPPerClear = 240, -- XP the active pet earns from every won fight
