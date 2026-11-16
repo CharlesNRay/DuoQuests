@@ -102,6 +102,12 @@ function Quests.Record(profile, event, amount, now)
 	amount = amount or 1
 	now = now or os.time()
 	local q = state(profile, now)
+	-- guild missions: remembered here, sent to the shared guild by GuildService (see Permanent.GuildPending)
+	local perm = profile.Permanent
+	if perm and perm.Guild then
+		perm.GuildPending = perm.GuildPending or {}
+		perm.GuildPending[event] = (perm.GuildPending[event] or 0) + amount
+	end
 	for _, quest in ipairs(todaysPool(q.Day)) do
 		if quest.Event == event then
 			q.Progress[quest.Id] = math.min(quest.Goal, (q.Progress[quest.Id] or 0) + amount)

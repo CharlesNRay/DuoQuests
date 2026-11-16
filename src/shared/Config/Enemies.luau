@@ -305,4 +305,29 @@ return {
 		IsBoss = true, DamageType = "Physical", EventOnly = true,
 		BaseStats = { MaxHealth = 1, Attack = 1, Defense = 1, AttackSpeed = 1, CritChance = 0 },
 	},
+	-- Guild raid bosses (stats set by Shared/Bosses; fought from the guild's Raid tab)
+	RaidTitan = {
+		Id = "RaidTitan", DisplayName = "Stone Titan",
+		Look = { Shape = "Golem", Color = { 130, 125, 120 }, Size = 13 },
+		IsBoss = true, DamageType = "Physical", EventOnly = true,
+		BaseStats = { MaxHealth = 1, Attack = 1, Defense = 1, AttackSpeed = 1, CritChance = 0 },
+	},
+	RaidWyrm = {
+		Id = "RaidWyrm", DisplayName = "Tide Wyrm",
+		Look = { Shape = "Serpent", Color = { 60, 140, 190 }, Size = 13 },
+		IsBoss = true, DamageType = "Magical", EventOnly = true,
+		BaseStats = { MaxHealth = 1, Attack = 1, Defense = 1, AttackSpeed = 1, CritChance = 0 },
+	},
+	RaidLich = {
+		Id = "RaidLich", DisplayName = "Hollow Lich",
+		Look = { Shape = "Skeleton", Color = { 150, 120, 200 }, Size = 12 },
+		IsBoss = true, DamageType = "Magical", EventOnly = true,
+		BaseStats = { MaxHealth = 1, Attack = 1, Defense = 1, AttackSpeed = 1, CritChance = 0 },
+	},
+	RaidPhoenix = {
+		Id = "RaidPhoenix", DisplayName = "Ashen Phoenix",
+		Look = { Shape = "Bird", Color = { 255, 140, 40 }, Size = 13 },
+		IsBoss = true, DamageType = "Magical", EventOnly = true,
+		BaseStats = { MaxHealth = 1, Attack = 1, Defense = 1, AttackSpeed = 1, CritChance = 0 },
+	},
 }

@@ -58,6 +58,7 @@ return {
 		"Wisp", "Emberkit", "Shellby", "Zephyr",
 		"Frostwing", "Starbun", "Thornback",
 		"EmberDrake", "Aurora", "Colossling",
+		"Hearthhound", "Bannerling", "Vaultmimic", "Wardenowl", "Charterfox", "Hearthdrake", "Oathgriffin", -- guild pets (Guild = true)
 		"Crownling", "Laurelwing", "Bannerhound", "Haloette", "Arcanix", "Skyhawk", "Shadowcat", "Spiritling", -- season prizes (Reward = true): never from the Wishing Tree
 	},
 
@@ -157,6 +158,49 @@ return {
 			Look = { Shape = "Wisp", Color = { 120, 255, 200 }, Size = 1.6 },
 			Stats = { { Stat = "CritChance", Share = 1.25 } },
 			Skill = { Name = "Aurora Veil", Text = "Heals and shields the whole party." },
+		},
+		-- Guild pets (Guild = true): only from the Guild Wish (see Config/Guilds.Wish), never the Wishing Tree or shards
+		Hearthhound = {
+			Id = "Hearthhound", DisplayName = "Hearthhound", Rarity = "Rare", Guild = true,
+			Look = { Shape = "Cat", Color = { 230, 150, 80 }, Size = 1.15 },
+			Stats = { { Stat = "Defense", Share = 0.7 }, { Stat = "MaxHealth", Share = 0.5 } },
+			Skill = { Name = "Hearth Ward", Text = "Shields the whole party." },
+		},
+		Bannerling = {
+			Id = "Bannerling", DisplayName = "Bannerling", Rarity = "Rare", Guild = true,
+			Look = { Shape = "Wisp", Color = { 220, 70, 70 }, Size = 1.1 },
+			Stats = { { Stat = "Attack", Share = 0.7 }, { Stat = "AttackSpeed", Share = 0.5 } },
+			Skill = { Name = "Rallying Bolt", Text = "A bolt of banner-light hits one enemy." },
+		},
+		Vaultmimic = {
+			Id = "Vaultmimic", DisplayName = "Vaultmimic", Rarity = "Rare", Guild = true,
+			Look = { Shape = "Ball", Color = { 200, 160, 60 }, Size = 1.2 },
+			Stats = { { Stat = "CritChance", Share = 0.7 }, { Stat = "Attack", Share = 0.5 } },
+			Skill = { Name = "Mimic Bite", Text = "A snapping bite on one enemy." },
+		},
+		Wardenowl = {
+			Id = "Wardenowl", DisplayName = "Warden Owl", Rarity = "Epic", Guild = true,
+			Look = { Shape = "Bird", Color = { 120, 150, 200 }, Size = 1.35, Glow = true },
+			Stats = { { Stat = "MaxHealth", Share = 0.8 }, { Stat = "Defense", Share = 0.4 } },
+			Skill = { Name = "Watchful Mend", Text = "Heals every ally." },
+		},
+		Charterfox = {
+			Id = "Charterfox", DisplayName = "Charterfox", Rarity = "Epic", Guild = true,
+			Look = { Shape = "Cat", Color = { 250, 120, 50 }, Size = 1.3 },
+			Stats = { { Stat = "Attack", Share = 0.8 }, { Stat = "CritMultiplier", Share = 0.4 } },
+			Skill = { Name = "Charter Flame", Text = "Fire sweeps over every enemy." },
+		},
+		Hearthdrake = {
+			Id = "Hearthdrake", DisplayName = "Hearthdrake", Rarity = "Legendary", Guild = true,
+			Look = { Shape = "Drake", Color = { 255, 120, 60 }, Size = 1.6, Glow = true },
+			Stats = { { Stat = "Attack", Share = 0.7 }, { Stat = "MaxHealth", Share = 0.5 } },
+			Skill = { Name = "Hearthstorm", Text = "Scorches every enemy." },
+		},
+		Oathgriffin = {
+			Id = "Oathgriffin", DisplayName = "Oathkeeper Griffin", Rarity = "Legendary", Guild = true,
+			Look = { Shape = "Bird", Color = { 240, 210, 120 }, Size = 1.6, Glow = true },
+			Stats = { { Stat = "Defense", Share = 0.6 }, { Stat = "CritChance", Share = 0.5 } },
+			Skill = { Name = "Oath Mantle", Text = "Heals and shields the whole party." },
 		},
 		-- Season prizes (see Config/SeasonRewards): not wishable, only earned by placing at the end of a season.
 		Crownling = {

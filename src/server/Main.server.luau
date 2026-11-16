@@ -12,6 +12,7 @@ local Services = script.Parent.Services
 local DataService = require(Services.DataService)
 local PartyService = require(Services.PartyService)
 local ApiService = require(Services.ApiService)
+local GuildService = require(Services.GuildService)
 local LeaderboardService = require(Services.LeaderboardService)
 local WorldService = require(Services.WorldService)
 local PremiumService = require(Services.PremiumService)
@@ -43,12 +44,14 @@ local function onPlayerAdded(player)
 	)
 
 	PartyService.OnPlayerReady(player, profile)
+	GuildService.OnPlayerReady(player, profile)
 	ApiService.ApplyLook(player, profile)
 end
 
 Players.PlayerAdded:Connect(onPlayerAdded)
 Players.PlayerRemoving:Connect(function(player)
 	PartyService.OnPlayerLeaving(player) -- while the profile is still loaded
+	GuildService.OnPlayerLeaving(player, DataService.GetProfile(player))
 	DataService.ReleaseProfile(player)
 end)
 

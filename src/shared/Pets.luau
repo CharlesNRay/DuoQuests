@@ -221,6 +221,13 @@ function Pets.Collection(profile)
 			table.insert(mods, { Stat = stat, Mode = "Mul", Value = value })
 		end
 	end
+	-- the guild's permanent combat upgrades ride along here: this list is already applied at every place a hero's stats are built
+	local guild = profile.Permanent.GuildBuffs
+	if guild and guild.Mods then
+		for _, mod in ipairs(guild.Mods) do
+			table.insert(mods, mod)
+		end
+	end
 	return { Points = points, Percent = value * 100, Mods = mods }
 end
 

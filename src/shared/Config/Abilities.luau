@@ -2149,6 +2149,119 @@ return {
 		},
 	},
 
+	Pet_Hearthhound = {
+		Id = "Pet_Hearthhound",
+		DisplayName = "Hearth Ward",
+		Description = "Shields the whole party.",
+		Class = "Pet",
+		Pet = true,
+		Rarity = "Rare",
+		Cooldown = 10,
+		CooldownPerLevel = -0.3,
+		MinCooldown = 5,
+		Conditions = { AllyHealthBelow = 0.85 },
+		Effects = {
+			{ Type = "Shield", Target = "AllAllies", Multiplier = 0.9, PercentMaxHealth = 0.08, Duration = 6, PerLevel = { Multiplier = 0.1, PercentMaxHealth = 0.01, Duration = 0.3 } },
+		},
+	},
+
+	Pet_Bannerling = {
+		Id = "Pet_Bannerling",
+		DisplayName = "Rallying Bolt",
+		Description = "A bolt of banner-light hits one enemy.",
+		Class = "Pet",
+		Pet = true,
+		Rarity = "Rare",
+		Cooldown = 10,
+		CooldownPerLevel = -0.3,
+		MinCooldown = 5,
+
+		Effects = {
+			{ Type = "Damage", Target = "Primary", Multiplier = 3.2, PerLevel = { Multiplier = 0.16 } },
+		},
+	},
+
+	Pet_Vaultmimic = {
+		Id = "Pet_Vaultmimic",
+		DisplayName = "Mimic Bite",
+		Description = "A snapping bite on one enemy.",
+		Class = "Pet",
+		Pet = true,
+		Rarity = "Rare",
+		Cooldown = 10,
+		CooldownPerLevel = -0.3,
+		MinCooldown = 5,
+
+		Effects = {
+			{ Type = "Damage", Target = "Primary", Multiplier = 3.2, PerLevel = { Multiplier = 0.16 } },
+		},
+	},
+
+	Pet_Wardenowl = {
+		Id = "Pet_Wardenowl",
+		DisplayName = "Watchful Mend",
+		Description = "Heals every ally.",
+		Class = "Pet",
+		Pet = true,
+		Rarity = "Epic",
+		Cooldown = 10,
+		CooldownPerLevel = -0.3,
+		MinCooldown = 5,
+		Conditions = { AllyHealthBelow = 0.85 },
+		Effects = {
+			{ Type = "Heal", Target = "AllAllies", Multiplier = 0.9, PerLevel = { Multiplier = 0.1 } },
+		},
+	},
+
+	Pet_Charterfox = {
+		Id = "Pet_Charterfox",
+		DisplayName = "Charter Flame",
+		Description = "Fire sweeps over every enemy.",
+		Class = "Pet",
+		Pet = true,
+		Rarity = "Epic",
+		Cooldown = 10,
+		CooldownPerLevel = -0.3,
+		MinCooldown = 5,
+
+		Effects = {
+			{ Type = "Damage", Target = "AllEnemies", Multiplier = 1.6, DamageType = "Magical", PerLevel = { Multiplier = 0.16 } },
+		},
+	},
+
+	Pet_Hearthdrake = {
+		Id = "Pet_Hearthdrake",
+		DisplayName = "Hearthstorm",
+		Description = "Scorches every enemy.",
+		Class = "Pet",
+		Pet = true,
+		Rarity = "Legendary",
+		Cooldown = 13,
+		CooldownPerLevel = -0.3,
+		MinCooldown = 5,
+
+		Effects = {
+			{ Type = "Damage", Target = "AllEnemies", Multiplier = 3.6, DamageType = "Magical", PerLevel = { Multiplier = 0.16 } },
+		},
+	},
+
+	Pet_Oathgriffin = {
+		Id = "Pet_Oathgriffin",
+		DisplayName = "Oath Mantle",
+		Description = "Heals and shields the whole party.",
+		Class = "Pet",
+		Pet = true,
+		Rarity = "Legendary",
+		Cooldown = 13,
+		CooldownPerLevel = -0.3,
+		MinCooldown = 5,
+		Conditions = { AllyHealthBelow = 0.85 },
+		Effects = {
+			{ Type = "Heal", Target = "AllAllies", Multiplier = 1.0, PerLevel = { Multiplier = 0.12 } },
+			{ Type = "Shield", Target = "AllAllies", Multiplier = 1.2, PercentMaxHealth = 0.08, Duration = 8, PerLevel = { Multiplier = 0.1, PercentMaxHealth = 0.01, Duration = 0.3 } },
+		},
+	},
+
 	Pet_Skyhawk = {
 		Id = "Pet_Skyhawk",
 		DisplayName = "Hawk Strike",

@@ -25,6 +25,7 @@ Screens.Blacksmith = Shops.Blacksmith
 Screens.Hero = HeroScreen.Hero
 Screens.Map = MapScreen.Map
 Screens.Quests = require(script.Parent.UI.QuestScreen).Quests
+Screens.Guild = require(script.Parent.UI.GuildScreen).Guild
 Screens.Premium = require(script.Parent.UI.PremiumScreen).Premium
 Screens.Season = require(script.Parent.UI.SeasonScreen).Season
 Screens.Cosmetics = require(script.Parent.UI.CosmeticsScreen).Cosmetics
@@ -155,7 +156,7 @@ end
 local PANEL_DEFAULT = Vector2.new(500, 286)
 local PANEL_SIZES = {
 	Map = Vector2.new(640, 298), Hero = Vector2.new(640, 298), Skills = Vector2.new(660, 344),
-	Merchant = Vector2.new(540, 292), Blacksmith = Vector2.new(540, 292), Wish = Vector2.new(640, 352), Store = Vector2.new(640, 336), Boss = Vector2.new(640, 310), Quests = Vector2.new(640, 330), Premium = Vector2.new(640, 330), Season = Vector2.new(640, 330), Cosmetics = Vector2.new(640, 330), Codes = Vector2.new(540, 300), Character = Vector2.new(640, 340),
+	Merchant = Vector2.new(540, 292), Blacksmith = Vector2.new(540, 292), Wish = Vector2.new(640, 352), Store = Vector2.new(640, 336), Boss = Vector2.new(640, 310), Quests = Vector2.new(640, 330), Premium = Vector2.new(640, 330), Season = Vector2.new(640, 330), Cosmetics = Vector2.new(640, 330), Codes = Vector2.new(540, 300), Character = Vector2.new(640, 340), Guild = Vector2.new(720, 340),
 }
 local SHOP_NPC = { Merchant = "Merchant", Blacksmith = "Blacksmith", Wish = "Tree" }
 local panel = Kit.frame({ Name = "Panel", Size = UDim2.new(0, 500, 0, 286), Position = UDim2.new(0.5, -250, 0, 42), BackgroundColor3 = Kit.Colors.Bg, Visible = false, ZIndex = 5, Parent = root })
@@ -167,6 +168,22 @@ Kit.button({ Size = UDim2.fromOffset(44, 36), Position = UDim2.new(1, -52, 0, 6)
 	panel.Visible = false
 	Kit.HideTip()
 end)
+
+-- guild screens read through here (no redraw), actions go through call()
+function extra.Raw(action, ...)
+	local ok, data = api:InvokeServer(action, ...)
+	if not ok then
+		task.wait(0.3)
+		ok, data = api:InvokeServer(action, ...)
+	end
+	return ok, data
+end
+function extra.RefreshGuild()
+	local ok, data = extra.Raw("GuildState")
+	if ok and data then
+		extra.Guild = data
+	end
+end
 
 function extra.RefreshBoss()
 	local ok, data = api:InvokeServer("BossState")
@@ -205,6 +222,9 @@ local function redraw()
 	if current then
 		if current == "Boss" and extra.Boss == nil then
 			extra.RefreshBoss()
+		end
+		if current == "Guild" and extra.Guild == nil then
+			extra.RefreshGuild()
 		end
 		-- redrawing a panel (after an upgrade, say) must not throw the player back to the top of its lists
 		local saved
@@ -405,6 +425,10 @@ end)
 hud:AddButton("Boss", "mini", "👹", "Bosses", function()
 	extra.Boss = nil
 	open("Boss", "Bosses")
+end)
+hud:AddButton("Guild", "mini", "🛡️", "Guild", function()
+	extra.Guild, extra.GuildMsg, extra.GuildResults = nil, nil, nil
+	open("Guild", "Guild")
 end)
 hud:AddButton("Store", "mini", "🛍️", "Store", function()
 	extra.StoreTab = extra.StoreTab or "Premium"

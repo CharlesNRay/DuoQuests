@@ -75,7 +75,8 @@ function Progression.ApplyClear(profile, stage, rand)
 	local classId = season.ClassId
 	local bonuses = Passives.Rewards(classId, season.PassiveLoadouts[classId], season.PassiveSlotLevels[classId])
 	local boost = Consumables.Rewards(profile, os.time())
-	bonuses = { GoldGain = (bonuses.GoldGain or 0) + boost.GoldGain, XPGain = (bonuses.XPGain or 0) + boost.XPGain, ItemRarity = bonuses.ItemRarity }
+	local guildBuffs = profile.Permanent and profile.Permanent.GuildBuffs or {} -- from the guild's upgrades
+	bonuses = { GoldGain = (bonuses.GoldGain or 0) + boost.GoldGain + (guildBuffs.GoldGain or 0), XPGain = (bonuses.XPGain or 0) + boost.XPGain + (guildBuffs.XPGain or 0), ItemRarity = bonuses.ItemRarity }
 	local rewards = Progression.ClearRewards(stage, isFrontier, bonuses)
 
 	season.Currencies.Gold += rewards.Gold

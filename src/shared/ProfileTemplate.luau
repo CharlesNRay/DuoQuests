@@ -153,6 +153,10 @@ function ProfileTemplate.Defaults()
 			LegacyPoints = 0,
 			LegacyUpgrades = {}, -- [upgradeId] = rank
 			SeasonHistory = {}, -- archived summaries of finished seasons
+			-- Guild = { Id = "..." } is added when the player joins a guild; GuildBuffs = { Mods, GoldGain, XPGain } is a cached copy
+			-- of the guild's upgrades; GuildPending = { [event] = n } waits to be sent to the guild; GuildMarks / GuildPity are personal.
+			GuildMarks = 0,
+			GuildPity = { Epic = 0, Legendary = 0 },
 			-- PartyId is added when the player joins a party
 		},
 

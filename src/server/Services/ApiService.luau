@@ -56,6 +56,7 @@ local Gear = require(Shared.Gear)
 local Consumables = require(Shared.Consumables)
 local Wishing = require(Shared.Wishing)
 local BossService = require(script.Parent.BossService)
+local GuildService = require(script.Parent.GuildService)
 local Hero = require(Shared.Hero)
 local World = require(Shared.World)
 local Daily = require(Shared.Daily)
@@ -377,6 +378,34 @@ function handlers.Wish(player, profile, kind, tierId, method, count)
 	end
 	return ok, data
 end
+
+-- Guilds (shared across servers, see GuildService)
+local function guildCall(player, fn, ...)
+	local ok, data = fn(...)
+	if ok then
+		afterBuildChange(player)
+	end
+	return ok, data
+end
+function handlers.GuildState(player, profile) return GuildService.State(player, profile) end
+function handlers.GuildSearch(player, profile, query) return GuildService.Search(player, profile, query) end
+function handlers.GuildCreate(player, profile, name, tag, open) return guildCall(player, GuildService.Create, player, profile, name, tag, open) end
+function handlers.GuildJoin(player, profile, id) return guildCall(player, GuildService.Join, player, profile, id) end
+function handlers.GuildLeave(player, profile) return guildCall(player, GuildService.Leave, player, profile) end
+function handlers.GuildKick(player, profile, userId) return GuildService.Kick(player, profile, userId) end
+function handlers.GuildRank(player, profile, userId, rank) return GuildService.SetRank(player, profile, userId, rank) end
+function handlers.GuildTransfer(player, profile, userId) return GuildService.Transfer(player, profile, userId) end
+function handlers.GuildApprove(player, profile, userId, accept) return GuildService.Approve(player, profile, userId, accept) end
+function handlers.GuildInfo(player, profile, fields) return GuildService.SetInfo(player, profile, fields) end
+function handlers.GuildBuy(player, profile, upgradeId) return guildCall(player, GuildService.Buy, player, profile, upgradeId) end
+function handlers.GuildClaimMission(player, profile, kind, index) return GuildService.ClaimMission(player, profile, kind, index) end
+function handlers.GuildRaid(player, profile)
+	return GuildService.RaidChallenge(player, profile, PartyService.GetPartnerSnapshot(player), function(fight, label, damage)
+		playBossFight(player, fight, label, damage)
+	end)
+end
+function handlers.GuildRaidClaim(player, profile, which) return GuildService.RaidClaim(player, profile, which) end
+function handlers.GuildWish(player, profile, count) return guildCall(player, GuildService.Wish, player, profile, count) end
 
 -- Bosses: the world boss (this server, timed) and the season boss (all servers).
 function handlers.BossState(player, profile)
@@ -1013,11 +1042,12 @@ function ApiService.Init()
 
 	WorldService.Init(push)
 	BossService.Init(push, DataService.GetProfile)
+	GuildService.Init(DataService.GetProfile, afterBuildChange)
 
 	api.OnServerInvoke = function(player, action, ...)
 		local now = os.clock()
 		-- cheap read-only calls are not throttled, so a refresh right after an action is never refused
-		local readOnly = action == "GetState" or action == "BossState" or action == "GetWorld"
+		local readOnly = action == "GetState" or action == "BossState" or action == "GuildState" or action == "GuildSearch" or action == "GetWorld"
 		if not readOnly then
 			if lastCall[player.UserId] and now - lastCall[player.UserId] < MIN_INTERVAL then
 				return false, "TooFast"
