@@ -209,6 +209,9 @@ return function(modulesOverride)
 	local pathErrors = {}
 	for _, pathId in ipairs(SubclassConfig.Order) do
 		local def = SubclassConfig.Defs[pathId]
+		if def.UnlockLevel > 30 then
+			continue -- the level-90 forms are tested below
+		end
 		local mine = member(def.Class, "m")
 		mine.Profile.Season.Level = 30
 		Subclasses.Choose(mine.Profile, def.Class, pathId)
@@ -237,6 +240,43 @@ return function(modulesOverride)
 		end
 	end
 	check("Every new path's skills run and cast in a fight" .. (if #pathErrors > 0 then (": " .. table.concat(pathErrors, "; ")) else ""), #pathErrors == 0)
+
+	-- level 90: the final form of every path stacks on the first and its skill fights
+	local tier2Errors = {}
+	for _, pathId in ipairs(SubclassConfig.Order) do
+		local def = SubclassConfig.Defs[pathId]
+		if def.UnlockLevel == 90 then
+			local mine = member(def.Class, "m")
+			mine.Profile.Season.Level = 30
+			Subclasses.Choose(mine.Profile, def.Class, def.Parent)
+			if Subclasses.Choose(mine.Profile, def.Class, pathId) ~= false then
+				table.insert(tier2Errors, pathId .. " chosen below level 90")
+			end
+			mine.Profile.Season.Level = 90
+			if not Subclasses.Choose(mine.Profile, def.Class, pathId) then
+				table.insert(tier2Errors, pathId .. " cannot be chosen at 90")
+			end
+			local skillId = def.Skills[1]
+			mine.Profile.Season.Loadouts[def.Class] = { skillId, Classes[def.Class].DefaultLoadout[1], Classes[def.Class].DefaultLoadout[2], Classes[def.Class].DefaultLoadout[3] }
+			local ok, outcome = pcall(StageRunner.Run, { mine, member(def.Class == "Cleric" and "Warrior" or "Cleric", "o") }, 60, 5, nil, true)
+			local cast = false
+			if ok then
+				for _, e in ipairs(outcome.Events) do
+					if e.Type == "Cast" and e.Ability == skillId then
+						cast = true
+					end
+				end
+			end
+			if not (ok and cast) then
+				table.insert(tier2Errors, pathId .. " skill did not cast")
+			end
+			local chain = Subclasses.Chain(pathId)
+			if #chain ~= 2 or chain[1].Id ~= def.Parent then
+				table.insert(tier2Errors, pathId .. " chain")
+			end
+		end
+	end
+	check("All 12 level-90 forms: locked below 90, chosen at 90, stack on their path and cast" .. (if #tier2Errors > 0 then (": " .. table.concat(tier2Errors, "; ")) else ""), #tier2Errors == 0)
 
 	-- early game is winnable with each new class beside a Cleric -----------------------------------------
 	local early = true

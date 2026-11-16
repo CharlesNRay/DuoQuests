@@ -502,7 +502,24 @@ function SkillsScreen.Skills(container, state, call, extra)
 			end
 		end)
 		rankBtn.Position = UDim2.new(0, 8, 1, -114)
+		rankBtn.Size = UDim2.new(0.5, -10, 0, 28)
 		rankBtn.Active = info.CanRank
+		local copies = 0
+		for _, n in pairs(info.Copies or {}) do
+			copies += n
+		end
+		local eatBtn = actionButton(right, if info.CanConsume then ("Consume %d  (+%d XP)"):format(copies, info.CopyXP) elseif copies > 0 then "Max rank" else "No spare copies", 0, if info.CanConsume then C.Accent else C.Panel, function()
+			if info.CanConsume then
+				call("ConsumeSkillCopies", selectedId, "All")
+			end
+		end)
+		eatBtn.Position = UDim2.new(0.5, 2, 1, -114)
+		eatBtn.Size = UDim2.new(0.5, -10, 0, 28)
+		eatBtn.Active = info.CanConsume == true
+		if info.CanConsume then
+			eatBtn.TextColor3 = Color3.fromRGB(30, 24, 10)
+		end
+		Kit.Hover(eatBtn, function() return "Spare copies from the Wishing Tree are banked. Consume them (same or lower rarity than this skill) to gain XP toward the next rank." end)
 		local pending = info.Pending ~= nil and info.CanUpgrade
 		local upBtn = actionButton(right, if pending then ("Upgrade to " .. info.Pending .. "!") else "No upgrade waiting", 0, if pending then C.Accent else C.Panel, function()
 			if pending then
@@ -520,7 +537,7 @@ function SkillsScreen.Skills(container, state, call, extra)
 		if not isPartner then
 			progressButtons()
 		end
-		note(right, "Drag icons to reorder, or drag a pool skill onto this slot. Duplicates from the Wishing Tree become XP.", -46, 44)
+		note(right, "Drag icons to reorder, or drag a pool skill onto this slot. Spare copies are banked - consume them for XP.", -46, 44)
 	elseif isOwned then
 		local target = math.clamp(sel.Target or #equipped, 1, #equipped)
 		local swapOut = Abilities[equipped[target]]

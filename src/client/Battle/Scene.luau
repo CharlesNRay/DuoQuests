@@ -58,16 +58,22 @@ function Scene.new(origin)
 	return self
 end
 
+local function wrap(x)
+	return (x + SPAN) % (SPAN * 2) - SPAN
+end
+
 function Scene:_update(dt)
 	if self.Walking then
-		self.Scroll = (self.Scroll + dt * 9) % (SPAN * 2)
-		for _, p in ipairs(self.Props) do
-			local x = p.BaseX - self.Scroll
-			if x < -SPAN then
-				x += SPAN * 2
-			end
-			p.Root:PivotTo(CFrame.new(self.Origin + Vector3.new(x, 0, p.Z)))
+		self.Scroll = (self.Scroll + dt * 9) % (SPAN * 2 * 10) -- (a long period so slower layers wrap cleanly)
+	end
+	local now = os.clock()
+	for _, p in ipairs(self.Props) do
+		local x = wrap(p.BaseX - self.Scroll * (p.Par or 1) + (p.Drift or 0) * now)
+		local cf = CFrame.new(self.Origin + Vector3.new(x, p.Y or 0, p.Z))
+		if p.Sway then
+			cf = cf * CFrame.Angles(0, 0, math.sin(now * p.Sway + p.Phase) * 0.025)
 		end
+		p.Root:PivotTo(cf)
 	end
 end
 
@@ -206,6 +212,84 @@ local function decor(parent, kind, c, size)
 	return m
 end
 
+-- Floating things in the air of each zone: fireflies, leaves, dust, snow, embers, bubbles...
+local AMBIENT = {
+	Trees = { Color = { 255, 240, 140 }, Rate = 5, Size = 0.35, Speed = 0.6, Life = 6, Accel = Vector3.new(0, 0.1, 0), Light = 1 }, -- fireflies
+	Pines = { Color = { 120, 190, 100 }, Rate = 4, Size = 0.5, Speed = 1.2, Life = 7, Accel = Vector3.new(-1.2, -0.6, 0), Light = 0.1 }, -- drifting leaves
+	Rocks = { Color = { 210, 200, 185 }, Rate = 5, Size = 0.3, Speed = 1.5, Life = 6, Accel = Vector3.new(-1.5, 0, 0), Light = 0 }, -- dust
+	Crystals = { Color = { 190, 150, 255 }, Rate = 8, Size = 0.3, Speed = 0.8, Life = 5, Accel = Vector3.new(0, 0.8, 0), Light = 1 }, -- sparkles rising
+	Cacti = { Color = { 235, 205, 150 }, Rate = 12, Size = 0.35, Speed = 4, Life = 5, Accel = Vector3.new(-6, 0, 0), Light = 0 }, -- blown sand
+	SnowPines = { Color = { 255, 255, 255 }, Rate = 22, Size = 0.35, Speed = 1, Life = 8, Accel = Vector3.new(-0.8, -3, 0), Light = 0.3 }, -- snowfall
+	LavaRocks = { Color = { 255, 140, 50 }, Rate = 10, Size = 0.3, Speed = 1.5, Life = 5, Accel = Vector3.new(0.5, 2.2, 0), Light = 1 }, -- embers rising
+	DeadTrees = { Color = { 160, 210, 120 }, Rate = 4, Size = 1.4, Speed = 0.4, Life = 8, Accel = Vector3.new(0, 0.1, 0), Light = 0.4, Soft = true }, -- swamp mist
+	Pillars = { Color = { 190, 235, 245 }, Rate = 6, Size = 0.35, Speed = 0.8, Life = 6, Accel = Vector3.new(0, 1.2, 0), Light = 0.5 }, -- bubbles
+	Clouds = { Color = { 255, 255, 255 }, Rate = 7, Size = 0.4, Speed = 0.7, Life = 7, Accel = Vector3.new(0, 0.3, 0), Light = 1 }, -- sparkles
+}
+
+function Scene:_ambient(theme)
+	if self.AmbientPart then
+		self.AmbientPart:Destroy()
+		self.AmbientPart = nil
+	end
+	local spec = AMBIENT[theme.Scenery]
+	if not spec then
+		return
+	end
+	local emitterPart = prop(self.Folder, { Name = "Ambient", Size = Vector3.new(60, 14, 30), Transparency = 1, CFrame = CFrame.new(self.Origin + Vector3.new(0, 8, 4)) })
+	local e = Instance.new("ParticleEmitter")
+	e.Texture = "rbxasset://textures/particles/sparkles_main.dds"
+	e.Color = ColorSequence.new(color(spec.Color))
+	e.LightEmission = spec.Light
+	e.Rate = spec.Rate
+	e.Lifetime = NumberRange.new(spec.Life * 0.7, spec.Life)
+	e.Speed = NumberRange.new(spec.Speed * 0.5, spec.Speed)
+	e.SpreadAngle = Vector2.new(180, 180)
+	e.Acceleration = spec.Accel
+	e.Size = NumberSequence.new({ NumberSequenceKeypoint.new(0, 0), NumberSequenceKeypoint.new(0.2, spec.Size), NumberSequenceKeypoint.new(1, 0) })
+	e.Transparency = NumberSequence.new({ NumberSequenceKeypoint.new(0, 1), NumberSequenceKeypoint.new(0.2, if spec.Soft then 0.7 else 0.1), NumberSequenceKeypoint.new(0.8, if spec.Soft then 0.7 else 0.2), NumberSequenceKeypoint.new(1, 1) })
+	e.RotSpeed = NumberRange.new(-60, 60)
+	e.Parent = emitterPart
+	self.AmbientPart = emitterPart
+end
+
+-- distant hills (or dunes, peaks...) behind the fight; they scroll slower than the near scenery
+function Scene:_backdrop(theme, rng)
+	local ground, sky = color(theme.Ground), color(theme.Sky)
+	local far = sky:Lerp(ground, 0.35)
+	local near = sky:Lerp(ground, 0.6)
+	local isCave = theme.Scenery == "Crystals"
+	for layer = 1, 2 do
+		local count = if layer == 1 then 5 else 6
+		for i = 1, count do
+			local h = rng:NextNumber(10, 22) * (if layer == 1 then 1.1 else 0.8)
+			local w = h * rng:NextNumber(1.8, 2.8)
+			local m = newModel(self.Scenery)
+			local z = if layer == 1 then -42 else -30
+			local col = if layer == 1 then far else near
+			if theme.Scenery == "Pillars" or theme.Scenery == "LavaRocks" or isCave then
+				prop(m, { Size = Vector3.new(w * 0.4, h * 1.3, w * 0.4), Color = col, Material = Enum.Material.Slate, CFrame = CFrame.new(0, h * 0.5, 0) })
+			elseif theme.Scenery == "Clouds" then
+				prop(m, { Shape = Enum.PartType.Ball, Size = Vector3.new(w, h * 0.5, h * 0.8), Color = Color3.new(1, 1, 1), CFrame = CFrame.new(0, h * 0.3, 0) })
+			else
+				prop(m, { Shape = Enum.PartType.Ball, Size = Vector3.new(w, h * 1.2, w * 0.7), Color = col, CFrame = CFrame.new(0, h * 0.1, 0) })
+			end
+			local baseX = -SPAN + (i - 1) * (SPAN * 2 / count) + rng:NextNumber(-4, 4)
+			table.insert(self.Props, { Root = m, BaseX = baseX, Z = z, Par = if layer == 1 then 0.1 else 0.3, Phase = 0 })
+		end
+	end
+	-- a few slow clouds
+	if theme.Scenery ~= "Crystals" then
+		for i = 1, 4 do
+			local m = newModel(self.Scenery)
+			local h = rng:NextNumber(3, 5)
+			for j = -1, 1 do
+				prop(m, { Shape = Enum.PartType.Ball, Size = Vector3.new(h * 1.4, h * 0.7, h), Color = if theme.Scenery == "LavaRocks" then Color3.fromRGB(90, 55, 50) else Color3.fromRGB(255, 255, 255), Transparency = 0.15, CFrame = CFrame.new(j * h * 0.9, math.abs(j) * -0.3, 0) })
+			end
+			table.insert(self.Props, { Root = m, BaseX = -SPAN + (i - 1) * (SPAN * 2 / 4), Z = -45, Y = rng:NextNumber(26, 38), Par = 0.1, Drift = rng:NextNumber(0.3, 0.8), Phase = 0 })
+		end
+	end
+end
+
 local BUILDERS = {
 	Trees = tree, Pines = pine, Rocks = rock, Crystals = crystal,
 	Cacti = cactus, SnowPines = snowPine, LavaRocks = lavaRock, DeadTrees = deadTree, Pillars = pillar, Clouds = cloud,
@@ -215,11 +299,17 @@ function Scene:SetZone(theme)
 	self.Scenery:ClearAllChildren()
 	self.Props = {}
 	self.Ground.Color = color(theme.Ground)
+	if not self.Apron then
+		-- more ground behind the fight, so the distant hills stand on something
+		self.Apron = prop(self.Folder, { Name = "Apron", Size = Vector3.new(64, 1, 24), CFrame = CFrame.new(self.Origin + Vector3.new(0, -0.5, -33)) })
+	end
+	self.Apron.Color = color(theme.Ground):Lerp(color(theme.Sky), 0.1)
 	local sky = color(theme.Sky)
 	local okMaterial, material = pcall(function()
 		return Enum.Material[theme.Material or "Grass"]
 	end)
 	self.Ground.Material = if okMaterial and material then material else Enum.Material.Grass
+	self.Apron.Material = self.Ground.Material
 
 	local build = BUILDERS[theme.Scenery] or tree
 	local rng = Random.new(7)
@@ -228,8 +318,10 @@ function Scene:SetZone(theme)
 		local z = -6 - rng:NextInteger(0, 2) * 4
 		local model = build(self.Scenery, theme, rng:NextNumber(5, 9))
 		model:PivotTo(CFrame.new(self.Origin + Vector3.new(baseX, 0, z)))
-		table.insert(self.Props, { Root = model, BaseX = baseX, Z = z })
+		table.insert(self.Props, { Root = model, BaseX = baseX, Z = z, Sway = rng:NextNumber(0.8, 1.6), Phase = rng:NextNumber(0, 6) })
 	end
+	self:_backdrop(theme, rng)
+	self:_ambient(theme)
 	-- foreground decoration: flowers, mushrooms, bones...
 	if theme.Decor then
 		for i = 1, 10 do
@@ -243,6 +335,9 @@ function Scene:SetZone(theme)
 end
 
 function Scene:Destroy()
+	if self.AmbientPart then
+		self.AmbientPart:Destroy()
+	end
 	self.Conn:Disconnect()
 	self.Folder:Destroy()
 end

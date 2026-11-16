@@ -293,10 +293,8 @@ function Wishing.Wish(profile, kind, tierId, method, count, rng)
 			local got, amount = SkillProgress.Receive(profile.Season, id, rarity)
 			row.New = got == "New"
 			row.Upgrade = got == "Upgrade" or nil
-			if got == "XP" then
-				row.DupXP = amount
-			elseif got == "Upgrade" and amount then
-				row.DupXP = amount -- the lower copy that was waiting turned into XP
+			if got == "Copy" then
+				row.Copies = 1 -- banked; consume it on the Skills page
 			end
 		end
 		table.insert(results, row)

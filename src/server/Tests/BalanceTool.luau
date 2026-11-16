@@ -48,6 +48,7 @@ local function wishForSkills(m, profile)
 	end
 	for abilityId in pairs(profile.Season.OwnedAbilities) do
 		m.SkillProgress.Upgrade(profile, abilityId)
+		m.SkillProgress.Consume(profile, abilityId, "All")
 		while m.SkillProgress.RankUp(profile, abilityId) do
 		end
 	end

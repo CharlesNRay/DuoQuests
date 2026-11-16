@@ -705,6 +705,168 @@ return {
 		Effects = { { Type = "ApplyStatus", Target = "Self", Status = "Enraged", Duration = 999 } },
 	},
 
+	-- Level 90 final-subclass skills (one each)
+	WarlordsRoar = {
+		Id = "WarlordsRoar", DisplayName = "Warlord's Roar", Description = "A roar that smashes every enemy.", Class = "Warrior", Subclass = "Warlord", Rarity = "Legendary",
+		Cooldown = 18, CooldownPerLevel = -0.3, MinCooldown = 10,
+		Effects = { { Type = "Damage", Target = "AllEnemies", Multiplier = 2.3, PerLevel = { Multiplier = 0.15 } } },
+	},
+	AegisOfAges = {
+		Id = "AegisOfAges", DisplayName = "Aegis of Ages", Description = "Shields the whole party.", Class = "Warrior", Subclass = "Paragon", Rarity = "Legendary",
+		Cooldown = 18, CooldownPerLevel = -0.3, MinCooldown = 10,
+		Effects = { { Type = "Shield", Target = "AllAllies", PercentMaxHealth = 0.3, Duration = 9, PerLevel = { PercentMaxHealth = 0.012, Duration = 0.2 } } },
+	},
+	Resurgence = {
+		Id = "Resurgence", DisplayName = "Resurgence", Description = "A great wave of healing for everyone.", Class = "Cleric", Subclass = "Archon", Rarity = "Legendary",
+		Cooldown = 18, CooldownPerLevel = -0.3, MinCooldown = 10,
+		Effects = { { Type = "Heal", Target = "AllAllies", Multiplier = 2.4, PerLevel = { Multiplier = 0.15 } } },
+	},
+	HolyCrusade = {
+		Id = "HolyCrusade", DisplayName = "Holy Crusade", Description = "Holy light on every enemy.", Class = "Cleric", Subclass = "Crusader", Rarity = "Legendary",
+		Cooldown = 18, CooldownPerLevel = -0.3, MinCooldown = 10,
+		Effects = { { Type = "Damage", Target = "AllEnemies", Multiplier = 2.0, DamageType = "Magical", PerLevel = { Multiplier = 0.15 } } },
+	},
+	Cataclysm = {
+		Id = "Cataclysm", DisplayName = "Cataclysm", Description = "Burns every enemy.", Class = "Mage", Subclass = "Cataclysm", Rarity = "Legendary",
+		Cooldown = 18, CooldownPerLevel = -0.3, MinCooldown = 10,
+		Effects = { { Type = "Damage", Target = "AllEnemies", Multiplier = 2.4, DamageType = "Magical", PerLevel = { Multiplier = 0.17 } } },
+	},
+	AbsoluteZero = {
+		Id = "AbsoluteZero", DisplayName = "Absolute Zero", Description = "Freezes the air: hurts and chills everyone.", Class = "Mage", Subclass = "Glacialist", Rarity = "Legendary",
+		Cooldown = 18, CooldownPerLevel = -0.3, MinCooldown = 10,
+		Effects = { { Type = "Damage", Target = "AllEnemies", Multiplier = 1.8, DamageType = "Magical", PerLevel = { Multiplier = 0.14 } } },
+	},
+	RainOfArrows = {
+		Id = "RainOfArrows", DisplayName = "Rain of Arrows", Description = "A volley on every enemy.", Class = "Ranger", Subclass = "Marshal", Rarity = "Legendary",
+		Cooldown = 18, CooldownPerLevel = -0.3, MinCooldown = 10,
+		Effects = { { Type = "Damage", Target = "AllEnemies", Multiplier = 2.2, PerLevel = { Multiplier = 0.16 } } },
+	},
+	PrimalSurge = {
+		Id = "PrimalSurge", DisplayName = "Primal Surge", Description = "The whole party surges with speed.", Class = "Ranger", Subclass = "Wildlord", Rarity = "Legendary",
+		Cooldown = 18, CooldownPerLevel = -0.3, MinCooldown = 10,
+		Effects = { { Type = "ApplyStatus", Target = "AllAllies", Status = "Hasted", Duration = 8, PerLevel = { Duration = 0.3 } } },
+	},
+	VanishingStrike = {
+		Id = "VanishingStrike", DisplayName = "Vanishing Strike", Description = "A huge strike from the shadows.", Class = "Rogue", Subclass = "Nightblade", Rarity = "Legendary",
+		Cooldown = 18, CooldownPerLevel = -0.3, MinCooldown = 10,
+		Effects = { { Type = "Damage", Target = "Primary", Multiplier = 6.5, PerLevel = { Multiplier = 0.45 } } },
+	},
+	ThousandCuts = {
+		Id = "ThousandCuts", DisplayName = "Thousand Cuts", Description = "Four rapid strikes on one enemy.", Class = "Rogue", Subclass = "Swordsaint", Rarity = "Legendary",
+		Cooldown = 18, CooldownPerLevel = -0.3, MinCooldown = 10,
+		Effects = { { Type = "Damage", Target = "Primary", Multiplier = 1.5, PerLevel = { Multiplier = 0.1 } }, { Type = "Damage", Target = "Primary", Multiplier = 1.5, PerLevel = { Multiplier = 0.1 } }, { Type = "Damage", Target = "Primary", Multiplier = 1.5, PerLevel = { Multiplier = 0.1 } }, { Type = "Damage", Target = "Primary", Multiplier = 1.5, PerLevel = { Multiplier = 0.1 } } },
+	},
+	SoulHarvest = {
+		Id = "SoulHarvest", DisplayName = "Soul Harvest", Description = "Reaps every enemy and heals you.", Class = "Summoner", Subclass = "Lich", Rarity = "Legendary",
+		Cooldown = 18, CooldownPerLevel = -0.3, MinCooldown = 10,
+		Effects = { { Type = "Damage", Target = "AllEnemies", Multiplier = 1.8, DamageType = "Magical", PerLevel = { Multiplier = 0.13 } }, { Type = "Heal", Target = "Self", Multiplier = 2.0, PerLevel = { Multiplier = 0.1 } } },
+	},
+	AncestralWrath = {
+		Id = "AncestralWrath", DisplayName = "Ancestral Wrath", Description = "The ancestors strike every enemy.", Class = "Summoner", Subclass = "AncestralSage", Rarity = "Legendary",
+		Cooldown = 18, CooldownPerLevel = -0.3, MinCooldown = 10,
+		Effects = { { Type = "Damage", Target = "AllEnemies", Multiplier = 1.9, DamageType = "Magical", PerLevel = { Multiplier = 0.14 } } },
+	},
+
+	-- Monster skills (regular enemies): short, readable moves. Not in any class pool. Anim = how the monster moves while casting.
+	PoisonSpit = {
+		Id = "PoisonSpit", DisplayName = "Poison Spit", Description = "A venomous glob that poisons one hero.", Enemy = true, Anim = "Shoot",
+		Rarity = "Common", Cooldown = 9,
+		Effects = {
+			{ Type = "Damage", Target = "Primary", Multiplier = 0.9, DamageType = "Magical", PerLevel = { Multiplier = 0 } },
+			{ Type = "ApplyStatus", Target = "Primary", Status = "Poisoned", Duration = 5 },
+		},
+	},
+	FeralPounce = {
+		Id = "FeralPounce", DisplayName = "Feral Pounce", Description = "Leaps onto one hero.", Enemy = true, Anim = "Pounce",
+		Rarity = "Common", Cooldown = 8,
+		Effects = { { Type = "Damage", Target = "Primary", Multiplier = 1.9, PerLevel = { Multiplier = 0 } } },
+	},
+	Howl = {
+		Id = "Howl", DisplayName = "Howl", Description = "Whips the pack into a frenzy.", Enemy = true, Anim = "Cast",
+		Rarity = "Common", Cooldown = 16,
+		Effects = { { Type = "ApplyStatus", Target = "AllAllies", Status = "Enraged", Duration = 6 } },
+	},
+	WebShot = {
+		Id = "WebShot", DisplayName = "Web Shot", Description = "Sticky web that slows one hero's attacks.", Enemy = true, Anim = "Shoot",
+		Rarity = "Common", Cooldown = 9,
+		Effects = {
+			{ Type = "Damage", Target = "Primary", Multiplier = 0.7, PerLevel = { Multiplier = 0 } },
+			{ Type = "ApplyStatus", Target = "Primary", Status = "Snared", Duration = 4 },
+		},
+	},
+	FrostBreath = {
+		Id = "FrostBreath", DisplayName = "Frost Breath", Description = "A wave of cold that chills the whole party.", Enemy = true, Anim = "Cast",
+		Rarity = "Common", Cooldown = 12,
+		Effects = {
+			{ Type = "Damage", Target = "AllEnemies", Multiplier = 0.6, DamageType = "Magical", PerLevel = { Multiplier = 0 } },
+			{ Type = "ApplyStatus", Target = "AllEnemies", Status = "Chilled", Duration = 5 },
+		},
+	},
+	EmberBolt = {
+		Id = "EmberBolt", DisplayName = "Ember Bolt", Description = "A burning orb at one hero.", Enemy = true, Anim = "Cast",
+		Rarity = "Common", Cooldown = 9,
+		Effects = {
+			{ Type = "Damage", Target = "Primary", Multiplier = 1.5, DamageType = "Magical", PerLevel = { Multiplier = 0 } },
+			{ Type = "ApplyStatus", Target = "Primary", Status = "Burning", Duration = 4 },
+		},
+	},
+	SandSting = {
+		Id = "SandSting", DisplayName = "Sand Sting", Description = "A stinging tail strike that poisons.", Enemy = true, Anim = "Bite",
+		Rarity = "Common", Cooldown = 8,
+		Effects = {
+			{ Type = "Damage", Target = "Primary", Multiplier = 1.3, PerLevel = { Multiplier = 0 } },
+			{ Type = "ApplyStatus", Target = "Primary", Status = "Poisoned", Duration = 5 },
+		},
+	},
+	BoulderToss = {
+		Id = "BoulderToss", DisplayName = "Boulder Toss", Description = "Hurls a boulder at one hero.", Enemy = true, Anim = "Slam",
+		Rarity = "Common", Cooldown = 11, Telegraph = 1.2,
+		Effects = { { Type = "Damage", Target = "Primary", Multiplier = 2.4, PerLevel = { Multiplier = 0 } } },
+	},
+	ShadowDrain = {
+		Id = "ShadowDrain", DisplayName = "Shadow Drain", Description = "Drains life from one hero.", Enemy = true, Anim = "Cast",
+		Rarity = "Common", Cooldown = 10,
+		Effects = {
+			{ Type = "Damage", Target = "Primary", Multiplier = 1.0, DamageType = "Magical", PerLevel = { Multiplier = 0 } },
+			{ Type = "Heal", Target = "Self", Multiplier = 1.2, PerLevel = { Multiplier = 0 } },
+		},
+	},
+	Screech = {
+		Id = "Screech", DisplayName = "Screech", Description = "A shriek that curses the whole party.", Enemy = true, Anim = "Cast",
+		Rarity = "Common", Cooldown = 14,
+		Effects = {
+			{ Type = "Damage", Target = "AllEnemies", Multiplier = 0.4, DamageType = "Magical", PerLevel = { Multiplier = 0 } },
+			{ Type = "ApplyStatus", Target = "AllEnemies", Status = "Cursed", Duration = 5 },
+		},
+	},
+	ShellGuard = {
+		Id = "ShellGuard", DisplayName = "Shell Guard", Description = "Pulls into its shell behind a shield.", Enemy = true, Anim = "Cast",
+		Rarity = "Common", Cooldown = 14,
+		Effects = { { Type = "Shield", Target = "Self", PercentMaxHealth = 0.35, Duration = 6 } },
+	},
+	Swoop = {
+		Id = "Swoop", DisplayName = "Swoop", Description = "Dives at one hero.", Enemy = true, Anim = "Pounce",
+		Rarity = "Common", Cooldown = 7,
+		Effects = { { Type = "Damage", Target = "Primary", Multiplier = 1.6, PerLevel = { Multiplier = 0 } } },
+	},
+	Thunderclap = {
+		Id = "Thunderclap", DisplayName = "Thunderclap", Description = "Lightning on the whole party.", Enemy = true, Anim = "Cast",
+		Rarity = "Common", Cooldown = 13, Telegraph = 1.2,
+		Effects = { { Type = "Damage", Target = "AllEnemies", Multiplier = 0.9, DamageType = "Magical", PerLevel = { Multiplier = 0 } } },
+	},
+	GroundPound = {
+		Id = "GroundPound", DisplayName = "Ground Pound", Description = "Shakes the ground under the party.", Enemy = true, Anim = "Slam",
+		Rarity = "Common", Cooldown = 12,
+		Effects = { { Type = "Damage", Target = "AllEnemies", Multiplier = 0.8, PerLevel = { Multiplier = 0 } } },
+	},
+	BoneRattle = {
+		Id = "BoneRattle", DisplayName = "Bone Rattle", Description = "Rattles bones in a frenzy, striking twice.", Enemy = true, Anim = "Spin",
+		Rarity = "Common", Cooldown = 9,
+		Effects = {
+			{ Type = "Damage", Target = "Primary", Multiplier = 0.9, PerLevel = { Multiplier = 0 } },
+			{ Type = "Damage", Target = "Primary", Multiplier = 0.9, PerLevel = { Multiplier = 0 } },
+		},
+	},
 	SporeBurst = {
 		Id = "SporeBurst",
 		DisplayName = "Spore Burst",

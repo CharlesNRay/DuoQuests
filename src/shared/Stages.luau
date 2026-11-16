@@ -50,7 +50,8 @@ function Stages.Build(stage)
 	else
 		local count = math.min(Config.MaxEnemies, 1 + (stage - 1) // 2)
 		for index = 1, count do
-			local enemyId = Config.EnemyPool[(stage + index) % #Config.EnemyPool + 1]
+			local pool = Config.ZonePools[((stage - 1) // Config.BossEvery) % #Config.ZonePools + 1] or Config.EnemyPool
+			local enemyId = pool[(stage + index) % #pool + 1]
 			table.insert(enemies, { Id = "e" .. index, EnemyId = enemyId, Scale = scale })
 		end
 	end

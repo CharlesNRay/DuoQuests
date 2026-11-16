@@ -10,7 +10,20 @@
 return {
 	BossEvery = 10, -- every 10th stage is a boss stage
 	EnemyPool = { "Slime", "Goblin", "Mushroom" }, -- regular stages cycle through these
-	BossPool = { "SlimeKing", "GoblinWarlord", "SporeMother" }, -- boss stages cycle through these
+	BossPool = { "SlimeKing", "GoblinWarlord", "SporeMother", "DireWolf", "Broodmother", "LichKing", "InfernoLord" }, -- boss stages cycle through these
+	-- Each zone (BossEvery stages) fields its own monsters; zones past the last repeat the list. Zone 1 keeps the starter trio.
+	ZonePools = {
+		{ "Slime", "Goblin", "Mushroom" },
+		{ "Wolf", "Spider", "Boar" },
+		{ "RockGolem", "Harpy", "Goblin" },
+		{ "Bat", "Wraith", "CrystalBeetle" },
+		{ "Scorpion", "Mummy", "SandSerpent" },
+		{ "SnowWolf", "FrostImp", "Yeti" },
+		{ "FireElemental", "LavaCrab", "Imp" },
+		{ "Frog", "BogWraith", "Spider" },
+		{ "Skeleton", "Ghost", "RuinGolem" },
+		{ "SkyHarpy", "StormSprite", "Bat" },
+	},
 	TimeLimit = 60, -- seconds to clear a regular stage; running out counts as a loss
 	BossTimeLimit = 90, -- seconds to clear a boss stage
 	MaxEnemies = 3, -- regular stages grow from 1 enemy up to this many

@@ -304,3 +304,18 @@ two paths of 3 skills, a season prize pet (Arcanix, Skyhawk, Shadowcat, Spiritli
 - Roblox's default Backpack hotbar is disabled (the class weapon is cosmetic only).
 - Gear names are class themed (Config/Gear `ClassNames`); in-battle weapon model is per class; the Hero screen shows the equipped pet.
 - Studio-only dev button "+5 levels" (DevLevel).
+
+## Skills: copies, rank 20
+- Spare skill copies are banked per rarity on the skill (`SkillState[id].Copies`); "Consume" on the Skills page turns same-or-lower rarity copies into XP (`ConsumeSkillCopies`). Max rank is 20 with a slow XP curve (x1.24 per rank, ~3,660 XP total). Tier bonus is now +2/+4/+6 ranks (Rare/Epic/Legendary); the combat level cap is still 20.
+
+## Partner (ghost companion)
+- The starter companion now mirrors its owner: same gear (slots, rarity, power), a pet of the owner's rarity at the owner's pet level/rank, the owner's collection bonus and average skill level.
+
+## Arena, monsters and monster skills
+- Scene: zone ambience (fireflies, leaves, dust, sand, snow, embers, mist, bubbles, sparkles), two parallax hill layers, slow clouds, swaying trees and an apron of ground behind the fight.
+- `client/Battle/Creatures.luau`: 12 new body shapes with animated parts (wings, legs, tails, jaws, arms, claws, floating, squish). `Actor` animates tagged parts and has attack styles (Lunge, Slam, Pounce, Bite, Shoot, Cast, Spin); monsters pick one by body shape (`Look.Attack` overrides).
+- 24 new monsters in zone pools (`Config/Stages ZonePools`, zone 1 keeps the starter trio) and 4 new bosses (Dire Wolf, Broodmother, Lich King, Inferno Lord). 15 new monster skills (poison, webs, frost breath, ember bolt, boulder toss, drain, screech, shell guard, swoop, thunderclap, ground pound, bone rattle, howl, pounce, sand sting) with looks and cast animations.
+
+## Levels and the level-90 subclass
+- Level cap 50 -> 120. At level 90 each of the 12 paths unlocks its final form (Warlord, Paragon, Archon, Crusader, Cataclysmist, Glacialist, Deadeye Marshal, Wildlord, Nightblade, Swordsaint, Lich, Ancestral Sage): stats stack on the first path and it brings one Legendary skill. XP curve and stat growth past 50 are NOT yet balanced.
+- Boss fights already hold the party's stage fights while the replay plays (no passive progress meanwhile).

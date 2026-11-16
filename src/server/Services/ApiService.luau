@@ -328,6 +328,17 @@ function handlers.RankUpSkill(player, profile, abilityId)
 	return ok, reason
 end
 
+function handlers.ConsumeSkillCopies(player, profile, abilityId, rarity)
+	if type(abilityId) ~= "string" or (rarity ~= nil and type(rarity) ~= "string") then
+		return false, "BadArgs"
+	end
+	local ok, reason = SkillProgress.Consume(profile, abilityId, rarity or "All")
+	if ok then
+		afterBuildChange(player)
+	end
+	return ok, reason
+end
+
 function handlers.UpgradeSkill(player, profile, abilityId)
 	if type(abilityId) ~= "string" then
 		return false, "BadArgs"

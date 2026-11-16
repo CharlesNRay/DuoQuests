@@ -11,7 +11,8 @@
 	  SkillProgress.Level(season, id)            -> effective combat level (Rank + tier bonus), 1..20
 	  SkillProgress.LevelMap(season)             -> { [id] = level } for every owned skill
 	  SkillProgress.LevelsFor(loadout, map)      -> list of levels by slot
-	  SkillProgress.Receive(season, id, rarity)  a skill copy was won: returns "New" | "Upgrade" | "XP", amount?
+	  SkillProgress.Receive(season, id, rarity)  a skill copy was won: returns "New" | "Upgrade" | "Copy", amount?
+	  SkillProgress.Consume(profile, id, rarity|"All")  spend banked copies (same or lower rarity) as XP
 	  SkillProgress.RankUp(profile, id)          spend XP for the next rank  (reasons: "NotOwned", "MaxRank", "NotEnoughXP")
 	  SkillProgress.Upgrade(profile, id)         apply a waiting higher tier   (reasons: "NotOwned", "NothingWaiting")
 	  SkillProgress.Rows(season, classId, ids)   -> rows for the UI
@@ -70,6 +71,24 @@ local function stateOf(season, id, create)
 	return s
 end
 
+local function copiesOf(s)
+	local out = {}
+	for rarity, n in pairs(s.Copies or {}) do
+		if n > 0 then
+			out[rarity] = n
+		end
+	end
+	return out
+end
+
+local function copyXP(s)
+	local total = 0
+	for rarity, n in pairs(s.Copies or {}) do
+		total += n * (Config.DupXP[rarity] or 0)
+	end
+	return total
+end
+
 function SkillProgress.XPNeeded(rank)
 	return Config.RankXP[rank]
 end
@@ -83,6 +102,7 @@ function SkillProgress.Get(season, id)
 		Tier = s.Tier or baseTier(id), Rank = rank, MaxRank = Config.MaxRank, XP = s.XP or 0, XPNeeded = need, Pending = s.Pending,
 		CanRank = owned and need ~= nil and (s.XP or 0) >= need,
 		CanUpgrade = owned and s.Pending ~= nil and TIER_RANK[s.Pending] > TIER_RANK[s.Tier or baseTier(id)],
+		Copies = copiesOf(s), CopyXP = copyXP(s), CanConsume = owned and rank < Config.MaxRank and copyXP(s) > 0,
 		Level = rank + math.max(0, Config.TierBonus[s.Tier or baseTier(id)] - Config.TierBonus[baseTier(id)]),
 	}
 end
@@ -126,7 +146,7 @@ end
 
 -- A copy of a skill at `rarity` was won (the skill is already owned, or is being given now).
 -- "New": first copy (held at the rarity it dropped as; a subclass skill is always Legendary). "Upgrade": a higher tier is now waiting (any lower waiting
--- copy turns into XP). "XP": spare copy, worth XP (and, at max rank, kept as banked XP anyway).
+-- copy turns into XP). "Copy": spare copy, banked until the player consumes it for XP (SkillProgress.Consume).
 function SkillProgress.Receive(season, id, rarity)
 	rarity = tierName(rarity)
 	if season.OwnedAbilities[id] == nil then
@@ -140,15 +160,44 @@ function SkillProgress.Receive(season, id, rarity)
 	if TIER_RANK[rarity] > TIER_RANK[holding] then
 		local displaced = nil
 		if s.Pending and TIER_RANK[s.Pending] > TIER_RANK[s.Tier] then
-			displaced = Config.DupXP[s.Pending]
-			s.XP = (s.XP or 0) + displaced
+			displaced = s.Pending
+			s.Copies = s.Copies or {}
+			s.Copies[displaced] = (s.Copies[displaced] or 0) + 1
 		end
 		s.Pending = rarity
 		return "Upgrade", displaced
 	end
-	local xp = Config.DupXP[rarity]
-	s.XP = (s.XP or 0) + xp
-	return "XP", xp
+	s.Copies = s.Copies or {}
+	s.Copies[rarity] = (s.Copies[rarity] or 0) + 1
+	return "Copy", 1
+end
+
+-- Consume banked copies for XP. rarity = "Common" | "Rare" | "Epic" | "Legendary" | "All"; only copies of the same or a lower
+-- rarity than the skill's tier (or the tier waiting) are used. Reasons: "NotOwned", "MaxRank", "NoCopies"
+function SkillProgress.Consume(profile, id, rarity)
+	local season = profile.Season
+	if type(id) ~= "string" or Abilities[id] == nil or season.OwnedAbilities[id] == nil then
+		return false, "NotOwned"
+	end
+	local s = stateOf(season, id, true)
+	if s.Rank >= Config.MaxRank then
+		return false, "MaxRank"
+	end
+	local ceiling = math.max(TIER_RANK[s.Tier], s.Pending and TIER_RANK[s.Pending] or 0)
+	local gained, used = 0, 0
+	for _, name in ipairs(Config.TierOrder) do
+		local n = s.Copies and s.Copies[name] or 0
+		if n > 0 and (rarity == "All" or rarity == nil or rarity == name) and TIER_RANK[name] <= ceiling then
+			gained += n * Config.DupXP[name]
+			used += n
+			s.Copies[name] = 0
+		end
+	end
+	if used == 0 then
+		return false, "NoCopies"
+	end
+	s.XP = (s.XP or 0) + gained
+	return true, gained
 end
 
 function SkillProgress.RankUp(profile, id)
@@ -187,7 +236,7 @@ function SkillProgress.AnyReady(season)
 	for id in pairs(season.OwnedAbilities) do
 		if Abilities[id] then
 			local g = SkillProgress.Get(season, id)
-			if g.CanRank or g.CanUpgrade then
+			if g.CanRank or g.CanUpgrade or g.CanConsume then
 				return true
 			end
 		end

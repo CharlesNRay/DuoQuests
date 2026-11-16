@@ -12,6 +12,8 @@ local Enemies = require(ReplicatedStorage:WaitForChild("Shared").Config.Enemies)
 local Minions = require(game:GetService("ReplicatedStorage"):WaitForChild("Shared").Config.Minions)
 local PetConfig = require(ReplicatedStorage:WaitForChild("Shared").Config.Pets)
 
+local Creatures = require(script.Parent.Creatures)
+
 local Models = {}
 
 local CLASS_COLORS = {
@@ -63,9 +65,21 @@ function Models.Hero(classId, look)
 	return model
 end
 
+-- how a monster attacks: Look.Attack, else by body shape
+local ATTACK_BY_SHAPE = { Beast = "Pounce", Bat = "Bite", Spider = "Bite", Skeleton = "Lunge", Elemental = "Cast", Golem = "Slam", Frog = "Pounce", Scorpion = "Bite", Crab = "Lunge", Wraith = "Cast", Bird = "Pounce", Serpent = "Bite", Ball = "Pounce", Mushroom = "Spin", Biped = "Lunge" }
+function Models.AttackStyle(defId)
+	local def = Enemies[defId] or Minions[defId]
+	local look = def and def.Look
+	return look and (look.Attack or ATTACK_BY_SHAPE[look.Shape]) or "Lunge"
+end
+
 function Models.Enemy(defId)
 	local def = Enemies[defId] or Minions[defId]
 	local look = (def and def.Look) or { Shape = "Ball", Color = { 200, 80, 80 }, Size = 3 }
+	local built = Creatures.Build(look)
+	if built then
+		return built
+	end
 	local c = Color3.fromRGB(look.Color[1], look.Color[2], look.Color[3])
 	local s = look.Size
 	local model = Instance.new("Model")
@@ -75,14 +89,22 @@ function Models.Enemy(defId)
 		part(model, { Name = "Head", Shape = Enum.PartType.Ball, Size = Vector3.new(s * 0.4, s * 0.4, s * 0.4), Color = c, CFrame = CFrame.new(0, s * 0.95, 0) })
 		part(model, { Name = "Legs", Size = Vector3.new(s * 0.35, s * 0.3, s * 0.25), Color = c:Lerp(Color3.new(0, 0, 0), 0.4), CFrame = CFrame.new(0, s * 0.15, 0) })
 		eyes(model, root, s * 0.4, s * 0.09, -s * 0.18)
+		for _, side in ipairs({ -1, 1 }) do
+			local arm = part(model, { Name = "Arm", Size = Vector3.new(s * 0.12, s * 0.4, s * 0.12), Color = c:Lerp(Color3.new(0, 0, 0), 0.15), CFrame = CFrame.new(side * s * 0.3, s * 0.55, 0) })
+			arm:SetAttribute("Anim", "Arm")
+			arm:SetAttribute("Hinge", Vector3.new(0, s * 0.16, 0))
+			arm:SetAttribute("Side", side)
+		end
 		model.PrimaryPart = root
 	elseif look.Shape == "Mushroom" then
 		local root = part(model, { Name = "Body", Shape = Enum.PartType.Cylinder, Size = Vector3.new(s * 0.5, s * 0.35, s * 0.35), Color = Color3.fromRGB(240, 230, 210), CFrame = CFrame.new(0, s * 0.25, 0) * CFrame.Angles(0, 0, math.rad(90)) })
-		part(model, { Name = "Cap", Shape = Enum.PartType.Ball, Size = Vector3.new(s * 0.9, s * 0.6, s * 0.9), Color = c, CFrame = CFrame.new(0, s * 0.7, 0) })
+		local cap = part(model, { Name = "Cap", Shape = Enum.PartType.Ball, Size = Vector3.new(s * 0.9, s * 0.6, s * 0.9), Color = c, CFrame = CFrame.new(0, s * 0.7, 0) })
+		cap:SetAttribute("Anim", "Squish")
 		eyes(model, root, s * 0.25, s * 0.08, -s * 0.18)
 		model.PrimaryPart = root
 	else -- Ball (slimes)
 		local root = part(model, { Name = "Body", Shape = Enum.PartType.Ball, Size = Vector3.new(s, s * 0.8, s), Color = c, Transparency = 0.1, Material = Enum.Material.Glass, CFrame = CFrame.new(0, s * 0.4, 0) })
+		root:SetAttribute("Anim", "Squish")
 		eyes(model, root, s * 0.1, s * 0.15, -s * 0.42)
 		model.PrimaryPart = root
 	end

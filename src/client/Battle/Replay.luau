@@ -237,6 +237,7 @@ function Replay:Play(info, onDone)
 		else
 			enemyIndex += 1
 			local actor = Actor.new(scene, Models.Enemy(entry.DefId), { Name = entry.Name, Facing = -1, MaxHealth = entry.MaxHealth })
+			actor.AttackStyle = Models.AttackStyle(entry.DefId)
 			actor:Place(ENEMY_X[enemyIndex] + 30)
 			self.Enemies[entry.Id] = actor
 			task.spawn(function()
@@ -301,7 +302,7 @@ function Replay:_event(e)
 			floatText(scene, target:Pos() + Vector3.new(0, 1.5, 0), "-" .. math.floor((e.Amount or 0) + 0.5), Color3.fromRGB(190, 60, 100), 22)
 			return
 		end
-		source:Lunge(target.X)
+		source:Attack(source.AttackStyle, target.X)
 		local c = ELEMENT_COLORS[e.Element or "Physical"] or ELEMENT_COLORS.Physical
 		if e.Tag == "BasicAttack" then
 			safely(SkillEffects.Hit, scene, nil, source:Pos(), target:Pos(), source.ClassId)
@@ -337,6 +338,10 @@ function Replay:_event(e)
 			end
 			self.LastCast = self.LastCast or {}
 			self.LastCast[e.Source] = { Ability = e.Ability, T = e.T or 0 }
+			if def.Enemy and self.Enemies[e.Source] then
+				-- a monster skill has its own motion (the hit that follows still lunges)
+				source:Attack(def.Anim or "Cast", source.X - 1)
+			end
 			if SkillEffects.HasStyle(e.Ability) then
 				local isHero = self.Heroes[e.Source] ~= nil or self.Minions[e.Source] ~= nil
 				safely(SkillEffects.Cast, scene, {
@@ -391,6 +396,7 @@ function Replay:_event(e)
 			self.Spawned = (self.Spawned or 0) + 1
 			local x = ENEMY_X[#ENEMY_X] + 4 + ((self.Spawned - 1) % 4) * 3.5
 			local actor = Actor.new(scene, Models.Enemy(entry.DefId), { Name = entry.Name, Facing = -1, MaxHealth = entry.MaxHealth })
+			actor.AttackStyle = Models.AttackStyle(entry.DefId)
 			actor:Place(x)
 			self.Enemies[entry.Id] = actor
 			flash(scene, actor:Pos(), Color3.fromRGB(150, 230, 150), 4)

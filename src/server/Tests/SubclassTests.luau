@@ -152,7 +152,7 @@ return function(modulesOverride)
 	check("Deeper tiers chain through their parents", #chain == 2 and chain[1].Id == "Berserker" and chain[2].Id == "TestWarlord")
 	check("Their stats and skills stack", #Subclasses.Mods("TestWarlord") == #Config.Defs.Berserker.Mods + 1 and #Subclasses.SkillIds("TestWarlord") == 3)
 	table.insert(Config.Order, "TestWarlord")
-	check("They are offered after the first tier", #Subclasses.Choices("Warrior", "Berserker") == 1)
+	check("They are offered after the first tier", #Subclasses.Choices("Warrior", "Berserker") == 2) -- the real level-90 form plus this test one
 	check("But not before it", #Subclasses.Choices("Warrior") == 2)
 	Config.Defs.TestWarlord = nil
 	table.remove(Config.Order)

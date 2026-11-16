@@ -266,6 +266,25 @@ local function followOwner(companion, ownerProfile)
 	companion.Level = season.Level
 	companion.Frontier = season.HighestStage
 	companion.SkillLevels = nil -- the companion fights at its owner's average level
+	-- it wears gear like its owner's (same slots, rarities, power and upgrades; a class-themed name is chosen by whoever shows it)
+	companion.Gear = TableUtil.DeepCopy((season.Equipment and season.Equipment.Equipped) or {})
+	for _, item in pairs(companion.Gear) do
+		item.Id = "c" .. tostring(item.Id)
+	end
+	-- and keeps a pet of the owner's rarity, at the owner's pet level and rank (a different pet when one fits)
+	local ownerPet, petLevel, petRank = Pets.Active(ownerProfile)
+	companion.PetId, companion.PetLevel, companion.PetRank = nil, nil, nil
+	if ownerPet then
+		local rarity = Pets.Defs[ownerPet].Rarity
+		local pick = ownerPet
+		for id, def in pairs(Pets.Defs) do
+			if id ~= ownerPet and def.Rarity == rarity and def.Wish == true and (pick == ownerPet or id < pick) then
+				pick = id
+			end
+		end
+		companion.PetId, companion.PetLevel, companion.PetRank = pick, petLevel, petRank
+	end
+	companion.CollectionMods = Pets.Collection(ownerProfile).Mods
 	for index = 1, Skills.SLOTS do
 		companion.SlotLevels[index] = level
 	end

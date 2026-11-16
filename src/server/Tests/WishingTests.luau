@@ -147,9 +147,11 @@ return function(modulesOverride)
 	check("Skill wishes never run dry: spare copies keep coming", select(1, Wishing.Wish(drained, "Skill", "Starlit", "Currency", 1, seeded(12))) == true)
 	local anyXP = 0
 	for _, st in pairs(drained.Season.SkillState) do
-		anyXP += st.XP or 0
+		for _, n in pairs(st.Copies or {}) do
+			anyXP += n
+		end
 	end
-	check("Spare copies became skill XP", anyXP > 0)
+	check("Spare skill copies are banked", anyXP > 0)
 
 	print(("WishingTests done: %d passed, %d failed"):format(passed, failed))
 end

@@ -9,7 +9,7 @@
 
 return {
 	-- Player level --------------------------------------------------------
-	MaxLevel = 50,
+	MaxLevel = 120,
 	XPBase = 50, -- XP needed to go from level 1 to 2
 	XPPerLevel = 25, -- each later level needs this much more
 
