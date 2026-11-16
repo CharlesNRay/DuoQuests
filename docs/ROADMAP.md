@@ -241,3 +241,10 @@ Newest first.
 
 ## Cosmetics in the fight scene (built, not yet seen in Studio)
 - A hero's equipped aura now also shows on the drawn fight hero (follows body swaps). Name colour and title are still only on plaza/home characters; the fight scene has health bars, not name tags.
+
+## Skill effects (built; NOT yet seen in Studio)
+- `Config/SkillEffects` gives every ability, pet skill, status and ultimate a look (kind + colours); `client/Battle/SkillEffects` draws them from glowing parts, no assets. A test fails when a new skill has no look.
+- Single-target hits: Slash, Cross, Smash, Orb, Pillar, Beam, Lightning, Shards, Flame, Claws, Burst. Area skills draw once over the side they hit: Nova, Quake, Whirl, Rain, Wave, Starfall. Heals: Rings, Spiral, Bloom, Cross. Shields: Dome, Barrier, Bubble. Buffs: Chevrons, Glyph, Pulse. Resurrection: Rise.
+- Basic attacks differ per class (Warrior slash, Cleric holy burst, Mage arcane orb, monsters a plain burst). Pet skills pop their own symbol over the pet. Each ultimate has its own show (Charge, Dawn, Judgment).
+- Wired into Replay for Damage, Heal, Status, Cast, Ultimate and Revive events; every call is wrapped in pcall so a bad effect can never break a fight.
+- TODO: watch it in Studio and tune sizes/timings; ultimate damage hits still use the old bolt.

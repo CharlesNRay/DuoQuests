@@ -24,6 +24,7 @@ local Abilities = require(Shared.Config.Abilities)
 local Ultimates = require(Shared.Config.Ultimates)
 local Actor = require(script.Parent.Actor)
 local CosmeticsVisuals = require(script.Parent.CosmeticsVisuals)
+local SkillEffects = require(script.Parent.SkillEffects)
 local Models = require(script.Parent.Models)
 
 local Replay = {}
@@ -141,6 +142,7 @@ function Replay:_hero(entry, index)
 	if hero == nil then
 		local owner = entry.UserId and entry.UserId > 0 and Players:GetPlayerByUserId(entry.UserId) or nil
 		hero = Actor.new(self.Scene, Models.Hero(entry.DefId), { Name = owner and owner:GetAttribute("CharName") or entry.Name, Facing = 1, MaxHealth = entry.MaxHealth })
+		hero.ClassId = entry.DefId
 		hero.Pet = Actor.new(self.Scene, Models.Pet(entry.PetId), { Name = "Pet", Facing = 1, MaxHealth = 1 })
 		hero.PetId = entry.PetId
 		hero.Pet.Bar.Enabled = false
@@ -191,6 +193,28 @@ end
 
 local function actorFor(self, id)
 	return self.Heroes[id] or self.Enemies[id]
+end
+
+-- chest positions of the living fighters on a side
+local function positionsOf(actors)
+	local out = {}
+	for _, actor in pairs(actors) do
+		if actor.Alive and not actor.Destroyed then
+			table.insert(out, actor:Pos())
+		end
+	end
+	table.sort(out, function(a, b)
+		return a.X < b.X
+	end)
+	return out
+end
+
+-- Skill effects must never break a replay.
+local function safely(fn, ...)
+	local ok, err = pcall(fn, ...)
+	if not ok then
+		warn("[DuoQuest] skill effect failed: " .. tostring(err))
+	end
 end
 
 function Replay:Play(info, onDone)
@@ -267,7 +291,11 @@ function Replay:_event(e)
 		end
 		source:Lunge(target.X)
 		local c = ELEMENT_COLORS[e.Element or "Physical"] or ELEMENT_COLORS.Physical
-		if e.Tag ~= "BasicAttack" then
+		if e.Tag == "BasicAttack" then
+			safely(SkillEffects.Hit, scene, nil, source:Pos(), target:Pos(), source.ClassId)
+		elseif SkillEffects.HasStyle(e.Tag) then
+			safely(SkillEffects.Hit, scene, e.Tag, source:Pos(), target:Pos())
+		else
 			bolt(scene, source:Pos(), target:Pos(), c)
 		end
 		target:Flinch()
@@ -279,23 +307,40 @@ function Replay:_event(e)
 		if target then
 			target:SetHealth(e.TargetHealth or target.Health)
 			floatText(scene, target:Pos() + Vector3.new(0, 1.5, 0), "+" .. math.floor((e.Amount or 0) + 0.5), Color3.fromRGB(110, 235, 140), 22)
-			flash(scene, target:Pos(), Color3.fromRGB(110, 235, 140), 4)
+			safely(SkillEffects.Heal, scene, e.Tag, target:Pos())
+		end
+	elseif t == "Status" then
+		local target = actorFor(self, e.Target)
+		if target then
+			local cast = self.LastCast and self.LastCast[e.Source]
+			local ability = cast and math.abs((e.T or 0) - cast.T) < 0.06 and cast.Ability or nil
+			safely(SkillEffects.Status, scene, e.Status, target:Pos(), ability)
 		end
 	elseif t == "Cast" then
 		local source = actorFor(self, e.Source)
 		local def = Abilities[e.Ability]
 		if source and def then
 			floatText(scene, source:Pos() + Vector3.new(0, 3, 0), def.DisplayName, Color3.fromRGB(255, 230, 150), 16)
-			flash(scene, source:Pos(), Color3.fromRGB(255, 230, 150), 3)
+			self.LastCast = self.LastCast or {}
+			self.LastCast[e.Source] = { Ability = e.Ability, T = e.T or 0 }
+			if SkillEffects.HasStyle(e.Ability) then
+				local isHero = self.Heroes[e.Source] ~= nil
+				safely(SkillEffects.Cast, scene, {
+					Ability = e.Ability, SourcePos = source:Pos(), SourceIsHero = isHero,
+					AllyPositions = positionsOf(if isHero then self.Heroes else self.Enemies),
+					EnemyPositions = positionsOf(if isHero then self.Enemies else self.Heroes),
+					PetPos = if isHero and source.Pet and tostring(e.Ability):sub(1, 4) == "Pet_" then source.Pet:Pos() else nil,
+				})
+			else
+				flash(scene, source:Pos(), Color3.fromRGB(255, 230, 150), 3)
+			end
 		end
 	elseif t == "Ultimate" then
 		local def = Ultimates.Defs[e.Ability]
 		if self.OnBanner and def then
 			self.OnBanner(def.DisplayName, Color3.fromRGB(190, 110, 255))
 		end
-		for _, hero in pairs(self.Heroes) do
-			flash(scene, hero:Pos(), Color3.fromRGB(190, 110, 255), 7)
-		end
+		safely(SkillEffects.Ultimate, scene, e.Ability, { AllyPositions = positionsOf(self.Heroes), EnemyPositions = positionsOf(self.Enemies) })
 	elseif t == "Death" then
 		local target = actorFor(self, e.Target)
 		if target then
@@ -333,7 +378,7 @@ function Replay:_event(e)
 		if target then
 			target:Rise()
 			target:SetHealth(e.TargetHealth or 1)
-			flash(scene, target:Pos(), Color3.fromRGB(255, 240, 150), 6)
+			safely(SkillEffects.Revive, scene, target:Pos())
 		end
 	end
 end
