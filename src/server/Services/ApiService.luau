@@ -22,7 +22,7 @@
 	  ClaimSeasonRewards(seasonId)      collect a finished season's reward (once)
 	  CreateCharacter(name, classId, look, useAvatar) / UpdateCharacter(look, useAvatar) / RenameCharacter(name)   the character creator (once; look free; rename costs Sunstones)
 	  RedeemCode(text)   -> ok, { Success, Reason?, Lines? }   (wrong tries are limited: 5 a minute, then a short lock)
-	  BuyCosmetic(id) / EquipCosmetic(slot, id|nil)   auras, kill effects, name colours, titles (Sunstones)
+	  BuyCosmetic(id) / BuyCosmeticBundle(bundleId) / EquipCosmetic(slot, id|nil)   auras, kill effects, name colours, titles (Sunstones)
 	  Inspect(userId)                   public card of a party member on this server
 	  ChooseSubclass(subclassId)        pick a subclass path (once per season)
 	  EquipGear(itemId, wornSlot?) / EquipBestGear() (highest Item Power of every type) / UnequipGear(slot) / SellGear(itemId)   equipment (8 worn slots)
@@ -222,7 +222,7 @@ function cosmeticsOf(profile)
 	for _, slot in ipairs(CosmeticConfig.Slots) do
 		lists[slot] = Cosmetics.List(profile, slot)
 	end
-	return { Equipped = Cosmetics.Equipped(profile), Lists = lists, Slots = CosmeticConfig.Slots, Labels = CosmeticConfig.SlotLabels }
+	return { Equipped = Cosmetics.Equipped(profile), Lists = lists, Slots = CosmeticConfig.Slots, Labels = CosmeticConfig.SlotLabels, Bundles = Cosmetics.Bundles(profile) }
 end
 
 -- Everyone's looks are shown from attributes on the player (the client draws the aura, name colour and title from them).
@@ -845,6 +845,13 @@ function handlers.BuyCosmetic(player, profile, id)
 		ApiService.ApplyLook(player, profile)
 	end
 	return ok, data
+end
+
+function handlers.BuyCosmeticBundle(player, profile, bundleId)
+	if type(bundleId) ~= "string" then
+		return false, "BadArgs"
+	end
+	return Cosmetics.BuyBundle(profile, bundleId)
 end
 
 function handlers.EquipCosmetic(player, profile, slot, id)

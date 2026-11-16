@@ -248,3 +248,7 @@ Newest first.
 - Basic attacks differ per class (Warrior slash, Cleric holy burst, Mage arcane orb, monsters a plain burst). Pet skills pop their own symbol over the pet. Each ultimate has its own show (Charge, Dawn, Judgment).
 - Wired into Replay for Damage, Heal, Status, Cast, Ultimate and Revive events; every call is wrapped in pcall so a bad effect can never break a fight.
 - TODO: watch it in Studio and tune sizes/timings; ultimate damage hits still use the old bolt.
+
+## Cosmetics expansion (built)
+- 14 new shop items (auras Ocean/Blossom/Storm/Ember/Gilded, kill effects Stars/Bubbles/Embers/Snowfall/Glitter, name colours Ocean/Sunset/Ice/Ember) and 4 titles; 5 themed bundles (Inferno, Frostbound, Blossom, Stormcaller, Royal Gold) in a Sets tab. A bundle costs less than its three pieces and gets cheaper in proportion to what you already own. `Cosmetics.BuyBundle`, API `BuyCosmeticBundle`, 6 new tests.
+- Not built: try-on preview. Prices are still first guesses.

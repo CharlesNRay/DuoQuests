@@ -32,6 +32,11 @@ local Items = {
 	item("Aura_Void", "Aura", "Void aura", "Shop", 250, { 140, 70, 220 }, { Color2 = { 30, 10, 60 } }),
 	item("Aura_Starlight", "Aura", "Starlight aura", "Shop", 250, { 255, 240, 160 }, { Color2 = { 255, 255, 255 } }),
 	item("Aura_Rainbow", "Aura", "Rainbow aura", "Shop", 400, { 255, 255, 255 }, { Rainbow = true }),
+	item("Aura_Ocean", "Aura", "Ocean aura", "Shop", 200, { 60, 170, 255 }, { Color2 = { 120, 230, 255 } }),
+	item("Aura_Blossom", "Aura", "Blossom aura", "Shop", 200, { 255, 150, 200 }, { Color2 = { 255, 220, 230 } }),
+	item("Aura_Storm", "Aura", "Storm aura", "Shop", 250, { 150, 160, 255 }, { Color2 = { 255, 255, 150 } }),
+	item("Aura_Ember", "Aura", "Ember aura", "Shop", 250, { 255, 100, 40 }, { Color2 = { 90, 30, 20 } }),
+	item("Aura_Gilded", "Aura", "Gilded aura", "Shop", 400, { 255, 215, 90 }, { Color2 = { 255, 250, 200 } }),
 	-- Auras (season prizes)
 	item("Aura_Champion", "Aura", "Champion aura", "Season", 0, { 255, 205, 70 }, { Color2 = { 255, 245, 190 } }),
 	item("Aura_Silver", "Aura", "Silver aura", "Season", 0, { 200, 210, 225 }, { Color2 = { 255, 255, 255 } }),
@@ -44,6 +49,11 @@ local Items = {
 	item("Kill_Lightning", "Kill", "Lightning", "Shop", 200, { 255, 245, 120 }, { Color2 = { 150, 200, 255 } }),
 	item("Kill_Petals", "Kill", "Petals", "Shop", 150, { 255, 170, 200 }, { Color2 = { 255, 230, 235 } }),
 	item("Kill_Soulfire", "Kill", "Soulfire", "Shop", 300, { 110, 255, 200 }, { Color2 = { 40, 160, 255 } }),
+	item("Kill_Stars", "Kill", "Stars", "Shop", 150, { 255, 240, 150 }, { Color2 = { 255, 255, 255 } }),
+	item("Kill_Bubbles", "Kill", "Bubbles", "Shop", 150, { 120, 200, 255 }, { Color2 = { 220, 245, 255 } }),
+	item("Kill_Embers", "Kill", "Embers", "Shop", 200, { 255, 110, 50 }, { Color2 = { 255, 200, 80 } }),
+	item("Kill_Snow", "Kill", "Snowfall", "Shop", 200, { 220, 240, 255 }, { Color2 = { 150, 210, 255 } }),
+	item("Kill_Glitter", "Kill", "Glitter", "Shop", 250, { 255, 255, 255 }, { Rainbow = true }),
 	-- Kill effects (season prizes)
 	item("Kill_Sparks", "Kill", "Sparks kill effect", "Season", 0, { 255, 220, 120 }, { Color2 = { 255, 150, 60 } }),
 
@@ -55,6 +65,10 @@ local Items = {
 	item("Name_Violet", "Name", "Violet name", "Shop", 80, { 190, 140, 255 }),
 	item("Name_Crimson", "Name", "Crimson name", "Shop", 80, { 235, 70, 70 }),
 	item("Name_Rainbow", "Name", "Rainbow name", "Shop", 250, { 255, 255, 255 }, { Rainbow = true }),
+	item("Name_Ocean", "Name", "Ocean name", "Shop", 80, { 70, 180, 255 }),
+	item("Name_Sunset", "Name", "Sunset name", "Shop", 80, { 255, 160, 80 }),
+	item("Name_Ice", "Name", "Ice name", "Shop", 80, { 190, 238, 255 }),
+	item("Name_Ember", "Name", "Ember name", "Shop", 80, { 255, 110, 60 }),
 	-- Name colours (season prizes)
 	item("Name_Laurel", "Name", "Laurel name colour", "Season", 0, { 160, 220, 110 }),
 }
@@ -79,6 +93,20 @@ local ShopTitles = {
 	{ Id = "Pet Whisperer", Cost = 100 },
 	{ Id = "Wishbringer", Cost = 150 },
 	{ Id = "the Unbroken", Cost = 150 },
+	{ Id = "the Swift", Cost = 100 },
+	{ Id = "Dragon Tamer", Cost = 150 },
+	{ Id = "Moonlit", Cost = 100 },
+	{ Id = "Legend", Cost = 250 },
+}
+
+-- Themed sets: three looks at a lower price than buying them one by one. Cost is for the whole set; owning some of the items
+-- lowers it in proportion (see Cosmetics.BundlePrice).
+local Bundles = {
+	{ Id = "Inferno", Name = "Inferno set", Items = { "Aura_Flame", "Kill_Embers", "Name_Crimson" }, Cost = 400 },
+	{ Id = "Frostbound", Name = "Frostbound set", Items = { "Aura_Frost", "Kill_Snow", "Name_Ice" }, Cost = 400 },
+	{ Id = "Blossom", Name = "Blossom set", Items = { "Aura_Blossom", "Kill_Petals", "Name_Rose" }, Cost = 350 },
+	{ Id = "Stormcaller", Name = "Stormcaller set", Items = { "Aura_Storm", "Kill_Lightning", "Name_Azure" }, Cost = 430 },
+	{ Id = "RoyalGold", Name = "Royal Gold set", Items = { "Aura_Gilded", "Kill_Stars", "Name_Gold" }, Cost = 520 },
 }
 
 return {
@@ -86,4 +114,5 @@ return {
 	SlotLabels = { Aura = "Auras", Kill = "Kill effects", Name = "Name colours", Title = "Titles" },
 	Items = Items,
 	ShopTitles = ShopTitles,
+	Bundles = Bundles,
 }

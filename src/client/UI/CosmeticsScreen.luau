@@ -47,8 +47,10 @@ function CosmeticsScreen.Cosmetics(container, state, call, extra)
 	local function redraw()
 		CosmeticsScreen.Cosmetics(container, extra.State or state, call, extra)
 	end
-	for index, name in ipairs(data.Slots) do
-		Kit.button({ Size = UDim2.fromOffset(112, 28), Position = UDim2.fromOffset((index - 1) * 118, 0), Text = data.Labels[name], TextSize = 12, BackgroundColor3 = if name == slot then ORANGE else C.Panel, TextColor3 = if name == slot then Color3.fromRGB(40, 24, 6) else C.Text, Parent = container }, function()
+	local tabs = table.clone(data.Slots)
+	table.insert(tabs, "Bundles")
+	for index, name in ipairs(tabs) do
+		Kit.button({ Size = UDim2.fromOffset(100, 28), Position = UDim2.fromOffset((index - 1) * 104, 0), Text = data.Labels[name] or "Sets", TextSize = 12, BackgroundColor3 = if name == slot then ORANGE else C.Panel, TextColor3 = if name == slot then Color3.fromRGB(40, 24, 6) else C.Text, Parent = container }, function()
 			extra.CosmeticSlot = name
 			extra.CosmeticMsg = nil
 			redraw()
@@ -60,6 +62,23 @@ function CosmeticsScreen.Cosmetics(container, state, call, extra)
 	Kit.new("UIListLayout", { Padding = UDim.new(0, 5), Parent = scroll })
 	Kit.label({ Size = UDim2.new(1, -8, 0, 18), Text = extra.CosmeticMsg or "Looks only - they never change your power. Buy with Sunstones or win them as season prizes.", TextSize = 12, TextColor3 = if extra.CosmeticMsg then GOOD else C.Dim, Parent = scroll })
 
+	if slot == "Bundles" then
+		for _, row in ipairs(data.Bundles or {}) do
+			local frame = Kit.frame({ Size = UDim2.new(1, -8, 0, 58), BackgroundColor3 = C.PanelLight, Parent = scroll })
+			Kit.label({ Size = UDim2.new(1, -170, 0, 22), Position = UDim2.fromOffset(10, 5), Text = row.Name, TextSize = 14, Font = Enum.Font.GothamBold, TextColor3 = if row.Owned then C.Dim else C.Text, Parent = frame })
+			Kit.label({ Size = UDim2.new(1, -170, 0, 28), Position = UDim2.fromOffset(10, 27), Text = table.concat(row.Items, "  +  ") .. (if row.Owned then "" else ("   (separately 🔶 " .. commas(row.Separate) .. ")")), TextSize = 11, TextColor3 = C.Dim, TextWrapped = true, Parent = frame })
+			local btn = Kit.button({ Size = UDim2.fromOffset(130, 38), Position = UDim2.new(1, -140, 0.5, -19), Text = if row.Owned then "Owned" else ("🔶 " .. commas(row.Price)), BackgroundColor3 = if row.Owned then C.Panel elseif row.Affordable then ORANGE else ORANGE_DARK, TextColor3 = if row.Owned then C.Dim else Color3.fromRGB(30, 24, 8), Parent = frame }, function()
+				if call("BuyCosmeticBundle", row.Id) then
+					extra.CosmeticMsg = "Bought the " .. row.Name .. "! Equip the pieces from their tabs."
+				else
+					extra.CosmeticMsg = nil
+				end
+				redraw()
+			end)
+			btn.Active = (not row.Owned) and row.Affordable
+		end
+		return
+	end
 	for _, row in ipairs(data.Lists[slot] or {}) do
 		local classDef = row.Class and Classes[row.Class]
 		if not (classDef and classDef.Locked) then -- a class that is not playable yet shows its prizes when it launches

@@ -100,6 +100,44 @@ return function(modulesOverride)
 	p.Permanent.Cosmetics.Aura_Champion = nil
 	check("A worn item that is no longer owned is ignored", Cosmetics.Equipped(p).Aura == nil)
 
+	-- bundles
+	local bp = ProfileTemplate.New()
+	local bundle = Config.Bundles[1]
+	local singles = 0
+	for _, id in ipairs(bundle.Items) do
+		singles += Cosmetics.Def(id).Cost
+	end
+	check("Every bundle is made of shop items and is cheaper than buying them one by one", (function()
+		for _, b in ipairs(Config.Bundles) do
+			local sum = 0
+			for _, id in ipairs(b.Items) do
+				local d = Cosmetics.Def(id)
+				if d == nil or d.Source ~= "Shop" then
+					return false
+				end
+				sum += d.Cost
+			end
+			if b.Cost >= sum then
+				return false
+			end
+		end
+		return true
+	end)())
+	check("A bundle needs Sunstones", select(2, Cosmetics.BuyBundle(bp, bundle.Id)) == "NotEnough")
+	Premium.AddSunstones(bp, 2000)
+	local okB, infoB = Cosmetics.BuyBundle(bp, bundle.Id)
+	check("Buying a bundle unlocks every piece for the set price", okB and infoB.Cost == bundle.Cost and Premium.Sunstones(bp) == 2000 - bundle.Cost and Cosmetics.Owned(bp, bundle.Items[1]) and Cosmetics.Owned(bp, bundle.Items[3]))
+	check("A bundle cannot be bought twice", select(2, Cosmetics.BuyBundle(bp, bundle.Id)) == "AlreadyOwned" and select(2, Cosmetics.BuyBundle(bp, "Nope")) == "BadItem")
+	local part = ProfileTemplate.New()
+	Premium.AddSunstones(part, 2000)
+	Cosmetics.Buy(part, bundle.Items[1])
+	local price = Cosmetics.BundlePrice(part, bundle)
+	check("Owning a piece lowers the set price in proportion", price < bundle.Cost and price > 0 and price == math.floor(bundle.Cost * (singles - Cosmetics.Def(bundle.Items[1]).Cost) / singles + 0.5))
+	check("The bundle rows list names, price and what buying separately costs", (function()
+		local rows = Cosmetics.Bundles(ProfileTemplate.New())
+		return #rows == #Config.Bundles and rows[1].Separate == singles and rows[1].Price == bundle.Cost and #rows[1].Items == 3
+	end)())
+
 	print(("CosmeticsTests done: %d passed, %d failed"):format(passed, failed))
 	return failed == 0
 end

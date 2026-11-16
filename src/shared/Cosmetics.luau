@@ -11,6 +11,7 @@
 	  Cosmetics.Equipped(profile)         -> { Aura?, Kill?, Name?, Title? }  (only things still owned)
 	  Cosmetics.Equip(profile, slot, id)  -> true | false, "BadSlot" | "NotOwned"      (id nil takes the slot off)
 	  Cosmetics.Buy(profile, id)          -> true, { Name, Cost } | false, "BadItem" | "NotForSale" | "AlreadyOwned" | "NotEnough"
+	  Cosmetics.BuyBundle(profile, bundleId) / Cosmetics.BundlePrice / Cosmetics.Bundles(profile)   themed sets of three, cheaper than singles
 	  Cosmetics.List(profile, slot)       -> rows { Id, Name, Source, Cost, Owned, Equipped, Affordable, Class?, Color, Color2?, Rainbow? }
 	  Cosmetics.Look(profile)             -> what other players see: { Aura?, Kill?, Name?, Title? } (ids; Title is the text)
 	  Cosmetics.GrantTitle(profile, text) / Cosmetics.Grant(profile, id)      used by the season rewards
@@ -118,6 +119,59 @@ function Cosmetics.Buy(profile, id)
 		profile.Permanent.Titles[id] = true
 	end
 	return true, { Name = if def then def.Name else id, Cost = cost }
+end
+
+-- What a bundle costs this player: the set price, lowered in proportion to the items they already own.
+-- -> price, full price of the unowned items bought one by one
+function Cosmetics.BundlePrice(profile, bundle)
+	local total, unowned = 0, 0
+	for _, id in ipairs(bundle.Items) do
+		local def = defById[id]
+		total += def.Cost
+		if not profile.Permanent.Cosmetics[id] then
+			unowned += def.Cost
+		end
+	end
+	return math.floor(bundle.Cost * unowned / total + 0.5), unowned
+end
+
+function Cosmetics.BuyBundle(profile, bundleId)
+	local bundle
+	for _, b in ipairs(Config.Bundles) do
+		if b.Id == bundleId then
+			bundle = b
+		end
+	end
+	if bundle == nil then
+		return false, "BadItem"
+	end
+	local price, unowned = Cosmetics.BundlePrice(profile, bundle)
+	if unowned == 0 then
+		return false, "AlreadyOwned"
+	end
+	local ok, reason = Premium.SpendSunstones(profile, price)
+	if not ok then
+		return false, reason
+	end
+	for _, id in ipairs(bundle.Items) do
+		profile.Permanent.Cosmetics[id] = true
+	end
+	return true, { Name = bundle.Name, Cost = price }
+end
+
+-- Rows for the Bundles tab.
+function Cosmetics.Bundles(profile)
+	local rows = {}
+	local balance = Premium.Sunstones(profile)
+	for _, bundle in ipairs(Config.Bundles) do
+		local price, unowned = Cosmetics.BundlePrice(profile, bundle)
+		local names = {}
+		for _, id in ipairs(bundle.Items) do
+			table.insert(names, defById[id].Name)
+		end
+		table.insert(rows, { Id = bundle.Id, Name = bundle.Name, Items = names, Price = price, Separate = unowned, Owned = unowned == 0, Affordable = balance >= price })
+	end
+	return rows
 end
 
 function Cosmetics.List(profile, slot)
