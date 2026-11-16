@@ -428,12 +428,13 @@ local function buildLog(fight, everyHit)
 		elseif kind == "Damage" then
 			local isBasic = e.Tag == "BasicAttack"
 			local enemySource = teams[e.Source] ~= "Party"
-			if everyHit or (enemySource and not isBasic) then
+			local fromPet = type(e.Tag) == "string" and e.Tag:sub(1, 4) == "Pet_"
+			if everyHit or fromPet or (enemySource and not isBasic) then
 				local absorbed = (e.Absorbed or 0) > 0 and ("  (" .. math.floor(e.Absorbed + 0.5) .. " absorbed)") or ""
 				add(t, ("%s hits %s for %d%s%s%s"):format(whoFor(e.Source, e.Tag), who(e.Target), math.floor((e.Amount or 0) + 0.5), e.Crit and " CRIT" or "", isBasic and "" or (" [" .. ability(e.Tag) .. "]"), absorbed))
 			end
-		elseif kind == "Heal" and everyHit and (e.Amount or 0) > 0 then
-			add(t, ("%s heals %s for %d%s"):format(who(e.Source), who(e.Target), math.floor((e.Amount or 0) + 0.5), e.Tag and e.Tag ~= "BasicAttack" and (" [" .. ability(e.Tag) .. "]") or ""))
+		elseif kind == "Heal" and (everyHit or (type(e.Tag) == "string" and e.Tag:sub(1, 4) == "Pet_")) and (e.Amount or 0) > 0 then
+			add(t, ("%s heals %s for %d%s"):format(whoFor(e.Source, e.Tag), who(e.Target), math.floor((e.Amount or 0) + 0.5), e.Tag and e.Tag ~= "BasicAttack" and (" [" .. ability(e.Tag) .. "]") or ""))
 		elseif kind == "End" then
 			add(t, Kit.tint(if e.Winner == "Party" then "Victory" else "Defeat", if e.Winner == "Party" then C.Good else C.Bad))
 		end
