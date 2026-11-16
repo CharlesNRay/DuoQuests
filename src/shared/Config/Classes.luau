@@ -24,7 +24,7 @@ return {
 	Warrior = {
 		Id = "Warrior",
 		DisplayName = "Warrior",
-		Blurb = "A frontline tank. Draws enemy attacks with Taunt, shields the party and wins by outlasting. Paths: Berserker (damage) or Guardian (protector).",
+		Blurb = "A frontline fighter. Draws enemy attacks with Taunt, shields the party and wins by outlasting. Paths: Berserker (damage) or Guardian (protector).",
 		Weapon = { Name = "Steel Sword", Text = "A heavy blade for holding the line." }, -- the tool a player wields (see Shared/ClassWeapons)
 		Role = "Tank",
 		DamageType = "Physical",
@@ -63,7 +63,7 @@ return {
 	Cleric = {
 		Id = "Cleric",
 		DisplayName = "Cleric",
-		Blurb = "The party's healer. Heals, shields and revives allies, with holy damage on the side. Paths: Priest (healer) or Templar (holy warrior).",
+		Blurb = "A holy caster. Heals, shields and revives allies, with holy damage on the side. Paths: Priest (healer) or Templar (holy warrior).",
 		Weapon = { Name = "Sun Mace", Text = "A blessed mace that glows with healing light." }, -- the tool a player wields (see Shared/ClassWeapons)
 		Role = "Healer",
 		DamageType = "Magical",

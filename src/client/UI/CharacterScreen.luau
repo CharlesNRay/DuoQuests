@@ -135,7 +135,7 @@ function CharacterScreen.Character(container, state, call, extra)
 		local b = Kit.button({
 			Name = "Class_" .. class.Id, Size = UDim2.fromOffset(150, 38), Position = UDim2.fromOffset(0, (index - 1) * 42),
 			BackgroundColor3 = if isPick then color else C.PanelLight, TextSize = 14,
-			TextColor3 = if isPick then Color3.fromRGB(20, 20, 30) else C.Text, Text = ("%s  ·  %s"):format(class.Name, class.Role or ""), Parent = list,
+			TextColor3 = if isPick then Color3.fromRGB(20, 20, 30) else C.Text, Text = class.Name, Parent = list,
 		}, function()
 			if creating then
 				extra.PickClass = class.Id

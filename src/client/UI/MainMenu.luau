@@ -117,12 +117,11 @@ function MainMenu:Render(state)
 			local playing = entry.Active and inGame
 			Kit.new("UIStroke", { Color = color, Thickness = 2, Parent = card })
 			Kit.frame({ Size = UDim2.new(1, 0, 0, 6), BackgroundColor3 = color, NoCorner = true, ZIndex = 63, Parent = card })
-			Kit.label({ Size = UDim2.new(1, -28, 0, 30), Position = UDim2.fromOffset(14, 16), Text = class.Name, TextSize = 26, Font = Enum.Font.GothamBlack, TextColor3 = color, TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 63, Parent = card })
-			Kit.label({ Size = UDim2.new(1, -28, 0, 16), Position = UDim2.fromOffset(14, 48), Text = (class.Role or ""):upper(), TextSize = 11, Font = Enum.Font.GothamBold, TextColor3 = C.Dim, TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 63, Parent = card })
+			Kit.label({ Size = UDim2.new(1, -28, 0, 30), Position = UDim2.fromOffset(14, 22), Text = class.Name, TextSize = 28, Font = Enum.Font.GothamBlack, TextColor3 = color, TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 63, Parent = card })
 			if playing then
 				Kit.label({ Size = UDim2.fromOffset(80, 16), Position = UDim2.new(1, -94, 0, 22), Text = "PLAYING", TextSize = 11, Font = Enum.Font.GothamBlack, TextColor3 = GOOD, TextXAlignment = Enum.TextXAlignment.Right, ZIndex = 63, Parent = card })
 			end
-			divider(card, 76, 63)
+			divider(card, 66, 63)
 			local path
 			for _, p in ipairs(class.Paths or {}) do
 				if p.Id == entry.SubclassId then
