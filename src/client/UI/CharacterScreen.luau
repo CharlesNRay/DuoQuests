@@ -117,8 +117,8 @@ function CharacterScreen.Character(container, state, call, extra)
 	preview(area, draft, char)
 
 	local avatarButton = Kit.button({
-		Name = "AvatarToggle", Size = UDim2.fromOffset(300, 30), Position = UDim2.fromOffset(8, 216), TextSize = 12,
-		Text = if draft.UseAvatar then "[x] Fight scenes show my Roblox avatar" else "[ ] Fight scenes show my Roblox avatar (off: this look)",
+		Name = "AvatarToggle", Size = UDim2.fromOffset(240, 30), Position = UDim2.fromOffset(8, 216), TextSize = 12,
+		Text = if draft.UseAvatar then "[x] Roblox avatar in fights" else "[ ] Roblox avatar in fights (off)",
 		BackgroundColor3 = C.PanelLight, Parent = area,
 	}, function()
 		draft.UseAvatar = not draft.UseAvatar

@@ -107,35 +107,46 @@ local function bolt(scene, from, to, color)
 end
 
 -- Heroes persist between fights; (re)build them for a roster entry.
+-- The hero's body: the character creator's blocky look, or the player's Roblox avatar. Read from attributes the server
+-- sets on the player, and re-applied when they change (heroes persist between fights).
+local function applyBody(hero, entry)
+	local owner = entry.UserId and entry.UserId > 0 and Players:GetPlayerByUserId(entry.UserId) or nil
+	local custom = owner ~= nil and owner:GetAttribute("CharSkin") ~= nil and owner:GetAttribute("CharAvatar") ~= true
+	local key = if custom then table.concat({ tostring(owner:GetAttribute("CharSkin")), tostring(owner:GetAttribute("CharHair")), tostring(owner:GetAttribute("CharOutfit")) }, "|") else "avatar"
+	if hero.BodyKey == key then
+		return
+	end
+	hero.BodyKey = key
+	if custom then
+		hero:SetModel(Models.Hero(entry.DefId, { Skin = owner:GetAttribute("CharSkin"), Hair = owner:GetAttribute("CharHair"), Outfit = owner:GetAttribute("CharOutfit") }))
+	elseif entry.UserId and entry.UserId > 0 then -- ghosts like the starter companion have no avatar
+		task.spawn(function()
+			local ok, rig = pcall(function()
+				return Players:CreateHumanoidModelFromUserId(entry.UserId)
+			end)
+			if ok and rig and not hero.Destroyed and hero.BodyKey == key then
+				for _, d in ipairs(rig:GetDescendants()) do
+					if d:IsA("Script") or d:IsA("LocalScript") then
+						d:Destroy()
+					end
+				end
+				hero:SetModel(rig)
+			end
+		end)
+	end
+end
+
 function Replay:_hero(entry, index)
 	local hero = self.Heroes[entry.Id]
 	if hero == nil then
-		-- the character creator's look and name, set on the player by the server (ghost companions have none)
 		local owner = entry.UserId and entry.UserId > 0 and Players:GetPlayerByUserId(entry.UserId) or nil
-		local custom = owner and owner:GetAttribute("CharSkin") ~= nil and owner:GetAttribute("CharAvatar") ~= true
-		local look = custom and { Skin = owner:GetAttribute("CharSkin"), Hair = owner:GetAttribute("CharHair"), Outfit = owner:GetAttribute("CharOutfit") } or nil
-		hero = Actor.new(self.Scene, Models.Hero(entry.DefId, look), { Name = owner and owner:GetAttribute("CharName") or entry.Name, Facing = 1, MaxHealth = entry.MaxHealth })
+		hero = Actor.new(self.Scene, Models.Hero(entry.DefId), { Name = owner and owner:GetAttribute("CharName") or entry.Name, Facing = 1, MaxHealth = entry.MaxHealth })
 		hero.Pet = Actor.new(self.Scene, Models.Pet(entry.PetId), { Name = "Pet", Facing = 1, MaxHealth = 1 })
 		hero.PetId = entry.PetId
 		hero.Pet.Bar.Enabled = false
 		self.Heroes[entry.Id] = hero
-		-- the real avatar, when available
-		if entry.UserId and entry.UserId > 0 and not custom then -- ghosts like the starter companion have no avatar
-			task.spawn(function()
-				local ok, rig = pcall(function()
-					return Players:CreateHumanoidModelFromUserId(entry.UserId)
-				end)
-				if ok and rig and not hero.Destroyed then
-					for _, d in ipairs(rig:GetDescendants()) do
-						if d:IsA("Script") or d:IsA("LocalScript") then
-							d:Destroy()
-						end
-					end
-					hero:SetModel(rig)
-				end
-			end)
-		end
 	end
+	applyBody(hero, entry)
 	if hero.Look ~= entry.Look then
 		hero:SetLook(entry.Look)
 	end

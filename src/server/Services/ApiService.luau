@@ -150,6 +150,7 @@ local function heroSheetOf(profile)
 end
 
 local cosmeticsOf -- defined below
+local characterOf -- defined below
 
 local function buildState(player)
 	local profile = DataService.GetProfile(player)
@@ -226,7 +227,7 @@ end
 
 -- Everyone's looks are shown from attributes on the player (the client draws the aura, name colour and title from them).
 -- Character creator state for the client: what is saved plus every option (the lists are in Config/Character).
-local function characterOf(profile)
+function characterOf(profile)
 	local c = Character.Get(profile)
 	local classes = {}
 	for _, classId in ipairs({ "Warrior", "Cleric", "Mage" }) do
