@@ -427,13 +427,13 @@ Hub.Build({
 	Blacksmith = function() shopOpen("Blacksmith", "Blacksmith - upgrade gear") end,
 	Tree = function() open("Wish", "Wishing Tree", true) end,
 })
-hud:AddButton("Plaza", "mini", "⛲", "Plaza (leave the battle view)", function()
+hud:AddButton("Plaza", "mini", "⛲", "Plaza", function()
 	if BattleCamera.IsBattleView() then
 		stopWatching()
 	end
 	goPlaza()
 end)
-hud:AddButton("Home", "mini", "🏠", "Home: your arena and your battle", function()
+hud:AddButton("Home", "mini", "🏠", "Home", function()
 	goHome()
 	if extra.WatchMine then
 		extra.WatchMine()

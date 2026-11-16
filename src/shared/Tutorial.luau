@@ -19,12 +19,23 @@ Tutorial.BossStage = 10
 Tutorial.Reward = { Wishstones = 6, SkillPicks = 1 }
 
 Tutorial.Steps = {
-	{ Id = "Welcome", Title = "Welcome to Duo Quest", Text = "You and your partner fight on your own. Your party sits in the top left. Everything you do from here makes the pair stronger.", Target = "Party", Kind = "next" },
-	{ Id = "Fight", Title = "The battle runs itself", Text = "Fights play out automatically and every win moves you on a stage. Watch your stage in the top right climb.", Target = "Stage", Kind = "frontier", Goal = 5 },
-	{ Id = "Skills", Title = "Choose your skills", Text = "Open Skills. The four equipped skills fire in order, left to right. Upgrade them whenever a skill is ready.", Target = "Skills", Kind = "open", Goal = "Skills" },
-	{ Id = "Hero", Title = "Gear and stats", Text = "Open Hero to see your stats and equipment. Better gear from the Blacksmith and drops makes every fight faster.", Target = "Hero", Kind = "open", Goal = "Hero" },
-	{ Id = "Pets", Title = "Your pet fights too", Text = "Open Pets. The pet you equip strikes on its own and adds bonus stats. You can wish for more at the Wishing Tree.", Target = "Pets", Kind = "open", Goal = "Pets" },
-	{ Id = "Boss", Title = "Beat the Stage 10 boss", Text = "The first boss waits at stage 10. Keep fighting, level up and upgrade your skills until it falls.", Target = "Stage", Kind = "frontier", Goal = 11 },
+	{ Id = "Welcome", Title = "Welcome to Duo Quest", Text = "Duo Quest is a two-player idle adventure. You and a partner fight on your own, even while you are away. This short guide covers everything you need to beat the first boss.", Target = "Party", Kind = "next" },
+	{ Id = "Party", Title = "Your party", Text = "The two cards at the top left are you and your partner. Each shows a name, level, class and item power (IP), the total strength of that hero. Tap a card to inspect it.", Target = "Party", Kind = "next" },
+	{ Id = "Fight", Title = "Fights run themselves", Text = "Every win moves you up a stage and drops gold, experience and gear. Stay put and watch the stage counter in the top right climb to stage 3.", Target = "Stage", Kind = "frontier", Goal = 3 },
+	{ Id = "Watch", Title = "Watching a fight", Text = "Home takes you to your arena to watch your battle up close. Plaza takes you back to the town square. Your progress is the same in both places.", Target = "Home", Kind = "next" },
+	{ Id = "SkillsOpen", Title = "Skills", Text = "Open Skills. This is where most of your power comes from.", Target = "Skills", Kind = "open", Goal = "Skills" },
+	{ Id = "SkillsInfo", Title = "Using skills", Text = "Four equipped skills fire in order, left to right, then repeat. Tap a skill to swap it or upgrade it with Skill Picks. New skills unlock as you level.", Target = "Skills", Kind = "next" },
+	{ Id = "HeroOpen", Title = "Hero", Text = "Open Hero to see your stats and what you are wearing.", Target = "Hero", Kind = "open", Goal = "Hero" },
+	{ Id = "HeroInfo", Title = "Stats and gear", Text = "Health, damage and defense decide how long you survive. Every item you wear raises your IP. Gear drops from enemies, and the Blacksmith upgrades it.", Target = "Hero", Kind = "next" },
+	{ Id = "BagOpen", Title = "Bag", Text = "Open Bag to see every item you are carrying.", Target = "Bag", Kind = "open", Goal = "Bag" },
+	{ Id = "BagInfo", Title = "Managing items", Text = "Wear anything with a higher IP than your current piece. Sell the extras to the Merchant in the plaza for gold, then spend that gold on upgrades.", Target = "Bag", Kind = "next" },
+	{ Id = "PetsOpen", Title = "Pets", Text = "Open Pets.", Target = "Pets", Kind = "open", Goal = "Pets" },
+	{ Id = "PetsInfo", Title = "Your pet fights too", Text = "An equipped pet attacks on its own and adds bonus stats. Duplicates become shards that raise its rank. Wish for new pets at the Wishing Tree with Wishstones.", Target = "Pets", Kind = "next" },
+	{ Id = "QuestsOpen", Title = "Quests", Text = "Open Quests for daily goals and the season pass.", Target = "Quests", Kind = "open", Goal = "Quests" },
+	{ Id = "QuestsInfo", Title = "Rewards worth taking", Text = "Finished quests pay Wishstones, gold and Sunstones. Claim your daily login reward too. It adds up quickly.", Target = "Quests", Kind = "next" },
+	{ Id = "Level", Title = "Keep climbing", Text = "Fight on to stage 8. You should level up several times on the way. Check Skills and Gear after each level, since new skills and upgrades unlock.", Target = "Stage", Kind = "frontier", Goal = 8 },
+	{ Id = "BossPrep", Title = "Boss ahead", Text = "Stage 10 is a boss. It hits harder and has more health than normal enemies, so the fight takes longer. Equip your best gear and upgrade your skills first.", Target = "Boss", Kind = "next" },
+	{ Id = "Boss", Title = "Beat the stage 10 boss", Text = "Keep fighting until the boss falls. Clearing it ends the tutorial and pays a reward.", Target = "Stage", Kind = "frontier", Goal = 11 },
 }
 
 local function stateOf(profile)

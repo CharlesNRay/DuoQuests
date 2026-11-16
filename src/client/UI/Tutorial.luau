@@ -198,12 +198,13 @@ function TutorialUI:Update(state, hidden)
 	local showBar = def.Kind == "frontier"
 	self.Bar.Visible, self.BarText.Visible = showBar, showBar
 	if showBar then
-		local from = if def.Goal > 5 then 1 else 1
-		local frac = math.clamp((frontier - from) / math.max(def.Goal - from, 1), 0, 1)
+		local frac = math.clamp((frontier - 1) / math.max(def.Goal - 1, 1), 0, 1)
 		self.Fill.Size = UDim2.fromScale(frac, 1)
 		self.BarText.Text = ("Stage %d of %d"):format(math.min(frontier, def.Goal), def.Goal)
 	end
-	self.Card.Size = UDim2.fromOffset(WIDTH, if def.Kind == "next" then 132 elseif showBar then 126 else 112)
+	local lines = math.ceil(#def.Text / 40)
+	self.Body.Size = UDim2.new(1, -28, 0, lines * 15)
+	self.Card.Size = UDim2.fromOffset(WIDTH, 52 + lines * 15 + (if def.Kind == "next" then 38 elseif showBar then 24 else 10))
 	self:_slide(not hidden)
 	self:_point(if hidden then nil else targetOf(self.Hud, def.Target))
 end
