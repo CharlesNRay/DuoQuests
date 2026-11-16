@@ -443,13 +443,9 @@ local function playBossFight(player, fight, label, damage)
 			table.insert(events, event)
 		end
 	end
-	PartyService.HoldFights(player, fight.Duration + 6)
+	PartyService.HoldFights(player, fight.Duration + 14)
 	local payload = { Slot = slot, PartyId = partyState.PartyId, Stage = partyState.Stage, Won = fight.Won, Duration = fight.Duration, Roster = fight.Roster, Events = events, Label = label, Damage = damage }
-	for _, other in ipairs(Players:GetPlayers()) do
-		if other ~= player then
-			pushRemote:FireClient(other, "ArenaFight", payload)
-		end
-	end
+	-- the fight is played in a private boss arena on the challenger's screen, so nobody else watches it
 	pushRemote:FireClient(player, "BossFight", payload)
 end
 

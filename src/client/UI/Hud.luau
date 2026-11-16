@@ -182,7 +182,11 @@ function Hud.new(root)
 	local dock = Kit.frame({ Size = UDim2.fromOffset(10, 48), AutomaticSize = Enum.AutomaticSize.X, Position = UDim2.new(0.5, 0, 1, -4), AnchorPoint = Vector2.new(0.5, 1), BackgroundTransparency = 1, NoCorner = true, Parent = chrome })
 	self.Dock = dock
 	Kit.new("UIListLayout", { Padding = UDim.new(0, 4), FillDirection = Enum.FillDirection.Horizontal, SortOrder = Enum.SortOrder.LayoutOrder, HorizontalAlignment = Enum.HorizontalAlignment.Center, Parent = dock })
-	self.Rails = { dock = dock, mini = mini }
+	-- bottom-left: travel (Home and Plaza), kept apart from the menu buttons
+	local travel = Kit.frame({ Size = UDim2.fromOffset(10, 34), AutomaticSize = Enum.AutomaticSize.X, Position = UDim2.new(0, 10, 1, -10), AnchorPoint = Vector2.new(0, 1), BackgroundTransparency = 1, NoCorner = true, Parent = chrome })
+	self.Travel = travel
+	Kit.new("UIListLayout", { Padding = UDim.new(0, 6), FillDirection = Enum.FillDirection.Horizontal, SortOrder = Enum.SortOrder.LayoutOrder, Parent = travel })
+	self.Rails = { dock = dock, mini = mini, travel = travel }
 	self.NextOrder = 0
 
 	-- combat layer: stage pill, fight timer, toast, skill bar + ultimate -------------
@@ -246,6 +250,15 @@ function Hud.new(root)
 	function self:AddButton(key, side, glyph, label, onClick)
 		self.NextOrder += 1
 		local small = side == "mini"
+		if side == "travel" then
+			local pill = Kit.button({ Size = UDim2.fromOffset(86, 34), Text = "", BackgroundColor3 = Color3.fromRGB(26, 30, 48), LayoutOrder = self.NextOrder, Parent = self.Rails.travel }, onClick)
+			pill.BackgroundTransparency = 0.15
+			Kit.new("UIStroke", { Color = Color3.fromRGB(110, 118, 150), Thickness = 1, Transparency = 0.5, Parent = pill })
+			Kit.label({ Size = UDim2.new(1, -8, 1, 0), Position = UDim2.fromOffset(4, 0), Text = glyph .. "  " .. label, TextSize = 13, Font = Enum.Font.GothamBold, TextXAlignment = Enum.TextXAlignment.Center, TextWrapped = false, TextStrokeTransparency = 1, Parent = pill })
+			self.Buttons[key] = pill
+			self.Dots[key] = Kit.frame({ Size = UDim2.fromOffset(1, 1), Visible = false, Parent = pill })
+			return pill
+		end
 		local button = Kit.button({ Size = if small then UDim2.fromOffset(38, 38) else UDim2.fromOffset(50, 48), Text = "", BackgroundColor3 = Color3.fromRGB(26, 30, 48), LayoutOrder = self.NextOrder, Parent = self.Rails[side] }, onClick)
 		button.BackgroundTransparency = 0.15
 		Kit.new("UIStroke", { Color = Color3.fromRGB(110, 118, 150), Thickness = 1, Transparency = 0.5, Parent = button })
@@ -288,6 +301,9 @@ function Hud.new(root)
 		self.HudHidden = hidden
 		-- the party (top-left) and the currencies (top-right) stay; only the map card and the menu dock go
 		self.MapCard.Visible = not hidden
+		if self.Travel then
+			self.Travel.Visible = not hidden
+		end
 		if self.Dock then
 			self.Dock.Visible = not hidden
 		end

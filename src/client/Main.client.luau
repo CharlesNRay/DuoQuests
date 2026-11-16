@@ -38,6 +38,7 @@ local World = require(Shared.World)
 local Zones = require(Shared.Zones)
 local Arenas = require(script.Parent.Battle.Arenas)
 local Hub = require(script.Parent.Battle.Hub)
+local BossArena = require(script.Parent.Battle.BossArena)
 local BattleCamera = require(script.Parent.Battle.BattleCamera)
 
 local folder = ReplicatedStorage:WaitForChild(Remotes.FolderName)
@@ -427,13 +428,13 @@ Hub.Build({
 	Blacksmith = function() shopOpen("Blacksmith", "Blacksmith - upgrade gear") end,
 	Tree = function() open("Wish", "Wishing Tree", true) end,
 })
-hud:AddButton("Plaza", "mini", "⛲", "Plaza", function()
+hud:AddButton("Plaza", "travel", "⛲", "Plaza", function()
 	if BattleCamera.IsBattleView() then
 		stopWatching()
 	end
 	goPlaza()
 end)
-hud:AddButton("Home", "mini", "🏠", "Home", function()
+hud:AddButton("Home", "travel", "🏠", "Home", function()
 	goHome()
 	if extra.WatchMine then
 		extra.WatchMine()
@@ -485,22 +486,23 @@ push.OnClientEvent:Connect(function(kind, info)
 		end
 	elseif kind == "BossFight" then
 		task.spawn(function()
-			while fighting do
-				task.wait(0.2) -- let the party's current fight finish first
-			end
-			fighting = true
-			extra.WatchMine()
-			hud:Notify("⚔ " .. tostring(info.Label) .. "!")
+			current, lastDrawn = nil, nil
+			panel.Visible = false
+			Kit.HideTip()
 			liveLog:Play(info, 0.8)
-			arenas:Play(info.Slot, info, function()
-				fighting = false
-				hud:Notify(("You dealt %d damage to %s!"):format(info.Damage or 0, tostring(info.Label)))
+			hud:Notify("⚔ " .. tostring(info.Label) .. "!")
+			local started = BossArena.Play(info, function()
 				local ok, fresh = api:InvokeServer("GetState")
 				if ok and fresh then state = fresh end
 				extra.Boss = nil
 				extra.RefreshBoss()
 				open("Boss", "Bosses", true)
 			end)
+			if not started then
+				hud:Notify(("You dealt %d damage to %s!"):format(info.Damage or 0, tostring(info.Label)))
+				extra.Boss = nil
+				extra.RefreshBoss()
+			end
 		end)
 	elseif kind == "ArenaFight" then
 		arenas:Play(info.Slot, info)
