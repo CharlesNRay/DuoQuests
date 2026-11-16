@@ -147,15 +147,28 @@ function CharacterScreen.Character(container, state, call, extra)
 	end
 
 	-- details
-	local details = Kit.frame({ Size = UDim2.new(1, -176, 0, 262), Position = UDim2.fromOffset(168, 28), BackgroundColor3 = C.Panel, Parent = area })
+	local details = Kit.frame({ Size = UDim2.new(1, -176, 0, 292), Position = UDim2.fromOffset(168, 28), BackgroundColor3 = C.Panel, Parent = area })
 	Kit.label({ Size = UDim2.new(1, -170, 0, 26), Position = UDim2.fromOffset(12, 8), Text = selected.Name, TextSize = 20, Font = Enum.Font.GothamBold, TextColor3 = C[selected.Id] or C.Accent, Parent = details })
-	Kit.label({ Size = UDim2.new(1, -170, 0, 88), Position = UDim2.fromOffset(12, 36), Text = selected.Blurb or "", TextSize = 13, TextYAlignment = Enum.TextYAlignment.Top, Parent = details })
-	Kit.label({ Size = UDim2.new(1, -170, 0, 20), Position = UDim2.fromOffset(12, 130), Text = "Weapon: " .. (selected.WeaponName or "?"), TextSize = 14, Font = Enum.Font.GothamBold, Parent = details })
-	Kit.label({ Size = UDim2.new(1, -170, 0, 36), Position = UDim2.fromOffset(12, 152), Text = selected.WeaponText or "", TextSize = 12, TextColor3 = C.Dim, TextYAlignment = Enum.TextYAlignment.Top, Parent = details })
+	local blurb = (selected.Blurb or ""):gsub("%s*Paths:.*$", "")
+	Kit.label({ Size = UDim2.new(1, -170, 0, 52), Position = UDim2.fromOffset(12, 34), Text = blurb, TextSize = 12, TextYAlignment = Enum.TextYAlignment.Top, Parent = details })
+	-- the two paths, as their own cards so the choice is easy to see
+	local classColor = C[selected.Id] or C.Accent
+	Kit.label({ Size = UDim2.new(1, -170, 0, 16), Position = UDim2.fromOffset(12, 88), Text = "CHOOSE A PATH AT LEVEL 30", TextSize = 11, Font = Enum.Font.GothamBlack, TextColor3 = classColor, Parent = details })
+	local paths = selected.Paths or {}
+	local cardW = if #paths > 0 then 1 / #paths else 1
+	local holder = Kit.frame({ Size = UDim2.new(1, -170, 0, 66), Position = UDim2.fromOffset(12, 106), BackgroundTransparency = 1, NoCorner = true, Parent = details })
+	for index, path in ipairs(paths) do
+		local card = Kit.frame({ Size = UDim2.new(cardW, -4, 1, 0), Position = UDim2.new(cardW * (index - 1), if index == 1 then 0 else 4, 0, 0), BackgroundColor3 = C.PanelLight, Parent = holder })
+		Kit.new("UIStroke", { Color = classColor, Thickness = 2, ApplyStrokeMode = Enum.ApplyStrokeMode.Border, Parent = card })
+		Kit.frame({ Size = UDim2.new(1, 0, 0, 4), BackgroundColor3 = classColor, NoCorner = true, Parent = card })
+		Kit.label({ Size = UDim2.new(1, -10, 0, 18), Position = UDim2.fromOffset(6, 7), Text = path.Name, TextSize = 14, Font = Enum.Font.GothamBlack, TextColor3 = classColor, Parent = card })
+		Kit.label({ Size = UDim2.new(1, -10, 1, -26), Position = UDim2.fromOffset(6, 25), Text = path.Text or "", TextSize = 10, TextColor3 = C.Dim, TextWrapped = true, TextYAlignment = Enum.TextYAlignment.Top, Parent = card })
+	end
+	Kit.label({ Size = UDim2.new(1, -170, 0, 30), Position = UDim2.fromOffset(12, 176), Text = ("<b>Weapon: %s</b>  %s"):format(selected.WeaponName or "?", selected.WeaponText or ""), RichText = true, TextSize = 11, TextColor3 = C.Dim, TextYAlignment = Enum.TextYAlignment.Top, Parent = details })
 	weaponView(details, selected.Id, UDim2.fromOffset(150, 150), UDim2.new(1, -160, 0, 8))
 
 	if extra.CharMsg then
-		Kit.label({ Name = "CharMsg", Size = UDim2.new(1, -170, 0, 20), Position = UDim2.fromOffset(12, 188), Text = extra.CharMsg, TextSize = 12, TextColor3 = if extra.CharMsgBad then BAD else GOOD, Parent = details })
+		Kit.label({ Name = "CharMsg", Size = UDim2.new(1, -170, 0, 20), Position = UDim2.fromOffset(12, 206), Text = extra.CharMsg, TextSize = 12, TextColor3 = if extra.CharMsgBad then BAD else GOOD, Parent = details })
 	end
 
 	if creating then

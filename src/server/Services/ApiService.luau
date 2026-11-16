@@ -242,7 +242,12 @@ function characterOf(profile)
 	for _, classId in ipairs({ "Warrior", "Cleric", "Mage", "Ranger", "Rogue", "Summoner" }) do
 		local def = Classes[classId]
 		if def then
+			local paths = {}
+			for _, sub in ipairs(Subclasses.Choices(classId, nil)) do
+				table.insert(paths, { Id = sub.Id, Name = sub.DisplayName, Text = sub.Description })
+			end
 			table.insert(classes, {
+				Paths = paths,
 				Id = classId, Name = def.DisplayName or classId, Role = def.Role, Blurb = def.Blurb, WeaponName = def.Weapon and def.Weapon.Name, WeaponText = def.Weapon and def.Weapon.Text,
 				Playable = Character.Playable(profile, classId),
 			})
