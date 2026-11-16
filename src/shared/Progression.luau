@@ -28,6 +28,7 @@ local Pets = require(script.Parent.Pets)
 local Gear = require(script.Parent.Gear)
 local Consumables = require(script.Parent.Consumables)
 local Quests = require(script.Parent.Quests)
+local Passes = require(script.Parent.Passes)
 
 local Progression = {}
 
@@ -104,7 +105,8 @@ function Progression.ApplyClear(profile, stage, rand)
 	local bonuses = Passives.Rewards(classId, season.PassiveLoadouts[classId], season.PassiveSlotLevels[classId])
 	local boost = Consumables.Rewards(profile, os.time())
 	local guildBuffs = profile.Permanent and profile.Permanent.GuildBuffs or {} -- from the guild's upgrades
-	bonuses = { GoldGain = (bonuses.GoldGain or 0) + boost.GoldGain + (guildBuffs.GoldGain or 0), XPGain = (bonuses.XPGain or 0) + boost.XPGain + (guildBuffs.XPGain or 0), ItemRarity = bonuses.ItemRarity }
+	local perks = Passes.Perks(profile)
+	bonuses = { GoldGain = (bonuses.GoldGain or 0) + boost.GoldGain + (guildBuffs.GoldGain or 0) + perks.GoldGain, XPGain = (bonuses.XPGain or 0) + boost.XPGain + (guildBuffs.XPGain or 0) + perks.XPGain, ItemRarity = bonuses.ItemRarity }
 	local rewards = Progression.ClearRewards(stage, isFrontier, bonuses)
 
 	season.Currencies.Gold += rewards.Gold

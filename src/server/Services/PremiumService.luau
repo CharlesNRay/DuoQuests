@@ -17,6 +17,8 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Config = require(Shared.Config.Premium)
 local Premium = require(Shared.Premium)
+local Passes = require(Shared.Passes)
+local PolicyService = game:GetService("PolicyService")
 
 local PremiumService = {}
 
@@ -63,7 +65,60 @@ function PremiumService.Grant(profile, productId, purchaseId)
 	return "Granted"
 end
 
+-- Roblox restricts "paid random items" in some regions: true when this player may be offered them (fails closed).
+function PremiumService.PaidRandomAllowed(player)
+	local ok, info = pcall(function()
+		return PolicyService:GetPolicyInfoForPlayerAsync(player)
+	end)
+	return ok and info ~= nil and info.ArePaidRandomItemsRestricted == false
+end
+
+-- Gives a pass to a profile whose player owns its Game Pass (ignores passes with no id yet).
+function PremiumService.SyncPasses(player, profile)
+	for id, def in pairs(Config.Passes) do
+		if def.GamePassId ~= 0 and not Passes.Has(profile, id) then
+			local ok, owns = pcall(function()
+				return MarketplaceService:UserOwnsGamePassAsync(player.UserId, def.GamePassId)
+			end)
+			if ok and owns then
+				Passes.Grant(profile, id)
+			end
+		end
+	end
+end
+
 function PremiumService.Init(getProfile, saveNow, onGranted)
+	local function syncWhenReady(player)
+		task.spawn(function()
+			for _ = 1, 60 do
+				local profile = getProfile(player)
+				if profile then
+					PremiumService.SyncPasses(player, profile)
+					return
+				end
+				task.wait(0.5)
+			end
+		end)
+	end
+	Players.PlayerAdded:Connect(syncWhenReady)
+	for _, player in ipairs(Players:GetPlayers()) do
+		syncWhenReady(player)
+	end
+	MarketplaceService.PromptGamePassPurchaseFinished:Connect(function(player, gamePassId, purchased)
+		if not purchased then
+			return
+		end
+		local profile = getProfile(player)
+		for id, def in pairs(Config.Passes) do
+			if profile and def.GamePassId == gamePassId then
+				Passes.Grant(profile, id)
+				saveNow(player)
+				if onGranted then
+					onGranted(player)
+				end
+			end
+		end
+	end)
 	MarketplaceService.ProcessReceipt = function(receipt)
 		local player = Players:GetPlayerByUserId(receipt.PlayerId)
 		if not player then

@@ -69,6 +69,19 @@ local function packsTab(area, state, call, extra, redraw)
 	local me = state.Player
 	local scroll = listFrame(area)
 	Kit.label({ Size = UDim2.new(1, -8, 0, 18), Text = "Sunstones are bought with Robux. The first time you buy each pack you get double.", TextSize = 12, TextColor3 = ORANGE, Parent = scroll })
+	for _, pass in ipairs(me.Passes or {}) do
+		local row = Kit.frame({ Size = UDim2.new(1, -8, 0, 66), BackgroundColor3 = C.PanelLight, Parent = scroll })
+		Kit.new("UIStroke", { Color = C.Accent, Thickness = 2, ApplyStrokeMode = Enum.ApplyStrokeMode.Border, Parent = row })
+		Kit.label({ Size = UDim2.new(1, -170, 0, 20), Position = UDim2.fromOffset(10, 4), Text = "👑 " .. pass.Name .. "  (one time)", TextSize = 14, Font = Enum.Font.GothamBold, TextColor3 = C.Accent, Parent = row })
+		Kit.label({ Size = UDim2.new(1, -170, 0, 36), Position = UDim2.fromOffset(10, 26), Text = pass.Text, TextSize = 11, TextWrapped = true, TextYAlignment = Enum.TextYAlignment.Top, TextColor3 = C.Dim, Parent = row })
+		local label = if pass.Owned then "Owned" elseif pass.Available then ("R$ %d"):format(pass.Robux) else ("R$ %d (soon)"):format(pass.Robux)
+		local live = pass.Available and not pass.Owned
+		Kit.button({ Size = UDim2.fromOffset(140, 40), Position = UDim2.new(1, -150, 0.5, -20), Text = label, BackgroundColor3 = if live then C.Accent else C.Panel, TextColor3 = if live then Color3.fromRGB(30, 24, 10) else C.Dim, Parent = row }, function()
+			if live then
+				call("BuyPass", pass.Id)
+			end
+		end)
+	end
 	for _, pack in ipairs(me.SunstonePacks or {}) do
 		local row = Kit.frame({ Size = UDim2.new(1, -8, 0, 56), BackgroundColor3 = C.PanelLight, Parent = scroll })
 		Kit.label({ Size = UDim2.new(1, -170, 0, 20), Position = UDim2.fromOffset(10, 6), Text = ("🔶 %s  -  %s"):format(commas(pack.Sunstones), pack.Name), TextSize = 14, Font = Enum.Font.GothamBold, TextColor3 = ORANGE, Parent = row })

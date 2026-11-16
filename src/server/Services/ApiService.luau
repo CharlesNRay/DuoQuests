@@ -63,6 +63,7 @@ local World = require(Shared.World)
 local Daily = require(Shared.Daily)
 local Quests = require(Shared.Quests)
 local Premium = require(Shared.Premium)
+local Passes = require(Shared.Passes)
 local Subclasses = require(Shared.Subclasses)
 local Abilities = require(Shared.Config.Abilities)
 
@@ -217,6 +218,8 @@ local function buildState(player)
 			Pass = Quests.Pass(profile),
 			Sunstones = Premium.Sunstones(profile),
 			PremiumShop = Premium.List(profile),
+			Passes = Passes.List(profile),
+			Perks = Passes.Perks(profile),
 			PremiumOffer = Premium.Offer(profile),
 			SunstonePacks = Premium.Packs(profile),
 			Cosmetics = cosmeticsOf(profile),
@@ -793,6 +796,22 @@ function handlers.BuyPremium(player, profile, itemId)
 		afterBuildChange(player)
 	end
 	return ok, data
+end
+
+-- Game Pass (VIP): opens Roblox's purchase prompt. Ownership is granted by PremiumService when the purchase finishes.
+function handlers.BuyPass(player, _, passId)
+	if type(passId) ~= "string" then
+		return false, "BadArgs"
+	end
+	local def = require(Shared.Config.Premium).Passes[passId]
+	if not def then
+		return false, "BadPass"
+	end
+	if def.GamePassId == 0 then
+		return false, "NotAvailable" -- the pass does not exist in the creator dashboard yet
+	end
+	game:GetService("MarketplaceService"):PromptGamePassPurchase(player, def.GamePassId)
+	return true
 end
 
 -- The player closed a pop-up offer (the Subclass Pack): from now on it is listed in the shop.

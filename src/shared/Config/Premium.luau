@@ -25,6 +25,16 @@
 ]]
 
 return {
+	-- One-time Robux purchases (Game Passes). GamePassId is 0 until the pass exists in the creator dashboard.
+	-- Perks are permanent and checked with Passes.Perks(profile). Every number is a PLACEHOLDER to be tuned.
+	Passes = {
+		VIP = {
+			Id = "VIP", Name = "VIP Pass", Robux = 499, GamePassId = 0,
+			Text = "+25% gold, +25% XP, 20 more bag slots, 2 more dungeon keys a day and a second pet slot.",
+			Perks = { GoldGain = 0.25, XPGain = 0.25, BagSlots = 20, DungeonKeys = 2, PetSlots = 1 },
+		},
+	},
+
 	Packs = {
 		{ Id = "Sun1", Name = "Handful of Sunstones", Sunstones = 80, Robux = 79, FirstBonus = 80, ProductId = 0 },
 		{ Id = "Sun2", Name = "Pouch of Sunstones", Sunstones = 420, Robux = 399, FirstBonus = 420, ProductId = 0 },

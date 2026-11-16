@@ -57,6 +57,10 @@ local function expeditionOf(id)
 	end
 end
 
+local function maxKeys(profile)
+	return Activities.MaxKeys + require(script.Parent.Passes).Perks(profile).DungeonKeys
+end
+
 local function row(profile)
 	local permanent = profile.Permanent
 	if type(permanent.Activities) ~= "table" then
@@ -70,11 +74,11 @@ function Activities.Of(profile, now)
 	local day = math.floor((now or os.time()) / 86400)
 	if a.Day ~= day then
 		a.Day = day
-		a.Keys = Activities.MaxKeys
+		a.Keys = maxKeys(profile)
 	end
 	local e = a.Expedition
 	return {
-		Keys = a.Keys, MaxKeys = Activities.MaxKeys,
+		Keys = a.Keys, MaxKeys = maxKeys(profile),
 		Expedition = if e then { Id = e.Id, EndsAt = e.EndsAt, Ready = (now or os.time()) >= e.EndsAt } else nil,
 	}
 end

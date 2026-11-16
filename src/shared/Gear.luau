@@ -54,7 +54,7 @@ end
 
 -- Bag size: the starting cap plus Merchant upgrades.
 function Gear.Cap(profile)
-	return Config.InventoryCap + (bag(profile).BagUpgrades or 0) * Config.BagStep
+	return Config.InventoryCap + (bag(profile).BagUpgrades or 0) * Config.BagStep + require(script.Parent.Passes).Perks(profile).BagSlots
 end
 
 function Gear.BagUpgradeCost(profile)
