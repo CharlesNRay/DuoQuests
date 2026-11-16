@@ -88,6 +88,54 @@ local function buildBackground(parent)
 		Kit.corner(size).Parent = fly
 		table.insert(bg.Flies, { Frame = fly, X = math.random(), Y = rnd(0.55, 1), Sway = rnd(0, 6.3), Rise = rnd(0.01, 0.04), Speed = rnd(0.6, 1.6) })
 	end
+	-- the DUO: two adventurers (one warm, one cool, like the logo) standing on the near ridge, each with a light beam and motes
+	bg.Heroes = {}
+	local dark = Color3.fromRGB(8, 6, 20)
+	local function piece(parent, x, y, w, h, color, round, rot)
+		local f = Kit.frame({ Size = UDim2.fromOffset(w, h), Position = UDim2.fromOffset(x, y), BackgroundColor3 = color, NoCorner = true, Rotation = rot or 0, ZIndex = 7, Parent = parent })
+		if round then
+			Kit.corner(round).Parent = f
+		end
+		return f
+	end
+	for index, spec in ipairs({
+		{ X = 0.13, Glow = Color3.fromRGB(255, 150, 70), Rim = Color3.fromRGB(255, 190, 110), Weapon = "Sword" },
+		{ X = 0.87, Glow = Color3.fromRGB(80, 190, 245), Rim = Color3.fromRGB(140, 225, 255), Weapon = "Staff" },
+	}) do
+		local h = H * 0.3
+		local w = h * 0.62
+		local beam = Kit.frame({ Size = UDim2.fromOffset(w * 0.9, H * 0.95), Position = UDim2.new(spec.X, 0, 1, 0), AnchorPoint = Vector2.new(0.5, 1), BackgroundColor3 = spec.Glow, BackgroundTransparency = 0.8, NoCorner = true, ZIndex = 5, Parent = holder })
+		Kit.new("UIGradient", { Rotation = 90, Transparency = NumberSequence.new({ NumberSequenceKeypoint.new(0, 1), NumberSequenceKeypoint.new(0.6, 0.55), NumberSequenceKeypoint.new(1, 0.15) }), Parent = beam })
+		local aura = Kit.frame({ Size = UDim2.fromOffset(h * 1.5, h * 1.5), Position = UDim2.new(spec.X, 0, 1, -h * 0.45), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = spec.Glow, BackgroundTransparency = 0.82, ZIndex = 5, Parent = holder })
+		Kit.corner(h).Parent = aura
+		local body = Kit.frame({ Size = UDim2.fromOffset(w, h), Position = UDim2.new(spec.X, 0, 1, 4), AnchorPoint = Vector2.new(0.5, 1), BackgroundTransparency = 1, NoCorner = true, ZIndex = 7, Parent = holder })
+		local rimmed = {}
+		local function add(f)
+			Kit.new("UIStroke", { Color = spec.Rim, Thickness = 1.5, Transparency = 0.35, Parent = f })
+			table.insert(rimmed, f)
+			return f
+		end
+		local facing = if index == 1 then 1 else -1
+		add(piece(body, w * 0.30, h * 0.62, w * 0.16, h * 0.38, dark)) -- legs
+		add(piece(body, w * 0.54, h * 0.62, w * 0.16, h * 0.38, dark))
+		add(piece(body, w * 0.22, h * 0.30, w * 0.56, h * 0.36, dark, 6)) -- torso
+		add(piece(body, w * 0.34, h * 0.07, w * 0.32, h * 0.22, dark, 99)) -- head
+		-- cape blowing back
+		add(piece(body, if index == 1 then w * 0.02 else w * 0.62, h * 0.34, w * 0.34, h * 0.5, dark, 4, if index == 1 then 8 else -8))
+		if spec.Weapon == "Sword" then
+			add(piece(body, if facing == 1 then w * 0.8 else w * 0.0, h * 0.0, w * 0.07, h * 0.62, dark, 3, 18 * facing)) -- raised sword
+		else
+			add(piece(body, if facing == 1 then w * 0.8 else w * 0.0, h * 0.0, w * 0.06, h * 0.9, dark, 3, 10 * facing)) -- staff
+			add(piece(body, if facing == 1 then w * 0.74 else w * -0.07, -h * 0.04, w * 0.2, w * 0.2, spec.Glow, 99)) -- glowing orb
+		end
+		table.insert(bg.Heroes, { Body = body, Aura = aura, Beam = beam, BaseY = 4, Phase = index * 1.7 })
+		for _ = 1, 12 do
+			local size = rnd(2.5, 5)
+			local mote = Kit.frame({ Size = UDim2.fromOffset(size, size), BackgroundColor3 = spec.Glow, ZIndex = 8, Parent = holder })
+			Kit.corner(size).Parent = mote
+			table.insert(bg.Flies, { Frame = mote, X = spec.X + rnd(-0.04, 0.04), Y = rnd(0.5, 1), Sway = rnd(0, 6.3), Rise = rnd(0.05, 0.12), Speed = rnd(0.8, 1.8), Home = spec.X })
+		end
+	end
 	return bg
 end
 
@@ -112,11 +160,16 @@ local function updateBackground(bg, t, dt, view)
 			p.Frame.Position = UDim2.new(0, p.X, 1, 0)
 		end
 	end
+	for _, hero in ipairs(bg.Heroes) do
+		hero.Body.Position = UDim2.new(hero.Body.Position.X.Scale, 0, 1, hero.BaseY + math.sin(t * 1.4 + hero.Phase) * 2)
+		hero.Aura.BackgroundTransparency = 0.8 + math.sin(t * 1.1 + hero.Phase) * 0.05
+		hero.Beam.BackgroundTransparency = 0.78 + math.sin(t * 0.8 + hero.Phase) * 0.05
+	end
 	for _, f in ipairs(bg.Flies) do
 		f.Y -= f.Rise * dt
-		if f.Y < 0.5 then
+		if f.Y < (if f.Home then 0.3 else 0.5) then
 			f.Y = 1.02
-			f.X = math.random()
+			f.X = if f.Home then f.Home + rnd(-0.04, 0.04) else math.random()
 		end
 		f.Frame.Position = UDim2.new(f.X + math.sin(t * f.Speed + f.Sway) * 0.02, 0, f.Y, 0)
 		f.Frame.BackgroundTransparency = 0.2 + (math.sin(t * 3 * f.Speed + f.Sway) * 0.5 + 0.5) * 0.6
@@ -190,7 +243,7 @@ function MainMenu:Play(slot)
 	return false, reason
 end
 
-local STAGE_W, STAGE_H = 700, 400
+local STAGE_W, STAGE_H = 700, 376
 
 local function divider(parent, y, z)
 	Kit.frame({ Size = UDim2.new(1, -28, 0, 1), Position = UDim2.fromOffset(14, y), BackgroundColor3 = C.Dim, BackgroundTransparency = 0.75, NoCorner = true, ZIndex = z, Parent = parent })
