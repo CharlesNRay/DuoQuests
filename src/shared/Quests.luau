@@ -202,7 +202,22 @@ function Quests.Weekly(profile, now)
 	}
 end
 
+-- Sunstones live in Permanent.Premium (see Shared/Premium, which requires this module, so it is written here directly)
+local function addSunstones(profile, amount)
+	local n = math.max(0, math.floor(amount or 0))
+	if n == 0 then
+		return
+	end
+	local p = profile.Permanent.Premium
+	if p == nil then
+		p = { Sunstones = 0, Bought = {}, PacksBought = {} }
+		profile.Permanent.Premium = p
+	end
+	p.Sunstones = (p.Sunstones or 0) + n
+end
+
 local function payWeekly(profile, reward)
+	addSunstones(profile, reward.Sunstones)
 	local c = profile.Season.Currencies
 	c.Wishstones = (c.Wishstones or 0) + (reward.Wishstones or 0)
 	for id, count in pairs(reward.Items or {}) do
@@ -252,7 +267,7 @@ local function passState(profile)
 end
 
 local function rewardRow(profile, r)
-	return { Gold = goldFor(profile, r.GoldClears or 0), Wishstones = r.Wishstones, Shards = r.Shards, SkillPicks = r.SkillPicks, Items = r.Items }
+	return { Gold = goldFor(profile, r.GoldClears or 0), Wishstones = r.Wishstones, Sunstones = r.Sunstones, Shards = r.Shards, SkillPicks = r.SkillPicks, Items = r.Items }
 end
 
 function Quests.Pass(profile)
@@ -298,7 +313,8 @@ function Quests.ClaimPass(profile, level, track)
 	local r = (if premium then Config.Pass.PremiumRewards else Config.Pass.Rewards)[level]
 	claimed[level] = true
 	local c = profile.Season.Currencies
-	local reward = { Gold = goldFor(profile, r.GoldClears or 0), Wishstones = r.Wishstones or 0, Shards = r.Shards or 0, SkillPicks = r.SkillPicks or 0, Items = r.Items }
+	local reward = { Gold = goldFor(profile, r.GoldClears or 0), Wishstones = r.Wishstones or 0, Sunstones = r.Sunstones or 0, Shards = r.Shards or 0, SkillPicks = r.SkillPicks or 0, Items = r.Items }
+	addSunstones(profile, reward.Sunstones)
 	c.Gold += reward.Gold
 	c.Wishstones = (c.Wishstones or 0) + reward.Wishstones
 	c.Shards += reward.Shards

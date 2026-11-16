@@ -48,6 +48,8 @@ for level = 1, 30 do
 	if level == 30 then
 		r.Wishstones = 20
 	end
+	-- a little premium currency for playing: 50 Sunstones over the whole free track
+	r.Sunstones = ({ [10] = 10, [20] = 15, [30] = 25 })[level]
 	Rewards[level] = r
 end
 
@@ -74,6 +76,7 @@ for level = 1, 30 do
 	if level == 30 then
 		r.Wishstones = 30
 	end
+	r.Sunstones = ({ [10] = 15, [20] = 20, [30] = 40 })[level] -- 75 over the premium track
 	PremiumRewards[level] = r
 end
 
@@ -108,7 +111,7 @@ return {
 		},
 		QuestsPerWeek = 4,
 		QuestReward = { Wishstones = 6, PassXP = 120, Items = { GrandPetFood = 1 } },
-		BonusReward = { Wishstones = 12, PassXP = 250, Tickets = { PetWish = 1, SkillWish = 1 } },
+		BonusReward = { Wishstones = 12, Sunstones = 10, PassXP = 250, Tickets = { PetWish = 1, SkillWish = 1 } },
 	},
 
 	Pass = {

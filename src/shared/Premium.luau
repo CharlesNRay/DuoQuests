@@ -7,6 +7,7 @@
 
 	  Premium.Sunstones(profile)            -> balance (permanent: survives seasons)
 	  Premium.AddSunstones(profile, n)
+	  Premium.SpendSunstones(profile, n)   -> true | false, "NotEnough"   (cosmetics use it)
 	  Premium.AddPack(profile, packId)      -> true, { Sunstones, Bonus } | false, "BadPack"   (first purchase of a pack doubles it)
 	  Premium.Packs(profile)                -> { { Id, Name, Sunstones, Robux, FirstBonus, Bonus, ProductId } }  (Bonus = what the next buy adds)
 	  Premium.List(profile)                 -> { { Id, Name, Text, Cost, Tag, Bought, Max, Left, Affordable, Hidden } }
@@ -59,6 +60,17 @@ function Premium.AddSunstones(profile, amount)
 	local a = account(profile)
 	a.Sunstones += math.max(0, math.floor(amount))
 	return a.Sunstones
+end
+
+-- Spends Sunstones on something outside the shop list (cosmetics): true, or false, "NotEnough"
+function Premium.SpendSunstones(profile, amount)
+	local a = account(profile)
+	amount = math.max(0, math.floor(amount))
+	if a.Sunstones < amount then
+		return false, "NotEnough"
+	end
+	a.Sunstones -= amount
+	return true
 end
 
 function Premium.AddPack(profile, packId)

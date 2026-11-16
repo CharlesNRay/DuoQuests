@@ -25,6 +25,7 @@ local Config = require(script.Parent.Config.SeasonRewards)
 local Classes = require(script.Parent.Config.Classes)
 local Consumables = require(script.Parent.Consumables)
 local Pets = require(script.Parent.Pets)
+local Cosmetics = require(script.Parent.Cosmetics)
 local PetConfig = require(script.Parent.Config.Pets)
 local Premium = require(script.Parent.Premium)
 
@@ -199,10 +200,10 @@ function SeasonRewards.Claim(profile, seasonId, results, info)
 		Consumables.Grant(profile, id, count)
 	end
 	for _, title in ipairs(reward.Titles) do
-		profile.Permanent.Titles[title] = true
+		Cosmetics.GrantTitle(profile, title)
 	end
 	for _, id in ipairs(reward.Cosmetics) do
-		profile.Permanent.Cosmetics[id] = true
+		Cosmetics.Grant(profile, id)
 	end
 	for _, petId in ipairs(reward.Pets) do
 		if profile.Permanent.Pets[petId] then

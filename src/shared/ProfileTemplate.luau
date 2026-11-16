@@ -145,7 +145,8 @@ function ProfileTemplate.Defaults()
 		Permanent = {
 			UnlockedClasses = { Warrior = true, Cleric = true },
 			Pets = {}, -- [petId] = true
-			Cosmetics = {},
+			Cosmetics = {}, -- [cosmeticId] = true (see Config/Cosmetics)
+			CosmeticsEquipped = {}, -- [slot] = cosmetic id, or the title text for Title
 			Titles = {},
 			Achievements = {},
 			LegacyPoints = 0,

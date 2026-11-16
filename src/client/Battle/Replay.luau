@@ -23,6 +23,7 @@ local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Abilities = require(Shared.Config.Abilities)
 local Ultimates = require(Shared.Config.Ultimates)
 local Actor = require(script.Parent.Actor)
+local CosmeticsVisuals = require(script.Parent.CosmeticsVisuals)
 local Models = require(script.Parent.Models)
 
 local Replay = {}
@@ -280,6 +281,7 @@ function Replay:_event(e)
 		if target then
 			target:SetHealth(0)
 			if self.Enemies[e.Target] then
+				CosmeticsVisuals.KillEffect(scene.Folder, target:Pos())
 				target:FadeOut()
 			else
 				target:Fall()

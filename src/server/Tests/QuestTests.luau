@@ -181,5 +181,20 @@ return function(modulesOverride)
 	Quests.SetPremium(pn, true)
 	check("Premium levels still need the level reached", select(2, Quests.ClaimPass(pn, 3, "Premium")) == "NotReached")
 
+	-- Sunstones for playing
+	local freeSun, premSun = 0, 0
+	for l = 1, 30 do
+		freeSun += QuestConfig.Pass.Rewards[l].Sunstones or 0
+		premSun += QuestConfig.Pass.PremiumRewards[l].Sunstones or 0
+	end
+	check("The free pass track pays 50 Sunstones in total, the premium track 75", freeSun == 50 and premSun == 75)
+	local ps = ProfileTemplate.New()
+	Quests.AddPassXP(ps, 100000)
+	Quests.SetPremium(ps, true)
+	Quests.ClaimAllPass(ps)
+	check("Claiming the whole pass adds 125 Sunstones to the permanent balance", ps.Permanent.Premium ~= nil and ps.Permanent.Premium.Sunstones == 125)
+	check("Claiming twice adds nothing more", Quests.ClaimAllPass(ps) == 0 and ps.Permanent.Premium.Sunstones == 125)
+	check("The weekly bonus lists Sunstones", QuestConfig.Weekly.BonusReward.Sunstones == 10)
+
 	print(("QuestTests done: %d passed, %d failed"):format(passed, failed))
 end

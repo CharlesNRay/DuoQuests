@@ -20,6 +20,7 @@
 	  GetLeaderboard(categoryId)        top rows + your own score, "Stage" or "Level"
 	  GetSeasonRewards()                brackets, your live standing, and finished seasons' rewards waiting to be claimed
 	  ClaimSeasonRewards(seasonId)      collect a finished season's reward (once)
+	  BuyCosmetic(id) / EquipCosmetic(slot, id|nil)   auras, kill effects, name colours, titles (Sunstones)
 	  Inspect(userId)                   public card of a party member on this server
 	  ChooseSubclass(subclassId)        pick a subclass path (once per season)
 	  EquipGear(itemId, wornSlot?) / UnequipGear(slot) / SellGear(itemId)   equipment (8 worn slots)
@@ -66,6 +67,8 @@ local WorldService = require(script.Parent.WorldService)
 local LeaderboardService = require(script.Parent.LeaderboardService)
 local Leaderboards = require(Shared.Leaderboards)
 local SeasonRewards = require(Shared.SeasonRewards)
+local Cosmetics = require(Shared.Cosmetics)
+local CosmeticConfig = require(Shared.Config.Cosmetics)
 local SeasonRewardConfig = require(Shared.Config.SeasonRewards)
 local SeasonConfig = require(Shared.Config.Seasons)
 local SeasonResultsService = require(script.Parent.SeasonResultsService)
@@ -138,6 +141,8 @@ local function heroSheetOf(profile)
 	})
 end
 
+local cosmeticsOf -- defined below
+
 local function buildState(player)
 	local profile = DataService.GetProfile(player)
 	if not profile then
@@ -186,6 +191,7 @@ local function buildState(player)
 			PremiumShop = Premium.List(profile),
 			PremiumOffer = Premium.Offer(profile),
 			SunstonePacks = Premium.Packs(profile),
+			Cosmetics = cosmeticsOf(profile),
 		},
 	}
 
@@ -198,6 +204,24 @@ local function buildState(player)
 	end
 	state.LastClaim = PartyService.GetLastClaim(player)
 	return state
+end
+
+-- The cosmetics screen's data: what is worn, and the list for each slot.
+function cosmeticsOf(profile)
+	local lists = {}
+	for _, slot in ipairs(CosmeticConfig.Slots) do
+		lists[slot] = Cosmetics.List(profile, slot)
+	end
+	return { Equipped = Cosmetics.Equipped(profile), Lists = lists, Slots = CosmeticConfig.Slots, Labels = CosmeticConfig.SlotLabels }
+end
+
+-- Everyone's looks are shown from attributes on the player (the client draws the aura, name colour and title from them).
+function ApiService.ApplyLook(player, profile)
+	local look = Cosmetics.Look(profile)
+	player:SetAttribute("CosAura", look.Aura)
+	player:SetAttribute("CosKill", look.Kill)
+	player:SetAttribute("CosName", look.Name)
+	player:SetAttribute("CosTitle", look.Title)
 end
 
 -- After a build change, the partner's ghost of this player must match.
@@ -666,7 +690,33 @@ function handlers.ClaimSeasonRewards(player, profile, seasonId)
 		return false, "Unavailable"
 	end
 	local info = SeasonResultsService.InfoFor(player.UserId, seasonId, final, profile)
-	return SeasonRewards.Claim(profile, seasonId, final, info)
+	local ok, reward = SeasonRewards.Claim(profile, seasonId, final, info)
+	if ok then
+		ApiService.ApplyLook(player, profile) -- new titles may be worn straight away
+	end
+	return ok, reward
+end
+
+function handlers.BuyCosmetic(player, profile, id)
+	if type(id) ~= "string" then
+		return false, "BadArgs"
+	end
+	local ok, data = Cosmetics.Buy(profile, id)
+	if ok then
+		ApiService.ApplyLook(player, profile)
+	end
+	return ok, data
+end
+
+function handlers.EquipCosmetic(player, profile, slot, id)
+	if type(slot) ~= "string" or (id ~= nil and type(id) ~= "string") then
+		return false, "BadArgs"
+	end
+	local ok, reason = Cosmetics.Equip(profile, slot, id)
+	if ok then
+		ApiService.ApplyLook(player, profile)
+	end
+	return ok, reason
 end
 
 function handlers.ChooseSubclass(player, profile, subclassId)

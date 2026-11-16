@@ -43,6 +43,7 @@ local function onPlayerAdded(player)
 	)
 
 	PartyService.OnPlayerReady(player, profile)
+	ApiService.ApplyLook(player, profile)
 end
 
 Players.PlayerAdded:Connect(onPlayerAdded)

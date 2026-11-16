@@ -12,6 +12,7 @@ local function rewardText(r)
 	local parts = {}
 	if (r.Gold or 0) > 0 then table.insert(parts, "💰 " .. r.Gold) end
 	if (r.Wishstones or 0) > 0 then table.insert(parts, "💎 " .. r.Wishstones) end
+	if (r.Sunstones or 0) > 0 then table.insert(parts, "🔶 " .. r.Sunstones) end
 	if (r.Shards or 0) > 0 then table.insert(parts, "💠 " .. r.Shards) end
 	if (r.SkillPicks or 0) > 0 then table.insert(parts, "Skill pick x" .. r.SkillPicks) end
 	if (r.PassXP or 0) > 0 then table.insert(parts, "Pass XP " .. r.PassXP) end
