@@ -365,6 +365,9 @@ function Simulation:ApplyStatus(target, statusId, duration, source, amount, stre
 	if target.Health <= 0 then
 		return false
 	end
+	if def.Flags and def.Flags.Stunned and target.Flags.StunImmune then
+		return false -- bosses cannot be frozen
+	end
 
 	local ctx = {
 		Target = target,
@@ -767,7 +770,7 @@ end
 
 -- Casts the first ready ability whose conditions are met (one per tick).
 function Simulation:_tryCast(caster)
-	if caster.Casting ~= nil or (caster.CastLock or 0) > EPSILON then
+	if caster.Casting ~= nil or (caster.CastLock or 0) > EPSILON or self:HasFlag(caster, "Stunned") then
 		return false
 	end
 	for _, slot in ipairs(caster.Abilities) do
@@ -784,6 +787,17 @@ function Simulation:_tryCast(caster)
 end
 
 -- Counts down cooldowns and status durations by one tick.
+function Simulation:_entityById(id)
+	for _, list in ipairs({ self.Party, self.Enemies }) do
+		for _, e in ipairs(list) do
+			if e.Id == id then
+				return e
+			end
+		end
+	end
+	return nil
+end
+
 function Simulation:_tickTimers(entity)
 	for _, slot in ipairs(entity.Abilities) do
 		local before = slot.Timer
@@ -797,6 +811,18 @@ function Simulation:_tickTimers(entity)
 
 	for index = #entity.Statuses, 1, -1 do
 		local status = entity.Statuses[index]
+		-- damage over time (Burning, Poisoned): the status def has Dot = { Interval, Multiplier, DamageType, Element, Tag }
+		local dot = self:_statusDef(status.Id).Dot
+		if dot and entity.Health > 0 then
+			status.DotClock = (status.DotClock or 0) + Simulation.TICK
+			if status.DotClock >= dot.Interval - EPSILON then
+				status.DotClock -= dot.Interval
+				local source = (status.Source and self:_entityById(status.Source)) or entity
+				self:DealDamage(source, entity, self:GetStat(source, "Attack") * dot.Multiplier * (status.Strength or 1), {
+					Tag = dot.Tag or status.Id, DamageType = dot.DamageType or "Magical", Element = dot.Element, Dot = true,
+				})
+			end
+		end
 		status.Remaining -= Simulation.TICK
 		if status.Remaining <= EPSILON then
 			table.remove(entity.Statuses, index)
@@ -869,6 +895,9 @@ function Simulation:Step()
 		self:_tryCast(entity)
 
 		entity.AttackTimer += Simulation.TICK
+		if self:HasFlag(entity, "Stunned") then
+			entity.AttackTimer = math.min(entity.AttackTimer, 0)
+		end
 		local cooldown = 1 / math.max(self:GetStat(entity, "AttackSpeed"), 0.05)
 		while entity.AttackTimer >= cooldown - EPSILON do
 			entity.AttackTimer -= cooldown

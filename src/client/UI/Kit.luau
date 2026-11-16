@@ -30,6 +30,10 @@ Kit.Colors = {
 	Down = Color3.fromRGB(98, 40, 44),
 	Warrior = Color3.fromRGB(220, 110, 80),
 	Cleric = Color3.fromRGB(240, 220, 130),
+	Mage = Color3.fromRGB(130, 130, 240),
+	Ranger = Color3.fromRGB(110, 190, 100),
+	Rogue = Color3.fromRGB(150, 110, 200),
+	Summoner = Color3.fromRGB(100, 215, 195),
 }
 
 -- Lists sort by LayoutOrder, which defaults to 0 for everything, so every GUI object we make gets an

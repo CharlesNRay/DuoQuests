@@ -31,7 +31,7 @@ return function(modulesOverride)
 
 	local p = ProfileTemplate.New()
 	check("A new profile has no character yet", Character.Get(p).Created == false and Character.DisplayName(p, "Fallback") == "Fallback")
-	check("Mage (locked) and unknown classes cannot be picked", select(2, Character.Create(p, "Hero", "Mage", {}, false)) == "BadClass" and select(2, Character.Create(p, "Hero", "Nope", {}, false)) == "BadClass" and not Character.Get(p).Created)
+	check("Unknown classes cannot be picked", select(2, Character.Create(p, "Hero", "Nope", {}, false)) == "BadClass" and not Character.Get(p).Created)
 	check("A bad name does not create a character", select(2, Character.Create(p, "x", "Warrior", {}, false)) == "TooShort" and not Character.Get(p).Created)
 	check("Create saves name, look, avatar choice and class", Character.Create(p, "Mira Moon", "Cleric", { Skin = 3, Hair = 4, Outfit = 5 }, false) == true and Character.Get(p).Name == "Mira Moon" and p.Season.ClassId == "Cleric" and Character.Get(p).Look.Outfit == 5 and Character.DisplayName(p, "x") == "Mira Moon")
 	check("Create works once only", select(2, Character.Create(p, "Other", "Warrior", {}, false)) == "AlreadyCreated" and p.Season.ClassId == "Cleric")

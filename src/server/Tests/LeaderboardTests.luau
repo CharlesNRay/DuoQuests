@@ -61,7 +61,7 @@ return function(modulesOverride)
 			classBoards[category.Class] = category.Id
 		end
 	end
-	check("Warrior and Cleric have boards, the locked Mage does not", classBoards.Warrior == "Class_Warrior" and classBoards.Cleric == "Class_Cleric" and classBoards.Mage == nil)
+	check("Every playable class has a board", classBoards.Warrior == "Class_Warrior" and classBoards.Cleric == "Class_Cleric" and classBoards.Mage == "Class_Mage" and classBoards.Ranger == "Class_Ranger" and classBoards.Rogue == "Class_Rogue" and classBoards.Summoner == "Class_Summoner")
 	local warrior = ProfileTemplate.New()
 	warrior.Season.HighestStage = 12
 	warrior.Season.ClassId = "Warrior"

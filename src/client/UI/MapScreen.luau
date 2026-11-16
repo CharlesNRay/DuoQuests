@@ -29,7 +29,7 @@ local GLYPHS = {
 local PAPER = Color3.fromRGB(226, 205, 160)
 local PAPER_DARK = Color3.fromRGB(190, 164, 118)
 local INK = Color3.fromRGB(94, 66, 40)
-local CLASS_COLORS = { Warrior = Color3.fromRGB(214, 106, 80), Cleric = Color3.fromRGB(240, 220, 130) }
+local CLASS_COLORS = { Warrior = Color3.fromRGB(214, 106, 80), Cleric = Color3.fromRGB(240, 220, 130), Mage = Color3.fromRGB(130, 130, 240), Ranger = Color3.fromRGB(110, 190, 100), Rogue = Color3.fromRGB(150, 110, 200), Summoner = Color3.fromRGB(100, 215, 195) }
 
 local ZONES_PER_PAGE = 10
 local MAP_HEIGHT = 170

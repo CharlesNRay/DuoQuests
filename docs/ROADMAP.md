@@ -252,3 +252,17 @@ Newest first.
 ## Cosmetics expansion (built)
 - 14 new shop items (auras Ocean/Blossom/Storm/Ember/Gilded, kill effects Stars/Bubbles/Embers/Snowfall/Glitter, name colours Ocean/Sunset/Ice/Ember) and 4 titles; 5 themed bundles (Inferno, Frostbound, Blossom, Stormcaller, Royal Gold) in a Sets tab. A bundle costs less than its three pieces and gets cheaper in proportion to what you already own. `Cosmetics.BuyBundle`, API `BuyCosmeticBundle`, 6 new tests.
 - Not built: try-on preview. Prices are still first guesses.
+
+## New classes: Mage, Ranger, Rogue, Summoner
+
+All four are playable from the character creator (picking one at creation unlocks it and grants its starter skills). Each has 8 skills, 6 passives,
+two paths of 3 skills, a season prize pet (Arcanix, Skyhawk, Shadowcat, Spiritling), class cosmetics and a leaderboard.
+
+- Mage: Pyromancer (burning, big hits) and Frost Weaver (freeze, chill, party shields).
+- Ranger: Sharpshooter (crit damage) and Beastmaster (pet bonuses +75%, pet skill +4 levels).
+- Rogue: Assassin (crits, executes) and Duelist (dodging, ripostes that heal).
+- Summoner: Necromancer (curses, plague, drain) and Spirit Caller (shields and heals). Spirits are drawn as skill effects; real minion combatants are still to do.
+- New combat mechanics: damage over time (`Dot` on a status: Burning, Poisoned), `Stunned` flag (Frozen; bosses are immune), `PetBoost` on a subclass.
+- Every pair of different classes has one ultimate (14 new). Add a second per pair later.
+- All numbers are first guesses. To tune: class base stats, Ranger/Rogue crit and speed, DoT strength, ultimate multipliers.
+- Not seen in Studio yet: new skill looks, Mage/Ranger/Rogue/Summoner hero colours, the six-button class row in the creator.

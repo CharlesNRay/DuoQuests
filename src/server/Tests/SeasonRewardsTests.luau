@@ -130,7 +130,7 @@ return function(modulesOverride)
 	check("Claim gives the pets and cosmetics", p.Permanent.Pets.Crownling == true and p.Permanent.Pets.Laurelwing == true and p.Permanent.Pets.Bannerhound == true and p.Permanent.Cosmetics.Aura_Warrior == true)
 	local mageResults = { Total = 100, Histogram = { [10] = 100 }, Top = {}, ClassTop = { Mage = { [5] = 1 } } }
 	local mageReward = SR.Reward(SR.Standing(mageResults, { UserId = 5, Score = 10, ClassId = "Mage" }))
-	check("A class with no prize pet yet just skips the pet", #mageReward.Pets == 0 and mageReward.Sunstones > 0)
+	check("A Mage best earns the Arcanix prize pet", #mageReward.Pets == 1 and mageReward.Pets[1] == "Arcanix" and mageReward.Sunstones > 0)
 	local owned = ProfileTemplate.New()
 	owned.Permanent.Pets.Bannerhound = true
 	SR.Claim(owned, 1, results, { UserId = 11, Score = 12, ClassId = "Warrior" })

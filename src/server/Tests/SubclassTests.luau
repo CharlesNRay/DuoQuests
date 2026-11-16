@@ -111,9 +111,12 @@ return function(modulesOverride)
 	-- every path skill actually casts in a fight (no runtime errors)
 	for _, id in ipairs(Config.Order) do
 		local def = Config.Defs[id]
-		local w, c = ProfileTemplate.New(), ProfileTemplate.New()
-		c.Season.ClassId = "Cleric"
-		local mine = if def.Class == "Warrior" then w else c
+		local mine, other = ProfileTemplate.New(), ProfileTemplate.New()
+		mine.Permanent.UnlockedClasses[def.Class] = true
+		ProfileTemplate.GrantClassStarters(mine.Season, def.Class)
+		mine.Season.ClassId = def.Class
+		other.Season.ClassId = if def.Class == "Cleric" then "Warrior" else "Cleric"
+		local w, c = mine, other
 		mine.Season.Level = 30
 		Subclasses.Choose(mine, def.Class, id)
 		for _, skillId in ipairs(def.Skills) do

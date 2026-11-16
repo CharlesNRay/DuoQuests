@@ -8,7 +8,7 @@
 	  Character.Get(profile)                      -> the saved table (filled with defaults)
 	  Character.CheckName(text)                   -> true, cleaned | false, "TooShort" | "TooLong" | "BadCharacters" | "Blocked"
 	  Character.CleanLook(look)                   -> { Skin, Hair, Outfit } valid indexes (bad values fall back to defaults)
-	  Character.Playable(profile, classId)        -> boolean (a class that exists, is not Locked and is unlocked)
+	  Character.Playable(profile, classId)        -> boolean (a class that exists and is not Locked; picking it at creation unlocks it)
 	  Character.Create(profile, name, classId, look, useAvatar) -> true | false, reason ("AlreadyCreated", "BadClass", or a name reason)
 	  Character.SetLook(profile, look, useAvatar) -> true | false, "NotCreated"
 	  Character.Rename(profile, name, premium)    -> true, cost | false, reason ("NotCreated", "NotEnough", name reasons)
@@ -18,6 +18,7 @@
 
 local Config = require(script.Parent.Config.Character)
 local Classes = require(script.Parent.Config.Classes)
+local ProfileTemplate = require(script.Parent.ProfileTemplate)
 
 local Character = {}
 
@@ -76,7 +77,7 @@ end
 
 function Character.Playable(profile, classId)
 	local def = Classes[classId]
-	return def ~= nil and not def.Locked and profile.Permanent.UnlockedClasses[classId] == true
+	return def ~= nil and not def.Locked
 end
 
 function Character.Create(profile, name, classId, look, useAvatar)
@@ -95,6 +96,8 @@ function Character.Create(profile, name, classId, look, useAvatar)
 	c.Name = cleaned
 	c.Look = Character.CleanLook(look)
 	c.UseAvatar = useAvatar == true
+	profile.Permanent.UnlockedClasses[classId] = true
+	ProfileTemplate.GrantClassStarters(profile.Season, classId)
 	profile.Season.ClassId = classId
 	return true
 end

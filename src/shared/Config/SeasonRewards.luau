@@ -58,7 +58,7 @@ return {
 		{ MaxRank = 3, Label = "Top 3 %s", Sunstones = 300, Title = "%s Champion", Cosmetic = "Kill_%s" },
 		{ MaxRank = 10, Label = "Top 10 %s", Sunstones = 150, Title = "Elite %s", Cosmetic = "Name_%s" },
 	},
-	ClassPets = { Warrior = "Bannerhound", Cleric = "Haloette" }, -- add one when a class launches (Mage has none yet)
+	ClassPets = { Warrior = "Bannerhound", Cleric = "Haloette", Mage = "Arcanix", Ranger = "Skyhawk", Rogue = "Shadowcat", Summoner = "Spiritling" }, -- add one when a class launches
 
 	-- Display names for cosmetic ids ("%s" = class name).
 	CosmeticNames = {

@@ -49,7 +49,7 @@ return {
 		"Wisp", "Emberkit", "Shellby", "Zephyr",
 		"Frostwing", "Starbun", "Thornback",
 		"EmberDrake", "Aurora", "Colossling",
-		"Crownling", "Laurelwing", "Bannerhound", "Haloette", -- season prizes (Reward = true): never from the Wishing Tree
+		"Crownling", "Laurelwing", "Bannerhound", "Haloette", "Arcanix", "Skyhawk", "Shadowcat", "Spiritling", -- season prizes (Reward = true): never from the Wishing Tree
 	},
 
 	Defs = {
@@ -173,6 +173,30 @@ return {
 			Look = { Shape = "Wisp", Color = { 255, 240, 170 }, Size = 1.3, Glow = true },
 			Stats = { { Stat = "MaxHealth", Share = 0.8 }, { Stat = "CritMultiplier", Share = 0.4 } },
 			Skill = { Name = "Halo Mend", Text = "Heals the most hurt ally a lot and the rest a little." },
+		},
+		Arcanix = {
+			Id = "Arcanix", DisplayName = "Arcanix", Rarity = "Epic", Reward = true, Power = 2.0,
+			Look = { Shape = "Wisp", Color = { 170, 120, 255 }, Size = 1.3, Glow = true },
+			Stats = { { Stat = "Attack", Share = 0.8 }, { Stat = "CritMultiplier", Share = 0.4 } },
+			Skill = { Name = "Arcane Echo", Text = "A wave of arcane energy hits every enemy." },
+		},
+		Skyhawk = {
+			Id = "Skyhawk", DisplayName = "Skyhawk", Rarity = "Epic", Reward = true, Power = 2.0,
+			Look = { Shape = "Bird", Color = { 120, 190, 240 }, Size = 1.3 },
+			Stats = { { Stat = "AttackSpeed", Share = 0.7 }, { Stat = "CritChance", Share = 0.5 } },
+			Skill = { Name = "Hawk Strike", Text = "Dives on an enemy and marks it to take more damage." },
+		},
+		Shadowcat = {
+			Id = "Shadowcat", DisplayName = "Shadowcat", Rarity = "Epic", Reward = true, Power = 2.0,
+			Look = { Shape = "Cat", Color = { 80, 70, 110 }, Size = 1.3 },
+			Stats = { { Stat = "Attack", Share = 0.7 }, { Stat = "CritChance", Share = 0.5 } },
+			Skill = { Name = "Shadow Pounce", Text = "Pounces on an enemy; its owner attacks faster for a moment." },
+		},
+		Spiritling = {
+			Id = "Spiritling", DisplayName = "Spiritling", Rarity = "Epic", Reward = true, Power = 2.0,
+			Look = { Shape = "Wisp", Color = { 120, 230, 210 }, Size = 1.3, Glow = true },
+			Stats = { { Stat = "MaxHealth", Share = 0.7 }, { Stat = "Attack", Share = 0.5 } },
+			Skill = { Name = "Spirit Link", Text = "Heals the most hurt ally and shields them." },
 		},
 	},
 }

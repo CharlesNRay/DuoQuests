@@ -96,8 +96,8 @@ function CharacterScreen.Character(container, state, call, extra)
 	for _, class in ipairs(char.Classes) do
 		local chosen = draft.ClassId == class.Id
 		local b = Kit.button({
-			Size = UDim2.fromOffset(104, 34), Position = UDim2.fromOffset(x, 0), BackgroundColor3 = if chosen then C.Accent else C.PanelLight,
-			Text = if class.Playable then class.Name else (class.Name .. " (soon)"), TextSize = 13,
+			Size = UDim2.fromOffset(78, 34), Position = UDim2.fromOffset(x, 0), BackgroundColor3 = if chosen then C.Accent else C.PanelLight,
+			Text = if class.Playable then class.Name else (class.Name .. " (soon)"), TextSize = 12,
 			TextColor3 = if class.Playable then (if chosen then Color3.fromRGB(20, 20, 30) else C.Text) else C.Dim, Parent = classArea,
 		}, function()
 			if creating and class.Playable then
@@ -106,7 +106,7 @@ function CharacterScreen.Character(container, state, call, extra)
 			end
 		end)
 		b.Name = "Class_" .. class.Id
-		x += 108
+		x += 82
 	end
 
 	-- look

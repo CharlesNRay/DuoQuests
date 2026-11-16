@@ -230,7 +230,7 @@ end
 function characterOf(profile)
 	local c = Character.Get(profile)
 	local classes = {}
-	for _, classId in ipairs({ "Warrior", "Cleric", "Mage" }) do
+	for _, classId in ipairs({ "Warrior", "Cleric", "Mage", "Ranger", "Rogue", "Summoner" }) do
 		local def = Classes[classId]
 		if def then
 			table.insert(classes, { Id = classId, Name = def.DisplayName or classId, Playable = Character.Playable(profile, classId) })

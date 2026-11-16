@@ -16,6 +16,10 @@ local Models = {}
 local CLASS_COLORS = {
 	Warrior = Color3.fromRGB(214, 106, 80),
 	Cleric = Color3.fromRGB(240, 220, 130),
+	Mage = Color3.fromRGB(130, 130, 240),
+	Ranger = Color3.fromRGB(110, 190, 100),
+	Rogue = Color3.fromRGB(150, 110, 200),
+	Summoner = Color3.fromRGB(100, 215, 195),
 }
 
 local function part(parent, props)

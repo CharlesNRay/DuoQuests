@@ -124,4 +124,74 @@ return {
 		Description = "Hits much harder and faster.",
 		Mods = { { Stat = "Attack", Mode = "Mult", Value = 1.5 }, { Stat = "AttackSpeed", Mode = "Mult", Value = 1.25 } },
 	},
+
+	-- Class statuses (Mage, Ranger, Rogue, Summoner) ---------------------------------------
+	-- Dot = damage over time: every Interval seconds the holder takes Multiplier x the SOURCE's Attack (times the status Strength).
+	Burning = {
+		Id = "Burning",
+		DisplayName = "Burning",
+		Description = "Takes fire damage every second.",
+		Dot = { Interval = 1, Multiplier = 0.3, DamageType = "Magical", Element = "Fire", Tag = "Burning" },
+	},
+	Poisoned = {
+		Id = "Poisoned",
+		DisplayName = "Poisoned",
+		Description = "Takes poison damage every second.",
+		Dot = { Interval = 1, Multiplier = 0.25, DamageType = "Physical", Element = "Poison", Tag = "Poisoned" },
+	},
+	-- Frozen: cannot attack or cast (bosses are immune; they get Chilled instead from the same skills).
+	Frozen = {
+		Id = "Frozen",
+		DisplayName = "Frozen",
+		Description = "Frozen solid: cannot act.",
+		Flags = { Stunned = true },
+	},
+	Snared = {
+		Id = "Snared",
+		DisplayName = "Snared",
+		Description = "Attacks much more slowly.",
+		Mods = { { Stat = "AttackSpeed", Mode = "Mult", Value = 0.5 } },
+	},
+	Marked = {
+		Id = "Marked",
+		DisplayName = "Marked",
+		Description = "Takes more damage.",
+		Mods = { { Stat = "DamageTaken", Mode = "Mult", Value = 1.3 } },
+	},
+	Cursed = {
+		Id = "Cursed",
+		DisplayName = "Cursed",
+		Description = "Takes more damage and hits weaker.",
+		Mods = { { Stat = "DamageTaken", Mode = "Mult", Value = 1.2 }, { Stat = "Attack", Mode = "Mult", Value = 0.85 } },
+	},
+	Hasted = {
+		Id = "Hasted",
+		DisplayName = "Hasted",
+		Description = "Attack speed greatly increased.",
+		Mods = { { Stat = "AttackSpeed", Mode = "Mult", Value = 1.5 } },
+	},
+	Evasive = {
+		Id = "Evasive",
+		DisplayName = "Evasive",
+		Description = "Takes much less damage.",
+		Mods = { { Stat = "DamageTaken", Mode = "Mult", Value = 0.6 } },
+	},
+	DeadEye = {
+		Id = "DeadEye",
+		DisplayName = "Dead Eye",
+		Description = "Crit chance and attack greatly increased.",
+		Mods = { { Stat = "CritChance", Mode = "Add", Value = 0.3 }, { Stat = "Attack", Mode = "Mult", Value = 1.15 } },
+	},
+	Emboldened = {
+		Id = "Emboldened",
+		DisplayName = "Emboldened",
+		Description = "Attack and attack speed increased.",
+		Mods = { { Stat = "Attack", Mode = "Mult", Value = 1.2 }, { Stat = "AttackSpeed", Mode = "Mult", Value = 1.15 } },
+	},
+	Shadowed = {
+		Id = "Shadowed",
+		DisplayName = "Shadowed",
+		Description = "Crits much harder.",
+		Mods = { { Stat = "CritMultiplier", Mode = "Add", Value = 0.6 }, { Stat = "CritChance", Mode = "Add", Value = 0.15 } },
+	},
 }

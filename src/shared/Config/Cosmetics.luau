@@ -78,6 +78,9 @@ local ClassLooks = {
 	Warrior = { { 230, 80, 70 }, { 255, 170, 120 } },
 	Cleric = { { 255, 235, 150 }, { 255, 255, 255 } },
 	Mage = { { 110, 150, 255 }, { 190, 150, 255 } },
+	Ranger = { { 110, 200, 110 }, { 200, 255, 160 } },
+	Rogue = { { 150, 110, 210 }, { 220, 180, 255 } },
+	Summoner = { { 100, 220, 200 }, { 200, 255, 240 } },
 }
 local SlotNames = { Aura = "aura", Kill = "kill effect", Name = "name colour" }
 for classId, colours in pairs(ClassLooks) do

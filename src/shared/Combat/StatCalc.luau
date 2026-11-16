@@ -99,6 +99,14 @@ function StatCalc.NewPartyMember(id, name, classId, level, options)
 	end
 	if options.PetId then
 		applyMods(stats, Pets.Mods(options.PetId, options.PetLevel, options.PetRank))
+		local boost = if options.SubclassId then Subclasses.PetBoost(options.SubclassId) else nil
+		if boost and boost.Stats > 0 then -- Beastmaster: the pet's stat bonuses are worth more
+			local extra = {}
+			for _, mod in ipairs(Pets.Mods(options.PetId, options.PetLevel, options.PetRank)) do
+				table.insert(extra, { Stat = mod.Stat, Mode = mod.Mode, Value = mod.Value * boost.Stats })
+			end
+			applyMods(stats, extra)
+		end
 	end
 	if options.ExtraMods then
 		applyMods(stats, options.ExtraMods) -- timed boosts from consumables
@@ -113,7 +121,7 @@ function StatCalc.NewPartyMember(id, name, classId, level, options)
 		DamageType = class.DamageType,
 		BasicAttack = class.BasicAttack,
 		Stats = stats,
-		Abilities = StatCalc.WithPetSkill(StatCalc.ClassAbilities(classId, options.AbilityIds, options.SlotLevels), options.PetId, options.PetRank),
+		Abilities = StatCalc.WithPetSkill(StatCalc.ClassAbilities(classId, options.AbilityIds, options.SlotLevels), options.PetId, (options.PetRank or 1) + (if options.SubclassId then Subclasses.PetBoost(options.SubclassId).SkillLevels else 0)),
 	})
 end
 
@@ -136,6 +144,7 @@ function StatCalc.NewEnemy(id, enemyId, scale)
 		Stats = stats,
 		Abilities = enemy.Abilities,
 	})
+	entity.Flags.StunImmune = enemy.IsBoss == true
 	entity.Scale = scale -- summons copy their summoner's scale
 	return entity
 end

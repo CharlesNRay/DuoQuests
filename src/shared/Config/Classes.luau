@@ -16,8 +16,8 @@
 	                   Subclasses = { Berserker = { ...stat tweaks, extra skills... } }
 	                   with the choice stored as Season.SubclassId.
 
-	Prototype focus: Warrior (tank) and Cleric (healer). Mage is kept for
-	later and is not unlocked for new players.
+	Six classes: Warrior (tank), Cleric (healer), and four damage classes: Mage (burst and control),
+	Ranger (steady ranged, pets), Rogue (fast, crits) and Summoner (spirits and drain).
 ]]
 
 return {
@@ -98,7 +98,6 @@ return {
 
 	Mage = {
 		Id = "Mage",
-		Locked = true, -- not playable yet: no leaderboard until this is removed
 		DisplayName = "Mage",
 		Role = "Damage",
 		DamageType = "Magical",
@@ -119,8 +118,129 @@ return {
 			CritChance = 0,
 		},
 
-		AbilityPool = { "Fireball", "Blizzard", "LightningBolt", "ArcaneSurge" },
+		AbilityPool = {
+			"Fireball",
+			"Blizzard",
+			"LightningBolt",
+			"ArcaneSurge",
+			"ArcaneBlast",
+			"ChainLightning",
+			"ManaShield",
+			"Meteor",
+		},
+		PassivePool = { "ArcanePower", "Alchemy", "Focus", "WardedRobes", "Wisdom", "Gemcutter" },
 		DefaultLoadout = { "Fireball", "Blizzard", "LightningBolt", "ArcaneSurge" },
+		Subclasses = {},
+	},
+
+	Ranger = {
+		Id = "Ranger",
+		DisplayName = "Ranger",
+		Role = "Damage",
+		DamageType = "Physical",
+		BasicAttack = { Id = "ArrowShot", DisplayName = "Arrow Shot", Range = "Ranged" },
+
+		BaseStats = {
+			MaxHealth = 120,
+			Attack = 14,
+			Defense = 5,
+			AttackSpeed = 1.1,
+			CritChance = 0.12,
+		},
+		GrowthPerLevel = {
+			MaxHealth = 14,
+			Attack = 2.6,
+			Defense = 1,
+			AttackSpeed = 0,
+			CritChance = 0,
+		},
+
+		AbilityPool = {
+			"PowerShot",
+			"Volley",
+			"PiercingArrow",
+			"Snare",
+			"Evasion",
+			"HuntersMark",
+			"RapidFire",
+			"ExplosiveArrow",
+		},
+		PassivePool = { "SteadyAim", "Scavenger", "Fletching", "Camouflage", "Tracker", "KeenEye" },
+		DefaultLoadout = { "PowerShot", "Volley", "Snare", "PiercingArrow" },
+		Subclasses = {},
+	},
+
+	Rogue = {
+		Id = "Rogue",
+		DisplayName = "Rogue",
+		Role = "Damage",
+		DamageType = "Physical",
+		BasicAttack = { Id = "DaggerStab", DisplayName = "Dagger Stab", Range = "Melee" },
+
+		BaseStats = {
+			MaxHealth = 125,
+			Attack = 13,
+			Defense = 4,
+			AttackSpeed = 1.3,
+			CritChance = 0.15,
+		},
+		GrowthPerLevel = {
+			MaxHealth = 14,
+			Attack = 2.2,
+			Defense = 1,
+			AttackSpeed = 0,
+			CritChance = 0,
+		},
+
+		AbilityPool = {
+			"Backstab",
+			"FanOfKnives",
+			"PoisonBlade",
+			"Smokescreen",
+			"Shadowstep",
+			"Eviscerate",
+			"Flurry",
+			"Vanish",
+		},
+		PassivePool = { "Nimble", "Pickpocket", "Lethality", "Fleetfoot", "Streetwise", "Fence" },
+		DefaultLoadout = { "Backstab", "FanOfKnives", "PoisonBlade", "Eviscerate" },
+		Subclasses = {},
+	},
+
+	Summoner = {
+		Id = "Summoner",
+		DisplayName = "Summoner",
+		Role = "Damage",
+		DamageType = "Magical",
+		BasicAttack = { Id = "SpiritBolt", DisplayName = "Spirit Bolt", Range = "Ranged" },
+
+		BaseStats = {
+			MaxHealth = 120,
+			Attack = 15,
+			Defense = 4,
+			AttackSpeed = 0.9,
+			CritChance = 0.06,
+		},
+		GrowthPerLevel = {
+			MaxHealth = 13,
+			Attack = 2.7,
+			Defense = 1,
+			AttackSpeed = 0,
+			CritChance = 0,
+		},
+
+		AbilityPool = {
+			"SummonImp",
+			"WraithSwarm",
+			"SoulLeech",
+			"SpiritWard",
+			"Haunt",
+			"SpectralPack",
+			"BoneArmor",
+			"CallTitan",
+		},
+		PassivePool = { "SpiritBond", "Tribute", "Dominion", "WardingCircle", "Occultist", "Medium" },
+		DefaultLoadout = { "SummonImp", "WraithSwarm", "SoulLeech", "Haunt" },
 		Subclasses = {},
 	},
 }

@@ -80,6 +80,18 @@ function Subclasses.Mods(subclassId)
 	return mods
 end
 
+-- Beastmaster style bonuses: { Stats = extra share of the pet's stat bonuses, SkillLevels = extra levels on its skill }
+function Subclasses.PetBoost(subclassId)
+	local total = { Stats = 0, SkillLevels = 0 }
+	for _, def in ipairs(Subclasses.Chain(subclassId)) do
+		if def.PetBoost then
+			total.Stats += def.PetBoost.Stats or 0
+			total.SkillLevels += def.PetBoost.SkillLevels or 0
+		end
+	end
+	return total
+end
+
 function Subclasses.SkillIds(subclassId)
 	local ids = {}
 	for _, def in ipairs(Subclasses.Chain(subclassId)) do
@@ -131,7 +143,7 @@ function Subclasses.Choose(profile, classId, subclassId)
 	return true
 end
 
-local STAT_LABELS = { Attack = "Attack", MaxHealth = "Health", Defense = "Defense", AttackSpeed = "Attack speed", CritChance = "Crit", DamageDealt = "Damage", HealingDealt = "Healing", DamageTaken = "Damage taken" }
+local STAT_LABELS = { Attack = "Attack", MaxHealth = "Health", Defense = "Defense", AttackSpeed = "Attack speed", CritChance = "Crit", DamageDealt = "Damage", HealingDealt = "Healing", DamageTaken = "Damage taken", CritMultiplier = "Crit damage" }
 
 function Subclasses.Describe(subclassId)
 	local def = Config.Defs[subclassId]
@@ -142,6 +154,9 @@ function Subclasses.Describe(subclassId)
 	for _, mod in ipairs(def.Mods) do
 		local sign = if mod.Value >= 0 then "+" else ""
 		table.insert(parts, ("%s%d%% %s"):format(sign, math.floor(mod.Value * 100 + 0.5), STAT_LABELS[mod.Stat] or mod.Stat))
+	end
+	if def.PetBoost then
+		table.insert(parts, ("pet bonuses +%d%%"):format(math.floor((def.PetBoost.Stats or 0) * 100 + 0.5)))
 	end
 	return table.concat(parts, ", ")
 end
