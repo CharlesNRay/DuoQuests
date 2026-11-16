@@ -53,6 +53,17 @@ local function auraEmitter(def)
 	return e
 end
 
+-- A function that builds the aura emitter for a cosmetic id (nil when there is none), for the fight scene's heroes.
+function CosmeticsVisuals.AuraBuilder(id)
+	local def = id and Cosmetics.Def(id)
+	if not def then
+		return nil
+	end
+	return function()
+		return auraEmitter(def)
+	end
+end
+
 local function nameColor(def)
 	return if def and not def.Rainbow then c3(def.Color) else Color3.new(1, 1, 1)
 end

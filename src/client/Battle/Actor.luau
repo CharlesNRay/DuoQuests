@@ -8,6 +8,7 @@
 	  actor:SetHealth(health)   updates the bar
 	  actor:Lunge(towardX) / Flinch() / Fall() / Rise() / Cheer() / FadeOut()
 	  actor:SetModel(model)     swap the body (e.g. the real avatar) keeping state
+	  actor:SetAura(builder, key)  a cosmetic aura emitter that follows the body
 	  actor:SetGhost(on)        see-through look for an offline partner's ghost
 	  actor:Pos()               world position of the chest, for effects
 	  actor:Destroy()
@@ -135,6 +136,9 @@ function Actor:SetModel(model)
 	if self.Ghost then
 		applyGhost(model, true)
 	end
+	if self.AuraBuilder then
+		self.AuraBuilder().Parent = model.PrimaryPart -- the aura follows the body when it is swapped
+	end
 	if self.Bar then
 		self.Bar.Adornee = model.PrimaryPart
 	end
@@ -144,6 +148,25 @@ function Actor:SetModel(model)
 	end
 	if old then
 		old:Destroy()
+	end
+end
+
+-- A cosmetic aura (a function that builds a ParticleEmitter, or nil for none); kept across body swaps.
+function Actor:SetAura(builder, key)
+	if self.AuraKey == key then
+		return
+	end
+	self.AuraKey = key
+	self.AuraBuilder = builder
+	local root = self.Model.PrimaryPart
+	if root then
+		local old = root:FindFirstChild("CosAura")
+		if old then
+			old:Destroy()
+		end
+		if builder then
+			builder().Parent = root
+		end
 	end
 end
 

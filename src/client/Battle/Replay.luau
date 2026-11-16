@@ -147,6 +147,11 @@ function Replay:_hero(entry, index)
 		self.Heroes[entry.Id] = hero
 	end
 	applyBody(hero, entry)
+	do -- cosmetic aura of this hero's player (set by the server on the player)
+		local owner = entry.UserId and entry.UserId > 0 and Players:GetPlayerByUserId(entry.UserId) or nil
+		local auraId = owner and owner:GetAttribute("CosAura") or nil
+		hero:SetAura(CosmeticsVisuals.AuraBuilder(auraId), auraId or "none")
+	end
 	if hero.Look ~= entry.Look then
 		hero:SetLook(entry.Look)
 	end

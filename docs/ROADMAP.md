@@ -238,3 +238,6 @@ Newest first.
 
 ## Equip best gear (built)
 - Bag screen: "Equip best" wears the highest Item Power of every gear type (rings keep the best two); ties keep what is worn; nothing is lost. Set bonuses are not counted, only Item Power. `Gear.EquipBest`, API `EquipBestGear`, 7 tests.
+
+## Cosmetics in the fight scene (built, not yet seen in Studio)
+- A hero's equipped aura now also shows on the drawn fight hero (follows body swaps). Name colour and title are still only on plaza/home characters; the fight scene has health bars, not name tags.
