@@ -28,6 +28,7 @@ Screens.Quests = require(script.Parent.UI.QuestScreen).Quests
 Screens.Premium = require(script.Parent.UI.PremiumScreen).Premium
 Screens.Season = require(script.Parent.UI.SeasonScreen).Season
 Screens.Cosmetics = require(script.Parent.UI.CosmeticsScreen).Cosmetics
+Screens.Codes = require(script.Parent.UI.CodesScreen).Codes
 local CosmeticsVisuals = require(script.Parent.Battle.CosmeticsVisuals)
 CosmeticsVisuals.Init()
 local World = require(Shared.World)
@@ -140,7 +141,7 @@ end
 local PANEL_DEFAULT = Vector2.new(500, 286)
 local PANEL_SIZES = {
 	Map = Vector2.new(640, 298), Hero = Vector2.new(640, 298), Skills = Vector2.new(660, 344),
-	Merchant = Vector2.new(540, 292), Blacksmith = Vector2.new(540, 292), Wish = Vector2.new(640, 310), Boss = Vector2.new(640, 310), Quests = Vector2.new(640, 330), Premium = Vector2.new(640, 330), Season = Vector2.new(640, 330), Cosmetics = Vector2.new(640, 330),
+	Merchant = Vector2.new(540, 292), Blacksmith = Vector2.new(540, 292), Wish = Vector2.new(640, 310), Boss = Vector2.new(640, 310), Quests = Vector2.new(640, 330), Premium = Vector2.new(640, 330), Season = Vector2.new(640, 330), Cosmetics = Vector2.new(640, 330), Codes = Vector2.new(540, 300),
 }
 local SHOP_NPC = { Merchant = "Merchant", Blacksmith = "Blacksmith", Wish = "Tree" }
 local panel = Kit.frame({ Name = "Panel", Size = UDim2.new(0, 500, 0, 286), Position = UDim2.new(0.5, -250, 0, 42), BackgroundColor3 = Kit.Colors.Bg, Visible = false, ZIndex = 5, Parent = root })
@@ -371,6 +372,7 @@ hud:AddButton("Boss", "mini", "👹", "Bosses", function()
 	open("Boss", "Bosses")
 end)
 hud:AddButton("Premium", "mini", "🔶", "Premium shop", function() open("Premium", "Premium Shop") end)
+hud:AddButton("Codes", "mini", "🎁", "Redeem a code", function() extra.CodeResult = nil open("Codes", "Redeem Code") end)
 hud:AddButton("Cosmetics", "mini", "🎨", "Cosmetics: auras, kill effects, name colours, titles", function() open("Cosmetics", "Cosmetics") end)
 hud:AddButton("Season", "mini", "🏆", "Season rewards", function() extra.SeasonMsg = nil showSeason() end)
 hud:AddButton("Quests", "mini", "📜", "Quests & Season Pass", function() open("Quests", "Quests & Season Pass") end)

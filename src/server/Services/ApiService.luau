@@ -20,6 +20,7 @@
 	  GetLeaderboard(categoryId)        top rows + your own score, "Stage" or "Level"
 	  GetSeasonRewards()                brackets, your live standing, and finished seasons' rewards waiting to be claimed
 	  ClaimSeasonRewards(seasonId)      collect a finished season's reward (once)
+	  RedeemCode(text)   -> ok, { Success, Reason?, Lines? }   (wrong tries are limited: 5 a minute, then a short lock)
 	  BuyCosmetic(id) / EquipCosmetic(slot, id|nil)   auras, kill effects, name colours, titles (Sunstones)
 	  Inspect(userId)                   public card of a party member on this server
 	  ChooseSubclass(subclassId)        pick a subclass path (once per season)
@@ -68,6 +69,8 @@ local LeaderboardService = require(script.Parent.LeaderboardService)
 local Leaderboards = require(Shared.Leaderboards)
 local SeasonRewards = require(Shared.SeasonRewards)
 local Cosmetics = require(Shared.Cosmetics)
+local Codes = require(Shared.Codes)
+local CodeList = require(script.Parent.Parent.Data.CodeList) -- server only: clients never see the list
 local CosmeticConfig = require(Shared.Config.Cosmetics)
 local SeasonRewardConfig = require(Shared.Config.SeasonRewards)
 local SeasonConfig = require(Shared.Config.Seasons)
@@ -697,6 +700,35 @@ function handlers.ClaimSeasonRewards(player, profile, seasonId)
 	return ok, reward
 end
 
+local codeTries = {} -- [userId] = { Wrong = n, Since = t, LockedUntil = t }
+
+function handlers.RedeemCode(player, profile, text)
+	if type(text) ~= "string" then
+		return false, "BadArgs"
+	end
+	local now = os.time()
+	local t = codeTries[player.UserId]
+	if t == nil or now - t.Since > 60 then
+		t = { Wrong = 0, Since = now, LockedUntil = 0 }
+		codeTries[player.UserId] = t
+	end
+	if now < t.LockedUntil then
+		return true, { Success = false, Reason = "Slow", Wait = t.LockedUntil - now }
+	end
+	local ok, result = Codes.Redeem(profile, text, now, CodeList)
+	if ok then
+		return true, { Success = true, Lines = result.Lines }
+	end
+	if result == "Invalid" or result == "Empty" then
+		t.Wrong += 1
+		if t.Wrong >= 5 then
+			t.LockedUntil = now + 30
+			t.Wrong = 0
+		end
+	end
+	return true, { Success = false, Reason = result }
+end
+
 function handlers.BuyCosmetic(player, profile, id)
 	if type(id) ~= "string" then
 		return false, "BadArgs"
@@ -881,6 +913,7 @@ function ApiService.Init()
 
 	Players.PlayerRemoving:Connect(function(player)
 		lastCall[player.UserId] = nil
+		codeTries[player.UserId] = nil
 	end)
 end
 

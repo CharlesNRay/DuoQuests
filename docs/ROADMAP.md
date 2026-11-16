@@ -223,3 +223,9 @@ Newest first.
 - Cosmetics: `Config/Cosmetics` (6 shop auras, 5 shop kill effects, 7 shop name colours, 5 shop titles; season prizes: Champion/Silver/Bronze/Elite auras, Sparks, Laurel, and Aura/Kill/Name per class), `Shared/Cosmetics` (Owned, Equip, Buy with Sunstones, List, Look; 20 tests), API `BuyCosmetic` / `EquipCosmetic`, state field `Cosmetics`, the 🎨 Cosmetics screen (tabs per slot, buy/equip/take off; season prizes show locked), and `CosmeticsVisuals` (name tag with title and name colour and an aura on every character, from player attributes `CosAura/CosName/CosTitle`; the local player's kill effect bursts where an enemy dies in the fight scene).
 - NOT yet seen in Studio: the screen layout (mini-button row may be crowded now), the aura/name tag look, the kill burst. The hero in the fight scene is a drawn actor, not the character, so it does not wear the aura yet (the plaza and home characters do). Prices are first guesses.
 - Verified in Studio (Play): the wishing animation (x1 and x10 grid), the Season Rewards screen (needed an area frame around its scroll list to render cleanly) and the Cosmetics screen (buy, equip; the Flame aura shows as embers on the plaza character and the custom name tag draws).
+
+## Redeem codes (built)
+- `server/Data/CodeList` (server only, clients never see it): `[CODE] = { Rewards = {Sunstones, Wishstones, SkillPicks, Items, Titles, Cosmetics}, StartsAt?, ExpiresAt?, Disabled? }`. Sample codes WELCOME, DUOQUEST, THANKS, SEASON1: replace before launch.
+- `Shared/Codes`: normalises the text, once per account (`Permanent.Codes.Redeemed`), start/expiry window, pays out. 11 tests.
+- API `RedeemCode`: 5 wrong tries a minute, then a 30 second lock. UI: 🎁 button, Redeem Code box.
+- Not built: codes with a global use limit (needs a DataStore counter).
