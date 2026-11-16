@@ -145,6 +145,7 @@ return {
 				{ Stat = "MaxHealth", Mode = "Mul", Value = 0.2 },
 				{ Stat = "Defense", Mode = "Mul", Value = 0.2 },
 				{ Stat = "Attack", Mode = "Mul", Value = 0.15 },
+				{ Stat = "PetDamage", Mode = "Mul", Value = 2.0 }, -- the pet is the main damage dealer
 			},
 			PetBoost = { Stats = 0.75, SkillLevels = 4 },
 			Skills = { "PackHowl", "Stampede", "NaturesBond" },
@@ -288,7 +289,7 @@ return {
 			Parent = "Beastmaster",
 			UnlockLevel = 90,
 			Description = "The final form of the Beastmaster: the wild answers every call.",
-			Mods = { { Stat = "MaxHealth", Mode = "Mul", Value = 0.15 }, { Stat = "Attack", Mode = "Mul", Value = 0.12 }, { Stat = "DamageDealt", Mode = "Mul", Value = 0.08 } },
+			Mods = { { Stat = "MaxHealth", Mode = "Mul", Value = 0.15 }, { Stat = "Attack", Mode = "Mul", Value = 0.12 }, { Stat = "DamageDealt", Mode = "Mul", Value = 0.08 }, { Stat = "PetDamage", Mode = "Mul", Value = 1.0 } },
 			Skills = { "PrimalSurge" },
 		},
 		Nightblade = {

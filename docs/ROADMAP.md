@@ -328,3 +328,6 @@ two paths of 3 skills, a season prize pet (Arcanix, Skyhawk, Shadowcat, Spiritli
 - Weekly raid boss (4 bosses cycle): one shared health bar sized from active members' frontiers, 3 strikes per member per day, rewards by damage share plus a bonus when it falls; last week's raid stays claimable.
 - Guild pets: 7 guild-only pets (`Guild = true`), earned with the Guild Wish using personal Guild Marks (pity at 12 / 60).
 - Not yet: guild chat, expeditions/dungeons, live DataStore test in a published place.
+
+## Pet damage
+- Every pet hit (its strike and its skill, tag `Pet_*`) is multiplied by `Config/Pets.DamageScale` (4.5) in `Simulation:DealDamage`, and by the owner's `PetDamage` stat. Beastmaster adds +200% PetDamage (Wildlord +100% more), so the pet out-damages the Ranger (measured ~60-70% of the pair's damage vs ~40-45% for a normal build). `XPScale` retuned to 11 so level pacing still holds.

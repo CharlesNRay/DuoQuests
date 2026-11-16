@@ -37,6 +37,8 @@ return {
 	-- Collecting counts: every owned pet adds points (more for rarer pets, times its rank) and each point is a small permanent
 	-- bonus to Attack and Max Health, whether or not that pet is equipped.
 	Collection = { Points = { Common = 1, Rare = 2, Epic = 4, Legendary = 8 }, PerPoint = 0.001, Stats = { "Attack", "MaxHealth" } },
+	-- Every pet hit (its strike and its skill) is multiplied by this; Beastmaster paths add the PetDamage stat on top.
+	DamageScale = 4.5,
 	-- Every equipped pet also strikes on its own (ability Pet_Strike_<Rarity>, level = rank).
 	Strike = { Cooldown = 3.5 },
 	-- Stat sizes at Share 1 for a Common pet; Share splits them (a one-stat pet gets 1.25, a two-stat pet 0.7 + 0.5,

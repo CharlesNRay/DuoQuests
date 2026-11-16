@@ -75,6 +75,7 @@ local Statuses = require(script.Parent.Parent.Config.Statuses)
 local Ultimates = require(script.Parent.Parent.Config.Ultimates)
 local Minions = require(script.Parent.Parent.Config.Minions)
 local AbilityStats = require(script.Parent.AbilityStats)
+local PetConfig = require(script.Parent.Parent.Config.Pets)
 local StatCalc = require(script.Parent.StatCalc)
 
 local Simulation = {}
@@ -91,6 +92,7 @@ local STAT_DEFAULTS = {
 	AttackSpeed = 1,
 	CritMultiplier = 1.5,
 	DamageDealt = 1,
+	PetDamage = 1,
 	MagicalDamageDealt = 1,
 	PhysicalDamageDealt = 1,
 	DamageTaken = 1,
@@ -601,6 +603,10 @@ function Simulation:DealDamage(source, target, amount, info)
 		ctx.Amount *= self:GetStat(source, "CritMultiplier")
 	end
 
+	-- pets hit far harder than their raw skill numbers say (Config/Pets DamageScale); Beastmasters add PetDamage on top
+	if type(ctx.Tag) == "string" and ctx.Tag:sub(1, 4) == "Pet_" then
+		ctx.Amount *= PetConfig.DamageScale * self:GetStat(source, "PetDamage")
+	end
 	ctx.Amount *= self:GetStat(source, "DamageDealt")
 	if ctx.DamageType == "Magical" then
 		ctx.Amount *= self:GetStat(source, "MagicalDamageDealt")

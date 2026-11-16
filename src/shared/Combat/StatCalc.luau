@@ -66,7 +66,7 @@ function StatCalc.WithPetSkill(slots, petId, rank)
 end
 
 -- Stats that default to 1 when a class does not list them (see Simulation).
-local MULTIPLIER_STATS = { DamageDealt = true, HealingDealt = true, DamageTaken = true }
+local MULTIPLIER_STATS = { PetDamage = true, DamageDealt = true, HealingDealt = true, DamageTaken = true }
 
 -- Folds modifiers (passives, pets) into base stats before the fight starts.
 local function applyMods(stats, mods)
