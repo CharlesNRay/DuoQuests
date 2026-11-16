@@ -7,6 +7,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Abilities = require(Shared.Config.Abilities)
 local Power = require(Shared.Power)
+local NumberFormat = require(Shared.Util.NumberFormat)
 local PassiveCfg = require(Shared.Config.Passives)
 local UltCfg = require(Shared.Config.Ultimates)
 local AbilityStats = require(Shared.Combat.AbilityStats)
@@ -611,92 +612,115 @@ function Screens.Inspect(container, _, _, extra)
 end
 
 -- Pets ---------------------------------------------------------------------
-function Screens.Pets(container, state, call)
-	local scroll = list(container)
-	Kit.label({ Size = UDim2.new(1, 0, 0, 30), Text = "Pets follow you, add stats and cast their own skill in fights. Win them at the Wishing Tree. Duplicates are saved as copies - spend them to rank a pet up yourself (stronger stats and skill). Feed them (Bag > Stash) and fight to level them.", TextColor3 = C.Dim, TextSize = 12, Parent = scroll })
-	-- shards: spare copies of maxed pets; collection bonus for owning and ranking pets
-	local shards, info, coll = state.Player.PetShards or {}, state.Player.PetShardInfo or { PetCost = 30, CondenseCost = 10 }, state.Player.PetCollection
-	local panel = row(scroll, 118)
-	local order = { "Common", "Rare", "Epic", "Legendary" }
-	local parts = {}
-	for _, rarity in ipairs(order) do
-		table.insert(parts, ("%s %d"):format(Kit.tint(rarity, Kit.rarityColor(rarity)), shards[rarity] or 0))
-	end
-	Kit.label({
-		Size = UDim2.new(1, -150, 0, 60), Position = UDim2.fromOffset(10, 4), RichText = true, TextSize = 12,
-		Text = ("<b>Pet shards</b>  (spare copies of a max-rank pet)\n%s\n%d shards buy a pet of that rarity  -  %d condense into 1 of the next rarity.\nCollection bonus: %s"):format(
-			table.concat(parts, "   "), info.PetCost, info.CondenseCost, coll and ("+%.1f%% Attack and Health (%d points)"):format(coll.Percent or 0, coll.Points or 0) or "none yet"),
-		Parent = panel,
-	})
-	Kit.button({ Size = UDim2.fromOffset(130, 30), Position = UDim2.new(1, -140, 0, 6), Text = "Condense all", TextSize = 12, BackgroundColor3 = C.Accent, TextColor3 = Color3.fromRGB(30, 24, 10), Parent = panel }, function()
-		call("CondensePetShards", "All")
-	end)
-	-- buy: one button per unmaxed wish pet of a rarity you can afford
-	local shop = Kit.frame({ Size = UDim2.new(1, -16, 0, 48), Position = UDim2.fromOffset(8, 66), BackgroundTransparency = 1, NoCorner = true, Parent = panel })
-	Kit.new("UIListLayout", { FillDirection = Enum.FillDirection.Horizontal, Padding = UDim.new(0, 4), Parent = shop })
-	local offered = 0
-	for _, pet in ipairs(state.Player.Pets or {}) do
-		if pet.Wish and (shards[pet.Rarity] or 0) >= info.PetCost and (pet.Rank or 1) < (pet.MaxRank or 1) and offered < 8 then
-			offered += 1
-			local b = Kit.button({ Size = UDim2.fromOffset(46, 46), Text = "", BackgroundColor3 = C.PanelLight, Parent = shop }, function()
-				call("BuyPetWithShards", pet.Id)
-			end)
-			Icons.Pet(b, pet.Id, { Size = UDim2.fromOffset(38, 38), Position = UDim2.fromOffset(4, 4) })
-			Kit.Hover(b, function() return ("Get %s for %d %s shards"):format(pet.Name, info.PetCost, pet.Rarity) end)
-		end
-	end
-	if offered == 0 then
-		Kit.label({ Size = UDim2.new(1, 0, 0, 30), Text = ("Collect %d shards of one rarity to choose a pet of it."):format(info.PetCost), TextColor3 = C.Dim, TextSize = 12, Parent = shop })
-	end
-	local rows = table.clone(state.Player.Pets or {})
-	local rank = { Legendary = 4, Epic = 3, Rare = 2, Common = 1 }
-	table.sort(rows, function(a, b)
+function Screens.Pets(container, state, call, extra)
+	Kit.clear(container)
+	local pets = table.clone(state.Player.Pets or {})
+	local rankOf = { Legendary = 4, Epic = 3, Rare = 2, Common = 1 }
+	table.sort(pets, function(a, b)
 		if a.Owned ~= b.Owned then
 			return a.Owned
 		end
 		if a.Active ~= b.Active then
 			return a.Active == true
 		end
-		if rank[a.Rarity] ~= rank[b.Rarity] then
-			return rank[a.Rarity] > rank[b.Rarity]
+		if rankOf[a.Rarity] ~= rankOf[b.Rarity] then
+			return rankOf[a.Rarity] > rankOf[b.Rarity]
 		end
 		return a.Name < b.Name
 	end)
-	for _, pet in ipairs(rows) do
-		if pet.Owned then
-			local r = row(scroll, 92)
-			Kit.new("UIStroke", { Color = if pet.Active then C.Accent else Kit.rarityColor(pet.Rarity), Thickness = if pet.Active then 3 else 2, Transparency = if pet.Active then 0 else 0.35, ApplyStrokeMode = Enum.ApplyStrokeMode.Border, Parent = r })
-			Icons.Pet(r, pet.Id, { Size = UDim2.fromOffset(40, 40), Position = UDim2.fromOffset(10, 6) })
-			if pet.Skill then
-				local skillIcon = Icons.PetSkill(r, pet.Id, { Size = UDim2.fromOffset(32, 32), Position = UDim2.fromOffset(14, 52), Level = pet.Rank or 1 })
-				Kit.Hover(skillIcon, function() return ("<b>%s</b> (Lv %d)\n%s"):format(pet.Skill.Name, pet.Rank or 1, pet.Skill.Text) end)
-			end
-			local stars = string.rep("★", pet.Rank or 1) .. string.rep("☆", (pet.MaxRank or 1) - (pet.Rank or 1))
-			local title = ("%s  %s  Lv %d/%d  [%s]  IP %d%s"):format(pet.Name, stars, pet.Level, pet.MaxLevel, pet.Rarity, Power.Pet(pet.Id, pet.Level, pet.Rank), pet.Active and "  (equipped)" or "")
-			local skill = if pet.Skill then ("\nSkill: %s (Lv %d) - %s"):format(pet.Skill.Name, pet.Rank or 1, pet.Skill.Text) else ""
-			local maxed = (pet.Rank or 1) >= (pet.MaxRank or 1)
-			local copyLine = if maxed then "\nMax rank - spare copies become shards" else ("\nCopies: %d / %d for the next rank"):format(pet.Copies or 0, pet.RankCost or 1)
-			Kit.label({ Size = UDim2.new(1, -150, 1, 0), Position = UDim2.fromOffset(60, 0), Text = title .. "\n" .. pet.Text .. skill .. copyLine, TextColor3 = Kit.rarityColor(pet.Rarity), TextSize = 12, Parent = r })
-			local canRank = not maxed and (pet.Copies or 0) >= (pet.RankCost or 1)
-			local rankBtn = Kit.button({ Size = UDim2.fromOffset(80, 32), Position = UDim2.new(1, -90, 0, 6), Text = if maxed then "Max" elseif canRank then "Rank up!" else "Rank up", TextSize = 12, BackgroundColor3 = if canRank then C.Accent else C.Panel, TextColor3 = if canRank then Color3.fromRGB(30, 24, 10) else C.Dim, Parent = r }, function()
-				if canRank then
-					call("RankUpPet", pet.Id)
-				end
-			end)
-			rankBtn.Active = canRank
-			if not pet.Active then
-				Kit.button({ Size = UDim2.fromOffset(80, 32), Position = UDim2.new(1, -90, 1, -38), Text = "Equip", Parent = r }, function()
-					call("EquipPet", pet.Id)
-				end)
-			end
-		else
-			local r = row(scroll, 56)
-			Icons.Pet(r, pet.Id, { Size = UDim2.fromOffset(40, 40), Position = UDim2.fromOffset(8, 8), Locked = true, Milestone = pet.UnlockStage ~= nil, LockText = if pet.UnlockStage then ("Stg " .. pet.UnlockStage) else nil })
-			local how = if pet.UnlockStage then ("Clear stage %d to get this pet"):format(pet.UnlockStage) else "Win it at the Wishing Tree"
-			local skill = if pet.Skill then ("  -  Skill: " .. pet.Skill.Name) else ""
-			Kit.label({ Size = UDim2.new(1, -72, 1, 0), Position = UDim2.fromOffset(56, 0), Text = ("%s  [%s]\n%s%s"):format(pet.Name, pet.Rarity, how, skill), TextColor3 = C.Dim, Parent = r })
+	local selected
+	for _, pet in ipairs(pets) do
+		if pet.Id == extra.PetSel and pet.Owned then
+			selected = pet
 		end
 	end
+	if not selected then
+		for _, pet in ipairs(pets) do
+			if pet.Active then
+				selected = pet
+			end
+		end
+		selected = selected or (pets[1] and pets[1].Owned and pets[1]) or nil
+	end
+
+	-- slim shard strip across the top
+	local shards, info, coll = state.Player.PetShards or {}, state.Player.PetShardInfo or { PetCost = 30, CondenseCost = 10 }, state.Player.PetCollection
+	local strip = Kit.frame({ Size = UDim2.new(1, -8, 0, 30), Position = UDim2.fromOffset(0, 0), BackgroundColor3 = C.Panel, Parent = container })
+	local parts = {}
+	for _, rarity in ipairs({ "Common", "Rare", "Epic", "Legendary" }) do
+		table.insert(parts, ("%s %d"):format(Kit.tint(rarity:sub(1, 1), Kit.rarityColor(rarity)), shards[rarity] or 0))
+	end
+	local bonus = if coll then ("  |  Collection +%.1f%%"):format(coll.Percent or 0) else ""
+	local shardLabel = Kit.label({ Size = UDim2.new(1, -140, 1, 0), Position = UDim2.fromOffset(10, 0), RichText = true, TextSize = 13, Text = ("<b>Shards</b>  %s%s"):format(table.concat(parts, "   "), bonus), Parent = strip })
+	Kit.Hover(shardLabel, function()
+		return ("Spare copies of max-rank pets become shards.\n%d shards buy a pet of that rarity; %d condense into 1 of the next rarity."):format(info.PetCost, info.CondenseCost)
+	end)
+	Kit.button({ Size = UDim2.fromOffset(120, 22), Position = UDim2.new(1, -130, 0, 4), Text = "Condense all", TextSize = 12, BackgroundColor3 = C.Accent, TextColor3 = Color3.fromRGB(30, 24, 10), Parent = strip }, function()
+		call("CondensePetShards", "All")
+	end)
+
+	-- card grid on the left
+	local grid = Kit.new("ScrollingFrame", { Size = UDim2.new(0.56, -8, 1, -38), Position = UDim2.fromOffset(0, 36), BackgroundTransparency = 1, BorderSizePixel = 0, CanvasSize = UDim2.new(), AutomaticCanvasSize = Enum.AutomaticSize.Y, ScrollBarThickness = 4, Parent = container })
+	Kit.new("UIGridLayout", { CellSize = UDim2.fromOffset(78, 92), CellPadding = UDim2.fromOffset(6, 6), SortOrder = Enum.SortOrder.LayoutOrder, Parent = grid })
+	Kit.new("UIPadding", { PaddingTop = UDim.new(0, 3), PaddingLeft = UDim.new(0, 3), Parent = grid })
+	for index, pet in ipairs(pets) do
+		local isSel = selected ~= nil and pet.Id == selected.Id
+		local color = Kit.rarityColor(pet.Rarity)
+		local card = Kit.button({ LayoutOrder = index, Text = "", BackgroundColor3 = if pet.Owned then C.PanelLight else C.Panel, Parent = grid }, function()
+			if pet.Owned then
+				extra.PetSel = pet.Id
+				Screens.Pets(container, state, call, extra)
+			end
+		end)
+		Kit.new("UIStroke", { Color = if pet.Active then C.Accent else color, Thickness = if isSel or pet.Active then 3 else 1.5, Transparency = if pet.Owned then 0 else 0.6, ApplyStrokeMode = Enum.ApplyStrokeMode.Border, Parent = card })
+		if pet.Owned then
+			Icons.Pet(card, pet.Id, { Size = UDim2.fromOffset(46, 46), Position = UDim2.new(0.5, -23, 0, 6) })
+			Kit.label({ Size = UDim2.new(1, -4, 0, 14), Position = UDim2.fromOffset(2, 54), Text = pet.Name, TextSize = 11, Font = Enum.Font.GothamBold, TextXAlignment = Enum.TextXAlignment.Center, TextColor3 = color, Parent = card })
+			Kit.label({ Size = UDim2.new(1, -4, 0, 12), Position = UDim2.fromOffset(2, 70), Text = ("Lv %d  %s"):format(pet.Level, string.rep("★", pet.Rank or 1)), TextSize = 10, TextXAlignment = Enum.TextXAlignment.Center, TextColor3 = C.Dim, Parent = card })
+			if pet.Active then
+				Kit.label({ Size = UDim2.fromOffset(16, 14), Position = UDim2.fromOffset(3, 2), Text = "✔", TextSize = 12, TextColor3 = C.Accent, Parent = card })
+			end
+			if (pet.RankCost or 1) <= (pet.Copies or 0) and (pet.Rank or 1) < (pet.MaxRank or 1) then
+				Kit.label({ Size = UDim2.fromOffset(16, 14), Position = UDim2.new(1, -19, 0, 2), Text = "▲", TextSize = 12, TextColor3 = Color3.fromRGB(130, 235, 150), Parent = card })
+			end
+		else
+			Icons.Pet(card, pet.Id, { Size = UDim2.fromOffset(46, 46), Position = UDim2.new(0.5, -23, 0, 6), Locked = true, Milestone = pet.UnlockStage ~= nil, LockText = if pet.UnlockStage then ("Stg " .. pet.UnlockStage) else nil })
+			Kit.label({ Size = UDim2.new(1, -4, 0, 14), Position = UDim2.fromOffset(2, 54), Text = pet.Name, TextSize = 11, TextXAlignment = Enum.TextXAlignment.Center, TextColor3 = C.Dim, Parent = card })
+			Kit.label({ Size = UDim2.new(1, -4, 0, 12), Position = UDim2.fromOffset(2, 70), Text = if pet.UnlockStage then ("Clear stage %d"):format(pet.UnlockStage) else "Wishing Tree", TextSize = 9, TextXAlignment = Enum.TextXAlignment.Center, TextColor3 = C.Dim, Parent = card })
+		end
+	end
+
+	-- detail pane on the right
+	local detail = Kit.frame({ Size = UDim2.new(0.44, -4, 1, -38), Position = UDim2.new(0.56, 0, 0, 36), BackgroundColor3 = C.Panel, Parent = container })
+	if not selected then
+		Kit.label({ Size = UDim2.new(1, -20, 1, 0), Position = UDim2.fromOffset(10, 0), Text = "No pets yet. Make a wish at the Wishing Tree.", TextColor3 = C.Dim, TextSize = 13, Parent = detail })
+		return
+	end
+	local pet = selected
+	local color = Kit.rarityColor(pet.Rarity)
+	Icons.Pet(detail, pet.Id, { Size = UDim2.fromOffset(54, 54), Position = UDim2.fromOffset(10, 10) })
+	Kit.label({ Size = UDim2.new(1, -78, 0, 22), Position = UDim2.fromOffset(72, 10), Text = pet.Name, TextSize = 17, Font = Enum.Font.GothamBold, TextColor3 = color, Parent = detail })
+	Kit.label({ Size = UDim2.new(1, -78, 0, 16), Position = UDim2.fromOffset(72, 32), Text = ("%s  |  Lv %d / %d"):format(pet.Rarity, pet.Level, pet.MaxLevel), TextSize = 12, TextColor3 = C.Dim, Parent = detail })
+	Kit.label({ Size = UDim2.new(1, -78, 0, 16), Position = UDim2.fromOffset(72, 48), Text = string.rep("★", pet.Rank or 1) .. string.rep("☆", (pet.MaxRank or 1) - (pet.Rank or 1)), TextSize = 13, TextColor3 = C.Accent, Parent = detail })
+	Kit.label({ Size = UDim2.new(1, -20, 0, 18), Position = UDim2.fromOffset(10, 70), Text = ("IP %s"):format(NumberFormat.Short(Power.Pet(pet.Id, pet.Level, pet.Rank))), TextSize = 14, Font = Enum.Font.GothamBold, Parent = detail })
+	Kit.label({ Size = UDim2.new(1, -20, 0, 44), Position = UDim2.fromOffset(10, 90), Text = pet.Text or "", TextSize = 11, TextColor3 = C.Dim, TextYAlignment = Enum.TextYAlignment.Top, Parent = detail })
+	if pet.Skill then
+		Kit.label({ Size = UDim2.new(1, -20, 0, 44), Position = UDim2.fromOffset(10, 136), RichText = true, TextSize = 11, TextYAlignment = Enum.TextYAlignment.Top, Text = ("<b>%s</b> (Lv %d)\n%s"):format(pet.Skill.Name, pet.Rank or 1, pet.Skill.Text), Parent = detail })
+	end
+	local maxed = (pet.Rank or 1) >= (pet.MaxRank or 1)
+	Kit.label({ Size = UDim2.new(1, -20, 0, 16), Position = UDim2.new(0, 10, 1, -86), TextSize = 11, TextColor3 = C.Dim, Text = if maxed then "Max rank - spare copies become shards" else ("Copies %d / %d for the next rank"):format(pet.Copies or 0, pet.RankCost or 1), Parent = detail })
+	local canRank = not maxed and (pet.Copies or 0) >= (pet.RankCost or 1)
+	local rankBtn = Kit.button({ Size = UDim2.new(1, -20, 0, 28), Position = UDim2.new(0, 10, 1, -66), Text = if maxed then "Max rank" elseif canRank then "Rank up!" else "Rank up", TextSize = 13, BackgroundColor3 = if canRank then C.Accent else C.PanelLight, TextColor3 = if canRank then Color3.fromRGB(30, 24, 10) else C.Dim, Parent = detail }, function()
+		if canRank then
+			call("RankUpPet", pet.Id)
+		end
+	end)
+	rankBtn.Active = canRank
+	Kit.button({ Size = UDim2.new(1, -20, 0, 28), Position = UDim2.new(0, 10, 1, -34), Text = if pet.Active then "Equipped" else "Equip", TextSize = 13, BackgroundColor3 = if pet.Active then C.PanelLight else C.Accent, TextColor3 = if pet.Active then C.Dim else Color3.fromRGB(30, 24, 10), Parent = detail }, function()
+		if not pet.Active then
+			call("EquipPet", pet.Id)
+		end
+	end)
 end
 
 -- Wishing Tree --------------------------------------------------------------
