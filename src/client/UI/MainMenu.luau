@@ -9,6 +9,7 @@
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local Kit = require(script.Parent.Kit)
+local MenuBattle = require(script.Parent.Parent.Battle.MenuBattle)
 local Branding = require(game:GetService("ReplicatedStorage"):WaitForChild("Shared").Config.Branding)
 local C = Kit.Colors
 
@@ -136,7 +137,40 @@ local function buildBackground(parent)
 			table.insert(bg.Flies, { Frame = mote, X = spec.X + rnd(-0.04, 0.04), Y = rnd(0.5, 1), Sway = rnd(0, 6.3), Rise = rnd(0.05, 0.12), Speed = rnd(0.8, 1.8), Home = spec.X })
 		end
 	end
+	-- everything except the fireflies is the painted scenery; the live 3D battle replaces it when it is running
+	local flyFrames = {}
+	for _, f in ipairs(bg.Flies) do
+		flyFrames[f.Frame] = true
+		if f.Home then
+			f.Frame.Visible = true
+		end
+	end
+	bg.Scenic = {}
+	for _, child in ipairs(holder:GetChildren()) do
+		if child:IsA("GuiObject") and not flyFrames[child] then
+			table.insert(bg.Scenic, child)
+		end
+	end
+	bg.FlyFrames = flyFrames
+	-- a dusk vignette that sits over the 3D world (title area dark, bottom clear)
+	local vignette = Kit.frame({ Name = "Vignette", Size = UDim2.fromScale(1, 1), BackgroundColor3 = Color3.fromRGB(16, 10, 40), NoCorner = true, Visible = false, ZIndex = 5, Parent = holder })
+	Kit.new("UIGradient", { Rotation = 90, Transparency = NumberSequence.new({ NumberSequenceKeypoint.new(0, 0.2), NumberSequenceKeypoint.new(0.45, 0.62), NumberSequenceKeypoint.new(1, 0.45) }), Parent = vignette })
+	bg.Vignette = vignette
 	return bg
+end
+
+-- on = the live 3D battle is showing behind the menu: hide the painted scenery and show the vignette
+local function setWorldMode(bg, on)
+	bg.Holder.BackgroundTransparency = if on then 1 else 0
+	for _, frame in ipairs(bg.Scenic) do
+		frame.Visible = not on
+	end
+	for _, f in ipairs(bg.Flies) do
+		if f.Home then
+			f.Frame.Visible = not on
+		end
+	end
+	bg.Vignette.Visible = on
 end
 
 local function updateBackground(bg, t, dt, view)
@@ -223,6 +257,10 @@ function MainMenu:Show(state)
 	self.Visible = true
 	self.Creating = false
 	self.Gui.Enabled = true
+	-- a live (fake) auto battle plays behind the menu; the painted backdrop is the fallback if it cannot start
+	local ok, started = pcall(MenuBattle.Start)
+	self.World3D = ok and started == true
+	setWorldMode(self.Bg, self.World3D)
 	self:Render(state)
 end
 
@@ -230,6 +268,7 @@ function MainMenu:Hide()
 	self.Visible = false
 	self.Gui.Enabled = false
 	self.Extra.MenuCreate = false
+	pcall(MenuBattle.Stop)
 end
 
 function MainMenu:Play(slot)
@@ -326,7 +365,7 @@ function MainMenu:Render(state)
 	for index = 1, max do
 		local x = (STAGE_W - total) / 2 + (index - 1) * (cardW + gap)
 		local entry = list[index]
-		local card = Kit.frame({ Name = "Slot" .. index, Size = UDim2.fromOffset(cardW, cardH), Position = UDim2.fromOffset(x, top), BackgroundColor3 = C.Panel, ZIndex = 62, Parent = stage })
+		local card = Kit.frame({ Name = "Slot" .. index, Size = UDim2.fromOffset(cardW, cardH), Position = UDim2.fromOffset(x, top), BackgroundColor3 = C.Panel, BackgroundTransparency = 0.12, ZIndex = 62, Parent = stage })
 		if entry then
 			local class = classes[entry.ClassId] or { Name = entry.ClassId }
 			local color = C[entry.ClassId] or C.Accent
@@ -359,7 +398,7 @@ function MainMenu:Render(state)
 			end)
 		else
 			Kit.new("UIStroke", { Color = C.Dim, Thickness = 1.5, Transparency = 0.6, Parent = card })
-			card.BackgroundTransparency = 0.35
+			card.BackgroundTransparency = 0.4
 			Kit.label({ Size = UDim2.new(1, 0, 0, 56), Position = UDim2.fromOffset(0, 38), Text = "+", TextSize = 54, Font = Enum.Font.GothamBlack, TextColor3 = C.Dim, TextXAlignment = Enum.TextXAlignment.Center, ZIndex = 63, Parent = card })
 			Kit.label({ Size = UDim2.new(1, -40, 0, 18), Position = UDim2.fromOffset(20, 104), Text = "Empty slot", TextSize = 14, Font = Enum.Font.GothamBold, TextXAlignment = Enum.TextXAlignment.Center, ZIndex = 63, Parent = card })
 			Kit.label({ Size = UDim2.new(1, -40, 0, 32), Position = UDim2.fromOffset(20, 126), Text = "A character is just a class.\nPick one to begin.", TextSize = 12, TextColor3 = C.Dim, TextXAlignment = Enum.TextXAlignment.Center, ZIndex = 63, Parent = card })

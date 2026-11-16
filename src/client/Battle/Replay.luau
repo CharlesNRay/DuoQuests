@@ -23,6 +23,7 @@ local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Abilities = require(Shared.Config.Abilities)
 local Ultimates = require(Shared.Config.Ultimates)
 local Actor = require(script.Parent.Actor)
+local StatusLook = require(script.Parent.StatusLook)
 local CosmeticsVisuals = require(script.Parent.CosmeticsVisuals)
 local SkillEffects = require(script.Parent.SkillEffects)
 local Models = require(script.Parent.Models)
@@ -210,7 +211,8 @@ function Replay:_hero(entry, index)
 		hero.Pet:SetModel(Models.Pet(entry.PetId))
 	end
 	hero.MaxHealth = entry.MaxHealth
-	hero:SetHealth(entry.MaxHealth)
+	hero:ClearStatuses()
+	hero:SetHealth(entry.MaxHealth, true)
 	if not hero.Alive then
 		hero:Rise()
 	end
@@ -370,6 +372,14 @@ function Replay:_event(e)
 			floatText(scene, target:Pos() + Vector3.new(0, 1.5, 0), "-" .. math.floor((e.Amount or 0) + 0.5), Color3.fromRGB(190, 60, 100), 22)
 			return
 		end
+		local dot = StatusLook.DotTag(e.Tag)
+		if dot then
+			-- a damage-over-time tick: no strike, just a tinted pulse on the victim and a coloured number
+			target:SetHealth(e.TargetHealth or target.Health)
+			target:Tint(dot.Color, 0.4, 0.35)
+			floatText(scene, target:Pos() + Vector3.new(0, 1.5, 0), dot.Glyph .. math.floor((e.Amount or 0) + 0.5), dot.Color, 18)
+			return
+		end
 		source:Attack(source.AttackStyle, target.X)
 		local c = ELEMENT_COLORS[e.Element or "Physical"] or ELEMENT_COLORS.Physical
 		if e.Tag == "BasicAttack" then
@@ -380,6 +390,7 @@ function Replay:_event(e)
 			bolt(scene, source:Pos(), target:Pos(), c)
 		end
 		target:Flinch()
+		target:Absorb(e.Absorbed)
 		target:SetHealth(e.TargetHealth or target.Health)
 		local text = tostring(math.floor((e.Amount or 0) + 0.5)) .. (if e.Crit then "!" else "")
 		floatText(scene, target:Pos() + Vector3.new(0, 1.5, 0), text, if e.Crit then Color3.fromRGB(255, 210, 60) else Color3.new(1, 1, 1), if e.Crit then 28 else 22)
@@ -387,6 +398,7 @@ function Replay:_event(e)
 		local target = actorFor(self, e.Target)
 		if target then
 			target:SetHealth(e.TargetHealth or target.Health)
+			target:HealFx()
 			floatText(scene, target:Pos() + Vector3.new(0, 1.5, 0), "+" .. math.floor((e.Amount or 0) + 0.5), Color3.fromRGB(110, 235, 140), 22)
 			safely(SkillEffects.Heal, scene, e.Tag, target:Pos())
 		end
@@ -396,6 +408,12 @@ function Replay:_event(e)
 			local cast = self.LastCast and self.LastCast[e.Source]
 			local ability = cast and math.abs((e.T or 0) - cast.T) < 0.06 and cast.Ability or nil
 			safely(SkillEffects.Status, scene, e.Status, target:Pos(), ability)
+			safely(target.AddStatus, target, e.Status, { Duration = e.Duration, Amount = e.Amount, Stacks = e.Stacks })
+		end
+	elseif t == "StatusEnd" then
+		local target = actorFor(self, e.Target)
+		if target then
+			safely(target.RemoveStatus, target, e.Status, e.Reason)
 		end
 	elseif t == "Cast" then
 		local source = actorFor(self, e.Source)
