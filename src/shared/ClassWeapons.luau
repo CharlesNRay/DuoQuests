@@ -26,12 +26,11 @@ function ClassWeapons.Info(classId)
 	return { Name = def.Weapon.Name, Text = def.Weapon.Text, Blurb = def.Blurb, Role = def.Role }
 end
 
-local WOOD = Color3.fromRGB(110, 76, 48)
-local STEEL = Color3.fromRGB(205, 210, 225)
-local GOLD = Color3.fromRGB(240, 200, 90)
-
 -- { Size, Pos (offset from the grip), Color, Material?, Shape?, Rot? (CFrame.Angles args), Neon? }
 local function recipe(classId)
+	local WOOD = Color3.fromRGB(110, 76, 48)
+	local STEEL = Color3.fromRGB(205, 210, 225)
+	local GOLD = Color3.fromRGB(240, 200, 90)
 	if classId == "Warrior" then
 		return {
 			{ Vector3.new(0.28, 0.28, 1.2), Vector3.new(0, 0, 0), WOOD },
