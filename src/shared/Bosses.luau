@@ -75,7 +75,7 @@ function Bosses.Challenge(members, cfg, frontier, seed, record)
 				end
 				table.insert(roster, {
 					Id = entity.Id, Name = entity.Name, Team = entity.Team, DefId = entity.DefId, PetId = entity.PetId,
-					Ghost = ghosts[entity.Id] or nil, Look = looks[entity.Id], MaxHealth = maxHealth,
+					Ghost = ghosts[entity.Id] or nil, Look = looks[entity.Id], MaxHealth = maxHealth, Row = sim:RowOf(entity),
 					UserId = if entity.Team == "Party" then tonumber(entity.Id) else nil,
 				})
 			end

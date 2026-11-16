@@ -78,10 +78,10 @@ return function(modulesOverride)
 	local lowRank = Pets.Mods("Slimey", 1, 1)[1].Value
 	local highRank = Pets.Mods("Slimey", 1, PetConfig.MaxRank)[1].Value
 	check("A higher rank gives a bigger bonus", highRank > lowRank * 2)
-	Pets.AddXP(profile, "Slimey", 100000)
+	Pets.AddXP(profile, "Slimey", 10000000)
 	check("Pets stop at the max level", Pets.Level(profile, "Slimey") == Pets.MaxLevel)
 	profile.Permanent.PetRanks.Slimey = 1
-	profile.Season.PetLevels.Slimey = 1
+	profile.Permanent.PetLevels.Slimey = 1
 
 	for stage = 2, 25 do
 		Progression.ApplyClear(profile, stage)
@@ -89,9 +89,11 @@ return function(modulesOverride)
 	check("Stage 5 gives Foxling; wish-only pets are not handed out", profile.Permanent.Pets.Foxling and not profile.Permanent.Pets.Mossback and not profile.Permanent.Pets.Wisp)
 	check("Equipping a pet changes the active pet", Pets.Equip(profile, "Foxling") and Pets.Active(profile) == "Foxling")
 
-	-- a new season keeps ownership but resets equip and levels
+	-- a new season keeps ownership, the equipped pet and its levels
+	Pets.AddXP(profile, "Foxling", 5000)
+	local foxLevel = Pets.Level(profile, "Foxling")
 	profile.Season = ProfileTemplate.NewSeasonData(2)
-	check("After a season reset you still get a pet", Pets.Active(profile) == "Slimey" and Pets.Level(profile, "Slimey") == 1)
+	check("After a season reset the pet and its level carry over", Pets.Active(profile) == "Foxling" and Pets.Level(profile, "Foxling") == foxLevel and foxLevel > 1)
 
 	-- combat stats
 	local plain = StatCalc.NewPartyMember("a", "A", "Warrior", 10)

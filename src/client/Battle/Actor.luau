@@ -77,7 +77,7 @@ function Actor.new(scene, model, info)
 			return
 		end
 		local bob = if self.Alive then math.sin(os.clock() * 3 + self.Phase) * 0.12 else 0
-		local base = CFrame.lookAt(Vector3.new(self.X, self.Height + bob, 0) + scene.Origin, Vector3.new(self.X, self.Height + bob, 0) + scene.Origin + Vector3.new(self.Facing, 0, 0))
+		local base = CFrame.lookAt(Vector3.new(self.X, self.Height + bob, self.Z or 0) + scene.Origin, Vector3.new(self.X, self.Height + bob, self.Z or 0) + scene.Origin + Vector3.new(self.Facing, 0, 0))
 		self.Model:PivotTo(base * self.Offset)
 		self:_animate(os.clock())
 	end)
@@ -232,8 +232,11 @@ function Actor:SetAura(builder, key)
 	end
 end
 
-function Actor:Place(x)
+function Actor:Place(x, z)
 	self.X = x
+	if z ~= nil then
+		self.Z = z
+	end
 	if self.Bar then
 		self.Bar.StudsOffsetWorldSpace = Vector3.new(0, self.Top / 2 + 1, 0)
 	end
@@ -245,7 +248,7 @@ function Actor:SetHealth(health)
 end
 
 function Actor:Pos()
-	return self.Scene.Origin + Vector3.new(self.X, self.Height + self.Top * 0.2, 0)
+	return self.Scene.Origin + Vector3.new(self.X, self.Height + self.Top * 0.2, self.Z or 0)
 end
 
 function Actor:Lunge(towardX)

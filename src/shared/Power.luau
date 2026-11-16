@@ -52,7 +52,8 @@ end
 function Power.Hero(profile)
 	local season = profile.Season
 	local classId = season.ClassId
-	local out = { Level = season.Level * LEVEL_IP, Gear = 0, Skills = 0, Passives = 0, Pet = 0, Collection = 0, Subclass = 0, Titles = 0, Guild = 0 }
+	local paragon = season.Paragon and season.Paragon.Level or 0
+	local out = { Level = season.Level * LEVEL_IP + paragon * 8, Gear = 0, Skills = 0, Passives = 0, Pet = 0, Collection = 0, Subclass = 0, Titles = 0, Guild = 0 }
 
 	local equipment = season.Equipment and season.Equipment.Equipped or {}
 	for _, item in pairs(equipment) do

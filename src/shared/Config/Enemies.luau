@@ -25,6 +25,7 @@ return {
 		IsBoss = false,
 		DamageType = "Physical",
 		BaseStats = { MaxHealth = 80, Attack = 9, Defense = 4, AttackSpeed = 1.0, CritChance = 0.05 },
+		Abilities = { { Id = "RustyStab", Level = 1, Timer = 5 } },
 	},
 
 	Mushroom = {
@@ -34,6 +35,7 @@ return {
 		IsBoss = false,
 		DamageType = "Magical",
 		BaseStats = { MaxHealth = 110, Attack = 7, Defense = 6, AttackSpeed = 0.7, CritChance = 0 },
+		Abilities = { { Id = "SporeCloud", Level = 1, Timer = 5 } },
 	},
 
 	SlimeKing = {
@@ -77,7 +79,7 @@ return {
 		DamageType = "Physical",
 		BaseStats = { MaxHealth = 650, Attack = 12, Defense = 10, AttackSpeed = 0.8, CritChance = 0.05 },
 		-- Crushing Blow lands at 8s, 19s, 30s... : time a shield before it, or a heal after it.
-		Abilities = { { Id = "CrushingBlow", Level = 1, Timer = 8 }, { Id = "Enrage", Level = 1 } },
+		Abilities = { { Id = "CrushingBlow", Level = 1, Timer = 8 }, { Id = "Stagger", Level = 1, Timer = 14 }, { Id = "Enrage", Level = 1 } },
 	},
 
 	SporeMother = {
@@ -162,6 +164,7 @@ return {
 		Look = { Shape = "Skeleton", Color = { 200, 185, 150 }, Size = 5, Wrapped = true },
 		IsBoss = false, DamageType = "Physical",
 		BaseStats = { MaxHealth = 100, Attack = 8, Defense = 5, AttackSpeed = 0.8, CritChance = 0.03 },
+		Abilities = { { Id = "CursedWrap", Level = 1, Timer = 5 } },
 	},
 	SandSerpent = {
 		Id = "SandSerpent", DisplayName = "Sand Serpent",
@@ -268,7 +271,7 @@ return {
 		Look = { Shape = "Beast", Color = { 70, 70, 85 }, Size = 9 },
 		IsBoss = true, DamageType = "Physical",
 		BaseStats = { MaxHealth = 640, Attack = 12, Defense = 9, AttackSpeed = 1.0, CritChance = 0.03 },
-		Abilities = { { Id = "FeralPounce", Level = 1, Timer = 6 }, { Id = "Howl", Level = 1, Timer = 14 }, { Id = "Enrage", Level = 1 } },
+		Abilities = { { Id = "FeralPounce", Level = 1, Timer = 6 }, { Id = "Stagger", Level = 1, Timer = 11 }, { Id = "Howl", Level = 1, Timer = 14 }, { Id = "Enrage", Level = 1 } },
 	},
 	Broodmother = {
 		Id = "Broodmother", DisplayName = "Broodmother",
@@ -289,7 +292,7 @@ return {
 		Look = { Shape = "Elemental", Color = { 255, 100, 30 }, Size = 9 },
 		IsBoss = true, DamageType = "Magical",
 		BaseStats = { MaxHealth = 650, Attack = 12, Defense = 8, AttackSpeed = 0.9, CritChance = 0.03 },
-		Abilities = { { Id = "EmberBolt", Level = 1, Timer = 5 }, { Id = "GroundPound", Level = 1, Timer = 12 }, { Id = "Enrage", Level = 1 } },
+		Abilities = { { Id = "EmberBolt", Level = 1, Timer = 5 }, { Id = "GroundPound", Level = 1, Timer = 12 }, { Id = "Stagger", Level = 1, Timer = 9 }, { Id = "Enrage", Level = 1 } },
 	},
 
 	-- Event bosses (fought in your arena from the Boss window; stats are set by Shared/Bosses) ----

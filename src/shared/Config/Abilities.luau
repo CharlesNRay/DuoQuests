@@ -206,12 +206,14 @@ return {
 				Duration = 8,
 				PerLevel = { Duration = 0.3, Strength = 0.04 },
 			},
+			{ Type = "Cleanse", Target = "AllAllies", PerLevel = {} },
 		},
 	},
 
 	-- Cleric -----------------------------------------------------------------------
 	Smite = {
 		Id = "Smite",
+		Reach = "Any",
 		DisplayName = "Smite",
 		Description = "Holy light that also burns a little of the foe's health.",
 		Class = "Cleric",
@@ -270,6 +272,7 @@ return {
 
 	RadiantBurst = {
 		Id = "RadiantBurst",
+		AllRows = true,
 		DisplayName = "Radiant Burst",
 		Description = "Damages all enemies and heals all allies.",
 		Class = "Cleric",
@@ -353,6 +356,7 @@ return {
 
 	Judgment = {
 		Id = "Judgment",
+		Reach = "Any",
 		DisplayName = "Judgment",
 		Description = "Calls down devastating holy damage on one enemy.",
 		Class = "Cleric",
@@ -404,6 +408,7 @@ return {
 
 	Blizzard = {
 		Id = "Blizzard",
+		AllRows = true,
 		DisplayName = "Blizzard",
 		Description = "Deals damage and slows all enemies.",
 		Class = "Mage",
@@ -418,6 +423,7 @@ return {
 
 	LightningBolt = {
 		Id = "LightningBolt",
+		Reach = "Any",
 		DisplayName = "Lightning Bolt",
 		Description = "Deals high single-target damage.",
 		Class = "Mage",
@@ -559,6 +565,7 @@ return {
 		Effects = {
 			{ Type = "Heal", Target = "AllAllies", Multiplier = 1.4, PerLevel = { Multiplier = 0.12 } },
 			{ Type = "Shield", Target = "AllAllies", PercentMaxHealth = 0.15, Duration = 6, PerLevel = { PercentMaxHealth = 0.008, Duration = 0.2 } },
+			{ Type = "Cleanse", Target = "AllAllies", PerLevel = {} },
 		},
 	},
 
@@ -782,7 +789,7 @@ return {
 	FeralPounce = {
 		Id = "FeralPounce", DisplayName = "Feral Pounce", Description = "Leaps onto one hero.", Enemy = true, Anim = "Pounce",
 		Rarity = "Common", Cooldown = 8,
-		Effects = { { Type = "Damage", Target = "Primary", Multiplier = 1.9, PerLevel = { Multiplier = 0 } } },
+		Effects = { { Type = "Damage", Target = "Primary", Multiplier = 1.9, PerLevel = { Multiplier = 0 } }, { Type = "ApplyStatus", Target = "Primary", Status = "Bleeding", Duration = 6 } },
 	},
 	Howl = {
 		Id = "Howl", DisplayName = "Howl", Description = "Whips the pack into a frenzy.", Enemy = true, Anim = "Cast",
@@ -824,7 +831,7 @@ return {
 	BoulderToss = {
 		Id = "BoulderToss", DisplayName = "Boulder Toss", Description = "Hurls a boulder at one hero.", Enemy = true, Anim = "Slam",
 		Rarity = "Common", Cooldown = 11, Telegraph = 1.2,
-		Effects = { { Type = "Damage", Target = "Primary", Multiplier = 2.4, PerLevel = { Multiplier = 0 } } },
+		Effects = { { Type = "Damage", Target = "Primary", Multiplier = 2.4, PerLevel = { Multiplier = 0 } }, { Type = "ApplyStatus", Target = "Primary", Status = "Cursed", Duration = 5 } },
 	},
 	ShadowDrain = {
 		Id = "ShadowDrain", DisplayName = "Shadow Drain", Description = "Drains life from one hero.", Enemy = true, Anim = "Cast",
@@ -832,6 +839,7 @@ return {
 		Effects = {
 			{ Type = "Damage", Target = "Primary", Multiplier = 1.0, DamageType = "Magical", PerLevel = { Multiplier = 0 } },
 			{ Type = "Heal", Target = "Self", Multiplier = 1.2, PerLevel = { Multiplier = 0 } },
+			{ Type = "ApplyStatus", Target = "Primary", Status = "Cursed", Duration = 4 },
 		},
 	},
 	Screech = {
@@ -850,7 +858,7 @@ return {
 	Swoop = {
 		Id = "Swoop", DisplayName = "Swoop", Description = "Dives at one hero.", Enemy = true, Anim = "Pounce",
 		Rarity = "Common", Cooldown = 7,
-		Effects = { { Type = "Damage", Target = "Primary", Multiplier = 1.6, PerLevel = { Multiplier = 0 } } },
+		Effects = { { Type = "Damage", Target = "Primary", Multiplier = 1.6, PerLevel = { Multiplier = 0 } }, { Type = "ApplyStatus", Target = "Primary", Status = "Bleeding", Duration = 5 } },
 	},
 	Thunderclap = {
 		Id = "Thunderclap", DisplayName = "Thunderclap", Description = "Lightning on the whole party.", Enemy = true, Anim = "Cast",
@@ -860,7 +868,7 @@ return {
 	GroundPound = {
 		Id = "GroundPound", DisplayName = "Ground Pound", Description = "Shakes the ground under the party.", Enemy = true, Anim = "Slam",
 		Rarity = "Common", Cooldown = 12,
-		Effects = { { Type = "Damage", Target = "AllEnemies", Multiplier = 0.8, PerLevel = { Multiplier = 0 } } },
+		Effects = { { Type = "Damage", Target = "AllEnemies", Multiplier = 0.8, PerLevel = { Multiplier = 0 } }, { Type = "ApplyStatus", Target = "AllEnemies", Status = "Snared", Duration = 3 } },
 	},
 	BoneRattle = {
 		Id = "BoneRattle", DisplayName = "Bone Rattle", Description = "Rattles bones in a frenzy, striking twice.", Enemy = true, Anim = "Spin",
@@ -868,6 +876,7 @@ return {
 		Effects = {
 			{ Type = "Damage", Target = "Primary", Multiplier = 0.9, PerLevel = { Multiplier = 0 } },
 			{ Type = "Damage", Target = "Primary", Multiplier = 0.9, PerLevel = { Multiplier = 0 } },
+			{ Type = "ApplyStatus", Target = "Primary", Status = "Bleeding", Duration = 6 },
 		},
 	},
 	SporeBurst = {
@@ -1299,6 +1308,7 @@ return {
 
 	ChainLightning = {
 		Id = "ChainLightning",
+		AllRows = true,
 		DisplayName = "Chain Lightning",
 		Description = "Lightning leaps between every enemy.",
 		Class = "Mage",
@@ -1331,6 +1341,7 @@ return {
 
 	Meteor = {
 		Id = "Meteor",
+		AllRows = true,
 		DisplayName = "Meteor",
 		Description = "Calls a meteor that scorches every enemy; burns stack.",
 		Class = "Mage",
@@ -1454,6 +1465,7 @@ return {
 
 	PowerShot = {
 		Id = "PowerShot",
+		Reach = "Any",
 		DisplayName = "Power Shot",
 		Description = "A hard-pulled arrow into one enemy.",
 		Class = "Ranger",
@@ -1469,6 +1481,7 @@ return {
 
 	Volley = {
 		Id = "Volley",
+		AllRows = true,
 		DisplayName = "Volley",
 		Description = "Rains arrows on every enemy.",
 		Class = "Ranger",
@@ -1484,6 +1497,7 @@ return {
 
 	PiercingArrow = {
 		Id = "PiercingArrow",
+		AllRows = true,
 		DisplayName = "Piercing Arrow",
 		Description = "An armor-piercing shot for big single-target damage.",
 		Class = "Ranger",
@@ -1529,6 +1543,7 @@ return {
 
 	HuntersMark = {
 		Id = "HuntersMark",
+		Reach = "Any",
 		DisplayName = "Hunter's Mark",
 		Description = "Marks an enemy: it takes much more damage.",
 		Class = "Ranger",
@@ -1559,6 +1574,7 @@ return {
 
 	ExplosiveArrow = {
 		Id = "ExplosiveArrow",
+		Reach = "Any",
 		DisplayName = "Explosive Arrow",
 		Description = "An arrow that explodes among the enemies.",
 		Class = "Ranger",
@@ -1671,6 +1687,7 @@ return {
 
 	Backstab = {
 		Id = "Backstab",
+		Reach = "Any",
 		DisplayName = "Backstab",
 		Description = "Stabs from behind and coats the wound in poison.",
 		Class = "Rogue",
@@ -1748,6 +1765,7 @@ return {
 
 	Eviscerate = {
 		Id = "Eviscerate",
+		Reach = "Any",
 		DisplayName = "Eviscerate",
 		Description = "A brutal finishing strike.",
 		Class = "Rogue",
@@ -1912,6 +1930,7 @@ return {
 
 	WraithSwarm = {
 		Id = "WraithSwarm",
+		AllRows = true,
 		DisplayName = "Wraith Swarm",
 		Description = "Spend health to call two fast, fragile wraiths. Up to 4 at once.",
 		Class = "Summoner",
@@ -2318,6 +2337,49 @@ return {
 		Effects = {
 			{ Type = "Heal", Target = "LowestAlly", Multiplier = 2.0, PerLevel = { Multiplier = 0.16 } },
 			{ Type = "Shield", Target = "LowestAlly", PercentMaxHealth = 0.1, Duration = 6, PerLevel = { PercentMaxHealth = 0.01, Duration = 0.2 } },
+		},
+	},
+
+	-- More monster utility: damaging debuffs on small monsters; hard crowd control (Stunned) is for bosses only ------------------
+	RustyStab = {
+		Id = "RustyStab", DisplayName = "Rusty Stab", Description = "A dirty blade that makes one hero bleed.", Enemy = true, Anim = "Slam",
+		Rarity = "Common", Cooldown = 9,
+		Effects = {
+			{ Type = "Damage", Target = "Primary", Multiplier = 1.2, PerLevel = { Multiplier = 0 } },
+			{ Type = "ApplyStatus", Target = "Primary", Status = "Bleeding", Duration = 5 },
+		},
+	},
+	SporeCloud = {
+		Id = "SporeCloud", DisplayName = "Spore Cloud", Description = "A cloud of spores that poisons one hero.", Enemy = true, Anim = "Cast",
+		Rarity = "Common", Cooldown = 9,
+		Effects = {
+			{ Type = "Damage", Target = "Primary", Multiplier = 0.8, DamageType = "Magical", PerLevel = { Multiplier = 0 } },
+			{ Type = "ApplyStatus", Target = "Primary", Status = "Poisoned", Duration = 5 },
+		},
+	},
+	CursedWrap = {
+		Id = "CursedWrap", DisplayName = "Cursed Wrap", Description = "Cursed bandages that weaken one hero.", Enemy = true, Anim = "Cast",
+		Rarity = "Common", Cooldown = 10,
+		Effects = {
+			{ Type = "Damage", Target = "Primary", Multiplier = 1.0, DamageType = "Magical", PerLevel = { Multiplier = 0 } },
+			{ Type = "ApplyStatus", Target = "Primary", Status = "Cursed", Duration = 6 },
+		},
+	},
+	Stagger = {
+		Id = "Stagger", DisplayName = "Stagger", Description = "A crushing blow that stuns one hero. Bosses only.", Enemy = true, Anim = "Slam",
+		Rarity = "Common", Cooldown = 14, Telegraph = 1.2,
+		Effects = {
+			{ Type = "Damage", Target = "Primary", Multiplier = 1.4, PerLevel = { Multiplier = 0 } },
+			{ Type = "ApplyStatus", Target = "Primary", Status = "Stunned", Duration = 1.8 },
+		},
+	},
+	Purify = {
+		Id = "Purify", DisplayName = "Purify", Description = "Cleanses every harmful effect from the whole party and heals a little.",
+		Class = "Cleric", Rarity = "Rare", Cooldown = 18, CooldownPerLevel = -0.3, MinCooldown = 10, Element = "Holy",
+		Conditions = { AllyHasDebuff = true },
+		Effects = {
+			{ Type = "Cleanse", Target = "AllAllies", PerLevel = {} },
+			{ Type = "Heal", Target = "AllAllies", Multiplier = 0.5, PerLevel = { Multiplier = 0.05 } },
 		},
 	},
 

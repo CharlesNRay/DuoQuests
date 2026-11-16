@@ -42,7 +42,7 @@ return function(modulesOverride)
 	check("a rarer pet has more IP", Power.Pet("Frostwing", 1, 1) > Power.Pet("Slimey", 1, 1))
 
 	local withPet = Power.Hero(profile)
-	profile.Season.PetLevels = { Slimey = 9 }
+	profile.Permanent.PetLevels = { Slimey = 9 }
 	check("pet IP follows the pet level", Power.Hero(profile).Pet > withPet.Pet or withPet.Pet == 0)
 	check("total is the sum of its parts", withPet.Total == withPet.Level + withPet.Gear + withPet.Skills + withPet.Passives + withPet.Pet + withPet.Collection + withPet.Subclass + withPet.Titles + withPet.Guild)
 

@@ -131,6 +131,8 @@ function AbilityStats.Rows(ability, level)
 			if kind == "Shield" and effect.Duration then
 				add("Lasts", seconds(AbilityStats.Value(ability, effect, "Duration", level)))
 			end
+		elseif kind == "Cleanse" then
+			add("Cleanse", "Removes every debuff")
 		elseif kind == "ApplyStatus" then
 			add("Duration", seconds(AbilityStats.Value(ability, effect, "Duration", level)))
 			local statusDef = require(script.Parent.Parent.Config.Statuses)[effect.Status]

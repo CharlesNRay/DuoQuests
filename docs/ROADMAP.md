@@ -345,3 +345,11 @@ two paths of 3 skills, a season prize pet (Arcanix, Skyhawk, Shadowcat, Spiritli
 ## IP (Item Power) score
 - `shared/Power.luau`: one number for hero strength. Level x5, equipped gear (Gear.ItemPower), skills (tier + level), passives, active pet (rarity, level, rank), pet collection, subclass, titles, guild bonuses. Never affects combat.
 - Shown on the HUD (hover for the breakdown), Hero screen, pet cards, skill tooltips and gear text. Tests: PowerTests.
+
+## Combat rows, monster utility, pets and pacing (balance pass)
+- Rows: melee fighters and all summons stand in the Front row, ranged fighters in the Back row, bosses and enemy casters behind their minions. Melee attackers reach only the front-most living row; back-row attackers have a 35% chance per basic attack to reach past it, and skills marked `Reach = "Any"` snipe the back row. Area attacks hit only the main target's row unless the skill is `AllRows` (ultimates, boss attacks and a few piercing skills). The battle view lines fighters up by row, side by side.
+- Monsters: bleeds, poison, curses, slows on small monsters (Wolf, Boar, Harpy, Skeleton, Goblin, Mushroom, Mummy, Golem, Yeti). Hard crowd control (Stunned) only from bosses (Stagger).
+- Cleanse: `Cleanse` effect (Purify, Sanctuary, Rallying Cry). Few classes have it.
+- Pets: ownership, level, XP and the equipped pet are account-wide (Permanent), levels 1-50 at 200 XP x level, buffed stats/rank bonus/damage.
+- Paragon: past level 120, XP fills Paragon levels (max 100, +0.4% Attack/Health/Defense each).
+- Pacing and class balance tuned with the balance harness (scratchpad), target: level 90 in 7-10 days.

@@ -520,7 +520,7 @@ return function(modulesOverride)
 	end
 	for _, classId in ipairs({ "Warrior", "Cleric" }) do
 		local counts = poolRarities(classId)
-		check(classId .. " has its full skill list across all three rarities", #Classes[classId].AbilityPool == (if classId == "Cleric" then 9 else 8) and counts.Common > 0 and counts.Rare > 0 and counts.Epic > 0)
+		check(classId .. " has its full skill list across all three rarities", #Classes[classId].AbilityPool == (if classId == "Cleric" then 10 else 8) and counts.Common > 0 and counts.Rare > 0 and counts.Epic > 0)
 		check(classId .. " has damage skills", poolHasEffect(classId, "Damage"))
 	end
 	check("Warrior has shield skills and defense buffs", poolHasEffect("Warrior", "Shield") and poolHasEffect("Warrior", "ApplyStatus", function(e)

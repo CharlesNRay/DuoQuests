@@ -77,6 +77,7 @@ local Minions = require(script.Parent.Parent.Config.Minions)
 local AbilityStats = require(script.Parent.AbilityStats)
 local PetConfig = require(script.Parent.Parent.Config.Pets)
 local StatCalc = require(script.Parent.StatCalc)
+local EnemyConfig = require(script.Parent.Parent.Config.Enemies)
 
 local Simulation = {}
 Simulation.__index = Simulation
@@ -167,7 +168,7 @@ Simulation.Effects = {
 			sim:_record({
 				Type = "Spawn",
 				Source = caster.Id,
-				Entity = { Id = minion.Id, Name = minion.Name, Team = minion.Team, DefId = minion.DefId, MaxHealth = minion.Stats.MaxHealth },
+				Entity = { Id = minion.Id, Name = minion.Name, Team = minion.Team, DefId = minion.DefId, MaxHealth = minion.Stats.MaxHealth, Row = sim:RowOf(minion) },
 			})
 		end
 	end,
@@ -197,7 +198,7 @@ Simulation.Effects = {
 			sim:_record({
 				Type = "Spawn",
 				Source = caster.Id,
-				Entity = { Id = minion.Id, Name = minion.Name, Team = minion.Team, DefId = minion.DefId, MaxHealth = minion.Stats.MaxHealth, Owner = caster.Id },
+				Entity = { Id = minion.Id, Name = minion.Name, Team = minion.Team, DefId = minion.DefId, MaxHealth = minion.Stats.MaxHealth, Owner = caster.Id, Row = sim:RowOf(minion) },
 			})
 			if Minions[effect.MinionId].Taunt then
 				sim:ApplyStatus(minion, "Taunting", 9999, caster)
@@ -256,6 +257,19 @@ Simulation.Effects = {
 				AbilityStats.Strength(castCtx.Ability, effect, castCtx.Level),
 				effect.Stacks
 			)
+		end
+	end,
+
+	-- Cleanse: removes harmful statuses (damage over time, slows, curses, stuns) from allies. Few skills have it.
+	Cleanse = function(sim, castCtx, effect)
+		for _, target in ipairs(sim:ResolveTargets(castCtx, effect.Target)) do
+			for index = #target.Statuses, 1, -1 do
+				local status = target.Statuses[index]
+				if Simulation.DEBUFFS[status.Id] then
+					table.remove(target.Statuses, index)
+					sim:_record({ Type = "StatusEnd", Target = target.Id, Status = status.Id, Reason = "Cleansed" })
+				end
+			end
 		end
 	end,
 
@@ -329,6 +343,18 @@ Simulation.Conditions = {
 		for _, ally in ipairs(sim:_alliesOf(caster)) do
 			if not ally.Alive and not ally.Minion then
 				return value
+			end
+		end
+		return not value
+	end,
+
+	-- True when any living ally has a harmful status to clean off (Cleanse skills wait for one).
+	AllyHasDebuff = function(sim, caster, value)
+		for _, ally in ipairs(livingOf(sim:_alliesOf(caster))) do
+			for _, status in ipairs(ally.Statuses) do
+				if Simulation.DEBUFFS[status.Id] then
+					return value
+				end
 			end
 		end
 		return not value
@@ -536,11 +562,71 @@ end
 
 -- Targeting ---------------------------------------------------------------------
 
+-- Rows ------------------------------------------------------------------------
+-- Every fighter stands in the Front or Back row of its team. Melee fighters and all summons stand in front (summons are there to
+-- tank), ranged fighters behind them. Enemy bosses and casters stand in the back, behind their minions. Melee attackers can only
+-- reach the front-most row that still has someone alive; fighters in the Back row, and skills marked Reach = "Any", can pick
+-- targets in other rows. Area attacks hit only the row of their main target (unless the skill is marked AllRows, which ultimates
+-- and boss attacks are).
+Simulation.DEBUFFS = { Chilled = true, Burning = true, Poisoned = true, Bleeding = true, Frozen = true, Stunned = true, Snared = true, Marked = true, Cursed = true }
+Simulation.RANGED_REACH = 0.35 -- chance a back-row attacker's basic attack goes past the front row
+
+function Simulation:RowOf(entity)
+	if entity.Row then
+		return entity.Row
+	end
+	local row = "Front"
+	if entity.Minion then
+		row = "Front"
+	elseif entity.Team == "Party" then
+		if entity.BasicAttack and entity.BasicAttack.Range == "Ranged" then
+			row = "Back"
+		end
+	else
+		local def = EnemyConfig[entity.DefId]
+		if entity.Flags.StunImmune or (def and (def.IsBoss or def.Row == "Back" or def.DamageType == "Magical")) then
+			row = "Back"
+		end
+	end
+	entity.Row = row
+	return row
+end
+
+-- the living opponents an attacker can reach right now (the front-most row that still has someone alive)
+function Simulation:_frontRow(candidates)
+	local front = {}
+	for _, candidate in ipairs(candidates) do
+		if self:RowOf(candidate) == "Front" then
+			table.insert(front, candidate)
+		end
+	end
+	return if #front > 0 then front else candidates
+end
+
 -- Chooses who an attacker hits. Default: the first living taunting opponent,
--- otherwise the first living opponent. Hooks may override.
-function Simulation:PickTarget(attacker)
+-- otherwise the first living opponent in the reachable row. `reachAny` (skills with Reach = "Any") looks at every row and goes
+-- for the back row first. Hooks may override.
+function Simulation:PickTarget(attacker, reachAny)
 	local candidates = livingOf(self:_opponentsOf(attacker))
-	local default = candidates[1]
+	local pool = candidates
+	local snipe = reachAny == true
+	if not snipe and self:RowOf(attacker) == "Back" and #candidates > 1 then
+		snipe = self.Rng() < Simulation.RANGED_REACH
+	end
+	if snipe then
+		for _, candidate in ipairs(candidates) do
+			if self:RowOf(candidate) == "Back" then
+				pool = { candidate }
+				break
+			end
+		end
+		if #pool == #candidates then
+			pool = self:_frontRow(candidates)
+		end
+	else
+		pool = self:_frontRow(candidates)
+	end
+	local default = pool[1]
 	for _, candidate in ipairs(candidates) do
 		if self:HasFlag(candidate, "Taunting") then
 			default = candidate
@@ -551,7 +637,7 @@ function Simulation:PickTarget(attacker)
 	-- enemies also go for the party's minions (unless something taunts): one roll picks a minion at random
 	if attacker.Team == "Enemy" and default ~= nil and not self:HasFlag(default, "Taunting") then
 		local minions = {}
-		for _, candidate in ipairs(candidates) do
+		for _, candidate in ipairs(pool) do
 			if candidate.Minion then
 				table.insert(minions, candidate)
 			end
@@ -577,7 +663,17 @@ function Simulation:ResolveTargets(castCtx, mode)
 	elseif mode == "Self" then
 		return { caster }
 	elseif mode == "AllEnemies" then
-		return livingOf(self:_opponentsOf(caster))
+		local all = livingOf(self:_opponentsOf(caster))
+		if castCtx.AllRows or castCtx.Primary == nil or castCtx.Primary.Health <= 0 then
+			return all
+		end
+		local row, hit = self:RowOf(castCtx.Primary), {}
+		for _, target in ipairs(all) do
+			if self:RowOf(target) == row then
+				table.insert(hit, target)
+			end
+		end
+		return hit
 	elseif mode == "AllAllies" then
 		return livingOf(self:_alliesOf(caster))
 	elseif mode == "DeadAlly" then
@@ -791,14 +887,14 @@ function Simulation:Cast(caster, slot)
 
 	local needsPrimary = false
 	for _, effect in ipairs(def.Effects) do
-		if effect.Target == "Primary" then
+		if effect.Target == "Primary" or effect.Target == "AllEnemies" then
 			needsPrimary = true
 		end
 	end
 
 	local primary = nil
 	if needsPrimary then
-		primary = self:PickTarget(caster)
+		primary = self:PickTarget(caster, def.Reach == "Any")
 		if primary == nil then
 			return false -- nobody to hit; keep the ability ready
 		end
@@ -811,6 +907,7 @@ function Simulation:Cast(caster, slot)
 		Ability = def,
 		Level = slot.Level,
 		Primary = primary,
+		AllRows = def.AllRows == true or slot.IsUltimate == true or caster.Flags.StunImmune == true,
 		Cancelled = false,
 	}
 	self.Hooks:Fire("OnAbilityCast", ctx)
@@ -860,7 +957,7 @@ function Simulation:_advanceCast(entity)
 	entity.Casting = nil
 	local ctx = casting.Ctx
 	if ctx.Primary ~= nil and not ctx.Primary.Alive then
-		ctx.Primary = self:PickTarget(entity)
+		ctx.Primary = self:PickTarget(entity, casting.Def.Reach == "Any")
 	end
 	local needsPrimary = false
 	for _, effect in ipairs(casting.Def.Effects) do

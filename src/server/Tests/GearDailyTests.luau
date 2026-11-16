@@ -285,10 +285,10 @@ return function(modulesOverride)
 	fed.Permanent.Pets = { Slimey = true }
 	C.Grant(fed, "PetFood", 3)
 	local okFeed = C.Use(fed, "PetFood", now, "Slimey")
-	check("Pet food gives a pet XP and levels it", okFeed and fed.Season.PetXP.Slimey ~= nil and C.Count(fed, "PetFood") == 2)
+	check("Pet food gives a pet XP and levels it", okFeed and fed.Permanent.PetXP.Slimey ~= nil and C.Count(fed, "PetFood") == 2)
 	C.Use(fed, "PetFood", now, "Slimey")
 	C.Use(fed, "PetFood", now, "Slimey")
-	check("Enough pet food raises the pet level", (fed.Season.PetLevels.Slimey or 1) >= 2)
+	check("Enough pet food raises the pet level", (fed.Permanent.PetLevels.Slimey or 1) >= 2)
 	check("Pet food needs a pet you own", select(2, C.Use(ProfileTemplate.New(), "PetFood", now, "Slimey")) == "NoneLeft")
 
 	local lookGear = Gear

@@ -33,8 +33,10 @@ Replay.__index = Replay
 local INTRO = 0.8 -- seconds for monsters to run in before the first blow
 -- The server waits Duration + 2s between fights, so the whole replay
 -- (INTRO + Duration + the tail below) must stay under that.
-local HERO_X = { -9, -14 }
-local ENEMY_X = { 9, 15, 21 }
+-- Formation: each team stands in a Front and a Back row; fighters in a row stand side by side (spread across the depth lanes).
+local ROW_X = { Party = { Front = -7, Back = -14 }, Enemy = { Front = 8, Back = 16 } }
+local LANE = 3.8
+local HERO_X = { -9, -14 } -- (only used for the idle walk before a fight is set up)
 
 local ELEMENT_COLORS = {
 	Holy = Color3.fromRGB(255, 240, 150),
@@ -137,6 +139,49 @@ local function applyBody(hero, entry)
 	end
 end
 
+-- Works out where every fighter stands from its row and join order. Fighters who have arrived are moved there at once.
+function Replay:_layout()
+	local groups = {}
+	for _, actor in ipairs(self.Formation or {}) do
+		if not actor.Destroyed and actor.Alive ~= false then
+			local key = actor.Team .. "/" .. actor.Row
+			groups[key] = groups[key] or {}
+			table.insert(groups[key], actor)
+		end
+	end
+	for key, list in pairs(groups) do
+		local team, row = string.match(key, "(%a+)/(%a+)")
+		table.sort(list, function(a, b)
+			return a.Order < b.Order
+		end)
+		local n = #list
+		for i, actor in ipairs(list) do
+			local x = ROW_X[team][row] + (if i % 2 == 0 then (if team == "Party" then -1.2 else 1.2) else 0)
+			local z = (i - (n + 1) / 2) * LANE
+			actor.HomeX, actor.HomeZ = x, z
+			if actor.Arrived then
+				actor:Place(x, z)
+				if actor.Pet then
+					actor.Pet:Place(x - 3.5, z)
+				end
+			end
+		end
+	end
+end
+
+function Replay:_enlist(actor, team, row)
+	for index, other in ipairs(self.Formation) do
+		if other == actor then
+			table.remove(self.Formation, index)
+			break
+		end
+	end
+	actor.Team, actor.Row = team, row or "Front"
+	self.OrderCounter = (self.OrderCounter or 0) + 1
+	actor.Order = self.OrderCounter
+	table.insert(self.Formation, actor)
+end
+
 function Replay:_hero(entry, index)
 	local hero = self.Heroes[entry.Id]
 	if hero == nil then
@@ -170,8 +215,10 @@ function Replay:_hero(entry, index)
 		hero:Rise()
 	end
 	hero.Model.Parent = self.Scene.Folder
-	hero:Place(HERO_X[index] or HERO_X[#HERO_X])
-	hero.Pet:Place((HERO_X[index] or -14) - 3.5)
+	hero.Arrived = true
+	self:_enlist(hero, "Party", entry.Row)
+	hero:Place(HERO_X[index] or HERO_X[#HERO_X], 0)
+	hero.Pet:Place((HERO_X[index] or -14) - 3.5, 0)
 	return hero
 end
 
@@ -224,6 +271,8 @@ end
 function Replay:Play(info, onDone)
 	self.Spawned = 0
 	self.SpawnedMinions = 0
+	self.Formation = {}
+	self.OrderCounter = 0
 	self.Token += 1
 	local token = self.Token
 	self:_clearEnemies()
@@ -238,20 +287,25 @@ function Replay:Play(info, onDone)
 			enemyIndex += 1
 			local actor = Actor.new(scene, Models.Enemy(entry.DefId), { Name = entry.Name, Facing = -1, MaxHealth = entry.MaxHealth })
 			actor.AttackStyle = Models.AttackStyle(entry.DefId)
-			actor:Place(ENEMY_X[enemyIndex] + 30)
 			self.Enemies[entry.Id] = actor
-			task.spawn(function()
-				local startX, endX = actor.X, ENEMY_X[enemyIndex]
-				local t0 = os.clock()
-				while os.clock() - t0 < INTRO and not actor.Destroyed do
-					actor:Place(startX + (endX - startX) * ((os.clock() - t0) / INTRO))
-					task.wait()
-				end
-				if not actor.Destroyed then
-					actor:Place(endX)
-				end
-			end)
+			self:_enlist(actor, "Enemy", entry.Row)
 		end
+	end
+	self:_layout() -- (heroes were placed as they were listed; monsters have not arrived yet)
+	for _, actor in pairs(self.Enemies) do
+		actor:Place((actor.HomeX or 10) + 30, actor.HomeZ or 0)
+		task.spawn(function()
+			local startX, endX = actor.X, actor.HomeX or 10
+			local t0 = os.clock()
+			while os.clock() - t0 < INTRO and not actor.Destroyed do
+				actor:Place(startX + (endX - startX) * ((os.clock() - t0) / INTRO), actor.HomeZ)
+				task.wait()
+			end
+			if not actor.Destroyed then
+				actor.Arrived = true
+				actor:Place(endX, actor.HomeZ)
+			end
+		end)
 	end
 	scene:Walk(false)
 
@@ -374,31 +428,23 @@ function Replay:_event(e)
 	elseif t == "Spawn" then
 		local entry = e.Entity
 		if entry and entry.Team == "Party" and not self.Minions[entry.Id] then
-			-- a summoner raised a minion: it joins our side, behind the heroes
-			self.SpawnedMinions = (self.SpawnedMinions or 0) + 1
-			local x = HERO_X[#HERO_X] - 5 - ((self.SpawnedMinions - 1) % 5) * 3.2
+			-- a summoner raised a minion: it takes the front row (summons are there to tank), beside the others
 			local actor = Actor.new(scene, Models.Enemy(entry.DefId), { Name = entry.Name, Facing = 1, MaxHealth = entry.MaxHealth })
-			actor:Place(x - 6)
 			self.Minions[entry.Id] = actor
-			task.spawn(function()
-				local t0 = os.clock()
-				while os.clock() - t0 < 0.35 and not actor.Destroyed do
-					actor:Place(x - 6 + 6 * ((os.clock() - t0) / 0.35))
-					task.wait()
-				end
-				if not actor.Destroyed then
-					actor:Place(x)
-				end
-			end)
+			actor.Arrived = true
+			self:_enlist(actor, "Party", entry.Row or "Front")
+			actor:Place(ROW_X.Party.Front - 6, 0)
+			self:_layout()
 			flash(scene, actor:Pos(), Color3.fromRGB(150, 60, 190), 5)
 		elseif entry and entry.Team ~= "Party" and not self.Enemies[entry.Id] then
-			-- a boss summoned a minion: it joins the enemy side
-			self.Spawned = (self.Spawned or 0) + 1
-			local x = ENEMY_X[#ENEMY_X] + 4 + ((self.Spawned - 1) % 4) * 3.5
+			-- a boss summoned a minion: it joins the enemy front row, in front of the boss
 			local actor = Actor.new(scene, Models.Enemy(entry.DefId), { Name = entry.Name, Facing = -1, MaxHealth = entry.MaxHealth })
 			actor.AttackStyle = Models.AttackStyle(entry.DefId)
-			actor:Place(x)
 			self.Enemies[entry.Id] = actor
+			actor.Arrived = true
+			self:_enlist(actor, "Enemy", entry.Row or "Front")
+			actor:Place(ROW_X.Enemy.Front + 5, 0)
+			self:_layout()
 			flash(scene, actor:Pos(), Color3.fromRGB(150, 230, 150), 4)
 		end
 	elseif t == "Telegraph" then
@@ -428,6 +474,7 @@ function Replay:Destroy()
 		hero.Pet:Destroy()
 		hero:Destroy()
 	end
+	self.Formation = {}
 	self.Heroes = {}
 end
 

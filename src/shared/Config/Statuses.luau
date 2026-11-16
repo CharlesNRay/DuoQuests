@@ -158,6 +158,13 @@ return {
 		Description = "Frozen solid: cannot act.",
 		Flags = { Stunned = true },
 	},
+	-- Stunned: hard crowd control. Only bosses stun heroes (and bosses themselves cannot be stunned).
+	Stunned = {
+		Id = "Stunned",
+		DisplayName = "Stunned",
+		Description = "Stunned: cannot act.",
+		Flags = { Stunned = true },
+	},
 	Snared = {
 		Id = "Snared",
 		DisplayName = "Snared",

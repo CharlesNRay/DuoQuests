@@ -35,10 +35,27 @@ function Progression.XPToNext(level)
 	return Economy.XPBase + Economy.XPPerLevel * (level - 1)
 end
 
+-- XP for the next Paragon level (a little more each level)
+function Progression.ParagonXPToNext(paragonLevel)
+	return math.floor(Progression.XPToNext(Economy.MaxLevel) * Economy.Paragon.XPFactor * (1 + 0.03 * paragonLevel))
+end
+
 function Progression.AddXP(season, amount)
 	local gained = 0
 	if season.Level >= Economy.MaxLevel then
 		season.XP = 0
+		season.Paragon = season.Paragon or { Level = 0, XP = 0 }
+		local para = season.Paragon
+		if para.Level < Economy.Paragon.Max then
+			para.XP += amount
+			while para.Level < Economy.Paragon.Max and para.XP >= Progression.ParagonXPToNext(para.Level) do
+				para.XP -= Progression.ParagonXPToNext(para.Level)
+				para.Level += 1
+			end
+			if para.Level >= Economy.Paragon.Max then
+				para.XP = 0
+			end
+		end
 		return 0
 	end
 	season.XP += amount

@@ -6,7 +6,7 @@
 	they do not fight themselves ("pets as combatants" is on the roadmap), so
 	their bonuses are deliberately small: the balance headroom is kept for
 	stronger pets later. Ownership is PERMANENT (Permanent.Pets); levels and
-	the equipped pet reset each season (Season.PetLevels, Season.ActivePet).
+	levels, pet XP and the equipped pet also carry across seasons (Permanent.PetLevels / PetXP / ActivePet). Levels go to 50 and are slow: a long account goal.
 
 	Each pet:
 	  Rarity       Common / Rare / Epic (Config/Rarities colours)
@@ -21,14 +21,14 @@
 ]]
 
 return {
-	MaxLevel = 10,
-	XPPerLevel = 100, -- pet XP to go from level L to L+1 is this * L (pet food and fighting)
+	MaxLevel = 50,
+	XPPerLevel = 200, -- pet XP to go from level L to L+1 is this * L (pet food and fighting)
 	-- Duplicates are banked as copies (Permanent.PetCopies). The player spends RankCost[rank] copies to rank the
 	-- pet up by hand (Permanent.PetRanks), up to MaxRank. A rank adds RankBonus (a fraction) of the pet's stats and
 	-- raises its skill level by one. Pets level separately from food/fighting.
 	MaxRank = 6,
 	RankCost = { 1, 1, 2, 2, 3 }, -- copies to go from rank r to r+1 (9 copies for a max rank pet)
-	RankBonus = 0.25,
+	RankBonus = 0.4,
 	DupFallbackXP = 80, -- (old) pet XP for a duplicate of a maxed pet; duplicates past what ranking needs are now shards
 	-- Pet shards: once a pet has all the copies it needs to reach max rank, every further duplicate becomes one shard of
 	-- its rarity. PetCost shards of a rarity buy a pet of that rarity (a copy, or the pet itself if not owned yet).
@@ -36,20 +36,20 @@ return {
 	Shards = { PetCost = 30, CondenseCost = 10, Order = { "Common", "Rare", "Epic", "Legendary" } },
 	-- Collecting counts: every owned pet adds points (more for rarer pets, times its rank) and each point is a small permanent
 	-- bonus to Attack and Max Health, whether or not that pet is equipped.
-	Collection = { Points = { Common = 1, Rare = 2, Epic = 4, Legendary = 8 }, PerPoint = 0.001, Stats = { "Attack", "MaxHealth" } },
+	Collection = { Points = { Common = 1, Rare = 2, Epic = 4, Legendary = 8 }, PerPoint = 0.002, Stats = { "Attack", "MaxHealth" } },
 	-- Every pet hit (its strike and its skill) is multiplied by this; Beastmaster paths add the PetDamage stat on top.
-	DamageScale = 4.5,
+	DamageScale = 6,
 	-- Every equipped pet also strikes on its own (ability Pet_Strike_<Rarity>, level = rank).
 	Strike = { Cooldown = 3.5 },
 	-- Stat sizes at Share 1 for a Common pet; Share splits them (a one-stat pet gets 1.25, a two-stat pet 0.7 + 0.5,
 	-- so the single-stat pet is better at its stat). Mul = +fraction, Add = raw number.
 	StatUnits = {
-		MaxHealth = { Mode = "Mul", Base = 0.05, PerLevel = 0.012 },
-		Attack = { Mode = "Mul", Base = 0.05, PerLevel = 0.012 },
-		Defense = { Mode = "Mul", Base = 0.05, PerLevel = 0.012 },
-		AttackSpeed = { Mode = "Mul", Base = 0.03, PerLevel = 0.008 },
-		CritChance = { Mode = "Add", Base = 0.015, PerLevel = 0.003 },
-		CritMultiplier = { Mode = "Add", Base = 0.08, PerLevel = 0.016 },
+		MaxHealth = { Mode = "Mul", Base = 0.09, PerLevel = 0.008 },
+		Attack = { Mode = "Mul", Base = 0.09, PerLevel = 0.008 },
+		Defense = { Mode = "Mul", Base = 0.09, PerLevel = 0.008 },
+		AttackSpeed = { Mode = "Mul", Base = 0.05, PerLevel = 0.005 },
+		CritChance = { Mode = "Add", Base = 0.025, PerLevel = 0.002 },
+		CritMultiplier = { Mode = "Add", Base = 0.14, PerLevel = 0.01 },
 	},
 	RarityMult = { Common = 1, Rare = 1.5, Epic = 2.2, Legendary = 3.2 },
 

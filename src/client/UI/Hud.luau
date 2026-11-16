@@ -361,8 +361,12 @@ function Hud.new(root)
 		self.Badge.BackgroundColor3 = C[me.ClassId] or C.Accent
 		self.NameLabel.Text = me.Name .. "  -  " .. me.ClassId
 		local frac = if me.XPNeeded and me.XPNeeded > 0 then math.clamp((me.XP or 0) / me.XPNeeded, 0, 1) else 0
-		self.XpFill.Size = UDim2.fromScale(frac, 1)
 		self.XpText = ("Level %d\nXP %d / %d"):format(me.Level, me.XP or 0, me.XPNeeded or 0)
+		if me.Level >= 120 then -- level cap: the bar shows Paragon progress
+			frac = math.clamp((me.ParagonXP or 0) / math.max(me.ParagonNeed or 1, 1), 0, 1)
+			self.XpText = ("Paragon %d / 100\nXP %d / %d\nEach Paragon level: +0.4%% Attack, Health and Defense"):format(me.Paragon or 0, me.ParagonXP or 0, me.ParagonNeed or 0)
+		end
+		self.XpFill.Size = UDim2.fromScale(frac, 1)
 		self.Gold.Text = "💰 " .. short(me.Gold)
 		self.Shards.Text = "💠 " .. short(me.Shards)
 		self.GoldExact, self.ShardExact = me.Gold, me.Shards

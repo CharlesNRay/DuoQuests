@@ -163,6 +163,7 @@ function StageRunner.Run(members, stage, seed, ultimate, record)
 					Ghost = ghosts[entity.Id] or nil,
 					Look = looks[entity.Id],
 					MaxHealth = entity.Stats.MaxHealth,
+					Row = sim:RowOf(entity),
 					UserId = if entity.Team == "Party" then tonumber(entity.Id) else nil,
 				})
 			end

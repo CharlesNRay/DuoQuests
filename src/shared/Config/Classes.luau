@@ -88,6 +88,7 @@ return {
 			"Smite",
 			"Heal",
 			"Blessing",
+			"Purify",
 			"RadiantBurst",
 			"DivineShield",
 			"GroupHeal",

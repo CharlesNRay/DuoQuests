@@ -33,8 +33,33 @@ Pets.Order = Config.Order
 
 local STAT_LABELS = { MaxHealth = "Max Health", Attack = "Attack", Defense = "Defense", CritChance = "Crit Chance", AttackSpeed = "Attack Speed", CritMultiplier = "Crit Damage" }
 
+-- Pet levels, pet XP and the equipped pet belong to the ACCOUNT (Permanent), so pets carry across seasons. Older saves kept
+-- them in Season; the first call folds them in (keeping the higher level).
+local function account(profile)
+	local perm = profile.Permanent
+	perm.PetLevels = perm.PetLevels or {}
+	perm.PetXP = perm.PetXP or {}
+	local season = profile.Season
+	if season.PetLevels and next(season.PetLevels) ~= nil then
+		for petId, level in pairs(season.PetLevels) do
+			if (perm.PetLevels[petId] or 1) < level then
+				perm.PetLevels[petId] = level
+				perm.PetXP[petId] = (season.PetXP or {})[petId] or 0
+			end
+		end
+		season.PetLevels = {}
+		season.PetXP = {}
+	end
+	if season.ActivePet ~= nil then
+		perm.ActivePet = perm.ActivePet or season.ActivePet
+		season.ActivePet = nil
+	end
+	return perm
+end
+Pets.Account = account
+
 function Pets.Level(profile, petId)
-	local levels = profile.Season.PetLevels or {}
+	local levels = account(profile).PetLevels
 	return math.clamp(levels[petId] or 1, 1, Config.MaxLevel)
 end
 
@@ -49,7 +74,7 @@ function Pets.Rank(profile, petId)
 end
 
 function Pets.Active(profile)
-	local active = profile.Season.ActivePet
+	local active = account(profile).ActivePet
 	if type(active) == "string" and Config.Defs[active] and owned(profile, active) then
 		return active, Pets.Level(profile, active), Pets.Rank(profile, active)
 	end
@@ -221,6 +246,14 @@ function Pets.Collection(profile)
 			table.insert(mods, { Stat = stat, Mode = "Mul", Value = value })
 		end
 	end
+	-- Paragon levels (earned past the level cap) add to the same stats
+	local paragon = profile.Season.Paragon
+	if paragon and paragon.Level > 0 then
+		local EconomyConfig = require(script.Parent.Config.Economy)
+		for _, stat in ipairs({ "Attack", "MaxHealth", "Defense" }) do
+			table.insert(mods, { Stat = stat, Mode = "Mul", Value = paragon.Level * EconomyConfig.Paragon.PerLevel })
+		end
+	end
 	-- the guild's permanent combat upgrades ride along here: this list is already applied at every place a hero's stats are built
 	local guild = profile.Permanent.GuildBuffs
 	if guild and guild.Mods then
@@ -282,7 +315,7 @@ function Pets.Equip(profile, petId)
 	if not owned(profile, petId) then
 		return false, "NotOwned"
 	end
-	profile.Season.ActivePet = petId
+	account(profile).ActivePet = petId
 	return true
 end
 
@@ -299,9 +332,7 @@ function Pets.AddXP(profile, petId, amount)
 	if not owned(profile, petId) then
 		return false, "NotOwned"
 	end
-	local season = profile.Season
-	season.PetLevels = season.PetLevels or {}
-	season.PetXP = season.PetXP or {}
+	local season = account(profile)
 	local level = Pets.Level(profile, petId)
 	if level >= Config.MaxLevel then
 		return false, "MaxLevel"

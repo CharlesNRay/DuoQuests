@@ -55,8 +55,7 @@ return {
 				{ Stat = "MaxHealth", Mode = "Mul", Value = 0.35 },
 				{ Stat = "Defense", Mode = "Mul", Value = 0.3 },
 				{ Stat = "DamageTaken", Mode = "Mul", Value = -0.1 },
-				{ Stat = "Attack", Mode = "Mul", Value = 0.05 },
-			},
+				{ Stat = "Attack", Mode = "Mul", Value = 0.15 }, { Stat = "DamageDealt", Mode = "Mul", Value = 0.35 } },
 			Skills = { "Bulwark", "Retribution", "UnbreakableVow" },
 		},
 		Priest = {
@@ -70,8 +69,7 @@ return {
 				{ Stat = "HealingDealt", Mode = "Mul", Value = 0.3 },
 				{ Stat = "MaxHealth", Mode = "Mul", Value = 0.2 },
 				{ Stat = "Defense", Mode = "Mul", Value = 0.12 },
-				{ Stat = "Attack", Mode = "Mul", Value = 0.05 },
-			},
+				{ Stat = "Attack", Mode = "Mul", Value = 0.2 }, { Stat = "DamageDealt", Mode = "Mul", Value = 0.5 } },
 			Skills = { "Sanctuary", "Renewal", "HolyAegis" },
 		},
 		Templar = {
@@ -97,8 +95,8 @@ return {
 			UnlockLevel = 30,
 			Description = "Fire and fury. Big attack and damage, with burning that keeps hurting; hits hard but stays fragile.",
 			Mods = {
-				{ Stat = "Attack", Mode = "Mul", Value = 0.3 },
-				{ Stat = "DamageDealt", Mode = "Mul", Value = 0.15 },
+				{ Stat = "Attack", Mode = "Mul", Value = 0.24 },
+				{ Stat = "DamageDealt", Mode = "Mul", Value = 0.08 },
 				{ Stat = "CritChance", Mode = "Add", Value = 0.04 },
 				{ Stat = "MaxHealth", Mode = "Mul", Value = 0.05 },
 			},
@@ -115,8 +113,7 @@ return {
 				{ Stat = "MaxHealth", Mode = "Mul", Value = 0.3 },
 				{ Stat = "Defense", Mode = "Mul", Value = 0.25 },
 				{ Stat = "DamageTaken", Mode = "Mul", Value = -0.08 },
-				{ Stat = "Attack", Mode = "Mul", Value = 0.15 },
-			},
+				{ Stat = "Attack", Mode = "Mul", Value = 0.15 }, { Stat = "DamageDealt", Mode = "Mul", Value = 0.25 } },
 			Skills = { "DeepFreeze", "FrostArmor", "Glacier" },
 		},
 		Sharpshooter = {
@@ -130,7 +127,7 @@ return {
 				{ Stat = "Attack", Mode = "Mul", Value = 0.25 },
 				{ Stat = "CritChance", Mode = "Add", Value = 0.1 },
 				{ Stat = "CritMultiplier", Mode = "Add", Value = 0.3 },
-				{ Stat = "DamageDealt", Mode = "Mul", Value = 0.12 },
+				{ Stat = "DamageDealt", Mode = "Mul", Value = 0.08 },
 			},
 			Skills = { "DeadEye", "Headshot", "Barrage" },
 		},
@@ -145,7 +142,7 @@ return {
 				{ Stat = "MaxHealth", Mode = "Mul", Value = 0.2 },
 				{ Stat = "Defense", Mode = "Mul", Value = 0.2 },
 				{ Stat = "Attack", Mode = "Mul", Value = 0.15 },
-				{ Stat = "PetDamage", Mode = "Mul", Value = 2.0 }, -- the pet is the main damage dealer
+				{ Stat = "PetDamage", Mode = "Mul", Value = 1.2 }, -- the pet is the main damage dealer
 			},
 			PetBoost = { Stats = 0.75, SkillLevels = 4 },
 			Skills = { "PackHowl", "Stampede", "NaturesBond" },
@@ -159,8 +156,8 @@ return {
 			Description = "Kills from the shadows. Huge crits and big single-target hits.",
 			Mods = {
 				{ Stat = "Attack", Mode = "Mul", Value = 0.28 },
-				{ Stat = "DamageDealt", Mode = "Mul", Value = 0.14 },
-				{ Stat = "CritChance", Mode = "Add", Value = 0.08 },
+				{ Stat = "DamageDealt", Mode = "Mul", Value = 0.04 },
+				{ Stat = "CritChance", Mode = "Add", Value = 0.05 },
 				{ Stat = "CritMultiplier", Mode = "Add", Value = 0.3 },
 			},
 			Skills = { "DeathMark", "Execute", "ShadowStrike" },
@@ -177,8 +174,7 @@ return {
 				{ Stat = "Defense", Mode = "Mul", Value = 0.25 },
 				{ Stat = "DamageTaken", Mode = "Mul", Value = -0.1 },
 				{ Stat = "Attack", Mode = "Mul", Value = 0.12 },
-				{ Stat = "AttackSpeed", Mode = "Mul", Value = 0.08 },
-			},
+				{ Stat = "AttackSpeed", Mode = "Mul", Value = 0.08 }, { Stat = "DamageDealt", Mode = "Mul", Value = 0.12 } },
 			Skills = { "Riposte", "Parry", "BladeDance" },
 		},
 		Necromancer = {
@@ -190,9 +186,9 @@ return {
 			Description = "Commands the dead. Stronger minions, ghouls that feed you life, plague and death magic; drains life from its victims.",
 			Mods = {
 				{ Stat = "Attack", Mode = "Mul", Value = 0.2 },
-				{ Stat = "DamageDealt", Mode = "Mul", Value = 0.1 },
+				{ Stat = "DamageDealt", Mode = "Mul", Value = 0.02 },
 				{ Stat = "MaxHealth", Mode = "Mul", Value = 0.1 },
-				{ Stat = "MinionPower", Mode = "Add", Value = 0.3 },
+				{ Stat = "MinionPower", Mode = "Add", Value = 0.15 },
 				{ Stat = "Lifesteal", Mode = "Add", Value = 0.05 },
 			},
 			Skills = { "RaiseDead", "DeathCoil", "Plague" },
@@ -289,7 +285,7 @@ return {
 			Parent = "Beastmaster",
 			UnlockLevel = 90,
 			Description = "The final form of the Beastmaster: the wild answers every call.",
-			Mods = { { Stat = "MaxHealth", Mode = "Mul", Value = 0.15 }, { Stat = "Attack", Mode = "Mul", Value = 0.12 }, { Stat = "DamageDealt", Mode = "Mul", Value = 0.08 }, { Stat = "PetDamage", Mode = "Mul", Value = 1.0 } },
+			Mods = { { Stat = "MaxHealth", Mode = "Mul", Value = 0.15 }, { Stat = "Attack", Mode = "Mul", Value = 0.12 }, { Stat = "DamageDealt", Mode = "Mul", Value = 0.08 }, { Stat = "PetDamage", Mode = "Mul", Value = 0.5 } },
 			Skills = { "PrimalSurge" },
 		},
 		Nightblade = {

@@ -12,12 +12,14 @@ return {
 	MaxLevel = 120,
 	XPBase = 50, -- XP needed to go from level 1 to 2
 	XPPerLevel = 25, -- each later level needs this much more
+	-- Past the level cap, XP fills Paragon levels (Season.Paragon): each is a small permanent bonus to Attack, Health and Defense for the season.
+	Paragon = { Max = 100, XPFactor = 3, PerLevel = 0.004 },
 
 	-- Stage clear rewards (earned at the frontier) --------------------------
 	RewardScale = 0.1, -- one dial that scales gold and XP income (shards have their own numbers below)
 	GoldBase = 10,
 	GoldPerStage = 4,
-	XPScale = 11, -- multiplies XP only (the level pacing dial): lv10 ~12 min, lv20 ~27 min, lv30 ~1 h
+	XPScale = 0.9, -- multiplies XP only (the level pacing dial): lv10 ~12 min, lv20 ~27 min, lv30 ~1 h
 	XPRewardBase = 10,
 	XPRewardPerStage = 3,
 	PetXPPerClear = 12, -- XP the active pet earns from every won fight
