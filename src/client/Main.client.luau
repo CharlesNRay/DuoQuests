@@ -29,6 +29,7 @@ Screens.Premium = require(script.Parent.UI.PremiumScreen).Premium
 Screens.Season = require(script.Parent.UI.SeasonScreen).Season
 Screens.Cosmetics = require(script.Parent.UI.CosmeticsScreen).Cosmetics
 Screens.Codes = require(script.Parent.UI.CodesScreen).Codes
+Screens.Character = require(script.Parent.UI.CharacterScreen).Character
 local CosmeticsVisuals = require(script.Parent.Battle.CosmeticsVisuals)
 CosmeticsVisuals.Init()
 local World = require(Shared.World)
@@ -141,7 +142,7 @@ end
 local PANEL_DEFAULT = Vector2.new(500, 286)
 local PANEL_SIZES = {
 	Map = Vector2.new(640, 298), Hero = Vector2.new(640, 298), Skills = Vector2.new(660, 344),
-	Merchant = Vector2.new(540, 292), Blacksmith = Vector2.new(540, 292), Wish = Vector2.new(640, 310), Boss = Vector2.new(640, 310), Quests = Vector2.new(640, 330), Premium = Vector2.new(640, 330), Season = Vector2.new(640, 330), Cosmetics = Vector2.new(640, 330), Codes = Vector2.new(540, 300),
+	Merchant = Vector2.new(540, 292), Blacksmith = Vector2.new(540, 292), Wish = Vector2.new(640, 310), Boss = Vector2.new(640, 310), Quests = Vector2.new(640, 330), Premium = Vector2.new(640, 330), Season = Vector2.new(640, 330), Cosmetics = Vector2.new(640, 330), Codes = Vector2.new(540, 300), Character = Vector2.new(640, 340),
 }
 local SHOP_NPC = { Merchant = "Merchant", Blacksmith = "Blacksmith", Wish = "Tree" }
 local panel = Kit.frame({ Name = "Panel", Size = UDim2.new(0, 500, 0, 286), Position = UDim2.new(0.5, -250, 0, 42), BackgroundColor3 = Kit.Colors.Bg, Visible = false, ZIndex = 5, Parent = root })
@@ -225,6 +226,7 @@ local function redraw()
 	end
 end
 
+local QUIET_ACTIONS = { CreateCharacter = true, RenameCharacter = true, UpdateCharacter = true }
 function call(action, ...)
 	local ok, data = api:InvokeServer(action, ...)
 	if action == "CreateCode" and ok then
@@ -232,6 +234,9 @@ function call(action, ...)
 	end
 	if not ok then
 		warn("[DuoQuest] " .. action .. " failed: " .. tostring(data))
+		if QUIET_ACTIONS[action] then
+			return ok, data -- the screen shows its own message
+		end
 		Kit.label({ Size = UDim2.new(1, 0, 0, 20), Position = UDim2.new(0, 0, 1, -20), Text = "Could not do that: " .. tostring(data), TextColor3 = Kit.Colors.Bad, Parent = body })
 	else
 		-- the server rate-limits back-to-back calls (0.1s), so a refresh sent right after an action can be
@@ -372,6 +377,7 @@ hud:AddButton("Boss", "mini", "👹", "Bosses", function()
 	open("Boss", "Bosses")
 end)
 hud:AddButton("Premium", "mini", "🔶", "Premium shop", function() open("Premium", "Premium Shop") end)
+hud:AddButton("Character", "mini", "🧍", "Character: name, class, look", function() extra.CharMsg = nil extra.Char = nil open("Character", "Character") end)
 hud:AddButton("Codes", "mini", "🎁", "Redeem a code", function() extra.CodeResult = nil open("Codes", "Redeem Code") end)
 hud:AddButton("Cosmetics", "mini", "🎨", "Cosmetics: auras, kill effects, name colours, titles", function() open("Cosmetics", "Cosmetics") end)
 hud:AddButton("Season", "mini", "🏆", "Season rewards", function() extra.SeasonMsg = nil showSeason() end)
@@ -529,3 +535,9 @@ for _ = 1, 40 do
 end
 redraw()
 refreshWorld()
+-- a brand new player starts in the character creator
+if state and state.Player.Character and not state.Player.Character.Created then
+	extra.CharMsg = nil
+	extra.Char = nil
+	open("Character", "Create your hero")
+end

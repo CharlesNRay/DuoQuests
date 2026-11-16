@@ -229,3 +229,9 @@ Newest first.
 - `Shared/Codes`: normalises the text, once per account (`Permanent.Codes.Redeemed`), start/expiry window, pays out. 11 tests.
 - API `RedeemCode`: 5 wrong tries a minute, then a 30 second lock. UI: 🎁 button, Redeem Code box.
 - Not built: codes with a global use limit (needs a DataStore counter).
+
+## Character creator (built)
+- Shared/Character + Config/Character: name rules (3-14 letters/digits/space/-/_, small blocklist plus Roblox's TextService filter on the server), class pick (Warrior/Cleric; Mage is Locked), look = indexes into skin / hair / outfit colour lists. `Permanent.Character`.
+- API: CreateCharacter (once), UpdateCharacter (free), RenameCharacter (100 Sunstones). A new player (or any existing player who has no character yet) lands in the creator; the 🧍 button reopens it as the Character screen.
+- The name shows in the HUD and the party. The look is drawn on the hero in the FIGHT scene (blocky body, or the Roblox avatar if the toggle is on). The plaza avatar is still the player's Roblox avatar.
+- Not built: switching class after creation (needs a rule for loadouts, party snapshots and class leaderboards), name uniqueness, a plaza avatar that matches the creator look.

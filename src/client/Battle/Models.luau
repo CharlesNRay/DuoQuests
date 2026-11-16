@@ -1,6 +1,6 @@
 --[[
 	Models (ModuleScript): builds the 3D bodies used in battle.
-	  Models.Hero(classId)        simple placeholder body (swapped for the player's
+	  Models.Hero(classId, look?) simple placeholder body (swapped for the player's
 	                              real avatar when it loads, see Actor)
 	  Models.Enemy(defId)         monster from simple shapes, looks in Config/Enemies
 	  Models.Pet(petId)           small companion, looks from Config/Pets (nil = default)
@@ -43,12 +43,17 @@ local function eyes(model, root, offsetY, spread, forward)
 	end
 end
 
-function Models.Hero(classId)
+-- look (optional) = { Skin, Hair, Outfit } as Color3: the character creator's choices
+function Models.Hero(classId, look)
 	local model = Instance.new("Model")
-	local color = CLASS_COLORS[classId] or Color3.fromRGB(200, 200, 200)
-	local root = part(model, { Name = "Body", Size = Vector3.new(2, 2.4, 1), Color = color, CFrame = CFrame.new(0, 3, 0) })
-	part(model, { Name = "Head", Shape = Enum.PartType.Ball, Size = Vector3.new(1.4, 1.4, 1.4), Color = Color3.fromRGB(245, 214, 180), CFrame = CFrame.new(0, 4.8, 0) })
-	part(model, { Name = "Legs", Size = Vector3.new(1.6, 1.8, 0.9), Color = Color3.fromRGB(70, 74, 96), CFrame = CFrame.new(0, 1.0, 0) })
+	local outfit = look and look.Outfit or CLASS_COLORS[classId] or Color3.fromRGB(200, 200, 200)
+	local skin = look and look.Skin or Color3.fromRGB(245, 214, 180)
+	local root = part(model, { Name = "Body", Size = Vector3.new(2, 2.4, 1), Color = outfit, CFrame = CFrame.new(0, 3, 0) })
+	part(model, { Name = "Head", Shape = Enum.PartType.Ball, Size = Vector3.new(1.4, 1.4, 1.4), Color = skin, CFrame = CFrame.new(0, 4.8, 0) })
+	part(model, { Name = "Legs", Size = Vector3.new(1.6, 1.8, 0.9), Color = look and outfit:Lerp(Color3.new(0, 0, 0), 0.45) or Color3.fromRGB(70, 74, 96), CFrame = CFrame.new(0, 1.0, 0) })
+	if look then
+		part(model, { Name = "Hair", Size = Vector3.new(1.5, 0.55, 1.5), Color = look.Hair, CFrame = CFrame.new(0, 5.4, 0) })
+	end
 	model.PrimaryPart = root
 	return model
 end

@@ -147,6 +147,7 @@ function ProfileTemplate.Defaults()
 			Pets = {}, -- [petId] = true
 			Cosmetics = {}, -- [cosmeticId] = true (see Config/Cosmetics)
 			CosmeticsEquipped = {}, -- [slot] = cosmetic id, or the title text for Title
+			Character = { Created = false, Name = "", Look = { Skin = 2, Hair = 2, Outfit = 6 }, UseAvatar = false, Renames = 0 }, -- see Shared/Character
 			Titles = {},
 			Achievements = {},
 			LegacyPoints = 0,

@@ -110,13 +110,17 @@ end
 function Replay:_hero(entry, index)
 	local hero = self.Heroes[entry.Id]
 	if hero == nil then
-		hero = Actor.new(self.Scene, Models.Hero(entry.DefId), { Name = entry.Name, Facing = 1, MaxHealth = entry.MaxHealth })
+		-- the character creator's look and name, set on the player by the server (ghost companions have none)
+		local owner = entry.UserId and entry.UserId > 0 and Players:GetPlayerByUserId(entry.UserId) or nil
+		local custom = owner and owner:GetAttribute("CharSkin") ~= nil and owner:GetAttribute("CharAvatar") ~= true
+		local look = custom and { Skin = owner:GetAttribute("CharSkin"), Hair = owner:GetAttribute("CharHair"), Outfit = owner:GetAttribute("CharOutfit") } or nil
+		hero = Actor.new(self.Scene, Models.Hero(entry.DefId, look), { Name = owner and owner:GetAttribute("CharName") or entry.Name, Facing = 1, MaxHealth = entry.MaxHealth })
 		hero.Pet = Actor.new(self.Scene, Models.Pet(entry.PetId), { Name = "Pet", Facing = 1, MaxHealth = 1 })
 		hero.PetId = entry.PetId
 		hero.Pet.Bar.Enabled = false
 		self.Heroes[entry.Id] = hero
 		-- the real avatar, when available
-		if entry.UserId and entry.UserId > 0 then -- ghosts like the starter companion have no avatar
+		if entry.UserId and entry.UserId > 0 and not custom then -- ghosts like the starter companion have no avatar
 			task.spawn(function()
 				local ok, rig = pcall(function()
 					return Players:CreateHumanoidModelFromUserId(entry.UserId)

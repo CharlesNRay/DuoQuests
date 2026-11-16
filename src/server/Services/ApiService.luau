@@ -20,6 +20,7 @@
 	  GetLeaderboard(categoryId)        top rows + your own score, "Stage" or "Level"
 	  GetSeasonRewards()                brackets, your live standing, and finished seasons' rewards waiting to be claimed
 	  ClaimSeasonRewards(seasonId)      collect a finished season's reward (once)
+	  CreateCharacter(name, classId, look, useAvatar) / UpdateCharacter(look, useAvatar) / RenameCharacter(name)   the character creator (once; look free; rename costs Sunstones)
 	  RedeemCode(text)   -> ok, { Success, Reason?, Lines? }   (wrong tries are limited: 5 a minute, then a short lock)
 	  BuyCosmetic(id) / EquipCosmetic(slot, id|nil)   auras, kill effects, name colours, titles (Sunstones)
 	  Inspect(userId)                   public card of a party member on this server
@@ -70,6 +71,10 @@ local Leaderboards = require(Shared.Leaderboards)
 local SeasonRewards = require(Shared.SeasonRewards)
 local Cosmetics = require(Shared.Cosmetics)
 local Codes = require(Shared.Codes)
+local Classes = require(Shared.Config.Classes)
+local Character = require(Shared.Character)
+local CharacterConfig = require(Shared.Config.Character)
+local TextService = game:GetService("TextService")
 local CodeList = require(script.Parent.Parent.Data.CodeList) -- server only: clients never see the list
 local CosmeticConfig = require(Shared.Config.Cosmetics)
 local SeasonRewardConfig = require(Shared.Config.SeasonRewards)
@@ -157,7 +162,7 @@ local function buildState(player)
 	local state = {
 		Player = {
 			UserId = player.UserId,
-			Name = player.Name,
+			Name = Character.DisplayName(profile, player.Name),
 			ClassId = classId,
 			Level = season.Level,
 			XP = season.XP,
@@ -195,6 +200,7 @@ local function buildState(player)
 			PremiumOffer = Premium.Offer(profile),
 			SunstonePacks = Premium.Packs(profile),
 			Cosmetics = cosmeticsOf(profile),
+			Character = characterOf(profile),
 		},
 	}
 
@@ -219,12 +225,40 @@ function cosmeticsOf(profile)
 end
 
 -- Everyone's looks are shown from attributes on the player (the client draws the aura, name colour and title from them).
+-- Character creator state for the client: what is saved plus every option (the lists are in Config/Character).
+local function characterOf(profile)
+	local c = Character.Get(profile)
+	local classes = {}
+	for _, classId in ipairs({ "Warrior", "Cleric", "Mage" }) do
+		local def = Classes[classId]
+		if def then
+			table.insert(classes, { Id = classId, Name = def.DisplayName or classId, Playable = Character.Playable(profile, classId) })
+		end
+	end
+	return {
+		Created = c.Created, Name = c.Name, Look = c.Look, UseAvatar = c.UseAvatar, Renames = c.Renames,
+		RenameCost = CharacterConfig.RenameCost, Classes = classes,
+		NameMin = CharacterConfig.Name.Min, NameMax = CharacterConfig.Name.Max,
+		Skins = CharacterConfig.Skins, Hairs = CharacterConfig.HairColors, Outfits = CharacterConfig.Outfits,
+	}
+end
+
 function ApiService.ApplyLook(player, profile)
 	local look = Cosmetics.Look(profile)
 	player:SetAttribute("CosAura", look.Aura)
 	player:SetAttribute("CosKill", look.Kill)
 	player:SetAttribute("CosName", look.Name)
 	player:SetAttribute("CosTitle", look.Title)
+	-- the character creator's look: the fight scene draws heroes from these (the plaza avatar is the player's own)
+	local c = Character.Get(profile)
+	if c.Created then
+		local colors = Character.Colors(profile)
+		player:SetAttribute("CharName", c.Name)
+		player:SetAttribute("CharAvatar", c.UseAvatar)
+		player:SetAttribute("CharSkin", Color3.fromRGB(table.unpack(colors.Skin)))
+		player:SetAttribute("CharHair", Color3.fromRGB(table.unpack(colors.Hair)))
+		player:SetAttribute("CharOutfit", Color3.fromRGB(table.unpack(colors.Outfit)))
+	end
 end
 
 -- After a build change, the partner's ghost of this player must match.
@@ -701,6 +735,70 @@ function handlers.ClaimSeasonRewards(player, profile, seasonId)
 end
 
 local codeTries = {} -- [userId] = { Wrong = n, Since = t, LockedUntil = t }
+
+-- Roblox's text filter: a name it would hide (#####) is refused. Studio has no filter access, so it passes there.
+local function filterOk(player, text)
+	local ok, result = pcall(function()
+		return TextService:FilterStringAsync(text, player.UserId):GetNonChatStringForBroadcastAsync()
+	end)
+	if not ok then
+		return true
+	end
+	return result == text
+end
+
+function handlers.CreateCharacter(player, profile, name, classId, look, useAvatar)
+	if type(name) ~= "string" or type(classId) ~= "string" or (look ~= nil and type(look) ~= "table") then
+		return false, "BadArgs"
+	end
+	if Character.Get(profile).Created then
+		return false, "AlreadyCreated"
+	end
+	local valid, cleaned = Character.CheckName(name)
+	if not valid then
+		return false, cleaned
+	end
+	if not filterOk(player, cleaned) then
+		return false, "Blocked"
+	end
+	local ok, reason = Character.Create(profile, cleaned, classId, look, useAvatar)
+	if ok then
+		ApiService.ApplyLook(player, profile)
+		PartyService.RenamePlayer(player, Character.DisplayName(profile, player.Name))
+		afterBuildChange(player)
+	end
+	return ok, reason
+end
+
+function handlers.UpdateCharacter(player, profile, look, useAvatar)
+	if type(look) ~= "table" then
+		return false, "BadArgs"
+	end
+	local ok, reason = Character.SetLook(profile, look, useAvatar)
+	if ok then
+		ApiService.ApplyLook(player, profile)
+	end
+	return ok, reason
+end
+
+function handlers.RenameCharacter(player, profile, name)
+	if type(name) ~= "string" then
+		return false, "BadArgs"
+	end
+	local valid, cleaned = Character.CheckName(name)
+	if not valid then
+		return false, cleaned
+	end
+	if not filterOk(player, cleaned) then
+		return false, "Blocked"
+	end
+	local ok, cost = Character.Rename(profile, cleaned, Premium)
+	if ok then
+		ApiService.ApplyLook(player, profile)
+		PartyService.RenamePlayer(player, Character.DisplayName(profile, player.Name))
+	end
+	return ok, cost
+end
 
 function handlers.RedeemCode(player, profile, text)
 	if type(text) ~= "string" then

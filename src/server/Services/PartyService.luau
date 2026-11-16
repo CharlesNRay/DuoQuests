@@ -51,6 +51,12 @@ local Pets = require(Shared.Pets)
 local Hero = require(Shared.Hero)
 local OfflineConfig = require(Shared.Config.Offline)
 local Seasons = require(Shared.Config.Seasons)
+local Character = require(Shared.Character)
+
+-- The name the party shows: the character creator's name, or the Roblox name until one is chosen.
+local function nameOf(player, profile)
+	return Character.DisplayName(profile, player.Name)
+end
 local TableUtil = require(Shared.Util.TableUtil)
 local PartyCore = require(script.Parent.PartyCore)
 
@@ -251,8 +257,8 @@ function attach(player, profile)
 	partyOf[userId] = partyId
 	local seasonId = Seasons.CurrentSeasonId
 	local partnerOnline = partnerIsOnline(entry, userId)
-	Party.OpenSession(entry.Record, seasonId, userId, player.Name, profile, partnerOnline, now())
-	entry.Online[userId] = { Player = player, Profile = profile, Name = player.Name }
+	Party.OpenSession(entry.Record, seasonId, userId, nameOf(player, profile), profile, partnerOnline, now())
+	entry.Online[userId] = { Player = player, Profile = profile, Name = nameOf(player, profile) }
 
 	local claim = Party.Claim(entry.Record, userId, profile)
 	lastClaim[userId] = claim
@@ -288,7 +294,7 @@ function PartyService.OnPlayerReady(player, profile)
 	end
 
 	if profile.Permanent.PartyId == nil then
-		local ok, reason = PartyCore.CreateSolo(deps, userId, player.Name, profile, seasonId)
+		local ok, reason = PartyCore.CreateSolo(deps, userId, nameOf(player, profile), profile, seasonId)
 		if not ok then
 			warn("[PartyService] Could not create a party for " .. player.Name .. ": " .. tostring(reason))
 			return false
@@ -341,7 +347,7 @@ function PartyService.JoinByCode(player, code)
 	end
 	local profile = online.Profile
 
-	local ok, joined, abandoned = PartyCore.JoinByCode(deps, userId, player.Name, profile, Seasons.CurrentSeasonId, code)
+	local ok, joined, abandoned = PartyCore.JoinByCode(deps, userId, nameOf(player, profile), profile, Seasons.CurrentSeasonId, code)
 	if not ok then
 		return false, joined
 	end
@@ -398,7 +404,7 @@ function PartyService.Leave(player)
 	end
 
 	-- Everyone always has a party: start a fresh solo one.
-	local created, reason = PartyCore.CreateSolo(deps, userId, player.Name, profile, Seasons.CurrentSeasonId)
+	local created, reason = PartyCore.CreateSolo(deps, userId, nameOf(player, profile), profile, Seasons.CurrentSeasonId)
 	if not created then
 		warn("[PartyService] Could not create a new party after leaving: " .. tostring(reason))
 		return true
@@ -413,6 +419,18 @@ function PartyService.Leave(player)
 		end
 	end
 	return true
+end
+
+-- After the character is created or renamed: the party record and the online entry take the new name.
+function PartyService.RenamePlayer(player, name)
+	local partyId = partyOf[player.UserId]
+	local entry = partyId and hosted[partyId]
+	local online = entry and entry.Online[player.UserId]
+	if online then
+		online.Name = name
+		Party.RefreshSnapshot(entry.Record, player.UserId, online.Name, online.Profile, now())
+		entry.Dirty = true
+	end
 end
 
 function PartyService.RefreshSnapshot(player)
