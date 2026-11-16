@@ -92,9 +92,9 @@ function MainMenu:Render(state)
 	local cardW, gap = 230, 24
 	local total = max * cardW + (max - 1) * gap
 	for index = 1, max do
-		local x = (Kit.RefW - total) / 2 + (index - 1) * (cardW + gap)
+		local x = -total / 2 + (index - 1) * (cardW + gap)
 		local entry = list[index]
-		local card = Kit.frame({ Name = "Slot" .. index, Size = UDim2.fromOffset(cardW, 250), Position = UDim2.fromOffset(x, 104), BackgroundColor3 = C.Panel, ZIndex = 62, Parent = body })
+		local card = Kit.frame({ Name = "Slot" .. index, Size = UDim2.fromOffset(cardW, 250), Position = UDim2.new(0.5, x, 0, 104), BackgroundColor3 = C.Panel, ZIndex = 62, Parent = body })
 		if entry then
 			local class = classes[entry.ClassId] or { Name = entry.ClassId }
 			local color = C[entry.ClassId] or C.Accent
