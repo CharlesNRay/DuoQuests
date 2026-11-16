@@ -61,14 +61,14 @@ return {
 	ShieldBash = {
 		Id = "ShieldBash",
 		DisplayName = "Shield Bash",
-		Description = "Deals damage and generates defense.",
+		Description = "Bashes an enemy, hurting a sliver of its health, and fortifies you.",
 		Class = "Warrior",
 		Rarity = "Common",
 		Cooldown = 6,
 		CooldownPerLevel = -0.1,
 		MinCooldown = 3,
 		Effects = {
-			{ Type = "Damage", Target = "Primary", Multiplier = 1.4, PerLevel = { Multiplier = 0.1 } },
+			{ Type = "Damage", Target = "Primary", Multiplier = 1.4, PercentTargetHealth = 0.01, PerLevel = { Multiplier = 0.1 } },
 			{
 				Type = "ApplyStatus",
 				Target = "Self",
@@ -118,7 +118,7 @@ return {
 	Whirlwind = {
 		Id = "Whirlwind",
 		DisplayName = "Whirlwind",
-		Description = "Deals area damage to all enemies.",
+		Description = "Spins through every enemy and leaves them bleeding.",
 		Class = "Warrior",
 		Rarity = "Common",
 		Cooldown = 8,
@@ -127,6 +127,7 @@ return {
 		Conditions = { MinEnemies = 2 },
 		Effects = {
 			{ Type = "Damage", Target = "AllEnemies", Multiplier = 0.9, PerLevel = { Multiplier = 0.07 } },
+			{ Type = "ApplyStatus", Target = "AllEnemies", Status = "Bleeding", Duration = 6, PerLevel = { Duration = 0.3 } },
 		},
 	},
 
@@ -160,7 +161,7 @@ return {
 	CrushingBlow = {
 		Id = "CrushingBlow",
 		DisplayName = "Crushing Blow",
-		Description = "A heavy blow on a single enemy.",
+		Description = "A huge blow that opens a deep, stacking wound.",
 		Class = "Warrior",
 		Rarity = "Rare",
 		Cooldown = 9,
@@ -168,6 +169,7 @@ return {
 		MinCooldown = 5,
 		Effects = {
 			{ Type = "Damage", Target = "Primary", Multiplier = 2.4, PerLevel = { Multiplier = 0.18 } },
+			{ Type = "ApplyStatus", Target = "Primary", Status = "Bleeding", Duration = 8, Stacks = 2, PerLevel = { Duration = 0.3 } },
 		},
 	},
 
@@ -211,7 +213,7 @@ return {
 	Smite = {
 		Id = "Smite",
 		DisplayName = "Smite",
-		Description = "Strikes an enemy with holy light.",
+		Description = "Holy light that also burns a little of the foe's health.",
 		Class = "Cleric",
 		Rarity = "Common",
 		Cooldown = 3,
@@ -222,7 +224,7 @@ return {
 			{
 				Type = "Damage",
 				Target = "Primary",
-				Multiplier = 1.5,
+				Multiplier = 1.5, PercentTargetHealth = 0.008,
 				DamageType = "Magical",
 				PerLevel = { Multiplier = 0.12 },
 			},
@@ -280,7 +282,7 @@ return {
 			{
 				Type = "Damage",
 				Target = "AllEnemies",
-				Multiplier = 0.8,
+				Multiplier = 0.8, PercentTargetHealth = 0.006,
 				DamageType = "Magical",
 				PerLevel = { Multiplier = 0.06 },
 			},
@@ -389,13 +391,14 @@ return {
 	Fireball = {
 		Id = "Fireball",
 		DisplayName = "Fireball",
-		Description = "Deals magical damage.",
+		Description = "A fireball that sets the target alight. Burns stack.",
 		Class = "Mage",
 		Rarity = "Common",
 		Cooldown = 5,
 		Element = "Fire",
 		Effects = {
 			{ Type = "Damage", Target = "Primary", Multiplier = 1.8, DamageType = "Magical" },
+			{ Type = "ApplyStatus", Target = "Primary", Status = "Burning", Duration = 8, PerLevel = { Duration = 0.3 } },
 		},
 	},
 
@@ -1290,7 +1293,7 @@ return {
 		Element = "Arcane",
 		Conditions = { MinEnemies = 2 },
 		Effects = {
-			{ Type = "Damage", Target = "AllEnemies", Multiplier = 1.1, PerLevel = { Multiplier = 0.1 } },
+			{ Type = "Damage", Target = "AllEnemies", Multiplier = 1.1, PercentTargetHealth = 0.01, PerLevel = { Multiplier = 0.1 } },
 		},
 	},
 
@@ -1306,7 +1309,7 @@ return {
 		Element = "Lightning",
 		Conditions = { MinEnemies = 2 },
 		Effects = {
-			{ Type = "Damage", Target = "AllEnemies", Multiplier = 1.5, PerLevel = { Multiplier = 0.12 } },
+			{ Type = "Damage", Target = "AllEnemies", Multiplier = 1.5, PercentTargetHealth = 0.007, PerLevel = { Multiplier = 0.12 } },
 		},
 	},
 
@@ -1329,7 +1332,7 @@ return {
 	Meteor = {
 		Id = "Meteor",
 		DisplayName = "Meteor",
-		Description = "Calls down a meteor that crushes every enemy.",
+		Description = "Calls a meteor that scorches every enemy; burns stack.",
 		Class = "Mage",
 		Rarity = "Epic",
 		Cooldown = 18,
@@ -1339,6 +1342,7 @@ return {
 		Conditions = { MinEnemies = 2 },
 		Effects = {
 			{ Type = "Damage", Target = "AllEnemies", Multiplier = 2.8, PerLevel = { Multiplier = 0.2 } },
+			{ Type = "ApplyStatus", Target = "AllEnemies", Status = "Burning", Duration = 8, Stacks = 2, PerLevel = { Duration = 0.3 } },
 		},
 	},
 
@@ -1355,7 +1359,7 @@ return {
 		Element = "Fire",
 		Effects = {
 			{ Type = "Damage", Target = "Primary", Multiplier = 1.8, PerLevel = { Multiplier = 0.13 } },
-			{ Type = "ApplyStatus", Target = "Primary", Status = "Burning", Duration = 6, PerLevel = { Duration = 0.3 } },
+			{ Type = "ApplyStatus", Target = "Primary", Status = "Burning", Duration = 8, Stacks = 2, PerLevel = { Duration = 0.3 } },
 		},
 	},
 
@@ -1373,7 +1377,7 @@ return {
 		Conditions = { MinEnemies = 2 },
 		Effects = {
 			{ Type = "Damage", Target = "AllEnemies", Multiplier = 1.8, PerLevel = { Multiplier = 0.14 } },
-			{ Type = "ApplyStatus", Target = "AllEnemies", Status = "Burning", Duration = 6, PerLevel = { Duration = 0.3 } },
+			{ Type = "ApplyStatus", Target = "AllEnemies", Status = "Burning", Duration = 8, Stacks = 2, PerLevel = { Duration = 0.3 } },
 		},
 	},
 
@@ -1459,6 +1463,7 @@ return {
 		MinCooldown = 3,
 		Effects = {
 			{ Type = "Damage", Target = "Primary", Multiplier = 2.0, PerLevel = { Multiplier = 0.14 } },
+			{ Type = "ApplyStatus", Target = "Primary", Status = "Bleeding", Duration = 7, PerLevel = { Duration = 0.3 } },
 		},
 	},
 
@@ -1473,7 +1478,7 @@ return {
 		MinCooldown = 4,
 		Conditions = { MinEnemies = 2 },
 		Effects = {
-			{ Type = "Damage", Target = "AllEnemies", Multiplier = 1.1, PerLevel = { Multiplier = 0.08 } },
+			{ Type = "Damage", Target = "AllEnemies", Multiplier = 1.1, PercentTargetHealth = 0.008, PerLevel = { Multiplier = 0.08 } },
 		},
 	},
 
@@ -1488,6 +1493,7 @@ return {
 		MinCooldown = 6,
 		Effects = {
 			{ Type = "Damage", Target = "Primary", Multiplier = 3.3, PerLevel = { Multiplier = 0.22 } },
+			{ Type = "ApplyStatus", Target = "Primary", Status = "Bleeding", Duration = 8, Stacks = 2, PerLevel = { Duration = 0.3 } },
 		},
 	},
 
@@ -1501,7 +1507,7 @@ return {
 		CooldownPerLevel = -0.2,
 		MinCooldown = 5,
 		Effects = {
-			{ Type = "Damage", Target = "Primary", Multiplier = 0.9, PerLevel = { Multiplier = 0.07 } },
+			{ Type = "Damage", Target = "Primary", Multiplier = 0.9, PercentTargetHealth = 0.01, PerLevel = { Multiplier = 0.07 } },
 			{ Type = "ApplyStatus", Target = "Primary", Status = "Snared", Duration = 6, PerLevel = { Duration = 0.25 } },
 		},
 	},
@@ -1563,7 +1569,8 @@ return {
 		Element = "Fire",
 		Conditions = { MinEnemies = 2 },
 		Effects = {
-			{ Type = "Damage", Target = "AllEnemies", Multiplier = 2.2, PerLevel = { Multiplier = 0.16 } },
+			{ Type = "Damage", Target = "AllEnemies", Multiplier = 2.2, PercentTargetHealth = 0.012, PerLevel = { Multiplier = 0.16 } },
+			{ Type = "ApplyStatus", Target = "AllEnemies", Status = "Burning", Duration = 8, Stacks = 2, PerLevel = { Duration = 0.3 } },
 		},
 	},
 
@@ -1665,7 +1672,7 @@ return {
 	Backstab = {
 		Id = "Backstab",
 		DisplayName = "Backstab",
-		Description = "A quick stab for good single-target damage.",
+		Description = "Stabs from behind and coats the wound in poison.",
 		Class = "Rogue",
 		Rarity = "Common",
 		Cooldown = 5,
@@ -1673,13 +1680,14 @@ return {
 		MinCooldown = 3,
 		Effects = {
 			{ Type = "Damage", Target = "Primary", Multiplier = 2.0, PerLevel = { Multiplier = 0.14 } },
+			{ Type = "ApplyStatus", Target = "Primary", Status = "Poisoned", Duration = 10, PerLevel = { Duration = 0.3 } },
 		},
 	},
 
 	FanOfKnives = {
 		Id = "FanOfKnives",
 		DisplayName = "Fan of Knives",
-		Description = "Throws knives at every enemy.",
+		Description = "Hurls knives at every enemy; each leaves a stack of poison.",
 		Class = "Rogue",
 		Rarity = "Common",
 		Cooldown = 8,
@@ -1688,6 +1696,7 @@ return {
 		Conditions = { MinEnemies = 2 },
 		Effects = {
 			{ Type = "Damage", Target = "AllEnemies", Multiplier = 1.1, PerLevel = { Multiplier = 0.08 } },
+			{ Type = "ApplyStatus", Target = "AllEnemies", Status = "Poisoned", Duration = 10, PerLevel = { Duration = 0.3 } },
 		},
 	},
 
@@ -1703,7 +1712,7 @@ return {
 		Element = "Poison",
 		Effects = {
 			{ Type = "Damage", Target = "Primary", Multiplier = 1.0, PerLevel = { Multiplier = 0.08 } },
-			{ Type = "ApplyStatus", Target = "Primary", Status = "Poisoned", Duration = 7, PerLevel = { Duration = 0.3 } },
+			{ Type = "ApplyStatus", Target = "Primary", Status = "Poisoned", Duration = 12, Stacks = 2, PerLevel = { Duration = 0.3 } },
 		},
 	},
 
@@ -1747,7 +1756,7 @@ return {
 		CooldownPerLevel = -0.2,
 		MinCooldown = 7,
 		Effects = {
-			{ Type = "Damage", Target = "Primary", Multiplier = 4.0, PerLevel = { Multiplier = 0.28 } },
+			{ Type = "Damage", Target = "Primary", Multiplier = 4.0, PercentTargetHealth = 0.02, PercentCap = 0.9, PerLevel = { Multiplier = 0.28 } },
 		},
 	},
 
@@ -1763,6 +1772,7 @@ return {
 		Conditions = { MinEnemies = 2 },
 		Effects = {
 			{ Type = "Damage", Target = "AllEnemies", Multiplier = 1.5, PerLevel = { Multiplier = 0.1 } },
+			{ Type = "ApplyStatus", Target = "AllEnemies", Status = "Poisoned", Duration = 10, PerLevel = { Duration = 0.3 } },
 		},
 	},
 
@@ -1928,7 +1938,7 @@ return {
 		MinCooldown = 5,
 		Element = "Shadow",
 		Effects = {
-			{ Type = "Damage", Target = "Primary", Multiplier = 1.6, PerLevel = { Multiplier = 0.12 } },
+			{ Type = "Damage", Target = "Primary", Multiplier = 1.6, PercentTargetHealth = 0.01, PerLevel = { Multiplier = 0.12 } },
 			{ Type = "Heal", Target = "Self", Multiplier = 0, PercentMaxHealth = 0.09, PerLevel = { PercentMaxHealth = 0.005 } },
 		},
 	},
@@ -1961,7 +1971,7 @@ return {
 		MinCooldown = 6,
 		Element = "Shadow",
 		Effects = {
-			{ Type = "Damage", Target = "Primary", Multiplier = 0.9, PerLevel = { Multiplier = 0.07 } },
+			{ Type = "Damage", Target = "Primary", Multiplier = 0.9, PercentTargetHealth = 0.012, PerLevel = { Multiplier = 0.07 } },
 			{ Type = "ApplyStatus", Target = "Primary", Status = "Cursed", Duration = 7, PerLevel = { Duration = 0.3 } },
 		},
 	},

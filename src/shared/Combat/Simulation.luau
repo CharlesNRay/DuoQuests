@@ -139,6 +139,18 @@ local function supportAmount(sim, castCtx, effect, target)
 	return flat * sim:GetStat(castCtx.Caster, "Attack") + percent * sim:GetStat(target, "MaxHealth")
 end
 
+-- Percent-of-max-health damage ("PercentTargetHealth" on a Damage effect, "PercentMaxHealth" on a Dot). It is capped by the
+-- attacker's Attack (capAttack x Attack) so it can never be broken against huge health pools, and bosses (StunImmune) take only
+-- BOSS_PERCENT_FACTOR of it. Stage bosses and the boss-challenge dummies are both covered.
+Simulation.BOSS_PERCENT_FACTOR = 0.4
+local function percentDamage(sim, caster, target, fraction, capAttack)
+	local value = math.min(fraction * sim:GetStat(target, "MaxHealth"), (capAttack or 0.6) * sim:GetStat(caster, "Attack"))
+	if target.Flags and target.Flags.StunImmune then
+		value *= Simulation.BOSS_PERCENT_FACTOR
+	end
+	return value
+end
+
 -- Effect handlers ---------------------------------------------------------------
 -- Each receives (sim, castCtx, effect). Register more in other modules.
 
@@ -220,7 +232,11 @@ Simulation.Effects = {
 
 		for _, target in ipairs(sim:ResolveTargets(castCtx, effect.Target)) do
 			if target.Health > 0 then
-				sim:DealDamage(caster, target, sim:GetStat(caster, "Attack") * magnitude, {
+				local amount = sim:GetStat(caster, "Attack") * magnitude
+				if effect.PercentTargetHealth then -- a small slice of the target's health on top (capped, see percentDamage)
+					amount += percentDamage(sim, caster, target, effect.PercentTargetHealth * (1 + 0.05 * math.max(0, castCtx.Level - 1)), effect.PercentCap)
+				end
+				sim:DealDamage(caster, target, amount, {
 					Tag = castCtx.Ability.Id,
 					DamageType = damageType,
 					Element = castCtx.Ability.Element,
@@ -237,7 +253,8 @@ Simulation.Effects = {
 				AbilityStats.Value(castCtx.Ability, effect, "Duration", castCtx.Level),
 				castCtx.Caster,
 				nil,
-				AbilityStats.Strength(castCtx.Ability, effect, castCtx.Level)
+				AbilityStats.Strength(castCtx.Ability, effect, castCtx.Level),
+				effect.Stacks
 			)
 		end
 	end,
@@ -441,7 +458,7 @@ end
 
 -- Applies (or refreshes) a status. `amount` is the size of an Absorb shield.
 -- Returns true if it was applied.
-function Simulation:ApplyStatus(target, statusId, duration, source, amount, strength)
+function Simulation:ApplyStatus(target, statusId, duration, source, amount, strength, stacks)
 	local def = self:_statusDef(statusId)
 	if target.Health <= 0 then
 		return false
@@ -475,6 +492,9 @@ function Simulation:ApplyStatus(target, statusId, duration, source, amount, stre
 		existing.Remaining = ctx.Duration
 		existing.Source = if source then source.Id else nil
 		existing.Strength = math.max(existing.Strength or 1, ctx.Strength)
+		if def.Stacks then -- stackable damage over time: each application adds a stack, up to the status's Max
+			existing.Stacks = math.min(def.Stacks.Max, (existing.Stacks or 1) + (stacks or 1))
+		end
 		if ctx.Amount then
 			existing.Amount = math.max(existing.Amount or 0, ctx.Amount)
 		end
@@ -485,6 +505,7 @@ function Simulation:ApplyStatus(target, statusId, duration, source, amount, stre
 			Source = if source then source.Id else nil,
 			Amount = ctx.Amount,
 			Strength = ctx.Strength,
+			Stacks = if def.Stacks then math.min(def.Stacks.Max, stacks or 1) else nil,
 		})
 	end
 
@@ -495,6 +516,7 @@ function Simulation:ApplyStatus(target, statusId, duration, source, amount, stre
 		Duration = ctx.Duration,
 		Amount = ctx.Amount,
 		Source = if source then source.Id else nil,
+		Stacks = if def.Stacks then (function() for _, s in ipairs(target.Statuses) do if s.Id == statusId then return s.Stacks end end end)() else nil,
 	})
 	return true
 end
@@ -939,7 +961,12 @@ function Simulation:_tickTimers(entity)
 			if status.DotClock >= dot.Interval - EPSILON then
 				status.DotClock -= dot.Interval
 				local source = (status.Source and self:_entityById(status.Source)) or entity
-				self:DealDamage(source, entity, self:GetStat(source, "Attack") * dot.Multiplier * (status.Strength or 1), {
+				local stacks = status.Stacks or 1
+				local tick = self:GetStat(source, "Attack") * dot.Multiplier * (status.Strength or 1) * stacks
+				if dot.PercentMaxHealth then
+					tick += percentDamage(self, source, entity, dot.PercentMaxHealth * stacks * (status.Strength or 1), (dot.PercentCap or 0.3) * stacks)
+				end
+				self:DealDamage(source, entity, tick, {
 					Tag = dot.Tag or status.Id, DamageType = dot.DamageType or "Magical", Element = dot.Element, Dot = true,
 				})
 			end

@@ -67,6 +67,7 @@ return {
 		Chilled = { Buff = "Glyph", Color = { 150, 220, 255 }, Glyph = "❄" },
 		Enraged = { Buff = "Pulse", Color = { 255, 70, 60 } },
 		Burning = { Buff = "Glyph", Color = { 255, 120, 40 }, Glyph = "🔥" },
+		Bleeding = { Buff = "Glyph", Color = { 200, 40, 50 }, Glyph = "🩸" },
 		Poisoned = { Buff = "Glyph", Color = { 130, 220, 90 }, Glyph = "☠" },
 		Frozen = { Shield = "Bubble", Color = { 170, 230, 255 } },
 		Snared = { Buff = "Glyph", Color = { 160, 170, 100 }, Glyph = "🕸" },
@@ -170,6 +171,7 @@ return {
 		SpiritStorm = A({ Area = "Starfall", Heal = "Cross", Color = { 160, 240, 230 }, Color2 = { 255, 255, 255 } }),
 		-- damage over time (the tag of each tick)
 		Burning = A({ Hit = "Burst", Color = { 255, 120, 40 }, Color2 = { 255, 210, 90 } }),
+		Bleeding = A({ Hit = "Claws", Color = { 200, 40, 50 }, Color2 = { 255, 140, 140 } }),
 		Poisoned = A({ Hit = "Burst", Color = { 120, 210, 80 }, Color2 = { 200, 255, 140 } }),
 		-- level 90 subclass skills
 		WarlordsRoar = A({ Area = "Quake", Color = { 190, 40, 40 }, Color2 = { 255, 170, 120 } }),

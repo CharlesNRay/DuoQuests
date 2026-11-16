@@ -131,13 +131,25 @@ return {
 		Id = "Burning",
 		DisplayName = "Burning",
 		Description = "Takes fire damage every second.",
-		Dot = { Interval = 1, Multiplier = 0.3, DamageType = "Magical", Element = "Fire", Tag = "Burning" },
+		-- Stacks up to 5 (each fire spell adds one): every stack burns for Multiplier x Attack plus a slice of max health (capped, and
+		-- only 40% as much against bosses - see Simulation percentDamage)
+		Stacks = { Max = 5 },
+		Dot = { Interval = 1, Multiplier = 0.22, PercentMaxHealth = 0.006, PercentCap = 0.22, DamageType = "Magical", Element = "Fire", Tag = "Burning" },
 	},
 	Poisoned = {
 		Id = "Poisoned",
 		DisplayName = "Poisoned",
 		Description = "Takes poison damage every second.",
-		Dot = { Interval = 1, Multiplier = 0.25, DamageType = "Physical", Element = "Poison", Tag = "Poisoned" },
+		-- Rogue poison stacks deeper (8) and each stack bites harder as it builds: the big payoff of the Rogue's stacking
+		Stacks = { Max = 8 },
+		Dot = { Interval = 1, Multiplier = 0.16, PercentMaxHealth = 0.008, PercentCap = 0.2, DamageType = "Physical", Element = "Poison", Tag = "Poisoned" },
+	},
+	Bleeding = {
+		Id = "Bleeding",
+		DisplayName = "Bleeding",
+		Description = "Loses blood every second; stacks up to 5.",
+		Stacks = { Max = 5 },
+		Dot = { Interval = 1, Multiplier = 0.14, PercentMaxHealth = 0.005, PercentCap = 0.16, DamageType = "Physical", Element = "Blood", Tag = "Bleeding" },
 	},
 	-- Frozen: cannot attack or cast (bosses are immune; they get Chilled instead from the same skills).
 	Frozen = {

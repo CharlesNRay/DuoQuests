@@ -335,3 +335,9 @@ two paths of 3 skills, a season prize pet (Arcanix, Skyhawk, Shadowcat, Spiritli
 ## Skills / Passives menu pass
 - Skills and passives can be unequipped (a skill loadout needs at least one skill; empty slots show a "+" plate you can drop onto). The Skills / Passives tabs put that list at the top of the pool; owned skills sort by the tier you hold.
 - Global look pass (Go Go Muffin style): chunky shaded buttons with a dark rim, a banner across the top of every window, stroked panels. A full per-menu layout redo (card grids, detail popups) is still to do for the other screens.
+
+## Damage over time and skill utility
+- Stacking DoTs: Burning (max 5, Mage/fire), Poisoned (max 8, Rogue, the deepest stacker) and the new Bleeding (max 5, Warrior/Ranger). Each stack ticks for a slice of the caster's Attack plus a slice of the target's max health; the %-health part is capped by the caster's Attack and bosses take only 40% of it (`Simulation.percentDamage`).
+- Damage effects can carry `PercentTargetHealth` (+`PercentCap`); low-damage skills across all classes got a small %HP hit and/or a stacking DoT (Fireball/Meteor burn, Backstab/Fan of Knives/Flurry/Poison Blade poison, Whirlwind/Crushing Blow/Power Shot bleed, Smite/Volley/Haunt etc. small %HP). Skill tooltips show the %HP and stack lines.
+- Measured on the world boss (where %HP is reduced): Rogue +26%, Ranger +20%, Mage +12%, others +3-5%; against ordinary monsters the %HP portion matters more.
+- Not yet: stack counts are not drawn on the monsters in the battle view (the Status event carries `Stacks`).
