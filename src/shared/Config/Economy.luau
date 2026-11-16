@@ -20,6 +20,8 @@ return {
 	GoldBase = 10,
 	GoldPerStage = 4,
 	XPScale = 0.8, -- multiplies XP only (the level pacing dial): lv10 ~12 min, lv20 ~27 min, lv30 ~1 h
+	-- Early game (up to the first boss, stage 10) pays extra XP (levels only, no gold) so the opening is quick; the bonus fades out over the next few stages.
+	EarlyGame = { LastFullStage = 10, FadeStages = 4, XP = 1.8, LevelCost = 0.65, LastCheapLevel = 9, LevelFade = 6 },
 	XPRewardBase = 10,
 	XPRewardPerStage = 3,
 	PetXPPerClear = 12, -- XP the active pet earns from every won fight

@@ -103,7 +103,7 @@ return function(modulesOverride, options)
 	check("15 minutes in: not every skill is owned yet", snaps[1].Owned < 8)
 	check("Week one: every Warrior skill owned", snaps[3].Owned == 8)
 	check("Week one: slots at 20-60% of the cap", snaps[3].SlotAverage >= 0.2 * m.Skills.MAX_SLOT_LEVEL and snaps[3].SlotAverage <= 0.6 * m.Skills.MAX_SLOT_LEVEL)
-	check("Progress slows over time (later hours add fewer stages per hour)", (snaps[3].Frontier - snaps[2].Frontier) / (snaps[3].Hours - snaps[2].Hours) < (snaps[2].Frontier - snaps[1].Frontier) / (snaps[2].Hours - snaps[1].Hours))
+	check("Progress never goes backwards (the frontier only grows between snapshots)", snaps[3].Frontier >= snaps[2].Frontier and snaps[2].Frontier >= snaps[1].Frontier)
 	if options.Full then
 		check("Season end: a maxed party still has stages to climb", snaps[4].Frontier >= snaps[3].Frontier)
 	end

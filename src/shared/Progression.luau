@@ -32,7 +32,14 @@ local Quests = require(script.Parent.Quests)
 local Progression = {}
 
 function Progression.XPToNext(level)
-	return Economy.XPBase + Economy.XPPerLevel * (level - 1)
+	local need = Economy.XPBase + Economy.XPPerLevel * (level - 1)
+	local early = Economy.EarlyGame
+	if early and early.LevelCost then
+		-- the first levels are cheaper, fading back to the full cost a few levels later
+		local fade = math.clamp((early.LastCheapLevel + early.LevelFade - level) / early.LevelFade, 0, 1)
+		need *= 1 - (1 - early.LevelCost) * fade
+	end
+	return math.max(1, math.floor(need))
 end
 
 -- XP for the next Paragon level (a little more each level)
@@ -74,6 +81,10 @@ function Progression.ClearRewards(stage, isFrontier, bonuses)
 	local goldFactor = 1 + (if bonuses then bonuses.GoldGain or 0 else 0)
 	local xpFactor = 1 + (if bonuses then bonuses.XPGain or 0 else 0)
 	local replay = if isFrontier then 1 else Economy.ReplayFactor
+	-- the opening (up to the first boss) pays extra, fading to normal over a few stages
+	local early = Economy.EarlyGame
+	local fade = if early then math.clamp((early.LastFullStage + early.FadeStages - stage) / early.FadeStages, 0, 1) else 0
+	xpFactor *= 1 + ((early and early.XP or 1) - 1) * fade
 	local factor = Economy.RewardScale * replay -- gold and XP
 	local shards = Economy.ShardsPerClear + stage // Economy.ShardStageStep
 	if Stages.IsBoss(stage) then
