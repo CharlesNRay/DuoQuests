@@ -712,6 +712,7 @@ function Simulation:DealDamage(source, target, amount, info)
 		DamageType = info.DamageType or source.DamageType,
 		Element = info.Element,
 		Tag = info.Tag,
+		Dot = info.Dot,
 		IsCrit = false,
 		Prevented = false,
 	}
@@ -784,6 +785,7 @@ function Simulation:DealDamage(source, target, amount, info)
 		Crit = ctx.IsCrit,
 		Tag = ctx.Tag,
 		Element = ctx.Element,
+		Dot = ctx.Dot,
 		TargetHealth = target.Health,
 	})
 
