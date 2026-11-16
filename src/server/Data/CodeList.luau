@@ -23,8 +23,8 @@
 ]]
 
 return {
-	WELCOME = { Rewards = { Sunstones = 25, Wishstones = 20, Items = { PetWish = 1, SkillWish = 1 } } },
-	DUOQUEST = { Rewards = { Wishstones = 30, Items = { XPTonic = 2, PowerElixir = 2 } } },
-	THANKS = { Rewards = { Sunstones = 50, Titles = { "Early Supporter" } } },
-	SEASON1 = { Rewards = { Sunstones = 30, Cosmetics = { "Name_Gold" } }, ExpiresAt = 1801440000 },
+	WELCOME = { Rewards = { Items = { PetWish = 3, SkillWish = 3, XPTonic = 3, PetFood = 5 } } },
+	DUOQUEST = { Rewards = { Items = { PetWish = 10, IronTonic = 2, HasteDraught = 2 } } },
+	THANKS = { Rewards = { Items = { SkillWish = 10, PowerElixir = 2, GrandPetFood = 1 } } },
+	SEASON1 = { Rewards = { Items = { PetWish = 2, SkillWish = 2, XPTonic = 2, PowerElixir = 2 } }, ExpiresAt = 1801440000 },
 }
