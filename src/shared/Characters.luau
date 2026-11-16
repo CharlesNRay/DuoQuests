@@ -112,7 +112,9 @@ function Characters.Select(profile, slot)
 		profile.Season.ClassId = list[slot].ClassId
 		profile.Permanent.ActiveSlot = slot
 	end
-	Character.Get(profile).Created = true
+	local c = Character.Get(profile)
+	c.Created = true
+	c.UseAvatar = true -- heroes wear the player's own Roblox avatar
 	Gear.EnsureStarter(profile) -- every character owns a weapon
 	return true
 end

@@ -32,6 +32,7 @@ return function(modulesOverride)
 	check("Creating does not start playing it", Characters.Active(p) == 0 and not Character.Get(p).Created)
 	check("A character cannot be selected that does not exist", select(2, Characters.Select(p, 2)) == "BadSlot" and select(2, Characters.Select(p, "x")) == "BadSlot")
 	check("Selecting makes the character active", Characters.Select(p, 1) == true and Characters.Active(p) == 1 and p.Season.ClassId == "Mage" and Character.Get(p).Created)
+	check("Heroes use the player's Roblox avatar", Character.Get(p).UseAvatar == true)
 	check("The selected character has starter skills and a weapon", next(p.Season.OwnedAbilities) ~= nil and p.Season.Equipment.Equipped.Weapon ~= nil)
 
 	p.Season.Level = 12

@@ -165,7 +165,7 @@ function Hud.new(root)
 	Kit.new("UIListLayout", { Padding = UDim.new(0, 3), FillDirection = Enum.FillDirection.Horizontal, SortOrder = Enum.SortOrder.LayoutOrder, HorizontalAlignment = Enum.HorizontalAlignment.Right, Parent = self.BuffRow })
 	self.BuffChips = {}
 	-- while watching a fight the buffs live in the combat layer (above the skill bar), so hiding the HUD keeps them
-	self.CombatBuffRow = Kit.frame({ Size = UDim2.fromOffset(300, 22), Position = UDim2.new(0.5, -150, 1, -140), BackgroundTransparency = 1, NoCorner = true, Parent = combat })
+	self.CombatBuffRow = Kit.frame({ Size = UDim2.fromOffset(300, 22), Position = UDim2.new(0.5, -150, 1, -138), BackgroundTransparency = 1, NoCorner = true, Parent = combat })
 	Kit.new("UIListLayout", { Padding = UDim.new(0, 3), FillDirection = Enum.FillDirection.Horizontal, SortOrder = Enum.SortOrder.LayoutOrder, HorizontalAlignment = Enum.HorizontalAlignment.Center, Parent = self.CombatBuffRow })
 	task.spawn(function()
 		while gui.Parent do
@@ -179,14 +179,14 @@ function Hud.new(root)
 	end)
 
 	-- bottom-centre: the menu dock -----------------------------------------------
-	local dock = Kit.frame({ Size = UDim2.fromOffset(10, 48), AutomaticSize = Enum.AutomaticSize.X, Position = UDim2.new(0.5, 0, 1, -6), AnchorPoint = Vector2.new(0.5, 1), BackgroundTransparency = 1, NoCorner = true, Parent = chrome })
+	local dock = Kit.frame({ Size = UDim2.fromOffset(10, 48), AutomaticSize = Enum.AutomaticSize.X, Position = UDim2.new(0.5, 0, 1, -4), AnchorPoint = Vector2.new(0.5, 1), BackgroundTransparency = 1, NoCorner = true, Parent = chrome })
 	Kit.new("UIListLayout", { Padding = UDim.new(0, 4), FillDirection = Enum.FillDirection.Horizontal, SortOrder = Enum.SortOrder.LayoutOrder, HorizontalAlignment = Enum.HorizontalAlignment.Center, Parent = dock })
 	self.Rails = { dock = dock, mini = mini }
 	self.NextOrder = 0
 
 	-- combat layer: stage pill, fight timer, toast, skill bar + ultimate -------------
 	-- the same card as the map corner, so a spectated battle shows where you are and lets you Advance
-	local card = Kit.frame({ Size = UDim2.fromOffset(220, 86), Position = UDim2.new(0.5, -110, 0, 44), BackgroundColor3 = Color3.fromRGB(70, 110, 70), Parent = combat })
+	local card = Kit.frame({ Size = UDim2.fromOffset(220, 86), Position = UDim2.new(0.5, -110, 0, 36), BackgroundColor3 = Color3.fromRGB(70, 110, 70), Parent = combat })
 	Kit.new("UIStroke", { Color = Color3.fromRGB(240, 220, 160), Thickness = 2, Transparency = 0.2, Parent = card })
 	self.CombatCard = card
 	Kit.frame({ Size = UDim2.new(1, 0, 0.55, 0), Position = UDim2.fromScale(0, 0.45), BackgroundColor3 = Color3.fromRGB(12, 14, 24), BackgroundTransparency = 0.45, Parent = card })
@@ -204,14 +204,14 @@ function Hud.new(root)
 	Kit.Hover(self.CAdvance, function()
 		return "Try the next stage. You stay on this stage until you advance."
 	end)
-	self.Fight = Kit.frame({ Size = UDim2.fromOffset(180, 5), Position = UDim2.new(0.5, -90, 0, 136), BackgroundColor3 = Color3.fromRGB(16, 18, 30), Parent = combat })
+	self.Fight = Kit.frame({ Size = UDim2.fromOffset(180, 5), Position = UDim2.new(0.5, -90, 0, 128), BackgroundColor3 = Color3.fromRGB(16, 18, 30), Parent = combat })
 	self.FightFill = Kit.frame({ Size = UDim2.fromScale(0, 1), BackgroundColor3 = C.Accent, Parent = self.Fight })
-	self.Toast = Kit.label({ Size = UDim2.new(0, 400, 0, 20), Position = UDim2.new(0.5, -200, 0, 144), Text = "", TextSize = 14, TextXAlignment = Enum.TextXAlignment.Center, TextColor3 = C.Accent, Parent = combat })
+	self.Toast = Kit.label({ Size = UDim2.new(0, 400, 0, 20), Position = UDim2.new(0.5, -200, 0, 135), Text = "", TextSize = 14, TextXAlignment = Enum.TextXAlignment.Center, TextColor3 = C.Accent, Parent = combat })
 
-	self.Bar = pill(combat, { Size = UDim2.fromOffset(300, 56), Position = UDim2.new(0.5, -150, 1, -112) })
-	self.Slots = Kit.frame({ Size = UDim2.fromOffset(216, 48), Position = UDim2.fromOffset(6, 4), BackgroundTransparency = 1, NoCorner = true, Parent = self.Bar })
-	Kit.new("UIListLayout", { FillDirection = Enum.FillDirection.Horizontal, Padding = UDim.new(0, 4), VerticalAlignment = Enum.VerticalAlignment.Center, Parent = self.Slots })
-	self.UltSlot = Kit.frame({ Size = UDim2.fromOffset(66, 48), Position = UDim2.new(1, -70, 0, 4), BackgroundTransparency = 1, NoCorner = true, Parent = self.Bar })
+	self.Bar = pill(combat, { Size = UDim2.fromOffset(340, 56), Position = UDim2.new(0.5, -170, 1, -108) })
+	self.Slots = Kit.frame({ Size = UDim2.fromOffset(250, 48), Position = UDim2.fromOffset(8, 4), BackgroundTransparency = 1, NoCorner = true, Parent = self.Bar })
+	Kit.new("UIListLayout", { FillDirection = Enum.FillDirection.Horizontal, Padding = UDim.new(0, 12), VerticalAlignment = Enum.VerticalAlignment.Center, Parent = self.Slots })
+	self.UltSlot = Kit.frame({ Size = UDim2.fromOffset(66, 48), Position = UDim2.new(1, -74, 0, 4), BackgroundTransparency = 1, NoCorner = true, Parent = self.Bar })
 	self.UltIcon = nil
 	self.UltBack = Kit.frame({ Size = UDim2.fromOffset(52, 6), Position = UDim2.fromOffset(7, 41), BackgroundColor3 = Color3.fromRGB(40, 44, 64), Parent = self.UltSlot })
 	self.UltFill = Kit.frame({ Size = UDim2.fromScale(0, 1), BackgroundColor3 = Kit.Colors.Epic, Parent = self.UltBack })

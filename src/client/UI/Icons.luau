@@ -163,8 +163,18 @@ function Icons.PetSkill(parent, petId, props)
 	return tile(parent, if look then look[1] else KIND_COLORS.Buff, if look then look[2] else KIND_GLYPHS.Buff, Kit.rarityColor(def and def.Rarity), props)
 end
 
+-- every ultimate has its own glyph and colour (each belongs to a pair of classes)
+local ULT_LOOK = {
+	SanctifiedCharge = { rgb(230, 190, 90), "🐎" }, BulwarkOfDawn = { rgb(240, 160, 90), "🌅" }, RadiantJudgment = { rgb(245, 215, 110), "⚖" },
+	HolyCataclysm = { rgb(240, 130, 70), "☄" }, BlessedBarrage = { rgb(190, 210, 120), "🏹" }, SacredBlades = { rgb(210, 200, 150), "🗡" },
+	SpiritChoir = { rgb(150, 210, 220), "🎶" }, ArcaneArrowstorm = { rgb(120, 130, 220), "🌠" }, Shadowflame = { rgb(150, 70, 170), "🔥" },
+	SpectralTempest = { rgb(110, 170, 200), "🌪" }, RunicSmash = { rgb(160, 110, 200), "🔨" }, HailOfBlades = { rgb(130, 160, 180), "🌧" },
+	WildHunt = { rgb(110, 160, 90), "🐺" }, WarbandVolley = { rgb(200, 100, 70), "🚩" }, ShadowLegion = { rgb(80, 70, 120), "👥" },
+	DuelOfSteel = { rgb(180, 190, 205), "⚔" }, GraveGuard = { rgb(90, 120, 100), "💀" },
+}
 function Icons.Ultimate(parent, def, props)
-	return tile(parent, KIND_COLORS.Ultimate, KIND_GLYPHS.Ultimate, Kit.rarityColor(def and def.Rarity or "Epic"), props)
+	local own = def and ULT_LOOK[def.Id]
+	return tile(parent, if own then own[1] else KIND_COLORS.Ultimate, if own then own[2] else KIND_GLYPHS.Ultimate, Kit.rarityColor(def and def.Rarity or "Epic"), props)
 end
 
 function Icons.Item(parent, item, props)

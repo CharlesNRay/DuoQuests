@@ -7,6 +7,7 @@
 	(class, level, stage, Play) or an empty one that opens the class picker.
 ]]
 local Kit = require(script.Parent.Kit)
+local Branding = require(game:GetService("ReplicatedStorage"):WaitForChild("Shared").Config.Branding)
 local C = Kit.Colors
 
 local GOOD = Color3.fromRGB(130, 235, 150)
@@ -95,7 +96,10 @@ function MainMenu:Render(state)
 	self.Extra.MenuCreate = false
 
 	-- title block
-	Kit.label({ Size = UDim2.new(1, 0, 0, 44), Position = UDim2.fromOffset(0, 0), Text = "DUO QUEST", TextSize = 38, Font = Enum.Font.GothamBlack, TextColor3 = C.Accent, TextXAlignment = Enum.TextXAlignment.Center, ZIndex = 62, Parent = stage })
+	if Branding.LogoImage ~= "" then
+		Kit.new("ImageLabel", { Size = UDim2.fromOffset(52, 52), Position = UDim2.new(0.5, -26, 0, -6), BackgroundTransparency = 1, Image = Branding.LogoImage, ScaleType = Enum.ScaleType.Fit, ZIndex = 62, Parent = stage })
+	end
+	Kit.label({ Size = UDim2.new(1, 0, 0, 44), Position = UDim2.fromOffset(0, if Branding.LogoImage ~= "" then 44 else 0), Text = "DUO QUEST", TextSize = if Branding.LogoImage ~= "" then 28 else 38, Font = Enum.Font.GothamBlack, TextColor3 = C.Accent, TextXAlignment = Enum.TextXAlignment.Center, ZIndex = 62, Parent = stage })
 	Kit.label({ Size = UDim2.new(1, 0, 0, 18), Position = UDim2.fromOffset(0, 46), Text = "SELECT A CHARACTER", TextSize = 12, Font = Enum.Font.GothamBold, TextColor3 = C.Dim, TextXAlignment = Enum.TextXAlignment.Center, ZIndex = 62, Parent = stage })
 
 	local max = char and char.MaxCharacters or 2

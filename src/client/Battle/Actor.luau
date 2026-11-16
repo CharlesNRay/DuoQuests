@@ -76,10 +76,11 @@ function Actor.new(scene, model, info)
 		if self.Destroyed then
 			return
 		end
-		local bob = if self.Alive then math.sin(os.clock() * 3 + self.Phase) * 0.12 else 0
+		local bob = if not self.Alive then 0 elseif self.Walking then math.abs(math.sin(os.clock() * 9 + self.Phase)) * 0.3 else math.sin(os.clock() * 3 + self.Phase) * 0.12
 		local base = CFrame.lookAt(Vector3.new(self.X, self.Height + bob, self.Z or 0) + scene.Origin, Vector3.new(self.X, self.Height + bob, self.Z or 0) + scene.Origin + Vector3.new(self.Facing, 0, 0))
 		self.Model:PivotTo(base * self.Offset)
 		self:_animate(os.clock())
+		self:_animateJoints(os.clock())
 	end)
 	return self
 end
@@ -119,9 +120,9 @@ function Actor:_animate(t)
 		elseif k == "Tail" then
 			rot = CFrame.Angles(0, math.sin(t * 4 + ph + side) * 0.45 * side, 0)
 		elseif k == "Arm" then
-			rot = CFrame.Angles(-atk * 1.7 + math.sin(t * 2.6 + ph + side * 1.5) * 0.28, 0, 0)
+			rot = CFrame.Angles(-atk * 1.7 + (if self.Walking then side * math.sin(t * 9 + ph) * 0.7 else math.sin(t * 2.6 + ph + side * 1.5) * 0.28), 0, 0)
 		elseif k == "Leg" then
-			rot = CFrame.Angles(side * math.sin(t * 5 + ph) * (0.22 + atk * 0.2), 0, 0)
+			rot = CFrame.Angles(side * math.sin(t * (if self.Walking then 9 else 5) + ph) * (if self.Walking then 0.7 else 0.22 + atk * 0.2), 0, 0)
 		elseif k == "Jaw" then
 			rot = CFrame.Angles(atk * 0.7 + math.max(0, math.sin(t * 2 + ph)) * 0.08, 0, 0)
 		elseif k == "Head" then
@@ -140,6 +141,66 @@ function Actor:_animate(t)
 		info.Part.CFrame = pivot * info.Rel * CFrame.new(move) * CFrame.new(info.Hinge) * rot * CFrame.new(-info.Hinge)
 		if size then
 			info.Part.Size = size
+		end
+	end
+end
+
+-- Avatar joints we swing by hand (R15 and R6 names) so heroes walk without animation assets.
+local JOINTS = {
+	RightHip = { "hip", 1 }, LeftHip = { "hip", -1 }, RightShoulder = { "arm", -1 }, LeftShoulder = { "arm", 1 },
+	["Right Hip"] = { "hip", 1 }, ["Left Hip"] = { "hip", -1 }, ["Right Shoulder"] = { "arm", -1 }, ["Left Shoulder"] = { "arm", 1 },
+	RightKnee = { "knee", 1 }, LeftKnee = { "knee", -1 },
+}
+
+function Actor:_collectJoints(model, rigged)
+	self.Joints = {}
+	self.R6 = false
+	if not rigged then
+		return
+	end
+	local humanoid = model:FindFirstChildOfClass("Humanoid")
+	if humanoid then
+		pcall(function()
+			humanoid.EvaluateStateMachine = false -- the body is moved by us, never by Humanoid physics
+			humanoid.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None
+			humanoid.HealthDisplayType = Enum.HumanoidHealthDisplayType.AlwaysOff
+		end)
+	end
+	self.R6 = humanoid ~= nil and humanoid.RigType == Enum.HumanoidRigType.R6
+	for _, d in ipairs(model:GetDescendants()) do
+		if d:IsA("Motor6D") and JOINTS[d.Name] then
+			table.insert(self.Joints, { Motor = d, Kind = JOINTS[d.Name][1], Side = JOINTS[d.Name][2] })
+		end
+	end
+end
+
+function Actor:SetWalking(on)
+	self.Walking = on == true
+end
+
+-- Drives the avatar's limbs: a walk cycle while travelling, a gentle sway when idle, arms thrown forward when attacking.
+function Actor:_animateJoints(t)
+	if not self.Joints or #self.Joints == 0 then
+		return
+	end
+	local target = if self.Walking and self.Alive then 1 else 0
+	self.WalkAmt = (self.WalkAmt or 0) + (target - (self.WalkAmt or 0)) * 0.2
+	local walk = self.WalkAmt
+	local atk = self.AttackAmt or 0
+	local phase = t * 9 + self.Phase
+	for _, j in ipairs(self.Joints) do
+		local angle = 0
+		if j.Kind == "hip" then
+			angle = j.Side * math.sin(phase) * 0.75 * walk
+		elseif j.Kind == "knee" then
+			angle = math.max(0, math.sin(phase + (if j.Side > 0 then 0 else math.pi) + 1.2)) * 0.5 * walk
+		else -- arm
+			angle = j.Side * math.sin(phase) * 0.8 * walk + math.sin(t * 2 + self.Phase) * 0.05 * (1 - walk) - atk * 1.6 * (if j.Side == -1 then 1 else 0.4)
+		end
+		if self.R6 then
+			j.Motor.Transform = CFrame.Angles(0, 0, if j.Kind == "arm" then -angle else angle)
+		else
+			j.Motor.Transform = CFrame.Angles(angle, 0, 0)
 		end
 	end
 end
@@ -185,9 +246,11 @@ function Actor:SetModel(model)
 	if self.Look then
 		GearVisuals.Apply(model, self.Look)
 	end
+	local rigged = model:FindFirstChildOfClass("Humanoid") ~= nil and model.PrimaryPart ~= nil
 	for _, d in ipairs(model:GetDescendants()) do
 		if d:IsA("BasePart") then
-			d.Anchored = true
+			-- a Roblox avatar: only the root is anchored, so its joints (Motor6D) can swing the limbs while it moves
+			d.Anchored = not rigged or d == model.PrimaryPart
 			d.CanCollide = false
 			d.CanQuery = false
 		end
@@ -195,6 +258,7 @@ function Actor:SetModel(model)
 	model.Parent = self.Scene.Folder
 	self.Model = model
 	self:_collectParts(model)
+	self:_collectJoints(model, rigged)
 	if self.Ghost then
 		applyGhost(model, true)
 	end

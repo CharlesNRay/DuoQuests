@@ -222,13 +222,27 @@ function Replay:_hero(entry, index)
 	return hero
 end
 
+-- Everyone walks (or stands) together: the scenery scrolls and the heroes and pets run their walk cycle.
+function Replay:_setWalking(on)
+	self.Scene:Walk(on)
+	for _, hero in pairs(self.Heroes) do
+		hero:SetWalking(on)
+		if hero.Pet then
+			hero.Pet:SetWalking(on)
+		end
+	end
+end
+
 function Replay:Idle(roster)
+	self.Formation = {}
+	self.OrderCounter = 0
 	for index, entry in ipairs(roster) do
 		if entry.Team == "Party" then
 			self:_hero(entry, index)
 		end
 	end
-	self.Scene:Walk(true)
+	self:_layout() -- walk side by side in the same formation they fight in, not in a single file line
+	self:_setWalking(true)
 end
 
 function Replay:_clearEnemies()
@@ -307,7 +321,7 @@ function Replay:Play(info, onDone)
 			end
 		end)
 	end
-	scene:Walk(false)
+	self:_setWalking(false)
 
 	local function later(t, fn)
 		task.delay(INTRO + t, function()
@@ -333,7 +347,7 @@ function Replay:Play(info, onDone)
 	-- fight over: walk on toward the next one
 	task.delay(INTRO + info.Duration + 0.4, function()
 		if self.Token == token then
-			scene:Walk(true)
+			self:_setWalking(true)
 		end
 		if onDone then
 			onDone() -- always refresh state, even if the next fight already began
