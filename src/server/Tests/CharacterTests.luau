@@ -44,6 +44,21 @@ return function(modulesOverride)
 	check("Renaming to the same name is free", select(2, Character.Rename(p, "New Name", Premium)) == 0 and Premium.Sunstones(p) == 5)
 	check("A refused rename keeps the old name and the money", select(1, Character.Rename(p, "ab", Premium)) == false and Character.Get(p).Name == "New Name" and Premium.Sunstones(p) == 5)
 
+
+	-- the simple flow: just pick a class (Roblox name and avatar are used)
+	local q = ProfileTemplate.New()
+	check("Choosing a class creates the character with no name or look to set", Character.ChooseClass(q, "Ranger") == true and Character.Get(q).Created and q.Season.ClassId == "Ranger" and Character.Get(q).UseAvatar == true and Character.DisplayName(q, "RobloxName") == "RobloxName")
+	check("It unlocks the class and gives its starter skills", q.Permanent.UnlockedClasses.Ranger == true and q.Season.OwnedAbilities.PowerShot == true)
+	check("The class can be chosen once only", select(2, Character.ChooseClass(q, "Mage")) == "AlreadyCreated" and q.Season.ClassId == "Ranger")
+	check("Unknown classes cannot be chosen", select(2, Character.ChooseClass(ProfileTemplate.New(), "Nope")) == "BadClass")
+	local info = m.ClassWeapons and m.ClassWeapons.Info("Mage")
+	local weaponsOk = m.ClassWeapons ~= nil
+	for _, classId in ipairs({ "Warrior", "Cleric", "Mage", "Ranger", "Rogue", "Summoner" }) do
+		local i = m.ClassWeapons and m.ClassWeapons.Info(classId)
+		weaponsOk = weaponsOk and i ~= nil and #i.Name > 0 and #i.Text > 0 and #i.Blurb > 20
+	end
+	check("Every class has a weapon and a description", weaponsOk and info.Name == "Arcane Staff")
+
 	print(("CharacterTests done: %d passed, %d failed"):format(passed, failed))
 	return failed == 0
 end

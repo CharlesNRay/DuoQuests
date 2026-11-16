@@ -24,6 +24,8 @@ return {
 	Warrior = {
 		Id = "Warrior",
 		DisplayName = "Warrior",
+		Blurb = "A frontline tank. Draws enemy attacks with Taunt, shields the party and wins by outlasting. Paths: Berserker (damage) or Guardian (protector).",
+		Weapon = { Name = "Steel Sword", Text = "A heavy blade for holding the line." }, -- the tool a player wields (see Shared/ClassWeapons)
 		Role = "Tank",
 		DamageType = "Physical",
 		BasicAttack = { Id = "SwordSlash", DisplayName = "Sword Slash", Range = "Melee" },
@@ -61,6 +63,8 @@ return {
 	Cleric = {
 		Id = "Cleric",
 		DisplayName = "Cleric",
+		Blurb = "The party's healer. Heals, shields and revives allies, with holy damage on the side. Paths: Priest (healer) or Templar (holy warrior).",
+		Weapon = { Name = "Sun Mace", Text = "A blessed mace that glows with healing light." }, -- the tool a player wields (see Shared/ClassWeapons)
 		Role = "Healer",
 		DamageType = "Magical",
 		BasicAttack = { Id = "HolyBolt", DisplayName = "Holy Bolt", Range = "Ranged" },
@@ -99,6 +103,8 @@ return {
 	Mage = {
 		Id = "Mage",
 		DisplayName = "Mage",
+		Blurb = "Ranged spell damage. Fire, frost and lightning hit hard and wide, but the mage is fragile. Paths: Pyromancer (burning) or Frost Weaver (control).",
+		Weapon = { Name = "Arcane Staff", Text = "A staff topped with a swirling arcane orb." }, -- the tool a player wields (see Shared/ClassWeapons)
 		Role = "Damage",
 		DamageType = "Magical",
 		BasicAttack = { Id = "ArcaneMissile", DisplayName = "Arcane Missile", Range = "Ranged" },
@@ -136,6 +142,8 @@ return {
 	Ranger = {
 		Id = "Ranger",
 		DisplayName = "Ranger",
+		Blurb = "A marksman with steady ranged damage, snares and marks. Paths: Sharpshooter (big crits) or Beastmaster (much stronger pets).",
+		Weapon = { Name = "Longbow", Text = "A tall bow for shots from afar." }, -- the tool a player wields (see Shared/ClassWeapons)
 		Role = "Damage",
 		DamageType = "Physical",
 		BasicAttack = { Id = "ArrowShot", DisplayName = "Arrow Shot", Range = "Ranged" },
@@ -173,6 +181,8 @@ return {
 	Rogue = {
 		Id = "Rogue",
 		DisplayName = "Rogue",
+		Blurb = "A fast striker with crits, poison and dodging. Paths: Assassin (burst damage) or Duelist (evasion and ripostes).",
+		Weapon = { Name = "Shadow Dagger", Text = "A keen blade that drinks the light." }, -- the tool a player wields (see Shared/ClassWeapons)
 		Role = "Damage",
 		DamageType = "Physical",
 		BasicAttack = { Id = "DaggerStab", DisplayName = "Dagger Stab", Range = "Melee" },
@@ -210,6 +220,8 @@ return {
 	Summoner = {
 		Id = "Summoner",
 		DisplayName = "Summoner",
+		Blurb = "Calls spirits to curse, drain and protect. Paths: Necromancer (curses and plague) or Spirit Caller (shields and heals).",
+		Weapon = { Name = "Spirit Tome", Text = "A tome that whispers with the voices of spirits." }, -- the tool a player wields (see Shared/ClassWeapons)
 		Role = "Damage",
 		DamageType = "Magical",
 		BasicAttack = { Id = "SpiritBolt", DisplayName = "Spirit Bolt", Range = "Ranged" },

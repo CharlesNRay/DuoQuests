@@ -226,7 +226,7 @@ local function redraw()
 	end
 end
 
-local QUIET_ACTIONS = { CreateCharacter = true, RenameCharacter = true, UpdateCharacter = true }
+local QUIET_ACTIONS = { ChooseClass = true, CreateCharacter = true, RenameCharacter = true, UpdateCharacter = true }
 function call(action, ...)
 	local ok, data = api:InvokeServer(action, ...)
 	if action == "CreateCode" and ok then
@@ -377,7 +377,7 @@ hud:AddButton("Boss", "mini", "👹", "Bosses", function()
 	open("Boss", "Bosses")
 end)
 hud:AddButton("Premium", "mini", "🔶", "Premium shop", function() open("Premium", "Premium Shop") end)
-hud:AddButton("Character", "mini", "🧍", "Character: name, class, look", function() extra.CharMsg = nil extra.Char = nil open("Character", "Character") end)
+hud:AddButton("Character", "mini", "🧍", "Your class and weapon", function() extra.CharMsg = nil open("Character", "Your class") end)
 hud:AddButton("Codes", "mini", "🎁", "Redeem a code", function() extra.CodeResult = nil open("Codes", "Redeem Code") end)
 hud:AddButton("Cosmetics", "mini", "🎨", "Cosmetics: auras, kill effects, name colours, titles", function() open("Cosmetics", "Cosmetics") end)
 hud:AddButton("Season", "mini", "🏆", "Season rewards", function() extra.SeasonMsg = nil showSeason() end)
@@ -538,6 +538,6 @@ refreshWorld()
 -- a brand new player starts in the character creator
 if state and state.Player.Character and not state.Player.Character.Created then
 	extra.CharMsg = nil
-	extra.Char = nil
-	open("Character", "Create your hero")
+	extra.PickClass = nil
+	open("Character", "Choose your class")
 end

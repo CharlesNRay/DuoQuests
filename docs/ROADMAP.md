@@ -266,3 +266,10 @@ two paths of 3 skills, a season prize pet (Arcanix, Skyhawk, Shadowcat, Spiritli
 - Every pair of different classes has one ultimate (14 new). Add a second per pair later.
 - All numbers are first guesses. To tune: class base stats, Ranger/Rogue crit and speed, DoT strength, ultimate multipliers.
 - Not seen in Studio yet: new skill looks, Mage/Ranger/Rogue/Summoner hero colours, the six-button class row in the creator.
+
+## Class picker and weapons (replaces the character creator)
+
+- A new player only picks a class. Their Roblox name and avatar are used; there is no name or look to set (the old creator handlers remain on the server but the screen no longer uses them).
+- Auto-combat does not start until everyone online in the party has chosen a class (PartyService.tickEntry); it starts right after the pick.
+- Each class has a weapon (`Weapon` and `Blurb` in Config/Classes). `Shared/ClassWeapons` builds it as a Tool from parts. Tapping a class in the picker wields a local-only preview on the player's own character and shows a 3D view; choosing gives the real tool (server `WeaponService`, backpack + StarterGear) and equips it.
+- Not seen in Studio yet: weapon orientation in the hand (blades should point forward; the bow and tome may need grip tweaks), the picker layout.

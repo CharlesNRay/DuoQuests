@@ -751,6 +751,13 @@ local function tickEntry(entry, currentTime)
 		return
 	end
 
+	-- Nobody fights before everyone online has picked a class (the picker is the first thing a new player sees).
+	for _, online in pairs(entry.Online) do
+		if not Character.Get(online.Profile).Created then
+			return
+		end
+	end
+
 	if currentTime >= entry.NextFightAt then
 		local seed = math.random(1, 1073741824)
 		local outcome = Party.OnlineTick(entry.Record, onlineList(entry), seed, currentTime)

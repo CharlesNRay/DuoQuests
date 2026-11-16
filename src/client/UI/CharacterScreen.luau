@@ -1,61 +1,92 @@
 --[[
-	CharacterScreen (ModuleScript): the character creator (first join) and later the Character screen.
+	CharacterScreen (ModuleScript): the class picker (first join) and later a "Your class" card.
 	  CharacterScreen.Character(container, state, call, extra)
-	    extra.Char    = the draft being edited { Name, ClassId, Skin, Hair, Outfit, UseAvatar } (built from the saved character)
-	    extra.CharMsg = last result text, extra.CharMsgBad = true for an error
+	    extra.PickClass = the class being previewed (before a class is chosen)
+	    extra.CharMsg   = last result text, extra.CharMsgBad = true for an error
 
-	state.Player.Character = { Created, Name, Look, UseAvatar, Renames, RenameCost, Classes, NameMin, NameMax, Skins, Hairs, Outfits }.
-	Before the character exists the screen creates it (name + class + look, once). After that the look can be changed for
-	free and the name changed for Sunstones. Colour options are index lists kept by the server (Config/Character).
+	state.Player.Character = { Created, Classes = { { Id, Name, Role, Blurb, WeaponName, WeaponText, Playable } } }.
+	A player only picks a class: their Roblox name and avatar are used. Selecting a class previews its weapon (a local-only tool
+	wielded on their own character, plus a small 3D view) and says what the class does. "Choose" saves it once and starts combat.
 ]]
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Kit = require(script.Parent.Kit)
+local ClassWeapons = require(ReplicatedStorage:WaitForChild("Shared").ClassWeapons)
 local C = Kit.Colors
 
 local GOOD = Color3.fromRGB(130, 235, 150)
 local BAD = Color3.fromRGB(255, 130, 120)
-local ORANGE = Color3.fromRGB(255, 165, 70)
 
 local REASONS = {
-	TooShort = "That name is too short.",
-	TooLong = "That name is too long.",
-	BadCharacters = "Names can only use letters, numbers, spaces, - and _.",
-	Blocked = "That name is not allowed. Try another.",
 	BadClass = "Pick a class you can play.",
-	AlreadyCreated = "Your character already exists.",
-	NotEnough = "Not enough Sunstones to rename.",
+	AlreadyCreated = "You already chose your class.",
 }
 
 local CharacterScreen = {}
 
-local function rgb(t)
-	return Color3.fromRGB(t[1], t[2], t[3])
-end
+local previewTool = nil -- the local-only weapon being previewed
 
-local function swatchRow(parent, y, title, colors, selected, onPick)
-	Kit.label({ Size = UDim2.fromOffset(70, 28), Position = UDim2.fromOffset(0, y), Text = title, TextSize = 12, TextColor3 = C.Dim, Parent = parent })
-	local x = 72
-	for i, color in ipairs(colors) do
-		local b = Kit.button({
-			Size = UDim2.fromOffset(26, 26), Position = UDim2.fromOffset(x, y + 1), Text = "", BackgroundColor3 = rgb(color), Parent = parent,
-		}, function()
-			onPick(i)
+local function clearPreviewTool()
+	if previewTool then
+		pcall(function()
+			previewTool:Destroy()
 		end)
-		if i == selected then
-			Kit.new("UIStroke", { Color = Color3.new(1, 1, 1), Thickness = 3, Parent = b })
-		end
-		x += 30
+		previewTool = nil
 	end
 end
 
--- a small paper doll of the character: legs, body, head, hair
-local function preview(parent, look, char)
-	local box = Kit.frame({ Size = UDim2.fromOffset(110, 170), Position = UDim2.new(1, -118, 0, 4), BackgroundColor3 = C.Panel, Parent = parent })
-	local outfit = rgb(char.Outfits[look.Outfit])
-	Kit.frame({ Size = UDim2.fromOffset(40, 46), Position = UDim2.fromOffset(35, 112), BackgroundColor3 = outfit:Lerp(Color3.new(0, 0, 0), 0.45), Parent = box })
-	Kit.frame({ Size = UDim2.fromOffset(56, 62), Position = UDim2.fromOffset(27, 56), BackgroundColor3 = outfit, Parent = box })
-	local head = Kit.frame({ Size = UDim2.fromOffset(40, 40), Position = UDim2.fromOffset(35, 16), BackgroundColor3 = rgb(char.Skins[look.Skin]), Parent = box })
-	Kit.corner(20).Parent = head
-	Kit.frame({ Size = UDim2.fromOffset(42, 14), Position = UDim2.fromOffset(34, 10), BackgroundColor3 = rgb(char.Hairs[look.Hair]), Parent = box })
+-- Wield the class weapon on the player's own character (local only; the server gives the real one when the class is chosen).
+local function wield(classId)
+	clearPreviewTool()
+	local player = Players.LocalPlayer
+	local tool = ClassWeapons.Build(classId)
+	if not tool then
+		return
+	end
+	tool.Name = tool.Name .. " (preview)"
+	local backpack = player:FindFirstChildOfClass("Backpack")
+	if not backpack then
+		tool:Destroy()
+		return
+	end
+	tool.Parent = backpack
+	previewTool = tool
+	local humanoid = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
+	if humanoid then
+		pcall(function()
+			humanoid:EquipTool(tool)
+		end)
+	end
+end
+
+-- A small 3D view of the weapon.
+local function weaponView(parent, classId, size, position)
+	local frame = Kit.new("ViewportFrame", {
+		Size = size, Position = position, BackgroundColor3 = C.Panel, BorderSizePixel = 0, Parent = parent,
+		Ambient = Color3.fromRGB(190, 190, 200), LightColor = Color3.new(1, 1, 1),
+	})
+	Kit.corner(10).Parent = frame
+	local tool = ClassWeapons.Build(classId)
+	if not tool then
+		return frame
+	end
+	local model = Instance.new("Model")
+	for _, child in ipairs(tool:GetChildren()) do
+		if child:IsA("BasePart") then
+			child.Anchored = true
+			child.Parent = model
+		end
+	end
+	model.Parent = frame
+	tool:Destroy()
+	local cf, extent = model:GetBoundingBox()
+	local radius = math.max(extent.X, extent.Y, extent.Z)
+	local camera = Instance.new("Camera")
+	camera.FieldOfView = 40
+	camera.CFrame = CFrame.lookAt(cf.Position + Vector3.new(radius * 1.5, radius * 0.5, radius * 0.7), cf.Position)
+	camera.Parent = frame
+	frame.CurrentCamera = camera
+	return frame
 end
 
 function CharacterScreen.Character(container, state, call, extra)
@@ -64,103 +95,81 @@ function CharacterScreen.Character(container, state, call, extra)
 	if char == nil then
 		return
 	end
-	if extra.Char == nil then
-		extra.Char = {
-			Name = char.Name, ClassId = state.Player.ClassId, Skin = char.Look.Skin, Hair = char.Look.Hair, Outfit = char.Look.Outfit, UseAvatar = char.UseAvatar,
-		}
-	end
-	local draft = extra.Char
+	local classes = char.Classes
+	local mine = state.Player.ClassId
 	local creating = not char.Created
+	local pick = if creating then extra.PickClass else mine
+	if pick == nil then
+		pick = if creating then classes[1].Id else mine
+	end
+	local selected
+	for _, class in ipairs(classes) do
+		if class.Id == pick then
+			selected = class
+		end
+	end
+	selected = selected or classes[1]
 
 	local area = Kit.frame({ Name = "CharacterArea", Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1, NoCorner = true, Parent = container })
 	local function redraw()
 		CharacterScreen.Character(container, state, call, extra)
 	end
 
-	Kit.label({ Size = UDim2.new(1, -130, 0, 20), Position = UDim2.fromOffset(8, 4), Text = if creating then "Create your hero - pick a name, a class and a look." else ("Your hero: %s"):format(char.Name), TextSize = 14, Font = Enum.Font.GothamBold, TextColor3 = C.Accent, Parent = area })
-
-	-- name
-	local box = Kit.new("TextBox", {
-		Name = "NameBox", Size = UDim2.new(1, -140, 0, 36), Position = UDim2.fromOffset(8, 30), BackgroundColor3 = C.PanelLight, TextColor3 = C.Text,
-		PlaceholderText = ("Name (%d-%d letters)"):format(char.NameMin, char.NameMax), PlaceholderColor3 = C.Dim, Text = draft.Name or "",
-		ClearTextOnFocus = false, Font = Enum.Font.GothamBold, TextSize = 16, BorderSizePixel = 0, Parent = area,
+	Kit.label({
+		Size = UDim2.new(1, -16, 0, 22), Position = UDim2.fromOffset(8, 2), TextSize = 15, Font = Enum.Font.GothamBold, TextColor3 = C.Accent, Parent = area,
+		Text = if creating then "Choose your class. Tap one to try its weapon." else ("Your class: %s"):format(selected.Name),
 	})
-	Kit.corner(8).Parent = box
-	box:GetPropertyChangedSignal("Text"):Connect(function()
-		draft.Name = box.Text
-	end)
 
-	-- class (chosen once, when the character is created)
-	local classArea = Kit.frame({ Size = UDim2.new(1, -140, 0, 36), Position = UDim2.fromOffset(8, 72), BackgroundTransparency = 1, NoCorner = true, Parent = area })
-	local x = 0
-	for _, class in ipairs(char.Classes) do
-		local chosen = draft.ClassId == class.Id
+	-- the class list
+	local list = Kit.frame({ Size = UDim2.fromOffset(150, 252), Position = UDim2.fromOffset(8, 28), BackgroundTransparency = 1, NoCorner = true, Parent = area })
+	for index, class in ipairs(classes) do
+		local isPick = class.Id == selected.Id
+		local color = C[class.Id] or C.Accent
 		local b = Kit.button({
-			Size = UDim2.fromOffset(78, 34), Position = UDim2.fromOffset(x, 0), BackgroundColor3 = if chosen then C.Accent else C.PanelLight,
-			Text = if class.Playable then class.Name else (class.Name .. " (soon)"), TextSize = 12,
-			TextColor3 = if class.Playable then (if chosen then Color3.fromRGB(20, 20, 30) else C.Text) else C.Dim, Parent = classArea,
+			Name = "Class_" .. class.Id, Size = UDim2.fromOffset(150, 38), Position = UDim2.fromOffset(0, (index - 1) * 42),
+			BackgroundColor3 = if isPick then color else C.PanelLight, TextSize = 14,
+			TextColor3 = if isPick then Color3.fromRGB(20, 20, 30) else C.Text, Text = ("%s  ·  %s"):format(class.Name, class.Role or ""), Parent = list,
 		}, function()
-			if creating and class.Playable then
-				draft.ClassId = class.Id
+			if creating then
+				extra.PickClass = class.Id
+				wield(class.Id)
 				redraw()
 			end
 		end)
-		b.Name = "Class_" .. class.Id
-		x += 82
+		b.TextXAlignment = Enum.TextXAlignment.Left
+		Kit.new("UIPadding", { PaddingLeft = UDim.new(0, 10), Parent = b })
 	end
 
-	-- look
-	local looks = Kit.frame({ Size = UDim2.new(1, -140, 0, 100), Position = UDim2.fromOffset(8, 114), BackgroundTransparency = 1, NoCorner = true, Parent = area })
-	swatchRow(looks, 0, "Skin", char.Skins, draft.Skin, function(i) draft.Skin = i redraw() end)
-	swatchRow(looks, 32, "Hair", char.Hairs, draft.Hair, function(i) draft.Hair = i redraw() end)
-	swatchRow(looks, 64, "Outfit", char.Outfits, draft.Outfit, function(i) draft.Outfit = i redraw() end)
-	preview(area, draft, char)
-
-	local avatarButton = Kit.button({
-		Name = "AvatarToggle", Size = UDim2.fromOffset(240, 30), Position = UDim2.fromOffset(8, 216), TextSize = 12,
-		Text = if draft.UseAvatar then "[x] Roblox avatar in fights" else "[ ] Roblox avatar in fights (off)",
-		BackgroundColor3 = C.PanelLight, Parent = area,
-	}, function()
-		draft.UseAvatar = not draft.UseAvatar
-		redraw()
-	end)
-	avatarButton.TextXAlignment = Enum.TextXAlignment.Left
+	-- details
+	local details = Kit.frame({ Size = UDim2.new(1, -176, 0, 262), Position = UDim2.fromOffset(168, 28), BackgroundColor3 = C.Panel, Parent = area })
+	Kit.label({ Size = UDim2.new(1, -170, 0, 26), Position = UDim2.fromOffset(12, 8), Text = selected.Name, TextSize = 20, Font = Enum.Font.GothamBold, TextColor3 = C[selected.Id] or C.Accent, Parent = details })
+	Kit.label({ Size = UDim2.new(1, -170, 0, 88), Position = UDim2.fromOffset(12, 36), Text = selected.Blurb or "", TextSize = 13, TextYAlignment = Enum.TextYAlignment.Top, Parent = details })
+	Kit.label({ Size = UDim2.new(1, -170, 0, 20), Position = UDim2.fromOffset(12, 130), Text = "Weapon: " .. (selected.WeaponName or "?"), TextSize = 14, Font = Enum.Font.GothamBold, Parent = details })
+	Kit.label({ Size = UDim2.new(1, -170, 0, 36), Position = UDim2.fromOffset(12, 152), Text = selected.WeaponText or "", TextSize = 12, TextColor3 = C.Dim, TextYAlignment = Enum.TextYAlignment.Top, Parent = details })
+	weaponView(details, selected.Id, UDim2.fromOffset(150, 150), UDim2.new(1, -160, 0, 8))
 
 	if extra.CharMsg then
-		Kit.label({ Name = "CharMsg", Size = UDim2.new(1, -16, 0, 20), Position = UDim2.fromOffset(8, 250), Text = extra.CharMsg, TextSize = 12, TextColor3 = if extra.CharMsgBad then BAD else GOOD, Parent = area })
+		Kit.label({ Name = "CharMsg", Size = UDim2.new(1, -170, 0, 20), Position = UDim2.fromOffset(12, 188), Text = extra.CharMsg, TextSize = 12, TextColor3 = if extra.CharMsgBad then BAD else GOOD, Parent = details })
 	end
 
-	local look = { Skin = draft.Skin, Hair = draft.Hair, Outfit = draft.Outfit }
 	if creating then
-		Kit.button({ Name = "CreateButton", Size = UDim2.fromOffset(200, 40), Position = UDim2.new(1, -208, 1, -46), Text = "Create hero", BackgroundColor3 = GOOD, TextColor3 = Color3.fromRGB(10, 40, 18), Parent = area }, function()
-			-- call() redraws the open screen from the new state when it succeeds, so set the message first
-			extra.CharMsg, extra.CharMsgBad = "Welcome, " .. (draft.Name or "hero") .. "!", false
-			local ok, reason = call("CreateCharacter", draft.Name or "", draft.ClassId, look, draft.UseAvatar)
+		Kit.button({
+			Name = "ChooseButton", Size = UDim2.new(1, -24, 0, 44), Position = UDim2.new(0, 12, 1, -54), Text = ("Choose %s"):format(selected.Name),
+			BackgroundColor3 = GOOD, TextColor3 = Color3.fromRGB(10, 40, 18), TextSize = 16, Parent = details,
+		}, function()
+			-- call() redraws the open screen from the new state when it succeeds
+			extra.CharMsg, extra.CharMsgBad = ("You are a %s!"):format(selected.Name), false
+			local ok, reason = call("ChooseClass", selected.Id)
 			if ok then
-				extra.Char = nil
+				clearPreviewTool() -- the server hands over the real weapon
+				extra.PickClass = nil
 			else
-				extra.CharMsg, extra.CharMsgBad = REASONS[reason] or "Could not create the hero.", true
+				extra.CharMsg, extra.CharMsgBad = REASONS[reason] or "Could not choose that class.", true
 				redraw()
 			end
 		end)
 	else
-		Kit.button({ Name = "SaveLook", Size = UDim2.fromOffset(150, 40), Position = UDim2.new(1, -366, 1, -46), Text = "Save look", BackgroundColor3 = GOOD, TextColor3 = Color3.fromRGB(10, 40, 18), Parent = area }, function()
-			extra.CharMsg, extra.CharMsgBad = "Look saved.", false
-			if not call("UpdateCharacter", look, draft.UseAvatar) then
-				extra.CharMsg, extra.CharMsgBad = "Could not save.", true
-				redraw()
-			end
-		end)
-		Kit.button({ Name = "RenameButton", Size = UDim2.fromOffset(200, 40), Position = UDim2.new(1, -208, 1, -46), Text = ("Rename  🔶 %d"):format(char.RenameCost), BackgroundColor3 = ORANGE, TextColor3 = Color3.fromRGB(40, 22, 6), Parent = area }, function()
-			extra.CharMsg, extra.CharMsgBad = "Renamed.", false
-			local ok, reason = call("RenameCharacter", draft.Name or "")
-			if ok then
-				extra.Char = nil
-			else
-				extra.CharMsg, extra.CharMsgBad = REASONS[reason] or "Could not rename.", true
-				redraw()
-			end
-		end)
+		Kit.label({ Size = UDim2.new(1, -24, 0, 40), Position = UDim2.new(0, 12, 1, -50), Text = "Your weapon is in your backpack (press its number to wield it). Classes are chosen once per character.", TextSize = 12, TextColor3 = C.Dim, Parent = details })
 	end
 end
 

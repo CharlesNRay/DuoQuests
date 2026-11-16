@@ -20,7 +20,7 @@
 	  GetLeaderboard(categoryId)        top rows + your own score, "Stage" or "Level"
 	  GetSeasonRewards()                brackets, your live standing, and finished seasons' rewards waiting to be claimed
 	  ClaimSeasonRewards(seasonId)      collect a finished season's reward (once)
-	  CreateCharacter(name, classId, look, useAvatar) / UpdateCharacter(look, useAvatar) / RenameCharacter(name)   the character creator (once; look free; rename costs Sunstones)
+	  ChooseClass(classId)   the class picker (once); starts auto-combat. Older: CreateCharacter(name, classId, look, useAvatar) / UpdateCharacter(look, useAvatar) / RenameCharacter(name)   the character creator (once; look free; rename costs Sunstones)
 	  RedeemCode(text)   -> ok, { Success, Reason?, Lines? }   (wrong tries are limited: 5 a minute, then a short lock)
 	  BuyCosmetic(id) / BuyCosmeticBundle(bundleId) / EquipCosmetic(slot, id|nil)   auras, kill effects, name colours, titles (Sunstones)
 	  Inspect(userId)                   public card of a party member on this server
@@ -73,6 +73,7 @@ local Cosmetics = require(Shared.Cosmetics)
 local Codes = require(Shared.Codes)
 local Classes = require(Shared.Config.Classes)
 local Character = require(Shared.Character)
+local WeaponService = require(script.Parent.WeaponService)
 local CharacterConfig = require(Shared.Config.Character)
 local TextService = game:GetService("TextService")
 local CodeList = require(script.Parent.Parent.Data.CodeList) -- server only: clients never see the list
@@ -233,7 +234,10 @@ function characterOf(profile)
 	for _, classId in ipairs({ "Warrior", "Cleric", "Mage", "Ranger", "Rogue", "Summoner" }) do
 		local def = Classes[classId]
 		if def then
-			table.insert(classes, { Id = classId, Name = def.DisplayName or classId, Playable = Character.Playable(profile, classId) })
+			table.insert(classes, {
+				Id = classId, Name = def.DisplayName or classId, Role = def.Role, Blurb = def.Blurb, WeaponName = def.Weapon and def.Weapon.Name, WeaponText = def.Weapon and def.Weapon.Text,
+				Playable = Character.Playable(profile, classId),
+			})
 		end
 	end
 	return {
@@ -254,11 +258,12 @@ function ApiService.ApplyLook(player, profile)
 	local c = Character.Get(profile)
 	if c.Created then
 		local colors = Character.Colors(profile)
-		player:SetAttribute("CharName", c.Name)
+		player:SetAttribute("CharName", Character.DisplayName(profile, player.DisplayName))
 		player:SetAttribute("CharAvatar", c.UseAvatar)
 		player:SetAttribute("CharSkin", Color3.fromRGB(table.unpack(colors.Skin)))
 		player:SetAttribute("CharHair", Color3.fromRGB(table.unpack(colors.Hair)))
 		player:SetAttribute("CharOutfit", Color3.fromRGB(table.unpack(colors.Outfit)))
+		task.spawn(WeaponService.Give, player, profile.Season.ClassId) -- the class weapon on their Roblox character
 	end
 end
 
@@ -754,6 +759,19 @@ local function filterOk(player, text)
 		return true
 	end
 	return result == text
+end
+
+-- The class picker: the player chooses a class once; their Roblox name and avatar are used. Combat starts after this.
+function handlers.ChooseClass(player, profile, classId)
+	if type(classId) ~= "string" then
+		return false, "BadArgs"
+	end
+	local ok, reason = Character.ChooseClass(profile, classId)
+	if ok then
+		ApiService.ApplyLook(player, profile)
+		afterBuildChange(player)
+	end
+	return ok, reason
 end
 
 function handlers.CreateCharacter(player, profile, name, classId, look, useAvatar)

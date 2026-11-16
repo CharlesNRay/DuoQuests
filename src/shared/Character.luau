@@ -102,6 +102,24 @@ function Character.Create(profile, name, classId, look, useAvatar)
 	return true
 end
 
+-- The simple flow: a player only picks a class. Their Roblox name and avatar are used, so there is no name or look to set.
+function Character.ChooseClass(profile, classId)
+	local c = Character.Get(profile)
+	if c.Created then
+		return false, "AlreadyCreated"
+	end
+	if not Character.Playable(profile, classId) then
+		return false, "BadClass"
+	end
+	c.Created = true
+	c.Name = ""
+	c.UseAvatar = true
+	profile.Permanent.UnlockedClasses[classId] = true
+	ProfileTemplate.GrantClassStarters(profile.Season, classId)
+	profile.Season.ClassId = classId
+	return true
+end
+
 function Character.SetLook(profile, look, useAvatar)
 	local c = Character.Get(profile)
 	if not c.Created then
