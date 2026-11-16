@@ -60,6 +60,12 @@ return function(modulesOverride)
 	check("Rank 1 gets a title, the class title and an aura", table.find(reward.Titles, "Champion") ~= nil and table.find(reward.Titles, "Grandmaster Warrior") ~= nil and table.find(reward.Cosmetics, "Aura_Champion") ~= nil)
 	check("Lines list every layer", #reward.Lines == 3)
 
+	local everyRank = true
+	for rank = 1, Config.TopKept do
+		everyRank = everyRank and SR.Standing({ Total = 1000, Histogram = { [12] = 1000 }, Top = { [1] = rank }, ClassTop = {} }, { UserId = 1, Score = 12, ClassId = "Cleric" }).RankReward ~= nil
+	end
+	check("Every rank from 1 to 50 gets a rank reward", everyRank)
+	check("Rank 51 gets none", SR.Standing({ Total = 1000, Histogram = { [12] = 1000 }, Top = { [1] = 51 }, ClassTop = {} }, { UserId = 1, Score = 12, ClassId = "Cleric" }).RankReward == nil)
 	check("Rank 7 fits Top 10", SR.Standing(results, { UserId = 44, Score = 10, ClassId = "Cleric" }).RankReward.MaxRank == 10)
 	check("Rank 15 fits Top 20", SR.Standing(results, { UserId = 55, Score = 10, ClassId = "Cleric" }).RankReward.MaxRank == 20)
 	check("Rank 40 fits Top 50", SR.Standing(results, { UserId = 66, Score = 9, ClassId = "Cleric" }).RankReward.MaxRank == 50)

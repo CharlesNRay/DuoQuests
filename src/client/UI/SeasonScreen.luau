@@ -98,7 +98,7 @@ function SeasonScreen.Season(container, state, call, extra)
 	for _, row in ipairs(data.Brackets.Percentiles) do
 		bracketRow(scroll, row.Label, rewardText(row), live.Percentile == row.Label)
 	end
-	section(scroll, "Top ranks earn extra on top")
+	section(scroll, "Ranks 1-50 all earn extra on top (these are the steps up)")
 	for _, row in ipairs(data.Brackets.Ranks) do
 		bracketRow(scroll, row.Label, rewardText(row), live.RankLabel == row.Label)
 	end
