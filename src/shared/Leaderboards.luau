@@ -4,7 +4,7 @@
 
 	Pure ranking rules; the server service stores and fetches the numbers.
 
-	  Leaderboards.Categories           list of { Id, Name, Unit }
+	  Leaderboards.Categories           list of { Id, Name, Unit, Class? } (Class set on the per-class boards, Id "Class_<class>")
 	  Leaderboards.ScoreFor(categoryId, profile)   -> whole number
 	  Leaderboards.Rank(entries, limit)  entries: { { UserId, Name, Value } }
 	                                     -> sorted rows { Rank, UserId, Name, Value }
@@ -18,12 +18,29 @@
 	board. Legacy / all-time boards can be added later as extra categories.
 ]]
 
+local Classes = require(script.Parent.Config.Classes)
+
 local Leaderboards = {}
 
 Leaderboards.Categories = {
 	{ Id = "Stage", Name = "Furthest stage", Unit = "Stage" },
 	{ Id = "Level", Name = "Highest level", Unit = "Level" },
 }
+
+-- One board per class, made from Config/Classes: adding a class there adds its board (and its tab) with no other change.
+-- A class with Locked = true (not playable yet) gets its board when the flag is removed.
+-- The score is the furthest stage while playing that class (a player who changes class moves to the new class's board).
+-- Store names are "Leaderboard_S<season>_Class_<class>", the same boards the season rewards read (see SeasonResultsService).
+local classIds = {}
+for classId, def in pairs(Classes) do
+	if not def.Locked then
+		table.insert(classIds, classId)
+	end
+end
+table.sort(classIds)
+for _, classId in ipairs(classIds) do
+	table.insert(Leaderboards.Categories, { Id = "Class_" .. classId, Name = classId, Unit = "Stage", Class = classId })
+end
 
 local SCORERS = {
 	Stage = function(profile)
@@ -33,6 +50,17 @@ local SCORERS = {
 		return profile.Season.Level
 	end,
 }
+
+for _, category in ipairs(Leaderboards.Categories) do
+	if category.Class then
+		SCORERS[category.Id] = function(profile)
+			if profile.Season.ClassId ~= category.Class then
+				return 0
+			end
+			return profile.Season.HighestStage
+		end
+	end
+end
 
 function Leaderboards.IsCategory(categoryId)
 	return SCORERS[categoryId] ~= nil

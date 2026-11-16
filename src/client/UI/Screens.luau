@@ -476,15 +476,21 @@ function Screens.Daily(container, state, call)
 end
 
 -- Ranks --------------------------------------------------------------------
--- extra.Board = reply of GetLeaderboard, extra.BoardCategory = "Stage"|"Level",
+-- extra.Board = reply of GetLeaderboard, extra.BoardCategory = "Stage"|"Level"|"Class_<class>",
 -- extra.ShowBoard(categoryId) switches tabs.
 function Screens.Ranks(container, _, _, extra)
 	local Leaderboards = require(Shared.Leaderboards)
 	local scroll = list(container)
-	local tabs = row(scroll, 44)
+	-- three tabs per row: Furthest stage, Highest level, then one per class
+	local PER_ROW = 3
+	local tabs
 	for index, category in ipairs(Leaderboards.Categories) do
+		local col = (index - 1) % PER_ROW
+		if col == 0 then
+			tabs = row(scroll, 44)
+		end
 		Kit.button({
-			Size = UDim2.fromOffset(150, 36), Position = UDim2.fromOffset(4 + (index - 1) * 158, 4), Text = category.Name,
+			Size = UDim2.fromOffset(150, 36), Position = UDim2.fromOffset(4 + col * 158, 4), Text = category.Name,
 			BackgroundColor3 = if extra.BoardCategory == category.Id then C.Accent else C.Panel, Parent = tabs,
 		}, function()
 			if extra.ShowBoard then

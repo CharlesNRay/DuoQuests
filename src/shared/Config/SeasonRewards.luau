@@ -38,10 +38,10 @@ return {
 	Ranks = {
 		{ MaxRank = 1, Label = "Champion", Sunstones = 1000, Title = "Champion", Cosmetic = "Aura_Champion", Tickets = { PetWish = 3, SkillWish = 3 } },
 		{ MaxRank = 2, Label = "Runner-up", Sunstones = 700, Title = "Runner-up", Cosmetic = "Aura_Champion", Tickets = { PetWish = 2, SkillWish = 2 } },
-		{ MaxRank = 3, Label = "Third place", Sunstones = 500, Title = "Podium", Cosmetic = "Aura_Podium", Tickets = { PetWish = 2, SkillWish = 2 } },
-		{ MaxRank = 10, Label = "Top 10", Sunstones = 300, Title = "Elite Ten", Cosmetic = "Aura_Elite", Tickets = { PetWish = 1, SkillWish = 1 } },
-		{ MaxRank = 20, Label = "Top 20", Sunstones = 200, Title = "Elite Twenty", Tickets = { PetWish = 1 } },
-		{ MaxRank = 50, Label = "Top 50", Sunstones = 100, Title = "Elite Fifty" },
+		{ MaxRank = 3, Label = "Third place", Sunstones = 600, Title = "Podium", Cosmetic = "Aura_Podium", Tickets = { PetWish = 2, SkillWish = 2 } },
+		{ MaxRank = 10, Label = "Top 10", Sunstones = 400, Title = "Elite Ten", Cosmetic = "Aura_Elite", Tickets = { PetWish = 1, SkillWish = 1 } },
+		{ MaxRank = 20, Label = "Top 20", Sunstones = 275, Title = "Elite Twenty", Tickets = { PetWish = 1 } },
+		{ MaxRank = 50, Label = "Top 50", Sunstones = 150, Title = "Elite Fifty" },
 	},
 
 	-- Best players of each class (their season class when they played; see SeasonResults).

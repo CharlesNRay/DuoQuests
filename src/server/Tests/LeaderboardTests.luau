@@ -54,5 +54,21 @@ return function(modulesOverride)
 	check("Unknown categories are not valid", not Leaderboards.IsCategory("Gold") and Leaderboards.IsCategory("Stage"))
 	check("Values are formatted for display", Leaderboards.Format("Stage", 42) == "Stage 42")
 
+	-- class boards
+	local classBoards = {}
+	for _, category in ipairs(Leaderboards.Categories) do
+		if category.Class then
+			classBoards[category.Class] = category.Id
+		end
+	end
+	check("Warrior and Cleric have boards, the locked Mage does not", classBoards.Warrior == "Class_Warrior" and classBoards.Cleric == "Class_Cleric" and classBoards.Mage == nil)
+	local warrior = ProfileTemplate.New()
+	warrior.Season.HighestStage = 12
+	warrior.Season.ClassId = "Warrior"
+	check("A class board scores only that class's players", Leaderboards.ScoreFor("Class_Warrior", warrior) == 12 and Leaderboards.ScoreFor("Class_Cleric", warrior) == 0)
+	warrior.Season.ClassId = "Cleric"
+	check("Changing class moves the score to the new board", Leaderboards.ScoreFor("Class_Warrior", warrior) == 0 and Leaderboards.ScoreFor("Class_Cleric", warrior) == 12)
+	check("Class boards are valid categories and format as stages", Leaderboards.IsCategory("Class_Warrior") and Leaderboards.Format("Class_Cleric", 5) == "Stage 5")
+
 	print(("LeaderboardTests done: %d passed, %d failed"):format(passed, failed))
 end

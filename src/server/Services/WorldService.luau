@@ -117,7 +117,9 @@ function WorldService.SetBoardText(textByCategory)
 	if label then
 		local parts = {}
 		for _, category in ipairs(require(ReplicatedStorage.Shared.Leaderboards).Categories) do
-			table.insert(parts, textByCategory[category.Id] or "")
+			if not category.Class then -- the sign shows the overall boards; class boards are on the Ranks screen
+				table.insert(parts, textByCategory[category.Id] or "")
+			end
 		end
 		label.Text = table.concat(parts, "\n\n")
 	end

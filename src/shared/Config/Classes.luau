@@ -98,6 +98,7 @@ return {
 
 	Mage = {
 		Id = "Mage",
+		Locked = true, -- not playable yet: no leaderboard until this is removed
 		DisplayName = "Mage",
 		Role = "Damage",
 		DamageType = "Magical",
