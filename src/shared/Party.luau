@@ -51,6 +51,7 @@ local Skills = require(script.Parent.Skills)
 local SkillProgress = require(script.Parent.SkillProgress)
 local StageRunner = require(script.Parent.StageRunner)
 local Pets = require(script.Parent.Pets)
+local Power = require(script.Parent.Power)
 local ProfileTemplate = require(script.Parent.ProfileTemplate)
 local Subclasses = require(script.Parent.Subclasses)
 local TableUtil = require(script.Parent.Util.TableUtil)
@@ -207,6 +208,7 @@ function Party.MakeSnapshot(profile, userId, name, previous, now)
 		UserId = userId,
 		Name = name,
 		ClassId = classId,
+		IP = Power.Hero(profile).Total, -- shown on the partner's card
 		PetId = petId,
 		PetLevel = petLevel,
 		PetRank = petRank,

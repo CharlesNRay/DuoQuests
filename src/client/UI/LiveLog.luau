@@ -18,8 +18,8 @@ local OPEN_H, BAR_H = 150, 24
 function LiveLog.new(parent, buildLog, buildMeter)
 	local self = setmetatable({ BuildLog = buildLog, BuildMeter = buildMeter, MeterOn = false, Lines = {}, Times = {}, Shown = 0, Open = true }, LiveLog)
 	local frame = Kit.frame({
-		Name = "LiveLog", Size = UDim2.fromOffset(300, OPEN_H), AnchorPoint = Vector2.new(0, 1),
-		Position = UDim2.new(0, 10, 1, -78), BackgroundColor3 = Color3.fromRGB(14, 16, 28), BackgroundTransparency = 0.2,
+		Name = "LiveLog", Size = UDim2.fromOffset(300, OPEN_H), AnchorPoint = Vector2.new(1, 1),
+		Position = UDim2.new(1, -10, 1, -78), BackgroundColor3 = Color3.fromRGB(14, 16, 28), BackgroundTransparency = 0.2,
 		Visible = false, ZIndex = 3, Parent = parent,
 	})
 	Kit.label({ Size = UDim2.new(1, -40, 0, BAR_H), Position = UDim2.fromOffset(8, 0), Text = "Combat log", TextSize = 13, Font = Enum.Font.GothamBold, TextColor3 = C.Dim, TextWrapped = false, Parent = frame })

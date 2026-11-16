@@ -571,6 +571,7 @@ function PartyService.GetPartner(player)
 		Name = snapshot.Name,
 		ClassId = snapshot.ClassId,
 		Level = snapshot.Level,
+		IP = snapshot.IP,
 		PetId = snapshot.PetId,
 		PetLevel = snapshot.PetLevel,
 		PetRank = snapshot.PetRank,

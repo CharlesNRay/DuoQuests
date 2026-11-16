@@ -90,15 +90,15 @@ function Hud.new(root)
 	self.Badge = Kit.frame({ Size = UDim2.fromOffset(38, 38), Position = UDim2.fromOffset(4, 4), BackgroundColor3 = C.Accent, Parent = portrait })
 	Kit.corner(19).Parent = self.Badge
 	self.LevelLabel = Kit.label({ Size = UDim2.fromScale(1, 1), Text = "1", TextSize = 17, Font = Enum.Font.GothamBlack, TextColor3 = C.Bg, TextStrokeTransparency = 1, TextXAlignment = Enum.TextXAlignment.Center, Parent = self.Badge })
-	self.NameLabel = Kit.label({ Size = UDim2.new(1, -50, 0, 18), Position = UDim2.fromOffset(48, 3), Text = "", TextSize = 15, Font = Enum.Font.GothamBold, TextWrapped = false, TextTruncate = Enum.TextTruncate.AtEnd, Parent = portrait })
-	local xpBack = Kit.frame({ Size = UDim2.new(1, -58, 0, 8), Position = UDim2.fromOffset(48, 30), BackgroundColor3 = Color3.fromRGB(40, 44, 64), Parent = portrait })
+	self.NameLabel = Kit.label({ Size = UDim2.new(1, -54, 0, 18), Position = UDim2.fromOffset(48, 3), Text = "", TextSize = 15, Font = Enum.Font.GothamBold, TextWrapped = false, TextTruncate = Enum.TextTruncate.AtEnd, Parent = portrait })
+	local xpBack = Kit.frame({ Size = UDim2.new(1, -130, 0, 8), Position = UDim2.fromOffset(48, 30), BackgroundColor3 = Color3.fromRGB(40, 44, 64), Parent = portrait })
 	self.XpFill = Kit.frame({ Size = UDim2.fromScale(0, 1), BackgroundColor3 = Color3.fromRGB(90, 180, 255), Parent = xpBack })
 	Kit.Hover(portrait, function()
 		return self.XpText
 	end)
-	self.IPLabel = Kit.label({ Size = UDim2.fromOffset(220, 18), Position = UDim2.fromOffset(12, safeTop + 49), Text = "IP 0", TextSize = 14, Font = Enum.Font.GothamBlack, TextColor3 = C.Accent, Parent = chrome })
+	self.IPLabel = Kit.label({ Size = UDim2.fromOffset(70, 14), Position = UDim2.new(1, -76, 1, -17), Text = "IP 0", TextSize = 11, Font = Enum.Font.GothamBlack, TextColor3 = C.Accent, TextXAlignment = Enum.TextXAlignment.Right, TextWrapped = false, ZIndex = 3, Parent = portrait })
 	Kit.Hover(self.IPLabel, function() return self.IPTip end)
-	self.Cards = Kit.frame({ Size = UDim2.fromOffset(220, 30), Position = UDim2.fromOffset(8, safeTop + 70), BackgroundTransparency = 1, NoCorner = true, Parent = chrome })
+	self.Cards = Kit.frame({ Size = UDim2.fromOffset(220, 30), Position = UDim2.fromOffset(8, safeTop + 50), BackgroundTransparency = 1, NoCorner = true, Parent = chrome })
 	Kit.new("UIListLayout", { Padding = UDim.new(0, 3), Parent = self.Cards })
 
 	-- top-right: the map card in the very corner, gold + shards directly to its left ----------
@@ -417,11 +417,14 @@ function Hud.new(root)
 
 		-- party cards
 		Kit.clear(self.Cards)
-		local function card(name, classId, level, note, onClick, tip)
+		local function card(name, classId, level, note, onClick, tip, ip)
 			local f = pill(self.Cards, { Size = UDim2.fromOffset(220, 28), Position = UDim2.new() })
 			local dot = Kit.frame({ Size = UDim2.fromOffset(18, 18), Position = UDim2.fromOffset(6, 5), BackgroundColor3 = C[classId] or C.Accent, Parent = f })
 			Kit.corner(10).Parent = dot
-			Kit.label({ Size = UDim2.new(1, -32, 1, 0), Position = UDim2.fromOffset(32, 0), Text = ("%s  Lv %d%s"):format(name, level, note or ""), TextSize = 13, TextWrapped = false, TextTruncate = Enum.TextTruncate.AtEnd, Parent = f })
+			Kit.label({ Size = UDim2.new(1, -if ip then 100 else 36, 1, 0), Position = UDim2.fromOffset(32, 0), Text = if classId ~= "" then ("%s  Lv %d %s%s"):format(name, level, classId, note or "") else name, TextSize = 12, TextWrapped = false, TextTruncate = Enum.TextTruncate.AtEnd, Parent = f })
+			if ip then
+				Kit.label({ Size = UDim2.fromOffset(60, 28), Position = UDim2.new(1, -64, 0, 0), Text = ("IP %d"):format(ip), TextSize = 11, Font = Enum.Font.GothamBlack, TextColor3 = C.Accent, TextXAlignment = Enum.TextXAlignment.Right, TextWrapped = false, ZIndex = 3, Parent = f })
+			end
 			if onClick then
 				local b = Kit.new("TextButton", { Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1, Text = "", ZIndex = 4, Parent = f })
 				b.Activated:Connect(onClick)
@@ -436,7 +439,7 @@ function Hud.new(root)
 				if self.OnPartner then
 					self.OnPartner()
 				end
-			end, ("<b>%s</b>  Lv %d %s\n%s\nClick for her stats, skills and gear"):format(p.Name, p.Level, p.ClassId, if p.Online then "Online" else "Fights as a ghost while away"))
+			end, ("<b>%s</b>  Lv %d %s\n%s\nClick for her stats, skills and gear"):format(p.Name, p.Level, p.ClassId, if p.Online then "Online" else "Fights as a ghost while away"), p.IP)
 		elseif party then
 			card("Waiting for partner...", "", 0, "", function()
 				if self.OnParty then
