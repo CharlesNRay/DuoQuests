@@ -1,7 +1,7 @@
 # Duo Quest Roadmap
 
 > Living document. Updated whenever we finish or reprioritise something.
-> **Last updated:** 2026-11-15
+> **Last updated:** 2026-11-16
 
 **Jump to:** [Now](#now) · [Next up](#next-up) · [Later](#later) · [Done](#done) · [Open questions](#open-questions) · [Known gaps](#known-gaps)
 
@@ -35,6 +35,18 @@ In rough order.
 
 ## Done
 Newest first.
+
+### 2026-11-16 (numbers, Battle hub, activities, market)
+- ✅ Number scale: health / attack / defense x10 (`Economy.NumberScale`), XP x20 (`Economy.XPNumber`), gold on a new curve (thousands early, millions later), costs ~x60. Percentages unchanged, so balance is invariant. Large numbers print short (`Util/NumberFormat`: 12.4K, 3.2M).
+- ✅ Subclass per-level growth (`Subclasses.Growth`): offensive paths gain Attack faster, protective paths Defense / Health. All 12 paths re-run through the balance harness; Templar retuned (it stalled at stage 40).
+- ✅ Ember Wastes uses Magma Hounds instead of crabs.
+- ✅ Battle hub (⚔): world boss, season boss, guild raid, dungeons, expeditions. Bosses fight in their own ember arena with a results card (damage meter, rewards). Seen in Studio: world boss arena + results.
+- 🔨 Dungeons (keys, floors, final-floor replay) and expeditions (start / collect): tests pass, UI not yet seen.
+- 🔨 Gold Market in the Store: daily capped wishes, season-limited items. Tests pass, UI not yet seen.
+- ✅ Pets attack independently (`Pet_Strike`) with a visible lunge and damage in the meter. 🔨 Active pets follow you in town (not yet seen).
+- ✅ Combat HUD: smaller log, damage meter first, skill bar clear of the dock. Window chrome restyle, travel buttons in their own corner, 17-step tutorial.
+- 🔨 Pets screen rebuilt as card grid + detail pane + slim shard strip (compiles, not seen).
+- ⬜ Still to do: same style for Hero / Skills / Party / Bag / Map / Quests / Boss / Store / Wish, text overflow audit with big numbers, levels 90 to 120 + Paragon + second subclass tier, pets to level 50, guild raids, stack counts on monsters, VIP pass / second pet slot / gifting / Robux IDs / PolicyService, upload `branding/logo.png` and set `Config/Branding.LogoImage`.
 
 ### 2026-11-15 (overnight, code only, not yet checked in Studio)
 - 🔨 Gear and inventory: Weapon / Armor / Trinket drops from stages (rarity rolls, boss drops, ItemRarity passive helps), bag of 30 (full bag sells new drops), equip / unequip / sell, ghost partners keep their gear, Gear screen (29 tests with daily login)
