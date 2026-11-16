@@ -22,6 +22,13 @@ local GearVisuals = require(script.Parent.GearVisuals)
 local Actor = {}
 Actor.__index = Actor
 
+local function tween(obj, time, goal, style, dir)
+	local t = TweenService:Create(obj, TweenInfo.new(time, style or Enum.EasingStyle.Quad, dir or Enum.EasingDirection.Out), goal)
+	t:Play()
+	return t
+end
+
+
 local function anim(duration, step)
 	task.spawn(function()
 		local t0 = os.clock()
@@ -725,12 +732,6 @@ function Actor:Place(x, z)
 	if self.Bar then
 		self.Bar.StudsOffsetWorldSpace = Vector3.new(0, self.Top / 2 + 1, 0)
 	end
-end
-
-local function tween(obj, time, goal, style, dir)
-	local t = TweenService:Create(obj, TweenInfo.new(time, style or Enum.EasingStyle.Quad, dir or Enum.EasingDirection.Out), goal)
-	t:Play()
-	return t
 end
 
 -- Health: the bar glides to the new value. Damage leaves a pale trail that catches up a moment later; healing lights up the

@@ -162,6 +162,9 @@ end
 -- on = the live 3D battle is showing behind the menu: hide the painted scenery and show the vignette
 local function setWorldMode(bg, on)
 	bg.Holder.BackgroundTransparency = if on then 1 else 0
+	if bg.Holder.Parent and bg.Holder.Parent:IsA("GuiObject") then
+		bg.Holder.Parent.BackgroundTransparency = if on then 1 else 0 -- the menu frame itself must let the 3D world through
+	end
 	for _, frame in ipairs(bg.Scenic) do
 		frame.Visible = not on
 	end
@@ -213,6 +216,7 @@ end
 function MainMenu.new(root, call, extra, CharacterScreen)
 	local self = setmetatable({ Visible = false, Creating = false, Message = nil }, MainMenu)
 	self.Call, self.Extra, self.CharacterScreen = call, extra, CharacterScreen
+	self.Root = root
 	-- its own ScreenGui that ignores the top bar inset, so the backdrop really covers the whole screen
 	local gui = Kit.new("ScreenGui", { Name = "DuoQuestMenu", ResetOnSpawn = false, IgnoreGuiInset = true, DisplayOrder = 100, Enabled = false, ZIndexBehavior = Enum.ZIndexBehavior.Sibling, Parent = Players.LocalPlayer:WaitForChild("PlayerGui") })
 	self.Gui = gui
@@ -257,6 +261,11 @@ function MainMenu:Show(state)
 	self.Visible = true
 	self.Creating = false
 	self.Gui.Enabled = true
+	local hud = self.Root and (if self.Root:IsA("ScreenGui") then self.Root else self.Root:FindFirstAncestorOfClass("ScreenGui"))
+	if hud and hud ~= self.Gui then
+		self.HudGui = hud
+		hud.Enabled = false -- the game UI stays out of sight while the menu (and its 3D battle) is up
+	end
 	-- a live (fake) auto battle plays behind the menu; the painted backdrop is the fallback if it cannot start
 	local ok, started = pcall(MenuBattle.Start)
 	self.World3D = ok and started == true
@@ -267,6 +276,9 @@ end
 function MainMenu:Hide()
 	self.Visible = false
 	self.Gui.Enabled = false
+	if self.HudGui then
+		self.HudGui.Enabled = true
+	end
 	self.Extra.MenuCreate = false
 	pcall(MenuBattle.Stop)
 end
@@ -323,9 +335,9 @@ function MainMenu:Render(state)
 	self.TitleHolder = holder
 	self.TitleGradients = {}
 	if Branding.LogoImage ~= "" then
-		Kit.new("ImageLabel", { Size = UDim2.fromOffset(64, 64), Position = UDim2.new(0.5, -32, 0, -34), BackgroundTransparency = 1, Image = Branding.LogoImage, ScaleType = Enum.ScaleType.Fit, ZIndex = 63, Parent = holder })
+		Kit.new("ImageLabel", { Size = UDim2.fromOffset(64, 64), Position = UDim2.new(0.5, -32, 0, 17), BackgroundTransparency = 1, Image = Branding.LogoImage, ScaleType = Enum.ScaleType.Fit, ZIndex = 63, Parent = holder })
 	else
-		Kit.label({ Size = UDim2.fromOffset(50, 40), Position = UDim2.new(0.5, -25, 0, -2), Text = "⚔", TextSize = 34, TextXAlignment = Enum.TextXAlignment.Center, TextColor3 = Color3.fromRGB(255, 232, 150), TextWrapped = false, ZIndex = 64, Parent = holder })
+		Kit.label({ Size = UDim2.fromOffset(50, 54), Position = UDim2.new(0.5, -25, 0, 22), Text = "⚔", TextSize = 34, TextYAlignment = Enum.TextYAlignment.Center, TextXAlignment = Enum.TextXAlignment.Center, TextColor3 = Color3.fromRGB(255, 232, 150), TextWrapped = false, ZIndex = 64, Parent = holder })
 	end
 	local function word(text, anchorRight, warm)
 		local function make(color, dx, dy, z, stroke)

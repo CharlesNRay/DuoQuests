@@ -62,12 +62,13 @@ function MenuBattle.Start()
 	if running then
 		return true
 	end
-	local ok = pcall(function()
+	local ok, why = pcall(function()
 		scene = Scene.new(ORIGIN)
 		replay = Replay.new(scene)
-		scene:SetZone(Zones.ForStage(30).Theme)
+		scene:SetZone(Zones.ForStage(5).Theme)
 	end)
 	if not ok then
+		warn("[DuoQuest] menu battle could not start: " .. tostring(why))
 		MenuBattle.Stop()
 		return false
 	end
@@ -75,7 +76,7 @@ function MenuBattle.Start()
 
 	-- dusk lighting (this client only) and a fixed side-on camera
 	saved = { ClockTime = Lighting.ClockTime, Brightness = Lighting.Brightness, Ambient = Lighting.Ambient, OutdoorAmbient = Lighting.OutdoorAmbient }
-	TweenService:Create(Lighting, TweenInfo.new(1.5), { ClockTime = 18.6, Brightness = 1.6, Ambient = Color3.fromRGB(90, 70, 120), OutdoorAmbient = Color3.fromRGB(120, 90, 140) }):Play()
+	TweenService:Create(Lighting, TweenInfo.new(1.5), { ClockTime = 17.4, Brightness = 2.6, Ambient = Color3.fromRGB(130, 105, 150), OutdoorAmbient = Color3.fromRGB(165, 135, 165) }):Play()
 	RunService:BindToRenderStep("DuoQuestMenuCamera", Enum.RenderPriority.Camera.Value + 2, function()
 		local cam = workspace.CurrentCamera
 		cam.CameraType = Enum.CameraType.Scriptable
@@ -83,9 +84,9 @@ function MenuBattle.Start()
 		local view = cam.ViewportSize
 		local aspect = view.X / math.max(1, view.Y)
 		local halfTan = math.tan(math.rad(cam.FieldOfView) / 2)
-		local distance = math.max(46 / (2 * halfTan * aspect), 20 / (2 * halfTan))
+		local distance = math.max(64 / (2 * halfTan * aspect), 30 / (2 * halfTan))
 		local t = os.clock()
-		local look = ORIGIN + Vector3.new(math.sin(t * 0.4) * 1.2, 7.2, 0) -- looks above the fighters so they sit low on the screen
+		local look = ORIGIN + Vector3.new(math.sin(t * 0.4) * 1.2, 12.2, 0) -- looks above the fighters so they sit low on the screen
 		cam.CFrame = CFrame.lookAt(look + Vector3.new(math.sin(t * 0.25) * 2, 1.5, distance), look)
 	end)
 
@@ -93,15 +94,24 @@ function MenuBattle.Start()
 		local index = 0
 		while running do
 			index += 1
-			local info, stage = newFight(index)
+			local okFight, info, stage = pcall(newFight, index)
+			if not okFight then
+				warn("[DuoQuest] menu battle fight failed: " .. tostring(info))
+				task.wait(3)
+				continue
+			end
 			if not running then
 				break
 			end
 			local finished = false
-			scene:SetZone(Zones.ForStage(stage).Theme)
-			replay:Play(info, function()
+			scene:SetZone(Zones.ForStage(5).Theme)
+			local okPlay, err = pcall(replay.Play, replay, info, function()
 				finished = true
 			end)
+			if not okPlay then
+				warn("[DuoQuest] menu battle replay failed: " .. tostring(err))
+				finished = true
+			end
 			local started = os.clock()
 			while running and not finished and os.clock() - started < info.Duration + 5 do
 				task.wait(0.25)
