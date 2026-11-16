@@ -69,7 +69,7 @@ return function(modulesOverride)
 	end
 	check("A damage skill lists Damage", rowLabels("Smite", 1).Damage == "150%")
 	check("A heal skill lists Heal and no Damage", rowLabels("Heal", 1).Heal ~= nil and rowLabels("Heal", 1).Damage == nil)
-	check("A defensive buff lists Duration and Strength", rowLabels("IronSkin", 5).Duration ~= nil and rowLabels("IronSkin", 5).Strength ~= nil)
+	check("A defensive buff lists its effect and how long it lasts", rowLabels("IronSkin", 5)["Iron Skin"] ~= nil and rowLabels("IronSkin", 5).Strength == nil)
 	check("Resurrection lists its once-per-fight limit", rowLabels("Resurrection", 1).Uses == "1 per fight")
 
 	local everySkillHasRows = true

@@ -118,7 +118,7 @@ function AbilityStats.Rows(ability, level)
 		if kind == "Damage" then
 			add("Damage", pct(AbilityStats.Value(ability, effect, "Multiplier", level)))
 			if effect.PercentTargetHealth then
-				add("Plus", ("%.1f%% of its max HP (less on bosses)"):format(effect.PercentTargetHealth * (1 + 0.05 * math.max(0, (level or 1) - 1)) * 100))
+				add("Bonus", ("+%.1f%% of its max HP"):format(effect.PercentTargetHealth * (1 + 0.05 * math.max(0, (level or 1) - 1)) * 100))
 			end
 		elseif kind == "Heal" or kind == "Shield" then
 			local label = if kind == "Heal" then "Heal" else "Shield"
@@ -134,14 +134,13 @@ function AbilityStats.Rows(ability, level)
 		elseif kind == "Cleanse" then
 			add("Cleanse", "Removes every debuff")
 		elseif kind == "ApplyStatus" then
-			add("Duration", seconds(AbilityStats.Value(ability, effect, "Duration", level)))
 			local statusDef = require(script.Parent.Parent.Config.Statuses)[effect.Status]
+			local name = (statusDef and statusDef.DisplayName) or "Effect"
+			local text = seconds(AbilityStats.Value(ability, effect, "Duration", level))
 			if statusDef and statusDef.Stacks then
-				add("Stacks", ("+%d each cast (max %d)"):format(effect.Stacks or 1, statusDef.Stacks.Max))
+				text ..= (" (stacks to %d)"):format(statusDef.Stacks.Max)
 			end
-			if effect.PerLevel and effect.PerLevel.Strength then
-				add("Strength", pct(AbilityStats.Strength(ability, effect, level)))
-			end
+			add(name, text)
 		elseif kind == "SpendHealth" then
 			add("Costs", pct(AbilityStats.Value(ability, effect, "Fraction", level)) .. " of your max HP")
 		elseif kind == "Raise" then

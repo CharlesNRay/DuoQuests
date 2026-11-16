@@ -27,7 +27,7 @@ return {
 	MaxRank = 20,
 	-- slow at the top: each rank costs ~24 percent more than the one before (3663 XP from rank 1 to 20)
 	RankXP = { 15, 19, 23, 29, 35, 44, 55, 68, 84, 104, 129, 160, 198, 246, 305, 378, 469, 581, 721 },
-	TierBonus = { Common = 0, Rare = 2, Epic = 4, Legendary = 6 }, -- a higher TIER is a head start of a few ranks
+	TierBonus = { Common = 0, Rare = 2, Epic = 5, Legendary = 9 }, -- a higher TIER is a head start of several ranks (each rank adds to the skill's numbers)
 	DupXP = { Common = 10, Rare = 25, Epic = 60, Legendary = 150 },
 	TierOrder = { "Common", "Rare", "Epic", "Legendary" },
 	-- unowned skills are this much more likely to be picked than owned ones (so new skills turn up early)

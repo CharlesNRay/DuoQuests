@@ -22,23 +22,18 @@ end
 
 function Tips.Skill(def, level, tier)
 	local lines = {}
-	table.insert(lines, ("<b>%s</b>%s"):format(Kit.tint(def.DisplayName, Kit.rarityColor(def.Rarity)), level and ("   Lv " .. level) or ""))
-	local kind = Icons.SkillKind(def)
-	local meta = KIND_NAMES[kind] .. "  -  " .. (def.Rarity or "Common")
-	table.insert(lines, dim(meta))
+	table.insert(lines, ("<b>%s</b>%s"):format(Kit.tint(def.DisplayName, Kit.rarityColor(tier or def.Rarity)), level and ("   Lv " .. level) or ""))
+	local meta = KIND_NAMES[Icons.SkillKind(def)]
 	if level then
-		table.insert(lines, Kit.tint(("IP %s"):format(Short(Power.Skill(tier or def.Rarity or "Common", level))), C.Accent))
+		meta ..= ("   -   IP %s"):format(Short(Power.Skill(tier or def.Rarity or "Common", level)))
 	end
+	table.insert(lines, dim(meta))
 	if def.Description and def.Description ~= "" then
 		table.insert(lines, def.Description)
 	end
 	for _, r in ipairs(AbilityStats.Rows(def, level or 1)) do
 		table.insert(lines, dim(r.Label .. ": ") .. r.Value)
 	end
-	if def.UsesPerCombat then
-		table.insert(lines, dim(("Usable %d time per fight"):format(def.UsesPerCombat)))
-	end
-	table.insert(lines, dim("Skills cast in slot order as soon as they are ready."))
 	return table.concat(lines, "\n")
 end
 
