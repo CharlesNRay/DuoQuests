@@ -44,8 +44,10 @@ local function rewardText(r)
 end
 
 function SeasonScreen.Season(container, state, call, extra)
+	Kit.clear(container)
 	local data = extra.SeasonData
-	local scroll = Kit.new("ScrollingFrame", { Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1, BorderSizePixel = 0, CanvasSize = UDim2.new(), AutomaticCanvasSize = Enum.AutomaticSize.Y, ScrollBarThickness = 4, Parent = container })
+	local area = Kit.frame({ Name = "SeasonArea", Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1, NoCorner = true, Parent = container })
+	local scroll = Kit.new("ScrollingFrame", { Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1, BorderSizePixel = 0, CanvasSize = UDim2.new(), AutomaticCanvasSize = Enum.AutomaticSize.Y, ScrollBarThickness = 4, Parent = area })
 	Kit.new("UIListLayout", { Padding = UDim.new(0, 5), Parent = scroll })
 	if not data then
 		Kit.label({ Size = UDim2.new(1, -8, 0, 30), Text = "Season rewards are loading...", TextColor3 = C.Dim, Parent = scroll })

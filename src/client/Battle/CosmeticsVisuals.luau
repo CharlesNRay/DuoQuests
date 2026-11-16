@@ -41,12 +41,12 @@ local function auraEmitter(def)
 	e.Texture = SPARKLE
 	e.Color = colours(def)
 	e.LightEmission = 1
-	e.Rate = 28
-	e.Lifetime = NumberRange.new(1, 1.8)
+	e.Rate = 45
+	e.Lifetime = NumberRange.new(1.2, 2)
 	e.Speed = NumberRange.new(0.5, 2)
 	e.SpreadAngle = Vector2.new(180, 180)
-	e.Size = NumberSequence.new({ NumberSequenceKeypoint.new(0, 0.7), NumberSequenceKeypoint.new(1, 0) })
-	e.Transparency = NumberSequence.new(0.15)
+	e.Size = NumberSequence.new({ NumberSequenceKeypoint.new(0, 1.0), NumberSequenceKeypoint.new(1, 0) })
+	e.Transparency = NumberSequence.new(0.1)
 	e.RotSpeed = NumberRange.new(-90, 90)
 	e.Shape = Enum.ParticleEmitterShape.Cylinder
 	e.ShapeStyle = Enum.ParticleEmitterShapeStyle.Volume
