@@ -5,7 +5,14 @@
 # Run several at once (2 cores handle ~4 jobs); each takes ~3-5 minutes for goal 40.
 H="$(cd "$(dirname "$0")" && pwd)"; LUAU="${LUAU:-luau}"
 tag=$1; goal=$2; mode=$3; c=$4
-python3 "$H/sync.py" >/dev/null
+# Python for sync.py: $PYTHON, else the first that really runs (on Windows python3/python can be Store stubs)
+if [ -z "$PYTHON" ]; then
+  for cand in python3 python "py -3"; do
+    if $cand -c "" >/dev/null 2>&1; then PYTHON="$cand"; break; fi
+  done
+fi
+PYTHON="${PYTHON:-python3}"
+$PYTHON "$H/sync.py" >/dev/null
 rm -rf "$H/.build/hl_$tag"; cp -r "$H/.build/hl6" "$H/.build/hl_$tag"; cp "$H/runners/balance90.luau" "$H/.build/hl_$tag/"
 cd "$H/.build/hl_$tag"; echo "return { $goal, 1, \"$c\", \"$mode\" }" > cfg.luau
 $LUAU balance90.luau > "$H/.build/res_$tag.txt" 2>&1

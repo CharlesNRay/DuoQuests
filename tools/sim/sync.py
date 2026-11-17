@@ -15,9 +15,9 @@ def tr(text,reldir):
     text=re.sub(r'require\(game:GetService\("ReplicatedStorage"\):WaitForChild\("Shared"\):WaitForChild\("(\w+)"\)\)',r'require("./\1")',text)
     return text
 def put(srcpath,rel):
-    t=open(srcpath).read()
+    t=open(srcpath,encoding="utf-8").read()
     dst=os.path.join(OUT,rel); os.makedirs(os.path.dirname(dst),exist_ok=True)
-    open(dst,"w").write(tr(t,os.path.dirname(rel)))
+    open(dst,"w",encoding="utf-8",newline="").write(tr(t,os.path.dirname(rel)))
 for root,_,files in os.walk(SRC+"/shared"):
     for f in files:
         if f.endswith(".luau"):
