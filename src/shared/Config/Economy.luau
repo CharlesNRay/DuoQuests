@@ -25,6 +25,7 @@ return {
 	-- Gear carries progression: each level adds only LevelGrowth of a class's per-level stats, and flat gear stats (attack, health, defense)
 	-- are GearPower times bigger, so a hero that never changes gear stalls while a geared one keeps climbing.
 	LevelGrowth = 0.35,
+	MinionScale = 0.27, -- a Summoner's minions take this share of their health and attack (their power rides on the summoner's gear, so it is trimmed to keep pace with the other classes)
 	GearPower = 9,
 	EarlyWeak = { Start = 0.55, FullLevel = 60 },
 	-- Past the level cap, XP fills Paragon levels (Season.Paragon): each is a small permanent bonus to Attack, Health and Defense for the season.

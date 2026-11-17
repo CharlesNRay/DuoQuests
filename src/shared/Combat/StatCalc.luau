@@ -181,7 +181,7 @@ end
 function StatCalc.NewMinion(id, minionId, owner, statOf, power)
 	local def = Minions[minionId]
 	assert(def ~= nil, "Unknown minion: " .. tostring(minionId))
-	power = power or 1
+	power = (power or 1) * (EconomyConfig.MinionScale or 1)
 	local entity = Entity.new({
 		Id = id,
 		Name = def.DisplayName,
