@@ -233,6 +233,7 @@ function TutorialUI:Update(state, hidden)
 	if t.Step ~= self.CountedStep then
 		self.CountedStep = t.Step
 		self.Opened_ = {}
+		self.LoadoutAtStart = table.concat(player.Loadout or {}, ",") -- the "equip" step waits for this to change
 	end
 	if not self.Busy then
 		if frontier > Tutorial.BossStage and not t.Rewarded then
@@ -245,7 +246,21 @@ function TutorialUI:Update(state, hidden)
 			return
 		end
 		local def = Tutorial.Steps[t.Step]
-		if def and ((def.Kind == "frontier" and frontier >= def.Goal) or (def.Kind == "open" and self.Opened_[def.Goal])) then
+		local equipDone = false
+		if def and def.Kind == "equip" then
+			-- done once the equipped skills changed during this step, or when every owned skill is already equipped
+			local equipped, spare = {}, false
+			for _, id in ipairs(player.Loadout or {}) do
+				equipped[id] = true
+			end
+			for id in pairs(player.Owned or {}) do
+				if not equipped[id] then
+					spare = true
+				end
+			end
+			equipDone = table.concat(player.Loadout or {}, ",") ~= self.LoadoutAtStart or not spare
+		end
+		if def and ((def.Kind == "frontier" and frontier >= def.Goal) or (def.Kind == "open" and self.Opened_[def.Goal]) or equipDone) then
 			self:_run(if t.Step >= #Tutorial.Steps then "TutorialComplete" else "TutorialAdvance", t.Step)
 			return
 		end
@@ -270,7 +285,7 @@ function TutorialUI:Update(state, hidden)
 	local lines = math.ceil(#def.Text / 32)
 	self.Body.Size = UDim2.new(1, -28, 0, lines * 22)
 	self.Card.Size = UDim2.fromOffset(WIDTH, 62 + lines * 22 + (if self.Next.Visible then 48 elseif showBar then 40 else 12))
-	self.PointsAtButton = def.Kind == "open"
+	self.PointsAtButton = def.Kind == "open" or def.Kind == "equip"
 	self:_slide(not hidden)
 	self:_point(if hidden then nil elseif def.Target == "Go" then self.Next else targetOf(self.Hud, def.Target))
 end

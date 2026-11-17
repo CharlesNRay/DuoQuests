@@ -30,7 +30,7 @@ return function(modulesOverride)
 	check("The steps are well formed", #Tutorial.Steps >= 5 and Tutorial.Steps[1].Kind == "next")
 	local formed = true
 	for _, step in ipairs(Tutorial.Steps) do
-		formed = formed and type(step.Id) == "string" and type(step.Title) == "string" and type(step.Text) == "string" and (step.Kind == "next" or step.Goal ~= nil)
+		formed = formed and type(step.Id) == "string" and type(step.Title) == "string" and type(step.Text) == "string" and (step.Kind == "next" or step.Kind == "equip" or step.Goal ~= nil)
 	end
 	check("Every step has an id, a title, text and (when needed) a goal", formed)
 	local bossDef = Tutorial.Steps[Tutorial.BossStep]
@@ -39,8 +39,8 @@ return function(modulesOverride)
 	for index = Tutorial.BossStep + 1, #Tutorial.Steps do
 		wrap[Tutorial.Steps[index].Id] = Tutorial.Steps[index]
 	end
-	check("After the boss: make your wishes (with a way to the Wishing Tree), then watch a battle",
-		wrap.Wish ~= nil and wrap.Wish.Goal == "Wish" and wrap.Wish.Go == "Tree" and wrap.Watch ~= nil and wrap.Watch.Goal == "Watch" and Tutorial.Steps[#Tutorial.Steps].Id == "Watch")
+	check("After the boss: make your wishes (with a way to the Wishing Tree), equip a new skill, then watch a battle",
+		wrap.Wish ~= nil and wrap.Wish.Goal == "Wish" and wrap.Wish.Go == "Tree" and wrap.Equip ~= nil and wrap.Equip.Kind == "equip" and wrap.Watch ~= nil and wrap.Watch.Goal == "Watch" and Tutorial.Steps[#Tutorial.Steps].Id == "Watch")
 
 	check("Advancing needs the right current step", select(2, Tutorial.Advance(p, 3)) == "WrongStep" and Tutorial.Of(p).Step == 1)
 	check("Advancing moves one step forward", Tutorial.Advance(p, 1) == true and Tutorial.Of(p).Step == 2)
