@@ -17,6 +17,7 @@ local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Zones = require(Shared.Zones)
 local Stages = require(Shared.Stages)
 local Classes = require(Shared.Config.Classes)
+local StageRewards = require(Shared.StageRewards)
 local Kit = require(script.Parent.Kit)
 local C = Kit.Colors
 
@@ -210,7 +211,28 @@ function MapScreen.Map(container, state, call, extra)
 
 	-- stage strip for the picked zone -------------------------------------------
 	local zone = Zones.ForStage((picked - 1) * 10 + 1)
-	Kit.label({ Size = UDim2.new(1, 0, 0, 20), Position = UDim2.fromOffset(2, MAP_HEIGHT + 4), Text = ("%s  -  stages %d-%d.  You are on stage %d (furthest %d). Tap a cleared stage to farm it."):format(zone.Name, zone.FirstStage, zone.LastStage, party.Stage, party.Frontier), TextSize = 12, TextColor3 = C.Dim, Parent = container })
+	Kit.label({ Size = UDim2.new(1, -150, 0, 20), Position = UDim2.fromOffset(2, MAP_HEIGHT + 4), Text = ("%s  -  stages %d-%d.  On stage %d (furthest %d). Tap a cleared stage to farm it."):format(zone.Name, zone.FirstStage, zone.LastStage, party.Stage, party.Frontier), TextSize = 12, TextColor3 = C.Dim, Parent = container })
+
+	-- every stage cleared this season leaves a reward to claim (Shared StageRewards rules; the server pays it)
+	local claimed = {}
+	for _, stage in ipairs(state.Player.StageClaims or {}) do
+		claimed[stage] = true
+	end
+	local waiting = 0
+	for stage = 1, party.Frontier - 1 do
+		if not claimed[stage] then
+			waiting += 1
+		end
+	end
+	local claimAll = Kit.button({
+		Size = UDim2.fromOffset(140, 22), Position = UDim2.new(1, -140, 0, MAP_HEIGHT + 3), Text = if waiting > 0 then ("Claim all rewards (%d)"):format(waiting) else "All rewards claimed", TextSize = 12,
+		BackgroundColor3 = if waiting > 0 then C.Accent else C.Panel, TextColor3 = if waiting > 0 then Color3.fromRGB(30, 24, 10) else C.Dim, Parent = container,
+	}, function()
+		if waiting > 0 then
+			call("ClaimAllStages")
+		end
+	end)
+	claimAll.Active = waiting > 0
 	local strip = Kit.frame({ Size = UDim2.new(1, 0, 0, 40), Position = UDim2.fromOffset(0, MAP_HEIGHT + 26), BackgroundTransparency = 1, NoCorner = true, Parent = container })
 	Kit.new("UIGridLayout", { CellSize = UDim2.new(0.1, -4, 0, 38), CellPadding = UDim2.fromOffset(4, 0), Parent = strip })
 	for i = 0, 9 do
@@ -228,6 +250,29 @@ function MapScreen.Map(container, state, call, extra)
 			end
 		end)
 		b.Active = unlocked
+		-- reward badge in the corner: 🎁 to claim, ✅ once claimed (✔ does not render in Roblox fonts); the frontier stage has none until it is cleared
+		if stage < party.Frontier then
+			local ready = not claimed[stage]
+			local badge = Kit.button({
+				-- dark behind the gift: on the gold accent the small 🎁 reads as a "T"
+				Size = UDim2.fromOffset(22, 18), Position = UDim2.new(1, -18, 0, -7), Text = if ready then "🎁" else "✅", TextSize = 12, ZIndex = 5,
+				BackgroundColor3 = C.Panel, TextColor3 = C.Good, Parent = b,
+			}, function()
+				if ready then
+					call("ClaimStage", stage)
+				end
+			end)
+			if ready then
+				Kit.new("UIStroke", { Color = C.Accent, Thickness = 1.5, Parent = badge })
+			end
+			Kit.Hover(badge, function()
+				return ("<b>Stage %d reward</b>\n%s\n%s"):format(stage, StageRewards.Text(stage), if ready then "Tap to claim" else "Claimed")
+			end)
+		elseif unlocked then
+			Kit.Hover(b, function()
+				return ("<b>Stage %d reward</b>\n%s\nClear this stage to unlock it"):format(stage, StageRewards.Text(stage))
+			end)
+		end
 	end
 end
 

@@ -52,5 +52,13 @@ return function(modulesOverride)
 	check("Claim all again does nothing", select(2, StageRewards.ClaimAll(p)).Count == 0)
 	check("A bad stage is refused", select(2, StageRewards.Claim(p, 0)) == "BadStage" and select(2, StageRewards.Claim(p, "x")) == "BadStage")
 	check("The reward text names the wishes on a boss", StageRewards.Text(10):find("Pet Wish") ~= nil and StageRewards.Text(9):find("Pet Wish") == nil)
+
+	-- claims are keyed by stage STRING (sparse number keys are lost on the way to the client); older number keys move over
+	local list = StageRewards.ClaimedList(p)
+	check("The claimed list is a plain sorted list of stage numbers", #list == 11 and list[1] == 1 and list[11] == 11)
+	p.Season.HighestStage = 30
+	p.Season.StageClaims = { [5] = true, [20] = true }
+	check("Older number-keyed claims still count", StageRewards.Status(p, 5) == "Claimed" and StageRewards.Status(p, 20) == "Claimed" and StageRewards.Status(p, 6) == "Ready")
+	check("...and are stored as strings afterwards", p.Season.StageClaims["5"] == true and p.Season.StageClaims[5] == nil)
 	print(("StageRewardsTests done: %d passed, %d failed"):format(passed, failed))
 end

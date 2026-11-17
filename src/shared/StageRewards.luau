@@ -53,11 +53,33 @@ local function claims(profile)
 	if type(season.StageClaims) ~= "table" then
 		season.StageClaims = {}
 	end
-	return season.StageClaims
+	-- keyed by the stage as a STRING ("5"): a table keyed by stage numbers with gaps does not survive being
+	-- sent to the client or saved. Older data used numbers: move them over.
+	local claimsTable = season.StageClaims
+	for key, value in pairs(claimsTable) do
+		if type(key) == "number" then
+			claimsTable[key] = nil
+			claimsTable[tostring(key)] = value
+		end
+	end
+	return claimsTable
+end
+
+-- the claimed stages as a plain sorted list of numbers (safe to send to the client)
+function StageRewards.ClaimedList(profile)
+	local list = {}
+	for key in pairs(claims(profile)) do
+		local stage = tonumber(key)
+		if stage then
+			table.insert(list, stage)
+		end
+	end
+	table.sort(list)
+	return list
 end
 
 function StageRewards.Status(profile, stage)
-	if claims(profile)[stage] then
+	if claims(profile)[tostring(stage)] then
 		return "Claimed"
 	end
 	if stage < profile.Season.HighestStage then
@@ -78,7 +100,7 @@ local function pay(profile, stage)
 	if r.SkillWish > 0 then
 		Consumables.Grant(profile, "SkillWish", r.SkillWish)
 	end
-	claims(profile)[stage] = true
+	claims(profile)[tostring(stage)] = true
 	return r
 end
 
@@ -99,7 +121,7 @@ function StageRewards.ReadyCount(profile)
 	local n = 0
 	local done = claims(profile)
 	for stage = 1, profile.Season.HighestStage - 1 do
-		if not done[stage] then
+		if not done[tostring(stage)] then
 			n += 1
 		end
 	end
@@ -110,7 +132,7 @@ function StageRewards.ClaimAll(profile)
 	local total = { Count = 0, Gold = 0, Shards = 0, Wishstones = 0, PetWish = 0, SkillWish = 0 }
 	local done = claims(profile)
 	for stage = 1, profile.Season.HighestStage - 1 do
-		if not done[stage] then
+		if not done[tostring(stage)] then
 			local r = pay(profile, stage)
 			total.Count += 1
 			total.Gold += r.Gold

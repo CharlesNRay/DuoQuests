@@ -223,7 +223,7 @@ local function buildState(player)
 			Sunstones = Premium.Sunstones(profile),
 			PremiumShop = Premium.List(profile),
 			Passes = Passes.List(profile),
-			StageClaims = profile.Season.StageClaims or {},
+			StageClaims = StageRewards.ClaimedList(profile), -- a list of stage numbers
 			Perks = Passes.Perks(profile),
 			PremiumOffer = Premium.Offer(profile),
 			SunstonePacks = Premium.Packs(profile),
