@@ -69,6 +69,9 @@ function StageRunner.NewParty(members)
 			for _, mod in ipairs(Pets.Collection(member.Profile).Mods) do -- the permanent bonus for the pets you have collected
 				table.insert(extraMods, mod)
 			end
+			for _, mod in ipairs(Pets.SecondMods(member.Profile)) do -- VIP second pet slot: its stat bonuses (it does not fight)
+				table.insert(extraMods, mod)
+			end
 		else
 			local snapshot = member.Snapshot
 			classId, level = snapshot.ClassId, snapshot.Level

@@ -208,6 +208,8 @@ local function buildState(player)
 			PetCollection = (function() local c = Pets.Collection(profile) return { Points = c.Points, Percent = c.Percent } end)(),
 			Wishing = { Pet = Wishing.Info(profile, "Pet"), Skill = Wishing.Info(profile, "Skill") },
 			ActivePet = (Pets.Active(profile)),
+			SecondPet = (Pets.Second(profile)), -- VIP second pet slot (nil when empty or not VIP)
+			HasSecondPetSlot = Pets.HasSecondSlot(profile),
 			SubclassId = Subclasses.Current(profile, classId),
 			SubclassChoices = subclassChoices(profile, classId),
 			SubclassUnlockLevel = (Subclasses.Choices(classId, Subclasses.Current(profile, classId))[1] or {}).UnlockLevel,
@@ -598,6 +600,18 @@ function handlers.EquipPet(player, profile, petId)
 		return false, "BadArgs"
 	end
 	local ok, reason = Pets.Equip(profile, petId)
+	if ok then
+		afterBuildChange(player)
+	end
+	return ok, reason
+end
+
+-- VIP second pet slot (petId "" empties it)
+function handlers.EquipSecondPet(player, profile, petId)
+	if type(petId) ~= "string" then
+		return false, "BadArgs"
+	end
+	local ok, reason = Pets.EquipSecond(profile, petId)
 	if ok then
 		afterBuildChange(player)
 	end

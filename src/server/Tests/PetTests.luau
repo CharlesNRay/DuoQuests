@@ -189,5 +189,25 @@ return function(modulesOverride)
 	check("Ranking a pet up raises the collection bonus", Pets.Collection(sp).Points > c1.Points)
 	check("A snapshot carries the pet rank", snap.PetRank == 1)
 
+	-- VIP second pet slot ------------------------------------------------------------------------------
+	local vp = ProfileTemplate.New()
+	vp.Permanent.Pets = { Slimey = true, Foxling = true }
+	Pets.Equip(vp, "Slimey")
+	check("Without VIP there is no second slot", not Pets.HasSecondSlot(vp) and select(2, Pets.EquipSecond(vp, "Foxling")) == "NeedVIP" and #Pets.SecondMods(vp) == 0)
+	vp.Permanent.Passes = { VIP = true }
+	check("VIP opens the second slot", Pets.HasSecondSlot(vp))
+	check("The main pet cannot also be the second", select(2, Pets.EquipSecond(vp, "Slimey")) == "AlreadyMain")
+	check("An unowned pet cannot be the second", select(2, Pets.EquipSecond(vp, "Mossback")) == "NotOwned")
+	check("A second pet adds its stat bonuses", Pets.EquipSecond(vp, "Foxling") == true and Pets.Second(vp) == "Foxling" and #Pets.SecondMods(vp) == #Pets.Mods("Foxling", Pets.Level(vp, "Foxling"), Pets.Rank(vp, "Foxling")) and #Pets.SecondMods(vp) > 0)
+	local vsnap = m.Party.MakeSnapshot(vp, 7, "V", nil, 0)
+	check("A ghost snapshot keeps the second pet's bonuses", #vsnap.CollectionMods == #Pets.Collection(vp).Mods + #Pets.SecondMods(vp))
+	Pets.Equip(vp, "Foxling")
+	check("Making the second pet the main one empties the second slot", Pets.Second(vp) == nil and (Pets.Active(vp)) == "Foxling")
+	Pets.EquipSecond(vp, "Slimey")
+	check("Clearing the second slot works", Pets.EquipSecond(vp, "") == true and Pets.Second(vp) == nil)
+	vp.Permanent.Passes = {}
+	Pets.EquipSecond(vp, nil)
+	check("Losing VIP switches the second pet off", Pets.Second(vp) == nil and #Pets.SecondMods(vp) == 0)
+
 	print(("PetTests done: %d passed, %d failed"):format(passed, failed))
 end

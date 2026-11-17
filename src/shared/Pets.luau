@@ -325,8 +325,61 @@ function Pets.Equip(profile, petId)
 	if not owned(profile, petId) then
 		return false, "NotOwned"
 	end
-	account(profile).ActivePet = petId
+	local acc = account(profile)
+	acc.ActivePet = petId
+	if acc.SecondPet == petId then
+		acc.SecondPet = nil -- a pet cannot fill both slots
+	end
 	return true
+end
+
+-- Second pet slot (VIP perk PetSlots): a support pet. Its stat bonuses count like the main pet's,
+-- but only the main pet fights and uses its skill.
+local Passes = require(script.Parent.Passes)
+function Pets.HasSecondSlot(profile)
+	return (Passes.Perks(profile).PetSlots or 0) >= 1
+end
+
+function Pets.Second(profile)
+	if not Pets.HasSecondSlot(profile) then
+		return nil
+	end
+	local id = account(profile).SecondPet
+	if type(id) ~= "string" or Config.Defs[id] == nil or not owned(profile, id) or id == (Pets.Active(profile)) then
+		return nil
+	end
+	return id, Pets.Level(profile, id), Pets.Rank(profile, id)
+end
+
+-- petId nil (or "") empties the slot
+function Pets.EquipSecond(profile, petId)
+	if not Pets.HasSecondSlot(profile) then
+		return false, "NeedVIP"
+	end
+	if petId == nil or petId == "" then
+		account(profile).SecondPet = nil
+		return true
+	end
+	if type(petId) ~= "string" or Config.Defs[petId] == nil then
+		return false, "UnknownPet"
+	end
+	if not owned(profile, petId) then
+		return false, "NotOwned"
+	end
+	if petId == (Pets.Active(profile)) then
+		return false, "AlreadyMain"
+	end
+	account(profile).SecondPet = petId
+	return true
+end
+
+-- the second pet's stat bonuses (empty when there is none)
+function Pets.SecondMods(profile)
+	local id, level, rank = Pets.Second(profile)
+	if id == nil then
+		return {}
+	end
+	return Pets.Mods(id, level, rank)
 end
 
 -- Pet XP: pets level up from pet food and from fighting (see Progression). XP to go from level L to L+1

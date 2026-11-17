@@ -42,9 +42,9 @@ Git Bash; they find a working Python themselves (`python3`/`python` there are St
    Open UI nit: the map badge hover tooltip has not been seen.
    Watch for: tables keyed by numbers with gaps do not survive remotes (pet gear Equipped and StageClaims were hit); ✔ and newer emoji (🪙 🪢 🪦, Unicode 13+) do not render.
    Balance questions for the owner: Market "Pet Food x5" = 2,304g vs Pet Store Pet Snack 6,900g each (same item); one Forgotten Crypt run
-   at stage 6 paid ~9.7K gold (3 keys/day); VIP row promises "a second pet slot" but perk PetSlots is unused. (and season auras), tutorial arrow/card, combat log views, map claim badges, tooltips, class-choose flow, pet follower, Battle hub dungeons/expeditions, Market tab, VIP row. Rojo must be reconnected via VS Code first.
+   at stage 6 paid ~9.7K gold (3 keys/day). (and season auras), tutorial arrow/card, combat log views, map claim badges, tooltips, class-choose flow, pet follower, Battle hub dungeons/expeditions, Market tab, VIP row. Rojo must be reconnected via VS Code first.
 2. Test hero in `tools/sim` does not yet use pet gear, pet food or pet leveling; pets are probably worth more than the numbers show. Check replay Wishstone income (maybe too generous).
-3. Restyle remaining screens (Hero, Skills, Party, Bag, Map, Quests, Boss, Store, Wish) in the card/detail style; second pet slot for VIP (perk `PetSlots` is defined but unused).
+3. Restyle remaining screens (Hero, Skills, Party, Bag, Map, Quests, Boss, Store, Wish) in the card/detail style. VIP second pet slot done 2026-11-16 (`Pets.Second`, support pet: its stats count, only the main pet fights; Pets screen "Set 2nd"; not seen in Studio).
 4. Not started: stack counts on monsters, guild chat, gifting, cosmetics try-on; show an on-screen notice for the skipped-tutorial payout.
 5. Owner-side: create the VIP Game Pass + Sunstone Developer Products and give the ids (`GamePassId`/`ProductId` are 0); upload `branding/logo.png` and set `Config/Branding.LogoImage`.
 6. `docs/ROADMAP.md` only covers up to the 2026-11-16 morning entry; add the items above.

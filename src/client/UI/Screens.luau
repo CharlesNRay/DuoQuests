@@ -764,6 +764,8 @@ function Screens.Pets(container, state, call, extra)
 			Kit.label({ Size = UDim2.new(1, -4, 0, 12), Position = UDim2.fromOffset(2, 70), Text = ("Lv %d  %s"):format(pet.Level, string.rep("★", pet.Rank or 1)), TextSize = 10, TextXAlignment = Enum.TextXAlignment.Center, TextColor3 = C.Dim, Parent = card })
 			if pet.Active then
 				Kit.label({ Size = UDim2.fromOffset(16, 14), Position = UDim2.fromOffset(3, 2), Text = "✅", TextSize = 11, TextColor3 = C.Accent, Parent = card })
+			elseif pet.Id == state.Player.SecondPet then
+				Kit.label({ Size = UDim2.fromOffset(26, 14), Position = UDim2.fromOffset(3, 2), Text = "2nd", TextSize = 10, Font = Enum.Font.GothamBold, TextColor3 = C.Accent, Parent = card })
 			end
 			if (pet.RankCost or 1) <= (pet.Copies or 0) and (pet.Rank or 1) < (pet.MaxRank or 1) then
 				Kit.label({ Size = UDim2.fromOffset(16, 14), Position = UDim2.new(1, -19, 0, 2), Text = "▲", TextSize = 12, TextColor3 = Color3.fromRGB(130, 235, 150), Parent = card })
@@ -787,6 +789,23 @@ function Screens.Pets(container, state, call, extra)
 	Kit.label({ Size = UDim2.new(1, -78, 0, 22), Position = UDim2.fromOffset(72, 10), Text = pet.Name, TextSize = 17, Font = Enum.Font.GothamBold, TextColor3 = color, Parent = detail })
 	Kit.label({ Size = UDim2.new(1, -78, 0, 16), Position = UDim2.fromOffset(72, 32), Text = ("%s  |  Lv %d / %d"):format(pet.Rarity, pet.Level, pet.MaxLevel), TextSize = 12, TextColor3 = C.Dim, Parent = detail })
 	Kit.label({ Size = UDim2.new(1, -78, 0, 16), Position = UDim2.fromOffset(72, 48), Text = string.rep("★", pet.Rank or 1) .. string.rep("☆", (pet.MaxRank or 1) - (pet.Rank or 1)), TextSize = 13, TextColor3 = C.Accent, Parent = detail })
+	-- VIP second pet slot: a support pet whose stat bonuses count too (only the main pet fights)
+	if not pet.Active then
+		local vip = state.Player.HasSecondPetSlot == true
+		local isSecond = pet.Id == state.Player.SecondPet
+		local second = Kit.button({
+			Size = UDim2.fromOffset(84, 22), Position = UDim2.new(1, -92, 0, 70),
+			Text = if not vip then "🔒 2nd slot" elseif isSecond then "Remove 2nd" else "Set 2nd", TextSize = 11,
+			BackgroundColor3 = if vip and not isSecond then C.Accent else C.PanelLight, TextColor3 = if vip and not isSecond then Color3.fromRGB(30, 24, 10) else C.Dim, Parent = detail,
+		}, function()
+			if vip then
+				call("EquipSecondPet", if isSecond then "" else pet.Id)
+			end
+		end)
+		Kit.Hover(second, function()
+			return if vip then "Second pet slot: this pet's stat bonuses count too. Only your main pet fights." else "VIP: a second pet slot. Its stat bonuses count too (only your main pet fights)."
+		end)
+	end
 	Kit.label({ Size = UDim2.new(1, -20, 0, 18), Position = UDim2.fromOffset(10, 70), Text = ("IP %s"):format(NumberFormat.Short(Power.Pet(pet.Id, pet.Level, pet.Rank))), TextSize = 14, Font = Enum.Font.GothamBold, Parent = detail })
 	-- the description and pet skill scroll in the space between the IP line and the buttons, so nothing hides behind them
 	local info = Kit.new("ScrollingFrame", { Size = UDim2.new(1, -14, 1, -148), Position = UDim2.fromOffset(10, 90), BackgroundTransparency = 1, BorderSizePixel = 0, CanvasSize = UDim2.new(), AutomaticCanvasSize = Enum.AutomaticSize.Y, ScrollBarThickness = 3, Parent = detail })

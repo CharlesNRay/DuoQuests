@@ -215,7 +215,13 @@ function Party.MakeSnapshot(profile, userId, name, previous, now)
 		PetRank = petRank,
 		SubclassId = season.Subclasses and season.Subclasses[classId] or nil,
 		Gear = TableUtil.DeepCopy((season.Equipment and season.Equipment.Equipped) or {}),
-		CollectionMods = Pets.Collection(profile).Mods,
+		CollectionMods = (function() -- the pet-collection bonus plus the VIP second pet's stats, so a ghost keeps both
+			local mods = table.clone(Pets.Collection(profile).Mods)
+			for _, mod in ipairs(Pets.SecondMods(profile)) do
+				table.insert(mods, mod)
+			end
+			return mods
+		end)(),
 		Level = season.Level,
 		Frontier = season.HighestStage,
 		SlotLevels = SkillProgress.SlotLevelsFor(season, season.Loadouts[classId], classId),
