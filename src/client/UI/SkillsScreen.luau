@@ -581,7 +581,7 @@ function SkillsScreen.Skills(container, state, call, extra)
 		for _, n in pairs(info.Copies or {}) do
 			copies += n
 		end
-		local eatBtn = actionButton(right, if info.CanConsume then ("Consume %d  (+%d XP)"):format(copies, info.CopyXP) elseif copies > 0 then "Max rank" else "No spare copies", 0, if info.CanConsume then C.Accent else C.Panel, function()
+		local eatBtn = actionButton(right, if info.CanConsume then (if info.Rank >= info.MaxRank then ("Cash in %d copies  (Skill Shards)"):format(copies) else ("Consume %d  (+%d XP)"):format(copies, info.CopyXP)) elseif copies > 0 then "Max rank" else "No spare copies", 0, if info.CanConsume then C.Accent else C.Panel, function()
 			if info.CanConsume then
 				call("ConsumeSkillCopies", selectedId, "All")
 			end
@@ -592,7 +592,7 @@ function SkillsScreen.Skills(container, state, call, extra)
 		if info.CanConsume then
 			eatBtn.TextColor3 = Color3.fromRGB(30, 24, 10)
 		end
-		Kit.Hover(eatBtn, function() return "Spare copies from the Wishing Tree are banked. Consume them (same or lower rarity than this skill) to gain XP toward the next rank." end)
+		Kit.Hover(eatBtn, function() return "Spare copies from the Wishing Tree are banked. Consume them (same or lower rarity than this skill) to gain XP toward the next rank. At max rank a copy pays Skill Shards instead. Slot levels are trained at the Skill Trainer in the plaza." end)
 		local pending = info.Pending ~= nil and info.CanUpgrade
 		local upBtn = actionButton(right, if pending then ("Upgrade to " .. info.Pending .. "!") else "No upgrade waiting", 0, if pending then C.Accent else C.Panel, function()
 			if pending then

@@ -8,10 +8,10 @@
 	true, or false plus a reason, and changes NOTHING when it fails.
 
 	  SkillProgress.Get(season, id)              -> { Tier, Rank, XP, Pending?, XPNeeded?, CanRank, CanUpgrade, Level }
-	  SkillProgress.Level(season, id)            -> effective combat level (Rank + tier bonus), 1..20
+	  SkillProgress.Level(season, id)            -> effective combat level (Rank + tier bonus), 1..20; the slot level adds on top (SlotLevelsFor)
 	  SkillProgress.LevelMap(season)             -> { [id] = level } for every owned skill
 	  SkillProgress.LevelsFor(loadout, map)      -> list of levels by slot
-	  SkillProgress.Receive(season, id, rarity)  a skill copy was won: returns "New" | "Upgrade" | "Copy", amount?
+	  SkillProgress.Receive(season, id, rarity)  a skill copy was won: returns "New" | "Upgrade" | "Copy" | "Excess" (Skill Shards paid), amount?
 	  SkillProgress.Consume(profile, id, rarity|"All")  spend banked copies (same or lower rarity) as XP
 	  SkillProgress.RankUp(profile, id)          spend XP for the next rank  (reasons: "NotOwned", "MaxRank", "NotEnoughXP")
 	  SkillProgress.Upgrade(profile, id)         apply a waiting higher tier   (reasons: "NotOwned", "NothingWaiting")
@@ -102,13 +102,13 @@ function SkillProgress.Get(season, id)
 		Tier = s.Tier or baseTier(id), Rank = rank, MaxRank = Config.MaxRank, XP = s.XP or 0, XPNeeded = need, Pending = s.Pending,
 		CanRank = owned and need ~= nil and (s.XP or 0) >= need,
 		CanUpgrade = owned and s.Pending ~= nil and TIER_RANK[s.Pending] > TIER_RANK[s.Tier or baseTier(id)],
-		Copies = copiesOf(s), CopyXP = copyXP(s), CanConsume = owned and rank < Config.MaxRank and copyXP(s) > 0,
+		Copies = copiesOf(s), CopyXP = copyXP(s), CanConsume = owned and copyXP(s) > 0,
 		Level = rank + math.max(0, Config.TierBonus[s.Tier or baseTier(id)] - Config.TierBonus[baseTier(id)]),
 	}
 end
 
 function SkillProgress.Level(season, id)
-	return math.clamp(SkillProgress.Get(season, id).Level, 1, 20)
+	return math.clamp(SkillProgress.Get(season, id).Level, 1, Config.MaxRank) -- rank + tier part, capped at 20 (slot levels add on top)
 end
 
 function SkillProgress.LevelMap(season)
@@ -129,8 +129,28 @@ function SkillProgress.LevelsFor(loadout, map)
 	return levels
 end
 
-function SkillProgress.SlotLevelsFor(season, loadout)
-	return SkillProgress.LevelsFor(loadout, SkillProgress.LevelMap(season))
+-- The extra levels each slot adds (slot level - 1), leveled with gold at the Skill Trainer
+function SkillProgress.SlotBonus(season, classId, count)
+	local levels = season.SlotLevels and season.SlotLevels[classId or season.ClassId] or {}
+	local bonus = {}
+	for index = 1, count do
+		bonus[index] = math.max(0, math.floor((levels[index] or 1) - 1))
+	end
+	return bonus
+end
+
+-- levels (by slot) plus the slot bonus, capped at the max skill level
+function SkillProgress.WithBonus(levels, bonus)
+	local out = {}
+	for index, level in ipairs(levels or {}) do
+		out[index] = math.clamp(level + ((bonus and bonus[index]) or 0), 1, Config.MaxLevel)
+	end
+	return out
+end
+
+function SkillProgress.SlotLevelsFor(season, loadout, classId)
+	local base = SkillProgress.LevelsFor(loadout, SkillProgress.LevelMap(season))
+	return SkillProgress.WithBonus(base, SkillProgress.SlotBonus(season, classId, #(loadout or {})))
 end
 
 -- { [id] = Get(...) } for every owned skill (what the client shows)
@@ -167,6 +187,11 @@ function SkillProgress.Receive(season, id, rarity)
 		s.Pending = rarity
 		return "Upgrade", displaced
 	end
+	if s.Rank >= Config.MaxRank then -- nothing left for a copy to raise: it pays Skill Shards instead
+		local shards = Config.DupShards[rarity] or 1
+		season.Currencies.Shards = (season.Currencies.Shards or 0) + shards
+		return "Excess", shards
+	end
 	s.Copies = s.Copies or {}
 	s.Copies[rarity] = (s.Copies[rarity] or 0) + 1
 	return "Copy", 1
@@ -181,6 +206,16 @@ function SkillProgress.Consume(profile, id, rarity)
 	end
 	local s = stateOf(season, id, true)
 	if s.Rank >= Config.MaxRank then
+		-- copies banked before the skill maxed out are paid out as shards
+		local shards = 0
+		for name, n in pairs(s.Copies or {}) do
+			shards += n * (Config.DupShards[name] or 1)
+			s.Copies[name] = 0
+		end
+		if shards > 0 then
+			season.Currencies.Shards = (season.Currencies.Shards or 0) + shards
+			return true, shards, "Shards"
+		end
 		return false, "MaxRank"
 	end
 	local ceiling = math.max(TIER_RANK[s.Tier], s.Pending and TIER_RANK[s.Pending] or 0)

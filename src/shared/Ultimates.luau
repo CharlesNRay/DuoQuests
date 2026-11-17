@@ -81,7 +81,7 @@ function Ultimates.PartyLevel(slotLevelLists)
 	if count == 0 then
 		return 1
 	end
-	return Skills.ClampSlotLevel(math.floor(total / count + 0.5))
+	return Skills.ClampSkillLevel(math.floor(total / count + 0.5))
 end
 
 return Ultimates

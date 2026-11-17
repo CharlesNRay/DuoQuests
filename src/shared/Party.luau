@@ -217,7 +217,8 @@ function Party.MakeSnapshot(profile, userId, name, previous, now)
 		CollectionMods = Pets.Collection(profile).Mods,
 		Level = season.Level,
 		Frontier = season.HighestStage,
-		SlotLevels = SkillProgress.SlotLevelsFor(season, season.Loadouts[classId]),
+		SlotLevels = SkillProgress.SlotLevelsFor(season, season.Loadouts[classId], classId),
+		SlotBonus = SkillProgress.SlotBonus(season, classId, #(season.Loadouts[classId] or {})),
 		SkillLevels = SkillProgress.LevelMap(season),
 		PassiveIds = copyList(season.PassiveLoadouts[classId] or {}), -- view only for the partner
 		PassiveLevels = copyList(season.PassiveSlotLevels[classId] or {}),
@@ -231,7 +232,7 @@ end
 -- The levels a snapshot's ghost fights its skills at, by slot (skill levels follow the SKILL, not the slot)
 function Party.GhostLevels(snapshot)
 	if snapshot.SkillLevels then
-		return SkillProgress.LevelsFor(snapshot.GhostLoadout, snapshot.SkillLevels)
+		return SkillProgress.WithBonus(SkillProgress.LevelsFor(snapshot.GhostLoadout, snapshot.SkillLevels), snapshot.SlotBonus)
 	end
 	return copyList(snapshot.SlotLevels or {})
 end

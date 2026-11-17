@@ -25,10 +25,14 @@
 
 return {
 	MaxRank = 20,
+	-- the skill's COMBAT level = rank + tier head start + (the level of the SLOT it sits in - 1); the slot is leveled with gold at the Skill Trainer
+	MaxLevel = 40,
 	-- slow at the top: each rank costs ~24 percent more than the one before (3663 XP from rank 1 to 20)
 	RankXP = { 15, 19, 23, 29, 35, 44, 55, 68, 84, 104, 129, 160, 198, 246, 305, 378, 469, 581, 721 },
 	TierBonus = { Common = 0, Rare = 2, Epic = 5, Legendary = 9 }, -- a higher TIER is a head start of several ranks (each rank adds to the skill's numbers)
 	DupXP = { Common = 10, Rare = 25, Epic = 60, Legendary = 150 },
+	-- a copy that can no longer raise the skill's rank (max rank) pays Skill Shards instead (Go Go Muffin / Ulala style compensation)
+	DupShards = { Common = 2, Rare = 5, Epic = 12, Legendary = 30 },
 	TierOrder = { "Common", "Rare", "Epic", "Legendary" },
 	-- unowned skills are this much more likely to be picked than owned ones (so new skills turn up early)
 	NewSkillWeight = 3,

@@ -97,6 +97,39 @@ return function(modulesOverride)
 	check("A snapshot carries per-skill levels for the ghost", snap.SkillLevels[common] == SP.Level(season, common))
 	check("Ghost levels follow the ghost's loadout", m.Party.GhostLevels(snap)[1] == (snap.SkillLevels[snap.GhostLoadout[1]] or 1))
 
+
+	-- slot levels (trained with gold at the Skill Trainer) add on top of the skill's own level
+	local slotProfile = m.ProfileTemplate.New()
+	slotProfile.Permanent.UnlockedClasses.Warrior = true
+	m.ProfileTemplate.GrantStarterAbilities(slotProfile)
+	slotProfile.Season.ClassId = "Warrior"
+	local sSeason = slotProfile.Season
+	local sLoadout = sSeason.Loadouts.Warrior
+	local before = SP.SlotLevelsFor(sSeason, sLoadout, "Warrior")
+	sSeason.Currencies.Gold = 1e9
+	check("Training a slot works", m.Economy.LevelSlot(slotProfile, "Warrior", 1) == true)
+	local after = SP.SlotLevelsFor(sSeason, sLoadout, "Warrior")
+	check("A trained slot adds one level to its skill", after[1] == before[1] + 1 and after[2] == before[2])
+	local swappedLoadout = { sLoadout[2], sLoadout[1] }
+	local swappedLevels = SP.SlotLevelsFor(sSeason, swappedLoadout, "Warrior")
+	check("The level stays with the SLOT when skills are swapped", swappedLevels[1] == SP.Level(sSeason, sLoadout[2]) + 1)
+	check("Slot bonus lists one entry per slot", #SP.SlotBonus(sSeason, "Warrior", 4) == 4 and SP.SlotBonus(sSeason, "Warrior", 4)[1] == 1)
+	local snapS = m.Party.MakeSnapshot(slotProfile, 8, "P", nil, 0)
+	check("A snapshot carries the slot bonus for the ghost", snapS.SlotBonus[1] == 1 and m.Party.GhostLevels(snapS)[1] == after[1])
+	check("Combined levels never pass the max skill level", SP.WithBonus({ 20 }, { 99 })[1] == m.Skills.MAX_LEVEL)
+
+	-- spare copies of a maxed skill pay Skill Shards instead of banking
+	local maxId = starter
+	season.SkillState[maxId] = season.SkillState[maxId] or { Tier = SP.BaseTier(maxId), Rank = 1, XP = 0 }
+	season.SkillState[maxId].Rank = Cfg.MaxRank
+	local shardsBefore = season.Currencies.Shards
+	local got, amount = SP.Receive(season, maxId, season.SkillState[maxId].Tier)
+	check("A copy of a max rank skill pays shards", got == "Excess" and amount == Cfg.DupShards[season.SkillState[maxId].Tier] and season.Currencies.Shards == shardsBefore + amount)
+	check("An excess copy is not banked", ((season.SkillState[maxId].Copies or {})[season.SkillState[maxId].Tier] or 0) == 0)
+	season.SkillState[maxId].Copies = { Common = 3 }
+	local cashed, paid, kind = SP.Consume(profile, maxId, "All")
+	check("Copies banked before max rank cash in for shards", cashed == true and kind == "Shards" and paid == 3 * Cfg.DupShards.Common)
+
 	-- pacing maths
 	local total = 0
 	for r = 1, Cfg.MaxRank - 1 do total += Cfg.RankXP[r] end

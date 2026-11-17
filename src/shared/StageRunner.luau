@@ -73,7 +73,7 @@ function StageRunner.NewParty(members)
 			local snapshot = member.Snapshot
 			classId, level = snapshot.ClassId, snapshot.Level
 			loadout = snapshot.GhostLoadout
-			slotLevels = if snapshot.SkillLevels then SkillProgress.LevelsFor(loadout, snapshot.SkillLevels) else snapshot.SlotLevels
+			slotLevels = if snapshot.SkillLevels then SkillProgress.WithBonus(SkillProgress.LevelsFor(loadout, snapshot.SkillLevels), snapshot.SlotBonus) else snapshot.SlotLevels
 			passiveIds, passiveLevels = snapshot.PassiveIds, snapshot.PassiveLevels
 			petId, petLevel, petRank = snapshot.PetId, snapshot.PetLevel, snapshot.PetRank
 			subclassId = snapshot.SubclassId
@@ -114,7 +114,7 @@ function StageRunner.UltimateFor(members, frontier, chosenId)
 		else
 			classes[index] = member.Snapshot.ClassId
 			local snap = member.Snapshot
-			levelLists[index] = if snap.SkillLevels then SkillProgress.LevelsFor(snap.GhostLoadout, snap.SkillLevels) else snap.SlotLevels
+			levelLists[index] = if snap.SkillLevels then SkillProgress.WithBonus(SkillProgress.LevelsFor(snap.GhostLoadout, snap.SkillLevels), snap.SlotBonus) else snap.SlotLevels
 		end
 	end
 	local id = Ultimates.Resolve(classes[1], classes[2], frontier, chosenId)

@@ -69,7 +69,7 @@ function StatCalc.ClassAbilities(classId, abilityIds, slotLevels)
 	local slots = {}
 	for index, abilityId in ipairs(abilityIds or class.DefaultLoadout) do
 		local level = if slotLevels then slotLevels[index] else nil
-		table.insert(slots, { Id = abilityId, Level = Skills.ClampSlotLevel(level or 1) })
+		table.insert(slots, { Id = abilityId, Level = Skills.ClampSkillLevel(level or 1) })
 	end
 	return slots
 end
@@ -79,11 +79,11 @@ end
 function StatCalc.WithPetSkill(slots, petId, rank)
 	local skillId = petId and Pets.SkillId(petId)
 	if skillId then
-		table.insert(slots, { Id = skillId, Level = Skills.ClampSlotLevel(rank or 1) })
+		table.insert(slots, { Id = skillId, Level = Skills.ClampSkillLevel(rank or 1) })
 	end
 	local def = petId and Pets.Defs[petId]
 	if def then -- every pet also fights: a steady strike scaled by its rarity and rank
-		table.insert(slots, { Id = "Pet_Strike_" .. def.Rarity, Level = Skills.ClampSlotLevel(rank or 1), Timer = 1.5 })
+		table.insert(slots, { Id = "Pet_Strike_" .. def.Rarity, Level = Skills.ClampSkillLevel(rank or 1), Timer = 1.5 })
 	end
 	return slots
 end

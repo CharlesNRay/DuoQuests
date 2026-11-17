@@ -295,6 +295,8 @@ function Wishing.Wish(profile, kind, tierId, method, count, rng)
 			row.Upgrade = got == "Upgrade" or nil
 			if got == "Copy" then
 				row.Copies = 1 -- banked; consume it on the Skills page
+			elseif got == "Excess" then
+				row.Shard, row.Shards = true, amount -- the skill is maxed: the copy pays Skill Shards
 			end
 		end
 		table.insert(results, row)

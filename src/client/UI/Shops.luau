@@ -4,6 +4,7 @@
 
 	  Shops.Merchant(container, state, call, extra)   sell bagged gear, one piece or in bulk
 	  Shops.Blacksmith(container, state, call, extra) upgrade worn or bagged gear with gold
+	  Shops.Trainer(container, state, call, extra)    level the skill slots with gold
 ]]
 local Short = require(game:GetService("ReplicatedStorage"):WaitForChild("Shared").Util.NumberFormat).Short
 local Kit = require(script.Parent.Kit)
@@ -196,6 +197,39 @@ function Shops.Blacksmith(container, state, call)
 	end
 	if not any then
 		Kit.label({ Size = UDim2.new(1, 0, 0, 50), Text = "\"Bring me something to work on.\"", TextColor3 = C.Dim, Parent = scroll })
+	end
+end
+
+-- Skill Trainer ---------------------------------------------------------------
+-- A slot's level stays with the SLOT: swap the skill in it and the level stays. Skill rank (from copies) adds on top.
+function Shops.Trainer(container, state, call)
+	local me = state.Player
+	local Skills = require(game:GetService("ReplicatedStorage"):WaitForChild("Shared").Skills)
+	local Economy = require(game:GetService("ReplicatedStorage"):WaitForChild("Shared").Economy)
+	local Abilities = require(game:GetService("ReplicatedStorage"):WaitForChild("Shared").Config.Abilities)
+	local scroll = list(container, 40)
+	Kit.label({ Size = UDim2.new(1, 0, 0, 38), Text = ("Gold: %s\nEach slot level adds +1 to the skill in it. Rank (from spare copies) adds on top."):format(Short(gold(state))), TextColor3 = C.Accent, TextSize = 13, TextWrapped = true, Parent = container })
+	for slot, id in ipairs(me.Loadout) do
+		local def = Abilities[id]
+		local base = (me.SlotBase or {})[slot] or 1
+		local r = row(scroll, 60)
+		if def then
+			Icons.Skill(r, def, { Size = UDim2.fromOffset(44, 44), Position = UDim2.fromOffset(8, 8), Level = me.SlotLevels[slot] })
+			Kit.Hover(r, function() return Tips.Skill(def, me.SlotLevels[slot], ((me.SkillInfo or {})[id] or {}).Tier) end)
+		end
+		Kit.label({ Size = UDim2.new(1, -170, 1, 0), Position = UDim2.fromOffset(60, 0), Text = ("Slot %d  -  Lv %d / %d\n%s  (fights at Lv %d)"):format(slot, base, Skills.MAX_SLOT_LEVEL, def and def.DisplayName or "?", me.SlotLevels[slot] or 1), TextColor3 = C.Text, TextSize = 13, Parent = r })
+		if base >= Skills.MAX_SLOT_LEVEL then
+			Kit.label({ Size = UDim2.fromOffset(104, 40), Position = UDim2.new(1, -110, 0.5, -20), Text = "Maxed", TextColor3 = C.Good, TextXAlignment = Enum.TextXAlignment.Center, Parent = r })
+		else
+			local cost = Economy.SlotLevelCost(base)
+			local can = gold(state) >= cost
+			local b = Kit.button({ Size = UDim2.fromOffset(104, 42), Position = UDim2.new(1, -110, 0.5, -21), Text = "Train\n" .. Short(cost) .. "g", BackgroundColor3 = if can then C.Up else C.Panel, TextColor3 = if can then C.Text else C.Dim, Parent = r }, function()
+				if can then
+					call("LevelSlot", slot)
+				end
+			end)
+			b.Active = can
+		end
 	end
 end
 

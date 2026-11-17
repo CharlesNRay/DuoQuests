@@ -188,7 +188,8 @@ local function buildState(player)
 			SkillPicks = season.Currencies.SkillPicks,
 			Frontier = season.HighestStage,
 			Loadout = table.clone(season.Loadouts[classId]),
-			SlotLevels = SkillProgress.SlotLevelsFor(season, season.Loadouts[classId]),
+			SlotLevels = SkillProgress.SlotLevelsFor(season, season.Loadouts[classId], classId),
+			SlotBase = table.clone(season.SlotLevels[classId] or {}),
 			SkillInfo = SkillProgress.Info(season),
 			SkillReady = SkillProgress.AnyReady(season),
 			Owned = table.clone(season.OwnedAbilities),
@@ -631,7 +632,7 @@ function handlers.UnequipGear(player, profile, slotName)
 	return ok, reason
 end
 
--- Selling and upgrading only happen at the Merchant and the Blacksmith in the plaza.
+-- Selling and upgrading only happen at the Merchant, the Blacksmith and the Skill Trainer in the plaza.
 function handlers.SellGear(player, profile, itemId)
 	if type(itemId) ~= "string" then
 		return false, "BadArgs"
@@ -665,6 +666,21 @@ function handlers.UpgradeBag(player, profile)
 		afterBuildChange(player)
 	end
 	return ok, data
+end
+
+-- The Skill Trainer levels a skill SLOT (the level stays with the slot when you swap the skill in it)
+function handlers.LevelSlot(player, profile, slotIndex)
+	if type(slotIndex) ~= "number" then
+		return false, "BadArgs"
+	end
+	if not nearShop(player, "Trainer") then
+		return false, "TooFar"
+	end
+	local ok, reason = Economy.LevelSlot(profile, profile.Season.ClassId, slotIndex)
+	if ok then
+		afterBuildChange(player)
+	end
+	return ok, reason
 end
 
 function handlers.UpgradeGear(player, profile, itemId)

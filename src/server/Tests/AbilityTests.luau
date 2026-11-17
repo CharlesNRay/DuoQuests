@@ -496,7 +496,7 @@ return function(modulesOverride)
 	check("Every slot has the same level cap (20)", Skills.MAX_SLOT_LEVEL == 20)
 	check("Slot levels are clamped to the cap and floor", Skills.ClampSlotLevel(99) == 20 and Skills.ClampSlotLevel(0) == 1 and Skills.ClampSlotLevel(nil) == 1)
 	local levelled = StatCalc.ClassAbilities("Warrior", { "Taunt", "IronSkin", "ShieldBash", "Whirlwind" }, { 5, 99, 3 })
-	check("Levels follow the slot position, clamped, defaulting to 1", levelled[1].Level == 5 and levelled[2].Level == 20 and levelled[3].Level == 3 and levelled[4].Level == 1)
+	check("Levels follow the slot position, clamped, defaulting to 1", levelled[1].Level == 5 and levelled[2].Level == Skills.MAX_LEVEL and levelled[3].Level == 3 and levelled[4].Level == 1)
 	local swapped = StatCalc.ClassAbilities("Warrior", { "Taunt", "LastStand", "ShieldBash", "Whirlwind" }, { 5, 8, 3, 1 })
 	check("Swapping the skill in a slot keeps the slot's level", swapped[2].Id == "LastStand" and swapped[2].Level == 8)
 

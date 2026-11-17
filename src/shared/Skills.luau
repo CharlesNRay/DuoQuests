@@ -33,6 +33,7 @@ local Skills = {}
 
 Skills.SLOTS = 4
 Skills.MAX_SLOT_LEVEL = 20 -- placeholder; raise as the game grows
+Skills.MAX_LEVEL = 40 -- a skill's combat level = rank + tier bonus + slot level - 1
 
 local function rarityOf(abilityId)
 	local def = Abilities[abilityId]
@@ -40,6 +41,10 @@ local function rarityOf(abilityId)
 	local rarity = Rarities[def.Rarity]
 	assert(rarity ~= nil, "Ability has no valid Rarity: " .. tostring(abilityId))
 	return rarity
+end
+
+function Skills.ClampSkillLevel(level)
+	return math.clamp(math.floor(level or 1), 1, Skills.MAX_LEVEL)
 end
 
 function Skills.ClampSlotLevel(level)
