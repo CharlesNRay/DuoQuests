@@ -55,8 +55,16 @@ return function(modulesOverride)
 
 	local q = ProfileTemplate.New()
 	Tutorial.Skip(q)
-	q.Season.HighestStage = 30
-	check("Skipping ends it with no reward", Tutorial.Of(q).Done and not Tutorial.Of(q).Rewarded)
+	q.Season.HighestStage = 5
+	check("Skipping ends it with no reward yet", Tutorial.Of(q).Done and not Tutorial.Of(q).Rewarded)
+	check("Nothing is paid before the first boss falls", Tutorial.PayIfSkipped(q) == nil)
+	q.Season.HighestStage = Tutorial.BossStage + 1
+	local paid = Tutorial.PayIfSkipped(q)
+	check("A skipped tutorial pays the full reward when the first boss falls", paid ~= nil and paid.PetWish == 10 and paid.SkillWish == 10 and Consumables.Count(q, "PetWish") == 10 and Consumables.Count(q, "SkillWish") == 10)
+	check("It pays only once", Tutorial.PayIfSkipped(q) == nil and Consumables.Count(q, "PetWish") == 10)
+	local fresh = ProfileTemplate.New()
+	fresh.Season.HighestStage = Tutorial.BossStage + 1
+	check("A player still in the tutorial is not paid here (the tutorial pays them)", Tutorial.PayIfSkipped(fresh) == nil)
 
 	print(("TutorialTests done: %d passed, %d failed"):format(passed, failed))
 end

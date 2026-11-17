@@ -26,6 +26,7 @@ local Stages = require(script.Parent.Stages)
 local Passives = require(script.Parent.Passives)
 local Pets = require(script.Parent.Pets)
 local PetGear = require(script.Parent.PetGear)
+local Tutorial = require(script.Parent.Tutorial)
 local PetsConfig = require(script.Parent.Config.Pets)
 local Gear = require(script.Parent.Gear)
 local Consumables = require(script.Parent.Consumables)
@@ -178,6 +179,7 @@ function Progression.ApplyClear(profile, stage, rand)
 	if isFrontier then
 		season.HighestStage = stage + 1
 	end
+	local tutorialReward = Tutorial.PayIfSkipped(profile) -- a skipped tutorial still pays when the first boss falls
 
 	return {
 		Stage = stage,
@@ -192,6 +194,7 @@ function Progression.ApplyClear(profile, stage, rand)
 		ItemSoldFor = itemSoldFor,
 		Consumable = consumableId,
 		PetGearDrop = petGearDrop,
+		TutorialReward = tutorialReward,
 		PetLevelsGained = petLevelsGained,
 		LevelsGained = levelsGained,
 		Level = season.Level,

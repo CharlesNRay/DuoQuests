@@ -10,7 +10,7 @@
 	      Kind "frontier"  completes when the highest stage reached is at least Goal
 	  Tutorial.Of(profile)                 -> { Step, Done, Rewarded } (created on first use)
 	  Tutorial.Advance(profile, step)      moves from `step` to the next one (only forwards, one at a time)
-	  Tutorial.Skip(profile)               ends the tutorial without the reward
+	  Tutorial.Skip(profile)               ends the tutorial (the reward still comes with the first boss, see PayIfSkipped)
 	  Tutorial.Finish(profile)             -> ok, reward   pays once, after the first boss is beaten
 ]]
 local Consumables = require(script.Parent.Consumables)
@@ -80,6 +80,19 @@ function Tutorial.Finish(profile)
 		Consumables.Grant(profile, ticketId, count)
 	end
 	return true, Tutorial.Reward
+end
+
+-- Called after every frontier clear: a skipped tutorial (Done without the reward) pays out once the first boss is beaten.
+function Tutorial.PayIfSkipped(profile)
+	local t = stateOf(profile)
+	if t.Done ~= true or t.Rewarded == true or profile.Season.HighestStage <= Tutorial.BossStage then
+		return nil
+	end
+	t.Rewarded = true
+	for ticketId, count in pairs(Tutorial.Reward) do
+		Consumables.Grant(profile, ticketId, count)
+	end
+	return Tutorial.Reward
 end
 
 return Tutorial
