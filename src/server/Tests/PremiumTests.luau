@@ -65,7 +65,7 @@ return function(modulesOverride)
 	Premium.AddSunstones(s, 5000)
 	local picksBefore, bagBefore = s.Season.Currencies.SkillPicks, Gear.Cap(s)
 	local ok, res = Premium.Buy(s, "StarterPack")
-	check("The Starter Pack grants picks, consumables and a bag upgrade", ok and s.Season.Currencies.SkillPicks == picksBefore + 3 and Consumables.Count(s, "XPTonic") >= 5 and Gear.Cap(s) > bagBefore)
+	check("The Starter Pack grants picks, consumables and a bag upgrade", ok and s.Season.Currencies.SkillPicks == picksBefore + 2 and Consumables.Count(s, "XPTonic") >= 5 and Gear.Cap(s) > bagBefore)
 	check("Buying spends Sunstones", Premium.Sunstones(s) == 5000 - Config.Items[1].Cost)
 	check("The Starter Pack is once per account", select(2, Premium.Buy(s, "StarterPack")) == "LimitReached")
 

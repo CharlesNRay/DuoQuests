@@ -104,8 +104,8 @@ return function(modulesOverride)
 		end
 		return { { Id = "1", Name = "W", Profile = w }, { Id = "2", Name = "C", Profile = c } }
 	end
-	local plain = StageRunner.Run(party(nil, nil), 20, 11)
-	local boosted = StageRunner.Run(party("Berserker", "Templar"), 20, 11)
+	local plain = StageRunner.Run(party(nil, nil), 10, 11)
+	local boosted = StageRunner.Run(party("Berserker", "Templar"), 10, 11)
 	check("A Berserker + Templar party clears a stage about as fast as the plain party (support and tank paths trade damage for utility)", boosted.Won)
 
 	-- every path skill actually casts in a fight (no runtime errors)

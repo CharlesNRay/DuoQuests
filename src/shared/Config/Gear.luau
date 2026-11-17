@@ -20,7 +20,7 @@ local Economy = require(script.Parent.Economy)
 local Gear = {
 	-- Blacksmith upgrades: each level adds ValuePerLevel of the item's base stat. The cost grows
 	-- with the level and with the stage the item dropped at. Gold is the only cost.
-	Upgrade = { MaxLevel = 10, ValuePerLevel = 0.06, BaseCost = 1200, CostGrowth = 1.42, PowerCost = 72 },
+	Upgrade = { MaxLevel = 10, ValuePerLevel = 0.1, BaseCost = 1200, CostGrowth = 1.42, PowerCost = 72 },
 
 	-- every drop rolls its stat between Min and Max of the base value (a 'good roll' shows as a percentage on the item)
 	Roll = { Min = 0.85, Max = 1.15 },
@@ -161,8 +161,8 @@ local Gear = {
 -- flat health / attack / defense on items is NumberScale times bigger, like the heroes it is worn by (Config/Economy)
 for _, stat in pairs(Gear.Slots) do
 	if stat.Stat == "MaxHealth" or stat.Stat == "Attack" or stat.Stat == "Defense" then
-		stat.Base *= Economy.NumberScale
-		stat.PerStage *= Economy.NumberScale
+		stat.Base *= Economy.NumberScale * (Economy.GearPower or 1)
+		stat.PerStage *= Economy.NumberScale * (Economy.GearPower or 1)
 	end
 end
 

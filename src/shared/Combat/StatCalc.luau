@@ -29,7 +29,7 @@ function StatCalc.ClassStats(classId, level, subclassId)
 	local stats = {}
 	for statName, baseValue in pairs(class.BaseStats) do
 		local growth = class.GrowthPerLevel[statName] or 0
-		stats[statName] = baseValue + growth * (level - 1)
+		stats[statName] = baseValue + growth * (level - 1) * (EconomyConfig.LevelGrowth or 1)
 	end
 	-- a path changes what each level after choosing it gives (offence paths: more Attack, less Health and Defense, and so on)
 	for _, def in ipairs(Subclasses.Chain(subclassId)) do
@@ -38,7 +38,7 @@ function StatCalc.ClassStats(classId, level, subclassId)
 			local levels = math.max(0, level - def.UnlockLevel)
 			for statName, mult in pairs(mults) do
 				local growth = class.GrowthPerLevel[statName] or 0
-				stats[statName] = (stats[statName] or 0) + growth * (mult - 1) * levels
+				stats[statName] = (stats[statName] or 0) + growth * (mult - 1) * levels * (EconomyConfig.LevelGrowth or 1)
 			end
 		end
 	end

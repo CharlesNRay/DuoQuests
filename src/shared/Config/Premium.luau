@@ -45,13 +45,13 @@ return {
 	Items = {
 		{
 			Id = "StarterPack", Name = "Starter Pack", Limit = { Per = "Account", Count = 1 }, Cost = 120,
-			Text = "3 free skill picks, 5 XP Tonics, 3 Power Elixirs, 3 Grand Pet Foods and a bigger bag.",
-			Grants = { SkillPicks = 3, BagUpgrades = 1, Items = { XPTonic = 5, PowerElixir = 3, GrandPetFood = 3 } },
+			Text = "2 free skill picks, 5 XP Tonics, 3 Power Elixirs, 3 Grand Pet Foods and a bigger bag.",
+			Grants = { SkillPicks = 2, BagUpgrades = 1, Items = { XPTonic = 5, PowerElixir = 3, GrandPetFood = 3 } },
 		},
 		{
 			Id = "EnhancedStarter", Name = "Enhanced Starter Pack", Tag = "BEST VALUE", Limit = { Per = "Account", Count = 1 }, Cost = 450,
-			Text = "8 free skill picks, 15 XP Tonics, 10 Power Elixirs, 10 Grand Pet Foods, 5 Iron Tonics, 5 Haste Draughts and 3 bag upgrades.",
-			Grants = { SkillPicks = 8, BagUpgrades = 3, Items = { XPTonic = 15, PowerElixir = 10, GrandPetFood = 10, IronTonic = 5, HasteDraught = 5 } },
+			Text = "4 free skill picks, 15 XP Tonics, 10 Power Elixirs, 10 Grand Pet Foods, 5 Iron Tonics, 5 Haste Draughts and 3 bag upgrades.",
+			Grants = { SkillPicks = 4, BagUpgrades = 3, Items = { XPTonic = 15, PowerElixir = 10, GrandPetFood = 10, IronTonic = 5, HasteDraught = 5 } },
 		},
 		{
 			-- shown on screen as a pop-up when the player reaches the subclass level; listed here once they close it

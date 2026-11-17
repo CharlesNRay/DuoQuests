@@ -22,6 +22,10 @@ return {
 	XPPower = 1.8,
 	-- Low-level heroes are weaker: Health, Attack and Defense from the class are multiplied by Start at level 1, rising in a straight
 	-- line to full strength at FullLevel. So the first stages cannot be skipped at a low level; you have to grow into them.
+	-- Gear carries progression: each level adds only LevelGrowth of a class's per-level stats, and flat gear stats (attack, health, defense)
+	-- are GearPower times bigger, so a hero that never changes gear stalls while a geared one keeps climbing.
+	LevelGrowth = 0.35,
+	GearPower = 9,
 	EarlyWeak = { Start = 0.55, FullLevel = 60 },
 	-- Past the level cap, XP fills Paragon levels (Season.Paragon): each is a small permanent bonus to Attack, Health and Defense for the season.
 	Paragon = { Max = 100, XPFactor = 3, PerLevel = 0.004 },

@@ -60,7 +60,7 @@ function CosmeticsScreen.Cosmetics(container, state, call, extra)
 	local area = Kit.frame({ Size = UDim2.new(1, 0, 1, -34), Position = UDim2.fromOffset(0, 34), BackgroundTransparency = 1, NoCorner = true, Parent = container })
 	local scroll = Kit.new("ScrollingFrame", { Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1, BorderSizePixel = 0, CanvasSize = UDim2.new(), AutomaticCanvasSize = Enum.AutomaticSize.Y, ScrollBarThickness = 4, Parent = area })
 	Kit.new("UIListLayout", { Padding = UDim.new(0, 5), Parent = scroll })
-	Kit.label({ Size = UDim2.new(1, -8, 0, 18), Text = extra.CosmeticMsg or "Looks only - they never change your power. Buy with Sunstones or win them as season prizes.", TextSize = 12, TextColor3 = if extra.CosmeticMsg then GOOD else C.Dim, Parent = scroll })
+	Kit.label({ Size = UDim2.new(1, -8, 0, 18), Text = extra.CosmeticMsg or "Looks only - they never change your power. Buy with Sunstones. Season prizes only appear once you win them.", TextSize = 12, TextColor3 = if extra.CosmeticMsg then GOOD else C.Dim, Parent = scroll })
 
 	if slot == "Bundles" then
 		for _, row in ipairs(data.Bundles or {}) do
@@ -81,7 +81,7 @@ function CosmeticsScreen.Cosmetics(container, state, call, extra)
 	end
 	for _, row in ipairs(data.Lists[slot] or {}) do
 		local classDef = row.Class and Classes[row.Class]
-		if not (classDef and classDef.Locked) then -- a class that is not playable yet shows its prizes when it launches
+		if not (classDef and classDef.Locked) and not (row.Source == "Season" and not row.Owned and slot ~= "Title") then -- a class that is not playable yet shows its prizes when it launches
 			local frame = Kit.frame({ Size = UDim2.new(1, -8, 0, 50), BackgroundColor3 = C.PanelLight, Parent = scroll })
 			if slot ~= "Title" then
 				swatch(frame, row)

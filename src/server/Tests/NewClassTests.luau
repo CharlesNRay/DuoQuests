@@ -220,7 +220,7 @@ return function(modulesOverride)
 		end
 		mine.Profile.Season.Loadouts[def.Class] = { def.Skills[1], def.Skills[2], def.Skills[3], Classes[def.Class].DefaultLoadout[1] }
 		local other = member(def.Class == "Cleric" and "Warrior" or "Cleric", "o")
-		local ok, outcome = pcall(StageRunner.Run, { mine, other }, 35, 5, nil, true)
+		local ok, outcome = pcall(StageRunner.Run, { mine, other }, 12, 5, nil, true)
 		local casts = {}
 		if ok then
 			for _, e in ipairs(outcome.Events) do

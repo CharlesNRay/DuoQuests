@@ -35,22 +35,163 @@ local function colours(def)
 	return ColorSequence.new(c3(def.Color), c3(def.Color2 or def.Color))
 end
 
-local function auraEmitter(def)
+-- Aura rigs: an Attachment named CosAura holding several layered emitters (flames, sparks, mist, halo...) so each themed aura
+-- looks different in shape and motion, not just in colour. Built-in particle textures only.
+local FIRE = "rbxasset://textures/particles/fire_main.dds"
+local SMOKE = "rbxasset://textures/particles/smoke_main.dds"
+
+local function numseq(list)
+	if #list == 1 then
+		return NumberSequence.new(list[1])
+	end
+	local points = {}
+	for i, v in ipairs(list) do
+		table.insert(points, NumberSequenceKeypoint.new((i - 1) / (#list - 1), v))
+	end
+	return NumberSequence.new(points)
+end
+
+local function colseq(list)
+	if #list == 1 then
+		return ColorSequence.new(list[1])
+	end
+	local points = {}
+	for i, v in ipairs(list) do
+		table.insert(points, ColorSequenceKeypoint.new((i - 1) / (#list - 1), v))
+	end
+	return ColorSequence.new(points)
+end
+
+-- o: Color (Color3 | list | ColorSequence), Rate, Life = {min,max}, Speed = {min,max}, Size = list, Alpha = list, Accel = Vector3,
+--    Spread = degrees, Rot = {min,max}, Spin = {min,max}, Glow = 0..1, Shape, Style, Drag
+local function layer(parent, texture, o)
 	local e = Instance.new("ParticleEmitter")
-	e.Name = "CosAura"
-	e.Texture = SPARKLE
-	e.Color = colours(def)
-	e.LightEmission = 1
-	e.Rate = 45
-	e.Lifetime = NumberRange.new(1.2, 2)
-	e.Speed = NumberRange.new(0.5, 2)
-	e.SpreadAngle = Vector2.new(180, 180)
-	e.Size = NumberSequence.new({ NumberSequenceKeypoint.new(0, 1.0), NumberSequenceKeypoint.new(1, 0) })
-	e.Transparency = NumberSequence.new(0.1)
-	e.RotSpeed = NumberRange.new(-90, 90)
-	e.Shape = Enum.ParticleEmitterShape.Cylinder
-	e.ShapeStyle = Enum.ParticleEmitterShapeStyle.Volume
+	e.Name = "Layer"
+	e.Texture = texture
+	local col = o.Color
+	e.Color = if typeof(col) == "ColorSequence" then col elseif typeof(col) == "table" then colseq(col) else ColorSequence.new(col or Color3.new(1, 1, 1))
+	e.LightEmission = o.Glow or 1
+	e.Rate = o.Rate or 20
+	local life = o.Life or { 1, 1.6 }
+	e.Lifetime = NumberRange.new(life[1], life[2])
+	local speed = o.Speed or { 0.5, 2 }
+	e.Speed = NumberRange.new(speed[1], speed[2])
+	e.SpreadAngle = Vector2.new(o.Spread or 180, o.Spread or 180)
+	e.Size = numseq(o.Size or { 0.8, 0 })
+	e.Transparency = numseq(o.Alpha or { 0.1, 0.1, 1 })
+	local rot = o.Rot or { 0, 360 }
+	e.Rotation = NumberRange.new(rot[1], rot[2])
+	local spin = o.Spin or { -90, 90 }
+	e.RotSpeed = NumberRange.new(spin[1], spin[2])
+	e.Acceleration = o.Accel or Vector3.zero
+	e.Drag = o.Drag or 0
+	e.Shape = o.Shape or Enum.ParticleEmitterShape.Cylinder
+	e.ShapeStyle = o.Style or Enum.ParticleEmitterShapeStyle.Volume
+	if o.Inward then
+		e.ShapeInOut = Enum.ParticleEmitterShapeInOut.Outward
+	end
+	e.Parent = parent
 	return e
+end
+
+local function rgb(r, g, b)
+	return Color3.fromRGB(r, g, b)
+end
+
+local UP = Vector3.new(0, 1, 0)
+
+-- themed aura recipes, by cosmetic id
+local RECIPES = {
+	Aura_Flame = function(a)
+		layer(a, FIRE, { Color = { rgb(255, 230, 120), rgb(255, 120, 30), rgb(120, 20, 10) }, Rate = 34, Life = { 0.7, 1.2 }, Speed = { 1, 3 }, Size = { 0.4, 2.4, 0 }, Alpha = { 0.2, 0.3, 1 }, Accel = UP * 5, Spread = 25 })
+		layer(a, SPARKLE, { Color = rgb(255, 170, 60), Rate = 14, Life = { 1, 1.8 }, Speed = { 4, 8 }, Size = { 0.5, 0 }, Accel = UP * 3, Spread = 30 })
+	end,
+	Aura_Frost = function(a)
+		layer(a, SPARKLE, { Color = { rgb(255, 255, 255), rgb(150, 220, 255) }, Rate = 34, Life = { 2, 3 }, Speed = { 0.5, 1.5 }, Size = { 0.7, 0.4, 0 }, Accel = UP * -1.5 })
+		layer(a, SMOKE, { Color = rgb(190, 235, 255), Rate = 7, Life = { 1.8, 2.6 }, Speed = { 0.3, 1 }, Size = { 2, 4.5 }, Alpha = { 0.85, 0.9, 1 }, Glow = 0.4, Accel = UP * 0.6 })
+		layer(a, SPARKLE, { Color = rgb(255, 255, 255), Rate = 6, Life = { 0.4, 0.8 }, Speed = { 0, 0.2 }, Size = { 0, 2.2, 0 }, Spin = { -200, 200 } })
+	end,
+	Aura_Nature = function(a)
+		layer(a, SPARKLE, { Color = { rgb(220, 255, 150), rgb(110, 220, 90) }, Rate = 22, Life = { 1.5, 2.4 }, Speed = { 1, 2 }, Size = { 0.6, 0 }, Accel = UP * 1.2 })
+		layer(a, SPARKLE, { Color = { rgb(150, 230, 90), rgb(60, 150, 50) }, Rate = 8, Life = { 3, 4 }, Speed = { 0.5, 1.5 }, Size = { 0.5, 1.1, 0.8 }, Accel = Vector3.new(0.6, -0.8, 0), Spin = { -220, 220 }, Glow = 0.3 })
+		layer(a, SMOKE, { Color = rgb(150, 255, 120), Rate = 4, Life = { 2, 3 }, Speed = { 0.2, 0.6 }, Size = { 2, 4 }, Alpha = { 0.88, 0.9, 1 }, Glow = 0.5 })
+	end,
+	Aura_Void = function(a)
+		layer(a, SMOKE, { Color = { rgb(90, 30, 150), rgb(12, 4, 24) }, Rate = 16, Life = { 1.2, 1.8 }, Speed = { -4, -2 }, Size = { 3.5, 0.5 }, Alpha = { 0.5, 0.4, 1 }, Glow = 0.2, Shape = Enum.ParticleEmitterShape.Sphere, Style = Enum.ParticleEmitterShapeStyle.Surface })
+		layer(a, SPARKLE, { Color = { rgb(220, 150, 255), rgb(120, 50, 220) }, Rate = 24, Life = { 0.8, 1.4 }, Speed = { -5, -2 }, Size = { 0.6, 0 }, Shape = Enum.ParticleEmitterShape.Sphere, Style = Enum.ParticleEmitterShapeStyle.Surface })
+	end,
+	Aura_Starlight = function(a)
+		layer(a, SPARKLE, { Color = { rgb(255, 255, 255), rgb(255, 235, 150) }, Rate = 60, Life = { 1.2, 2 }, Speed = { 0.5, 2.5 }, Size = { 0.9, 0.3, 0 }, Spin = { -120, 120 } })
+		layer(a, SPARKLE, { Color = rgb(255, 250, 200), Rate = 5, Life = { 0.6, 1.1 }, Speed = { 0, 0.3 }, Size = { 0, 2.8, 0 }, Spin = { 60, 180 }, Alpha = { 0, 0, 1 } })
+	end,
+	Aura_Rainbow = function(a)
+		layer(a, SPARKLE, { Color = RAINBOW, Rate = 70, Life = { 1.2, 2 }, Speed = { 0.8, 3 }, Size = { 1, 0 } })
+		layer(a, SMOKE, { Color = RAINBOW, Rate = 10, Life = { 1.5, 2.2 }, Speed = { 0.5, 1.5 }, Size = { 1.5, 4 }, Alpha = { 0.75, 0.85, 1 }, Accel = UP * 1.5, Spin = { -60, 60 } })
+	end,
+	Aura_Ocean = function(a)
+		layer(a, SPARKLE, { Color = { rgb(200, 245, 255), rgb(60, 170, 255) }, Rate = 16, Life = { 1.8, 2.6 }, Speed = { 2, 4 }, Size = { 0.35, 0.6, 0 }, Accel = UP * 1.5, Spread = 35, Glow = 0.6 })
+		layer(a, SMOKE, { Color = rgb(70, 170, 255), Rate = 6, Life = { 1.8, 2.5 }, Speed = { 0.3, 1 }, Size = { 2.5, 5 }, Alpha = { 0.85, 0.9, 1 }, Glow = 0.5, Accel = UP * 0.8 })
+		layer(a, SPARKLE, { Color = rgb(255, 255, 255), Rate = 10, Life = { 0.5, 1 }, Speed = { 0, 0.5 }, Size = { 0, 0.9, 0 } })
+	end,
+	Aura_Blossom = function(a)
+		layer(a, SPARKLE, { Color = { rgb(255, 235, 245), rgb(255, 140, 190) }, Rate = 18, Life = { 3, 4 }, Speed = { 0.5, 2 }, Size = { 0.8, 1.2, 0.8 }, Accel = Vector3.new(0.5, -1.2, 0.3), Spin = { -180, 180 }, Glow = 0.35 })
+		layer(a, SPARKLE, { Color = rgb(255, 190, 220), Rate = 14, Life = { 1.2, 2 }, Speed = { 1, 2.5 }, Size = { 0.5, 0 } })
+		layer(a, SMOKE, { Color = rgb(255, 180, 215), Rate = 4, Life = { 2, 3 }, Speed = { 0.2, 0.6 }, Size = { 2.5, 4.5 }, Alpha = { 0.88, 0.92, 1 }, Glow = 0.5 })
+	end,
+	Aura_Storm = function(a)
+		layer(a, SMOKE, { Color = { rgb(90, 95, 140), rgb(40, 42, 70) }, Rate = 9, Life = { 1.5, 2.2 }, Speed = { 0.3, 1 }, Size = { 2.5, 4.5 }, Alpha = { 0.6, 0.65, 1 }, Glow = 0.1, Accel = UP * 1 })
+		layer(a, SPARKLE, { Color = { rgb(255, 255, 210), rgb(255, 235, 90) }, Rate = 6, Life = { 0.12, 0.28 }, Speed = { 0, 1 }, Size = { 2.4, 3.2, 0 }, Spin = { -400, 400 }, Alpha = { 0, 0, 1 } })
+		layer(a, SPARKLE, { Color = rgb(255, 245, 130), Rate = 26, Life = { 0.2, 0.4 }, Speed = { 6, 11 }, Size = { 0.45, 0 }, Drag = 2 })
+	end,
+	Aura_Ember = function(a)
+		layer(a, FIRE, { Color = { rgb(255, 160, 60), rgb(200, 50, 20), rgb(40, 14, 10) }, Rate = 14, Life = { 0.9, 1.5 }, Speed = { 0.5, 1.5 }, Size = { 0.3, 1.2, 0 }, Alpha = { 0.3, 0.4, 1 }, Accel = UP * 3, Spread = 30 })
+		layer(a, SPARKLE, { Color = { rgb(255, 210, 120), rgb(255, 80, 30) }, Rate = 24, Life = { 1.6, 2.4 }, Speed = { 3, 7 }, Size = { 0.4, 0 }, Accel = UP * 3, Spread = 55 })
+		layer(a, SMOKE, { Color = rgb(30, 22, 22), Rate = 5, Life = { 1.5, 2.2 }, Speed = { 0.5, 1 }, Size = { 1.5, 3.5 }, Alpha = { 0.7, 0.8, 1 }, Glow = 0, Accel = UP * 2 })
+	end,
+	Aura_Gilded = function(a)
+		layer(a, SPARKLE, { Color = { rgb(255, 250, 200), rgb(255, 205, 70) }, Rate = 44, Life = { 1.2, 2 }, Speed = { 0.8, 2.6 }, Size = { 0.8, 0 } })
+		layer(a, SPARKLE, { Color = rgb(255, 215, 90), Rate = 7, Life = { 0.8, 1.4 }, Speed = { 0.2, 1 }, Size = { 0, 1.9, 0 }, Spin = { 120, 360 } })
+		layer(a, SMOKE, { Color = rgb(255, 215, 110), Rate = 4, Life = { 2, 2.8 }, Speed = { 0.2, 0.6 }, Size = { 3, 5 }, Alpha = { 0.88, 0.92, 1 }, Glow = 0.6 })
+	end,
+}
+
+-- Season prizes: a column of fire-light, a rising shower, a ring halo and a glow, all in the prize's two colours.
+local function prizeAura(a, def, power)
+	local c1, c2 = c3(def.Color), c3(def.Color2 or def.Color)
+	layer(a, FIRE, { Color = { c2, c1, c1:Lerp(Color3.new(0, 0, 0), 0.6) }, Rate = 30 * power, Life = { 0.8, 1.4 }, Speed = { 1, 3 }, Size = { 0.5, 2.8, 0 }, Alpha = { 0.25, 0.35, 1 }, Accel = UP * 7, Spread = 20 })
+	layer(a, SPARKLE, { Color = { c2, c1 }, Rate = 50 * power, Life = { 1.2, 2.2 }, Speed = { 5, 10 }, Size = { 0.7, 0 }, Accel = UP * 2, Spread = 28, Drag = 1 })
+	layer(a, SPARKLE, { Color = { c2, c1 }, Rate = 26, Life = { 1.6, 2 }, Speed = { 0, 0.1 }, Size = { 0.7, 0.9, 0 }, Spin = { -60, 60 }, Style = Enum.ParticleEmitterShapeStyle.Surface })
+	layer(a, SMOKE, { Color = c1, Rate = 6, Life = { 2, 3 }, Speed = { 0.2, 0.6 }, Size = { 3.5, 6.5 }, Alpha = { 0.82, 0.9, 1 }, Glow = 0.7, Accel = UP * 1.5 })
+	if power > 1 then
+		layer(a, SPARKLE, { Color = RAINBOW, Rate = 30, Life = { 1, 1.6 }, Speed = { 2, 5 }, Size = { 0.5, 0 }, Accel = UP * 2 })
+		layer(a, SPARKLE, { Color = c2, Rate = 4, Life = { 0.5, 0.9 }, Speed = { 0, 0.3 }, Size = { 0, 3.4, 0 }, Spin = { 90, 240 }, Alpha = { 0, 0, 1 } })
+	end
+end
+
+local function auraRig(def)
+	local a = Instance.new("Attachment")
+	a.Name = "CosAura"
+	local recipe = RECIPES[def.Id]
+	if recipe then
+		recipe(a)
+	elseif def.Source == "Season" then
+		prizeAura(a, def, if def.Id == "Aura_Champion" then 1.6 elseif def.Id == "Aura_Elite" then 1.3 else 1)
+	else
+		local e = Instance.new("ParticleEmitter")
+		e.Texture = SPARKLE
+		e.Color = colours(def)
+		e.LightEmission = 1
+		e.Rate = 45
+		e.Lifetime = NumberRange.new(1.2, 2)
+		e.Speed = NumberRange.new(0.5, 2)
+		e.SpreadAngle = Vector2.new(180, 180)
+		e.Size = NumberSequence.new({ NumberSequenceKeypoint.new(0, 1.0), NumberSequenceKeypoint.new(1, 0) })
+		e.Transparency = NumberSequence.new(0.1)
+		e.RotSpeed = NumberRange.new(-90, 90)
+		e.Shape = Enum.ParticleEmitterShape.Cylinder
+		e.Parent = a
+	end
+	return a
 end
 
 -- A function that builds the aura emitter for a cosmetic id (nil when there is none), for the fight scene's heroes.
@@ -60,7 +201,7 @@ function CosmeticsVisuals.AuraBuilder(id)
 		return nil
 	end
 	return function()
-		return auraEmitter(def)
+		return auraRig(def)
 	end
 end
 
@@ -129,7 +270,7 @@ local function refresh(player, character)
 		end
 		local def = Cosmetics.Def(player:GetAttribute("CosAura") or "")
 		if def then
-			auraEmitter(def).Parent = root
+			auraRig(def).Parent = root
 		end
 	end
 end
