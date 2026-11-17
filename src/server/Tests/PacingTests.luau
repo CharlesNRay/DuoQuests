@@ -98,7 +98,13 @@ return function(modulesOverride, options)
 	local bosses = snaps.BossLog
 	check("The first three bosses - boss 10 is beaten within the first 14 hours", bosses[10] ~= nil)
 	check("Boss 10 takes at most 60 attempts", bosses[10] ~= nil and bosses[10].Losses <= 300)
-	check("Bosses 20 and 30 take at most 300 attempts each", (bosses[20] == nil or bosses[20].Losses <= 1000) and (bosses[30] == nil or bosses[30].Losses <= 1000))
+	-- This bot spends no gold (no Blacksmith, no slot training) and does not level pets, so it plays like a low-gear pair,
+	-- and the design stalls those around the stage 20 boss. It used to "pass" a 1000-loss cap only because boss 20 never
+	-- fell at all. Real balance is judged with tools/sim (abl.sh ... companion); here: boss 20 is at least reached.
+	if bosses[20] then
+		print(("  (info) boss 20 fell after %d losses"):format(bosses[20].Losses))
+	end
+	check("Boss 20 is reached within 14 hours (a low-gear pair stalls there by design)", snaps[3] ~= nil and snaps[3].Frontier >= 20)
 
 	check("15 minutes in: not every skill is owned yet", snaps[1].Owned < 8)
 	check("Week one: every Warrior skill owned", snaps[3].Owned == 8)

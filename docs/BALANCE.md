@@ -90,3 +90,11 @@ Simulated with `tools/sim` (companion unless noted, goal level 40, 2 seeds):
 Sweeps that led here (8 sample builds): steeper curve alone left Warrior/Cleric pairs at stage 130-200; split health
 curves made it worse; defense scaling on the old curve was far too easy (L40 in 1-3h); curve 1.6 + defense 0.5 fit.
 Open: no-skills and no-pets slow a pair a little less than intended; stage 40 is where most builds sit at level 40.
+
+## Early ease - 2026-11-16
+Play-testing showed a fresh pair walled at stage 11 right after the tutorial (level 4, 20 wishes unspent). Two fixes:
+the tutorial now ends with "make your wishes" and "watch your battle" steps, and `Config/Stages.EarlyEase =
+{ From = 11, To = 40, Mult = 0.8 }` softens enemies from stage 11 (x0.8), easing back to full strength by stage 40.
+Simulated (companion, 2 seeds): level 30 unchanged at 5.1-6.1h (the subclass stays a 5-6h goal); level at stage 30 24-27;
+L40 9.2-12.3h; a player who upgrades nothing reaches stage 15 by level 15-16 (was 20-22) and still stalls at stage 20-25.
+PacingTests' old Warrior+Cleric bot spends no gold and levels no pets; its boss check now only asks that boss 20 is reached.
