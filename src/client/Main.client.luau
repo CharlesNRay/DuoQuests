@@ -308,6 +308,20 @@ function call(action, ...)
 	return ok, data
 end
 
+-- Centre the panel, slid up so the menu dock stays visible. While the tutorial card is out on the left,
+-- push the panel right so the card does not cover it (as far as the screen allows).
+local TUTORIAL_CARD_RIGHT = 8 + 340 + 8 -- card x + width (Tutorial.luau WIDTH) + gap, in root units
+local function placePanel()
+	local w, h = panel.Size.X.Offset, panel.Size.Y.Offset
+	local y = if h > 290 then 2 else 6
+	local rootW = root.Size.X.Offset
+	local left = rootW / 2 - w / 2
+	if tutorial and tutorial.Shown and left < TUTORIAL_CARD_RIGHT then
+		left = math.max(left, math.min(TUTORIAL_CARD_RIGHT, rootW - w - 8))
+	end
+	panel.Position = UDim2.fromOffset(left, y)
+end
+
 function open(name, label, keep)
 	if current == name and panel.Visible and not keep then
 		current = nil
@@ -324,7 +338,7 @@ function open(name, label, keep)
 	title.Text = label
 	local size = PANEL_SIZES[name] or PANEL_DEFAULT
 	panel.Size = UDim2.fromOffset(size.X, size.Y)
-	panel.Position = UDim2.new(0.5, -size.X / 2, 0, if size.Y > 290 then 2 else 6) -- slid up so the menu dock stays visible
+	placePanel()
 	panel.Visible = true
 	redraw()
 end
@@ -609,6 +623,9 @@ menu = require(script.Parent.UI.MainMenu).new(root, call, extra, require(script.
 tutorial = require(script.Parent.UI.Tutorial).new(root, hud, call, function()
 	return state, menu ~= nil and menu.Visible -- the card stays up while a panel is open, so the "open this" and info steps can be read
 end)
+-- keep an open panel clear of the tutorial card as the card slides in/out or the screen resizes
+tutorial.Card:GetPropertyChangedSignal("Visible"):Connect(placePanel)
+root:GetPropertyChangedSignal("Size"):Connect(placePanel)
 extra.OpenMenu = function()
 	current = nil
 	lastDrawn = nil

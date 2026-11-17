@@ -764,7 +764,7 @@ function handlers.BuyConsumable(player, profile, id, count)
 	return Consumables.Buy(profile, id, count)
 end
 
--- Studio-only test helper (press F7 in the client): gold, shards and a few of everything.
+-- Studio-only test helper (the 🧪 "Test items" HUD button): gold, shards and a few of everything.
 function handlers.DevGrant(player, profile)
 	if not game:GetService("RunService"):IsStudio() then
 		return false, "Forbidden"

@@ -663,12 +663,15 @@ function Screens.PetGear(container, state, call, extra)
 		local r = Kit.frame({ Size = UDim2.new(1, -8, 0, 40), BackgroundColor3 = C.PanelLight, LayoutOrder = index, Parent = scroll })
 		Kit.new("UIStroke", { Color = Kit.rarityColor(piece.Rarity), Thickness = 1.5, Parent = r })
 		Kit.label({ Size = UDim2.new(1, -190, 1, 0), Position = UDim2.fromOffset(8, 0), RichText = true, Text = ("%s %s  %s\n%s"):format(PetGearConfig.KindGlyph[piece.Kind] or "", Kit.tint(piece.Rarity .. " " .. piece.Kind, Kit.rarityColor(piece.Rarity)), if locked then "(slot locked)" else "", ("+%.1f%% %s"):format(piece.Value * 100, (PetGearConfig.StatUnits[piece.Stat] or {}).Label or piece.Stat)), TextSize = 12, TextColor3 = C.Text, Parent = r })
-		local eq = Kit.button({ Size = UDim2.fromOffset(78, 30), Position = UDim2.new(1, -170, 0.5, -15), Text = "Wear", TextSize = 12, BackgroundColor3 = if locked then C.Panel else C.Accent, TextColor3 = if locked then C.Dim else Color3.fromRGB(30, 24, 10), Parent = r }, function()
+		local eq = Kit.button({ Size = UDim2.fromOffset(78, 30), Position = UDim2.new(1, -170, 0.5, -15), Text = if locked then "🔒 Locked" else "Wear", TextSize = 12, BackgroundColor3 = if locked then C.Panel else C.Accent, TextColor3 = if locked then C.Dim else Color3.fromRGB(30, 24, 10), Parent = r }, function()
 			if not locked then
 				call("EquipPetGear", piece.Id)
 			end
 		end)
 		eq.Active = not locked
+		if locked then
+			Kit.Hover(eq, function() return ("The %s slot opens when your pet reaches Lv %d (it is Lv %d)."):format(piece.Kind, g.SlotNeeds[slot] or 0, g.PetLevel) end)
+		end
 		Kit.button({ Size = UDim2.fromOffset(84, 30), Position = UDim2.new(1, -88, 0.5, -15), Text = "Sell " .. NumberFormat.Short(math.floor(PetGearConfig.SellBase * PetGearConfig.RarityMult[piece.Rarity])) .. "g", TextSize = 11, BackgroundColor3 = C.Panel, Parent = r }, function()
 			call("SellPetGear", piece.Id)
 		end)
@@ -776,20 +779,24 @@ function Screens.Pets(container, state, call, extra)
 	Kit.label({ Size = UDim2.new(1, -78, 0, 16), Position = UDim2.fromOffset(72, 32), Text = ("%s  |  Lv %d / %d"):format(pet.Rarity, pet.Level, pet.MaxLevel), TextSize = 12, TextColor3 = C.Dim, Parent = detail })
 	Kit.label({ Size = UDim2.new(1, -78, 0, 16), Position = UDim2.fromOffset(72, 48), Text = string.rep("★", pet.Rank or 1) .. string.rep("☆", (pet.MaxRank or 1) - (pet.Rank or 1)), TextSize = 13, TextColor3 = C.Accent, Parent = detail })
 	Kit.label({ Size = UDim2.new(1, -20, 0, 18), Position = UDim2.fromOffset(10, 70), Text = ("IP %s"):format(NumberFormat.Short(Power.Pet(pet.Id, pet.Level, pet.Rank))), TextSize = 14, Font = Enum.Font.GothamBold, Parent = detail })
-	Kit.label({ Size = UDim2.new(1, -20, 0, 44), Position = UDim2.fromOffset(10, 90), Text = pet.Text or "", TextSize = 11, TextColor3 = C.Dim, TextYAlignment = Enum.TextYAlignment.Top, Parent = detail })
+	-- the description and pet skill scroll in the space between the IP line and the buttons, so nothing hides behind them
+	local info = Kit.new("ScrollingFrame", { Size = UDim2.new(1, -14, 1, -148), Position = UDim2.fromOffset(10, 90), BackgroundTransparency = 1, BorderSizePixel = 0, CanvasSize = UDim2.new(), AutomaticCanvasSize = Enum.AutomaticSize.Y, ScrollBarThickness = 3, Parent = detail })
+	Kit.new("UIListLayout", { Padding = UDim.new(0, 4), SortOrder = Enum.SortOrder.LayoutOrder, Parent = info })
+	Kit.label({ Size = UDim2.new(1, -6, 0, 0), AutomaticSize = Enum.AutomaticSize.Y, LayoutOrder = 1, Text = pet.Text or "", TextSize = 11, TextColor3 = C.Dim, TextYAlignment = Enum.TextYAlignment.Top, Parent = info })
 	if pet.Skill then
-		Kit.label({ Size = UDim2.new(1, -20, 0, 44), Position = UDim2.fromOffset(10, 136), RichText = true, TextSize = 11, TextYAlignment = Enum.TextYAlignment.Top, Text = ("<b>%s</b> (Lv %d)\n%s"):format(pet.Skill.Name, pet.Rank or 1, pet.Skill.Text), Parent = detail })
+		Kit.label({ Size = UDim2.new(1, -6, 0, 0), AutomaticSize = Enum.AutomaticSize.Y, LayoutOrder = 2, RichText = true, TextSize = 11, TextYAlignment = Enum.TextYAlignment.Top, Text = ("<b>%s</b> (Lv %d)\n%s"):format(pet.Skill.Name, pet.Rank or 1, pet.Skill.Text), Parent = info })
 	end
 	local maxed = (pet.Rank or 1) >= (pet.MaxRank or 1)
-	Kit.label({ Size = UDim2.new(1, -20, 0, 16), Position = UDim2.new(0, 10, 1, -86), TextSize = 11, TextColor3 = C.Dim, Text = if maxed then "Max rank - spare copies become shards" else ("Copies %d / %d for the next rank"):format(pet.Copies or 0, pet.RankCost or 1), Parent = detail })
+	Kit.label({ Size = UDim2.new(1, -20, 0, 16), Position = UDim2.new(0, 10, 1, -56), TextSize = 11, TextColor3 = C.Dim, Text = if maxed then "Max rank - spare copies become shards" else ("Copies %d / %d for the next rank"):format(pet.Copies or 0, pet.RankCost or 1), Parent = detail })
 	local canRank = not maxed and (pet.Copies or 0) >= (pet.RankCost or 1)
-	local rankBtn = Kit.button({ Size = UDim2.new(1, -20, 0, 28), Position = UDim2.new(0, 10, 1, -66), Text = if maxed then "Max rank" elseif canRank then "Rank up!" else "Rank up", TextSize = 13, BackgroundColor3 = if canRank then C.Accent else C.PanelLight, TextColor3 = if canRank then Color3.fromRGB(30, 24, 10) else C.Dim, Parent = detail }, function()
+	-- Rank up and Equip share one row at the bottom
+	local rankBtn = Kit.button({ Size = UDim2.new(0.5, -14, 0, 28), Position = UDim2.new(0, 10, 1, -36), Text = if maxed then "Max rank" elseif canRank then "Rank up!" else "Rank up", TextSize = 13, BackgroundColor3 = if canRank then C.Accent else C.PanelLight, TextColor3 = if canRank then Color3.fromRGB(30, 24, 10) else C.Dim, Parent = detail }, function()
 		if canRank then
 			call("RankUpPet", pet.Id)
 		end
 	end)
 	rankBtn.Active = canRank
-	Kit.button({ Size = UDim2.new(1, -20, 0, 28), Position = UDim2.new(0, 10, 1, -34), Text = if pet.Active then "Equipped" else "Equip", TextSize = 13, BackgroundColor3 = if pet.Active then C.PanelLight else C.Accent, TextColor3 = if pet.Active then C.Dim else Color3.fromRGB(30, 24, 10), Parent = detail }, function()
+	Kit.button({ Size = UDim2.new(0.5, -14, 0, 28), Position = UDim2.new(0.5, 4, 1, -36), Text = if pet.Active then "Equipped" else "Equip", TextSize = 13, BackgroundColor3 = if pet.Active then C.PanelLight else C.Accent, TextColor3 = if pet.Active then C.Dim else Color3.fromRGB(30, 24, 10), Parent = detail }, function()
 		if not pet.Active then
 			call("EquipPet", pet.Id)
 		end

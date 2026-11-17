@@ -236,11 +236,28 @@ end
 
 -- Pet Store ---------------------------------------------------------------------
 -- Eggs (Pet Wish tickets), pet gear crates and pet food. Wear the gear on the Pets screen.
+-- what the last crate gave, shown in the header for a few seconds (the screen redraws after every buy)
+local lastPull -- { Text = rich text, At = os.clock() }
+local PULL_SHOW_SECONDS = 12
+
+local function pullText(piece)
+	local PetGearConfig = require(game:GetService("ReplicatedStorage"):WaitForChild("Shared").Config.PetGear)
+	local stat = ("+%.1f%% %s"):format(piece.Value * 100, (PetGearConfig.StatUnits[piece.Stat] or {}).Label or piece.Stat)
+	return ("Got: %s %s  %s"):format(PetGearConfig.KindGlyph[piece.Kind] or "", Kit.tint(piece.Rarity .. " " .. piece.Kind, Kit.rarityColor(piece.Rarity)), stat)
+end
+
 function Shops.PetStore(container, state, call)
 	local me = state.Player
 	local g = me.PetGear
 	local scroll = list(container, 26)
-	Kit.label({ Size = UDim2.new(1, 0, 0, 24), Text = ("Gold: %s   -   wear what you buy on the Pets screen (Pet gear)"):format(Short(gold(state))), TextColor3 = C.Accent, TextSize = 13, Parent = container })
+	local goldText = ("Gold: %s"):format(Short(gold(state)))
+	local function headerText()
+		if lastPull and os.clock() - lastPull.At < PULL_SHOW_SECONDS then
+			return goldText .. "   -   " .. lastPull.Text
+		end
+		return goldText .. "   -   wear what you buy on the Pets screen (Pet gear)"
+	end
+	Kit.label({ Name = "PetStoreHeader", Size = UDim2.new(1, 0, 0, 24), RichText = true, Text = headerText(), TextColor3 = C.Accent, TextSize = 13, Parent = container })
 	local function offer(glyph, name, desc, price, buttonText, action, enabled)
 		local r = row(scroll, 60)
 		Kit.label({ Size = UDim2.fromOffset(44, 44), Position = UDim2.fromOffset(8, 8), Text = glyph, TextSize = 28, TextXAlignment = Enum.TextXAlignment.Center, Parent = r })
@@ -259,7 +276,17 @@ function Shops.PetStore(container, state, call)
 		for _, rarity in ipairs({ "Common", "Rare", "Epic", "Legendary" }) do
 			table.insert(odds, ("%s %d%%"):format(rarity:sub(1, 1), crate.Odds[rarity] or 0))
 		end
-		offer(crate.Glyph, crate.Name, "One piece of pet gear.  " .. table.concat(odds, "  "), crate.Price, "Open", function() call("BuyPetGearCrate", crate.Id) end, #g.Bag < g.BagSize)
+		offer(crate.Glyph, crate.Name, "One piece of pet gear.  " .. table.concat(odds, "  "), crate.Price, "Open", function()
+			local ok, piece = call("BuyPetGearCrate", crate.Id)
+			if ok and type(piece) == "table" and piece.Kind then
+				lastPull = { Text = pullText(piece), At = os.clock() }
+				-- call() has already redrawn the screen: update the new header in place
+				local header = container:FindFirstChild("PetStoreHeader")
+				if header then
+					header.Text = (header.Text:match("^Gold: [^ ]+") or "") .. "   -   " .. lastPull.Text
+				end
+			end
+		end, #g.Bag < g.BagSize)
 	end
 	for _, item in ipairs(me.Supplies or {}) do
 		if item.Kind == "PetFood" then

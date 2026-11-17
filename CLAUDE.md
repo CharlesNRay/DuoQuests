@@ -32,7 +32,9 @@ with parts turned off (`full|nogear|noskill|nopet|nogold|lazy`). Needs the stand
 - Other: VIP Game Pass scaffolding (`Passes`, ids are 0), map stage rewards (`StageRewards`), 3-view combat log + damage-by-skill tracker, tutorial rewrite, class-choose enters game, Templar retune.
 
 ## Backlog / next steps
-1. **Studio verification** of everything unseen: Skill Trainer + Pet Store NPCs and screens, Pets > Pet gear view, new auras (and season auras), tutorial arrow/card, combat log views, map claim badges, tooltips, class-choose flow, pet follower, Battle hub dungeons/expeditions, Market tab, VIP row. Rojo must be reconnected via VS Code first.
+1. **Studio verification** of everything unseen. Seen and working (2026-11-16 evening): class-choose flow, tutorial card, Skill Trainer
+   (train a slot), Pet Store (crate, snack; header shows what a crate gave), Pets detail card, Pets > Pet gear view. Still unseen: buying an egg,
+   feeding pet food, wearing gear in an open slot, new auras (and season auras), tutorial arrow/card, combat log views, map claim badges, tooltips, class-choose flow, pet follower, Battle hub dungeons/expeditions, Market tab, VIP row. Rojo must be reconnected via VS Code first.
 2. Test hero in `tools/sim` does not yet use pet gear, pet food or pet leveling; pets are probably worth more than the numbers show. Check replay Wishstone income (maybe too generous).
 3. Restyle remaining screens (Hero, Skills, Party, Bag, Map, Quests, Boss, Store, Wish) in the card/detail style; second pet slot for VIP (perk `PetSlots` is defined but unused).
 4. Not started: stack counts on monsters, guild chat, gifting, cosmetics try-on; show an on-screen notice for the skipped-tutorial payout.
@@ -40,6 +42,10 @@ with parts turned off (`full|nogear|noskill|nopet|nogold|lazy`). Needs the stand
 6. `docs/ROADMAP.md` only covers up to the 2026-11-16 morning entry; add the items above.
 
 ## Gotchas
+- Studio testing: the HUD 🧪 button grants test gold/items and ⬆ gives +5 levels (Studio only). Vendor prompts need you within 14 studs;
+  teleport from the command bar (Client view): `game.Players.LocalPlayer.Character:PivotTo(CFrame.new(x, 4, z))` - Trainer (13.5, -5), Pet Store (-13.5, -5).
+  The command bar has its own module cache, so `require(DataService).GetProfile` there returns nil.
+- Don't launch Studio via the Start menu while it is open: it starts a second instance (close it).
 - Hook message "N unpushed commits" can be a stale tracking ref: compare `git ls-remote origin <branch>` with `git rev-parse HEAD`.
 - Test files use `warn or print`; `warn` is nil in the headless harness.
 - Pet level shown/used = min(stored level, owner level); a new season (owner back at level 1) shows pets low until the hero catches up; stored level is kept.

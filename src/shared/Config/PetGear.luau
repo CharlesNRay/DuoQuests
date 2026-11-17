@@ -14,7 +14,7 @@
 return {
 	Slots = 4,
 	Kinds = { "Collar", "Charm", "Saddle", "Toy" }, -- slot n takes Kinds[n]
-	KindGlyph = { Collar = "📿", Charm = "🔮", Saddle = "🪢", Toy = "🧸" },
+	KindGlyph = { Collar = "📿", Charm = "🔮", Saddle = "🐴", Toy = "🧸" },
 	BagSize = 30,
 	Rarities = { "Common", "Rare", "Epic", "Legendary" },
 	RarityMult = { Common = 1, Rare = 1.6, Epic = 2.5, Legendary = 4 },
