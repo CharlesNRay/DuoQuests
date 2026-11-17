@@ -229,6 +229,11 @@ function TutorialUI:Update(state, hidden)
 		return
 	end
 	local frontier = player.Frontier or 1
+	-- an "open" goal only counts once its step is current (watching a battle by accident earlier must not skip a step)
+	if t.Step ~= self.CountedStep then
+		self.CountedStep = t.Step
+		self.Opened_ = {}
+	end
 	if not self.Busy then
 		if frontier > Tutorial.BossStage and not t.Rewarded then
 			-- somebody who is already past the first boss never needed the tutorial; one who just beat it gets the reward

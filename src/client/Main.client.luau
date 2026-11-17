@@ -642,6 +642,16 @@ tutorial.GoTo = function(spot)
 	local toCentre = Vector3.new(World.PLAZA.X - sx, 0, World.PLAZA.Z - sz)
 	local stand = Vector3.new(sx, 4, sz) + (if toCentre.Magnitude > 0 then toCentre.Unit * 14 else Vector3.new(0, 0, 14))
 	teleport(CFrame.lookAt(stand, Vector3.new(sx, 4, sz)))
+	-- turn the camera to look over the hero's shoulder at the spot, so its prompt is on screen
+	task.defer(function()
+		local cam = workspace.CurrentCamera
+		if cam and cam.CameraType == Enum.CameraType.Custom then
+			local spotPos = Vector3.new(sx, 6, sz)
+			local away = stand - Vector3.new(sx, 4, sz)
+			local eye = stand + (if away.Magnitude > 0 then away.Unit * 12 else Vector3.new(0, 0, 12)) + Vector3.new(0, 7, 0)
+			cam.CFrame = CFrame.lookAt(eye, spotPos)
+		end
+	end)
 end
 extra.OpenMenu = function()
 	current = nil
