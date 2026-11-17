@@ -345,6 +345,10 @@ function Replay:Play(info, onDone)
 			for _, hero in pairs(self.Heroes) do
 				hero:Cheer()
 			end
+			-- a clear win beat for the short pause before the next wave (only on your own arena)
+			if self.OnBanner and info.Stage then
+				self.OnBanner(("STAGE %d CLEARED"):format(info.Stage), Color3.fromRGB(120, 230, 140))
+			end
 		end
 	end)
 	-- fight over: walk on toward the next one

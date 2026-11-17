@@ -55,6 +55,7 @@ local Power = require(script.Parent.Power)
 local ProfileTemplate = require(script.Parent.ProfileTemplate)
 local Subclasses = require(script.Parent.Subclasses)
 local TableUtil = require(script.Parent.Util.TableUtil)
+local FIRST_BOSS_STAGE = require(script.Parent.Config.Stages).BossEvery -- stage 10: no farm hold up to it (see Party.OnlineTick)
 local Ultimates = require(script.Parent.Ultimates)
 local Classes = require(script.Parent.Config.Classes)
 
@@ -573,7 +574,9 @@ function Party.OnlineTick(party, online, seed, now)
 	end
 	-- A loss steps back one stage and HOLDS there: the party keeps farming that stage until a
 	-- member chooses to advance (map or Advance button), so it never grinds on a stage it cannot beat.
-	if not outcome.Won and stage > 1 then
+	-- (Before the first boss there is no hold: a brand-new player in the tutorial has not learned the Advance button,
+	-- so the party simply tries again after stepping back.)
+	if not outcome.Won and stage > FIRST_BOSS_STAGE then
 		party.Farm = true
 	end
 	local farming = party.Farm == true and outcome.Won and stage < party.Frontier

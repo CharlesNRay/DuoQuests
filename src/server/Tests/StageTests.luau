@@ -54,7 +54,7 @@ return function(modulesOverride)
 	check("Every 10th stage is a lone boss", Stages.Build(10).IsBoss and #Stages.Build(10).Enemies == 1 and Stages.Build(20).IsBoss)
 	check("Stage 9 is not a boss", not Stages.IsBoss(9))
 	check("Later regular stages have up to 3 enemies", #Stages.Build(7).Enemies == 3 and #Stages.Build(29).Enemies == 3)
-	check("Enemies get stronger every stage", Stages.Scale(5) > Stages.Scale(4) and Stages.Scale(1) == 1)
+	check("Enemies get stronger every stage (stage 1 at most scale 1; the early ease softens it)", Stages.Scale(5) > Stages.Scale(4) and Stages.Scale(12) > Stages.Scale(11) and Stages.Scale(41) > Stages.Scale(40) and Stages.Scale(1) > 0 and Stages.Scale(1) <= 1)
 	check("Stages are deterministic", #Stages.Build(13).Enemies == #Stages.Build(13).Enemies and Stages.Build(13).Enemies[2].EnemyId == Stages.Build(13).Enemies[2].EnemyId)
 	check("Bad stage numbers are rejected", not pcall(Stages.Build, 0) and not pcall(Stages.Build, 1.5))
 

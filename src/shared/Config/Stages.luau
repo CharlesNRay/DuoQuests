@@ -33,9 +33,9 @@ return {
 	-- Content gets tougher in steps to keep up with the power spikes the player gets
 	-- (subclass at level 30, and so on). Each tier multiplies enemy scale from its stage on.
 	Tiers = { { From = 31, Mult = 1.1 }, { From = 61, Mult = 1.1 } },
-	-- Softer zones right after the tutorial: from stage From enemies are scaled by Mult, easing back to full strength at To
+	-- Softer early zones (the tutorial and the ones after it): from stage From enemies are scaled by Mult, easing back to full strength at To
 	-- (new players have not learned wishing and gear yet; the late game keeps the pair balance). nil = off.
-	EarlyEase = { From = 11, To = 40, Mult = 0.8 },
+	EarlyEase = { From = 1, To = 40, Mult = 0.8 },
 	NormalHealth = { From = 5, Span = 25, Max = 1.6 }, -- ordinary enemies: extra health only, ramping from stage 5 to full at stage 30
 	FirstBossMult = 0.6, -- the first boss (stage 10) ends the tutorial, so it is much softer than the later ones
 	BossScaleMult = 1.1, -- extra multiplier on boss health and attack (bosses are the real hurdle)

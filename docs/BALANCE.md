@@ -94,7 +94,9 @@ Open: no-skills and no-pets slow a pair a little less than intended; stage 40 is
 ## Early ease - 2026-11-16
 Play-testing showed a fresh pair walled at stage 11 right after the tutorial (level 4, 20 wishes unspent). Two fixes:
 the tutorial now ends with "make your wishes" and "watch your battle" steps, and `Config/Stages.EarlyEase =
-{ From = 11, To = 40, Mult = 0.8 }` softens enemies from stage 11 (x0.8), easing back to full strength by stage 40.
+{ From = 1, To = 40, Mult = 0.8 }` softens enemies (x0.8 at the start, easing back to full strength by stage 40; it started at 11
+at first, but stages 2-10 had also got ~20% tougher and a level-2 pair lost stage 8 in the tutorial). No farm hold before
+the first boss: a loss there just steps back and the party tries again (new players do not know the Advance button yet).
 Simulated (companion, 2 seeds): level 30 unchanged at 5.1-6.1h (the subclass stays a 5-6h goal); level at stage 30 24-27;
 L40 9.2-12.3h; a player who upgrades nothing reaches stage 15 by level 15-16 (was 20-22) and still stalls at stage 20-25.
 PacingTests' old Warrior+Cleric bot spends no gold and levels no pets; its boss check now only asks that boss 20 is reached.
