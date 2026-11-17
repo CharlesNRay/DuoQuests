@@ -740,6 +740,13 @@ function Simulation:DealDamage(source, target, amount, info)
 	-- Defense mitigation. (Magical damage also uses Defense for now; a
 	-- separate magic resistance stat can be added later.)
 	local defenseK = 100 * EconomyConfig.NumberScale
+	-- A hero's Defense grows with gear stage after stage; against a fixed constant it would end up blocking nearly
+	-- everything (toughness ~ health x defense outgrows enemy attack, and pairs run away). With DefenseScaleExp set,
+	-- the constant grows with the attacking enemy's stage scale, so Defense keeps a steady share of the work.
+	local scaleExp = EconomyConfig.DefenseScaleExp
+	if scaleExp and source and source.Team == "Enemy" and (source.Scale or 1) > 1 then
+		defenseK *= source.Scale ^ scaleExp
+	end
 	ctx.Amount = ctx.Amount * defenseK / (defenseK + math.max(0, self:GetStat(target, "Defense")))
 	ctx.Amount *= self:GetStat(target, "DamageTaken")
 

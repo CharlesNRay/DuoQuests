@@ -27,6 +27,7 @@ return {
 	LevelGrowth = 0.35,
 	MinionScale = 0.27, -- a Summoner's minions take this share of their health and attack (their power rides on the summoner's gear, so it is trimmed to keep pace with the other classes)
 	GearPower = 9,
+	DefenseScaleExp = 0.5, -- Defense is measured against 1000 x (attacking enemy scale ^ this), not a flat 1000, so it cannot run away late (see Simulation)
 	EarlyWeak = { Start = 0.55, FullLevel = 60 },
 	-- Past the level cap, XP fills Paragon levels (Season.Paragon): each is a small permanent bonus to Attack, Health and Defense for the season.
 	Paragon = { Max = 100, XPFactor = 3, PerLevel = 0.004 },

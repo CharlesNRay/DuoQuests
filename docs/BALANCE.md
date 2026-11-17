@@ -61,3 +61,32 @@ The auto-player is more efficient than a real player at spending, so it runs ahe
 - The auto-player equips the most recently unlocked skills and cannot plan around boss timings or pick area skills on purpose, so it over-penalises mechanic bosses. Real players should do better. **Floor 40 (Slime King again) is a ~40-attempt wall for the bot; check it by hand.**
 - Solo play with no partner is still much slower; the starter companion helps in the real game but the simulator has no companion mode yet.
 - XP is tied to stage progress, so levels past 30 depend on beating the stage 30-40 bosses.
+
+# Pair balance - 2026-11-16 (supersedes the solo-tuned numbers above)
+The game is always played by two fighters: a partner, or the companion a lone player gets (it mirrors the owner's
+gear, pet and average skill-slot level). The 2026-11-15/16 tuning had been measured with a hero fighting alone, so in a
+pair every class reached level 40 in 1-2 hours at stage ~250 (the older pair tool showed the same: level 30 in ~50 min).
+
+Cause: Defense was measured against a flat 1000 (`damage x 1000 / (1000 + Defense)`). Health and Defense both grow with
+gear stage after stage, so toughness grew about stage^2 while enemy attack grew stage^1.35: once a party got ahead it
+could never be stopped (runs either stalled ~60 or exploded past 150). Warrior + Cleric pairs (a lone Warrior gets the
+Priest companion, a lone Cleric the Guardian one) have the most Defense and ran away first; that was the "Guardian" issue.
+
+Changes:
+- `Config/Economy.DefenseScaleExp = 0.5`: the 1000 becomes 1000 x (attacking enemy scale ^ 0.5) (Simulation:DealDamage).
+- `Config/Stages.ScalePower` 1.35 -> 1.6: steeper enemy growth.
+- New, off: `Config/Stages.HealthScalePower` (enemy health on its own curve). Tried and rejected (it made pairs faster).
+
+Simulated with `tools/sim` (companion unless noted, goal level 40, 2 seeds):
+| Check | Result | Target |
+|---|---|---|
+| All 12 paths | L40 in 8.5-12.3h at stage 40-81; L30 in 4.8-6.6h | L40 in 9-11h at stage 40-90; L30 in 4-10h |
+| Real duo (Cleric Priest partner) | L40 in 9.2-13.4h at stage 37-50 | same |
+| Levels at stage 10 / 30 | 3-8 / 23-31 | 5-8 / 23-28 |
+| Upgrade nothing (lazy) | stalls at stage 19-20 | the stage 20 boss |
+| No gear | stalls at 19-28 | ~16 |
+| No skills | reaches 34-42 | ~30 |
+| No pets | 20-30% slower | ~45% slower |
+Sweeps that led here (8 sample builds): steeper curve alone left Warrior/Cleric pairs at stage 130-200; split health
+curves made it worse; defense scaling on the old curve was far too easy (L40 in 1-3h); curve 1.6 + defense 0.5 fit.
+Open: no-skills and no-pets slow a pair a little less than intended; stage 40 is where most builds sit at level 40.

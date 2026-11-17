@@ -38,13 +38,26 @@ function Stages.Scale(stage)
 	return scale
 end
 
+-- Enemy HEALTH can grow on a steeper curve than attack (Config.HealthScalePower). Pairs that never die (a tank and a
+-- healer) only race the clock, so health is what slows them; squishy pairs are not crushed by harder hits.
+-- Returns the extra health factor on top of Stages.Scale (1 when HealthScalePower is not set).
+function Stages.HealthExtra(stage)
+	local power = Config.HealthScalePower
+	if power == nil or power == Config.ScalePower then
+		return 1
+	end
+	local steps = stage - 1
+	return (1 + Config.ScalePerStage * steps ^ power) / (1 + Config.ScalePerStage * steps ^ Config.ScalePower)
+end
+
 -- Ordinary (non-boss) enemies get extra health only, so fights last long enough to watch (about 10-16 s) without hitting harder.
+-- Both kinds also get Stages.HealthExtra.
 function Stages.HealthMult(stage)
 	local ramp = Config.NormalHealth
 	if not ramp or Stages.IsBoss(stage) then
-		return 1
+		return Stages.HealthExtra(stage)
 	end
-	return 1 + (ramp.Max - 1) * math.clamp((stage - ramp.From) / ramp.Span, 0, 1)
+	return (1 + (ramp.Max - 1) * math.clamp((stage - ramp.From) / ramp.Span, 0, 1)) * Stages.HealthExtra(stage)
 end
 
 function Stages.Build(stage)
@@ -55,7 +68,7 @@ function Stages.Build(stage)
 	if Stages.IsBoss(stage) then
 		local bossNumber = stage // Config.BossEvery
 		local enemyId = Config.BossPool[(bossNumber - 1) % #Config.BossPool + 1]
-		table.insert(enemies, { Id = "e1", EnemyId = enemyId, Scale = scale * (Config.BossScaleMult or 1) * (if bossNumber == 1 then Config.FirstBossMult or 1 else 1) })
+		table.insert(enemies, { Id = "e1", EnemyId = enemyId, Scale = scale * (Config.BossScaleMult or 1) * (if bossNumber == 1 then Config.FirstBossMult or 1 else 1), HealthMult = Stages.HealthMult(stage) })
 	else
 		local count = math.min(Config.MaxEnemies, 1 + (stage - 1) // 2)
 		for index = 1, count do
