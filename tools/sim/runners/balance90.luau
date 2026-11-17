@@ -1,11 +1,18 @@
--- Class balance study: a solo auto-player per class path to level 90 (gear, pets, skills, wishing included).
+-- Class balance study: an auto-player per class path to a goal level (gear, pets, skills, wishing included), solo or with a partner (see PARTNER).
 local m = {
 	ProfileTemplate = require("./ProfileTemplate"), StageRunner = require("./StageRunner"), Skills = require("./Skills"), Economy = require("./Economy"),
 	Classes = require("./Config/Classes"), Wishing = require("./Wishing"), SkillProgress = require("./SkillProgress"), Subclasses = require("./Subclasses"),
 	Gear = require("./Gear"), Pets = require("./Pets"), PetConfig = require("./Config/Pets"), SubclassConfig = require("./Config/Subclasses"),
+	Party = require("./Party"),
 }
 local ARGS = require("./cfg")
 local MODE = ARGS[4] or "full"
+-- who fights next to the tested hero (the game is played in pairs):
+--   "solo"       nobody (the old behaviour; a real lone player always has the companion)
+--   "companion"  the starter ghost the server gives a one-player party (Party.SyncCompanion), plus party ultimates
+--   <Class>      a second auto-played hero of that class (always plays "full"), plus party ultimates; ARGS[6] = its path
+local PARTNER = ARGS[5] or "solo"
+local PARTNER_PATH = ARGS[6]
 local doGear = not (MODE == "lazy" or MODE == "nogear")
 local doSkill = not (MODE == "lazy" or MODE == "noskill")
 local doPet = not (MODE == "lazy" or MODE == "nopet")
@@ -80,6 +87,14 @@ local function equipGear(profile)
 	for i = #eq.Inventory, 1, -1 do m.Gear.Sell(profile, eq.Inventory[i].Id) end
 end
 
+-- run fn with every upgrade switched on (the partner hero always plays "full", whatever MODE tests on the main hero)
+local function asFull(fn)
+	local g, s, p, o = doGear, doSkill, doPet, doGold
+	doGear, doSkill, doPet, doGold = true, true, true, true
+	fn()
+	doGear, doSkill, doPet, doGold = g, s, p, o
+end
+
 local LAZY = MODE == "lazy"
 local function goldSpend(profile, classId)
 	-- half the gold trains skill slots, half upgrades worn gear (cheapest first), like a player using the Trainer and the Blacksmith
@@ -116,6 +131,16 @@ local function run(classId, pathId, seedBase, goalLevel)
 	profile.Season.ClassId = classId
 	m.ProfileTemplate.EnsureClass = nil
 	local team = { { Id = "p1", Name = classId, Profile = profile } }
+	local companionParty, partnerProfile, partnerClass
+	if PARTNER == "companion" then
+		companionParty = { Members = { 1 } } -- just enough of a party for Party.SyncCompanion
+	elseif PARTNER ~= "solo" then
+		partnerClass = PARTNER
+		partnerProfile = m.ProfileTemplate.New()
+		partnerProfile.Permanent.UnlockedClasses[partnerClass] = true
+		partnerProfile.Season.ClassId = partnerClass
+		team[2] = { Id = "p2", Name = partnerClass, Profile = partnerProfile }
+	end
 	local clock, stage, seed, fights = 0, 1, seedBase * 1000, 0
 	local levelAt, first = {}, {}
 	local lvAtStage = {}
@@ -132,7 +157,13 @@ local function run(classId, pathId, seedBase, goalLevel)
 		fights += 1
 		if fights % 100 == 0 then print(("progress %s %s fights %d stage %d lv %d game %.1fh cpu %.0fs"):format(classId, pathId, fights, stage, profile.Season.Level, clock / 3600, os.clock())) end
 		local stonesBefore = profile.Season.Currencies.Wishstones or 0
-		local outcome = m.StageRunner.Run(team, stage, seed)
+		if companionParty then
+			-- exactly what the server does for a one-player party: the companion follows the owner's level and build
+			local companion = m.Party.SyncCompanion(companionParty, profile, 0)
+			team[2] = { Id = "c", Name = companion.Name, Snapshot = companion }
+		end
+		local ultimate = if #team == 2 then m.StageRunner.UltimateFor(team, profile.Season.HighestStage, nil) else nil
+		local outcome = m.StageRunner.Run(team, stage, seed, ultimate)
 		stonesEarned += (profile.Season.Currencies.Wishstones or 0) - stonesBefore
 		if profile.Season.Level >= 30 and stonesAt30 == nil then stonesAt30 = { stonesEarned, profile.Season.HighestStage, clock / 3600, fights } end
 		clock += outcome.Duration + 2
@@ -151,6 +182,18 @@ local function run(classId, pathId, seedBase, goalLevel)
 		spend(profile, classId)
 		if doSkill then equipBest(profile, classId) end
 		if doGold then goldSpend(profile, classId) end
+		if partnerProfile then
+			asFull(function()
+				if not m.Subclasses.Current(partnerProfile, partnerClass) and partnerProfile.Season.Level >= 30 then
+					local path = PARTNER_PATH or m.Subclasses.Choices(partnerClass, nil)[1].Id
+					m.Subclasses.Choose(partnerProfile, partnerClass, path)
+				end
+				equipGear(partnerProfile)
+				spend(partnerProfile, partnerClass)
+				equipBest(partnerProfile, partnerClass)
+				goldSpend(partnerProfile, partnerClass)
+			end)
+		end
 		for _, st in ipairs({ 3, 5, 10, 15, 20, 30, 40, 50, 60, 70, 80, 90, 100 }) do
 			if lvAtStage[st] == nil and profile.Season.HighestStage >= st then lvAtStage[st] = profile.Season.Level end
 		end
@@ -168,7 +211,7 @@ local function run(classId, pathId, seedBase, goalLevel)
 		if r == "Legendary" or r == "Epic" then table.insert(rarePets, petId) end
 	end
 	table.sort(rarePets)
-	return { Stuck = stuck, Class = classId, Path = pathId, Hours = clock / 3600, Level = profile.Season.Level, Frontier = profile.Season.HighestStage, Fights = fights,
+	return { Stuck = stuck, Class = classId, Path = pathId .. (if PARTNER == "solo" then "" else "+" .. PARTNER .. (PARTNER_PATH and ("." .. PARTNER_PATH) or "")), Hours = clock / 3600, Level = profile.Season.Level, Frontier = profile.Season.HighestStage, Fights = fights,
 		Durs = durs, LvAtStage = lvAtStage, Stones30 = stonesAt30, First = first, LevelAt = levelAt, Pet = pet, GearScore = gearScore, RarePets = rarePets }
 end
 
