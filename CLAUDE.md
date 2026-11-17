@@ -34,6 +34,16 @@ Git Bash; they find a working Python themselves (`python3`/`python` there are St
 - Other: VIP Game Pass scaffolding (`Passes`, ids are 0), map stage rewards (`StageRewards`), 3-view combat log + damage-by-skill tracker, tutorial rewrite, class-choose enters game, Templar retune.
 
 ## Backlog / next steps
+0. **Owner feedback 2026-11-17 (not started, do these first):**
+   - Summoner bug: summons keep spawning (seemingly without limit) and never despawn. Summons should despawn when they die or
+     on a timer; the ones meant to tank are not taking aggro. They also feel underwhelming (may be the bug; re-check
+     `MinionScale` 0.27 after fixing).
+   - Add a way to leave boss fights.
+   - The seasonal or guild boss fight used plain strikes instead of the normal auto combat (skills); find which and fix.
+   - Consider 4-player parties instead of 2, which means rebalancing everything for 4 (tools/sim partner modes take one partner today).
+   - Studio test cheat (🧪 HUD button, `handlers.DevGrant`) should give much more gold.
+   - Dungeons: show a recommended level; make them slightly challenging; structure = 2-3 waves of monsters then a boss,
+     fought back to back with no healing and no skill-cooldown reset between waves, until fully cleared.
 1. **Studio verification** of everything unseen. Seen and working (2026-11-16 evening): class-choose flow, tutorial card, Skill Trainer
    (train a slot), Pet Store (egg, crate, snack; header shows what a crate gave), feeding pet food (Bag > Stash), Pets detail card,
    Pets > Pet gear (wear/remove), map claim badges + Claim all, combat log 3 views, Flame aura on the hero, Store tabs, VIP row,
