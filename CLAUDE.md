@@ -38,7 +38,7 @@ with parts turned off (`full|nogear|noskill|nopet|nogold|lazy`). Needs the stand
    Battle hub, dungeon run (victory card), expedition send. Still unseen: expedition collect, season auras once won, the other
    auras/kill effects, tutorial arrow steps past 1, pet follower, guild raid / world + season boss screens.
    Open UI nit: the map badge hover tooltip has not been seen.
-   Watch for: tables keyed by numbers with gaps do not survive remotes (pet gear Equipped and StageClaims were hit); ✔ does not render.
+   Watch for: tables keyed by numbers with gaps do not survive remotes (pet gear Equipped and StageClaims were hit); ✔ and newer emoji (🪙 🪢 🪦, Unicode 13+) do not render.
    Balance questions for the owner: Market "Pet Food x5" = 2,304g vs Pet Store Pet Snack 6,900g each (same item); one Forgotten Crypt run
    at stage 6 paid ~9.7K gold (3 keys/day); VIP row promises "a second pet slot" but perk PetSlots is unused. (and season auras), tutorial arrow/card, combat log views, map claim badges, tooltips, class-choose flow, pet follower, Battle hub dungeons/expeditions, Market tab, VIP row. Rojo must be reconnected via VS Code first.
 2. Test hero in `tools/sim` does not yet use pet gear, pet food or pet leveling; pets are probably worth more than the numbers show. Check replay Wishstone income (maybe too generous).
