@@ -617,7 +617,71 @@ function Screens.Inspect(container, _, _, extra)
 end
 
 -- Pets ---------------------------------------------------------------------
+-- Pet gear: four slots (open as the active pet levels) and the bag of pieces
+function Screens.PetGear(container, state, call, extra)
+	Kit.clear(container)
+	local g = state.Player.PetGear
+	if not g then
+		return
+	end
+	local PetGearConfig = require(game:GetService("ReplicatedStorage"):WaitForChild("Shared").Config.PetGear)
+	local function pieceText(piece)
+		return ("%s %s\n%s"):format(Kit.tint(piece.Rarity, Kit.rarityColor(piece.Rarity)), piece.Kind, ("+%.1f%% %s"):format(piece.Value * 100, (PetGearConfig.StatUnits[piece.Stat] or {}).Label or piece.Stat))
+	end
+	Kit.button({ Size = UDim2.fromOffset(110, 24), Position = UDim2.fromOffset(0, 0), Text = "◀ Pets", TextSize = 12, BackgroundColor3 = C.Panel, Parent = container }, function()
+		extra.PetsView = nil
+		Screens.Pets(container, state, call, extra)
+	end)
+	Kit.label({ Size = UDim2.new(1, -120, 0, 24), Position = UDim2.fromOffset(120, 0), Text = ("Pet gear works for YOU. Your pet is Lv %d; more slots open as it levels."):format(g.PetLevel), TextSize = 12, TextColor3 = C.Dim, Parent = container })
+	for slot = 1, #g.Kinds do
+		local open = slot <= g.Open
+		local piece = g.Equipped[slot]
+		local tile = Kit.button({ Size = UDim2.new(0.25, -6, 0, 78), Position = UDim2.new((slot - 1) * 0.25, 0, 0, 30), Text = "", BackgroundColor3 = if open then C.PanelLight else C.Panel, Parent = container }, function()
+			if piece then
+				call("UnequipPetGear", slot)
+			end
+		end)
+		Kit.new("UIStroke", { Color = if piece then Kit.rarityColor(piece.Rarity) else C.Dim, Thickness = if piece then 2 else 1, Transparency = if open then 0 else 0.6, Parent = tile })
+		Kit.label({ Size = UDim2.new(1, -4, 0, 16), Position = UDim2.fromOffset(2, 3), Text = (PetGearConfig.KindGlyph[g.Kinds[slot]] or "") .. " " .. g.Kinds[slot], TextSize = 12, Font = Enum.Font.GothamBold, TextXAlignment = Enum.TextXAlignment.Center, TextColor3 = if open then C.Text else C.Dim, Parent = tile })
+		if not open then
+			Kit.label({ Size = UDim2.new(1, -4, 0, 40), Position = UDim2.fromOffset(2, 24), Text = ("🔒\nPet Lv %d"):format(g.SlotNeeds[slot]), TextSize = 12, TextXAlignment = Enum.TextXAlignment.Center, TextColor3 = C.Dim, Parent = tile })
+		elseif piece then
+			Kit.label({ Size = UDim2.new(1, -6, 0, 50), Position = UDim2.fromOffset(3, 22), RichText = true, Text = pieceText(piece) .. "\n<font size=\"9\">tap to remove</font>", TextSize = 11, TextXAlignment = Enum.TextXAlignment.Center, TextColor3 = C.Text, Parent = tile })
+		else
+			Kit.label({ Size = UDim2.new(1, -4, 0, 40), Position = UDim2.fromOffset(2, 28), Text = "empty", TextSize = 12, TextXAlignment = Enum.TextXAlignment.Center, TextColor3 = C.Dim, Parent = tile })
+		end
+	end
+	Kit.label({ Size = UDim2.new(1, 0, 0, 20), Position = UDim2.fromOffset(0, 112), Text = ("Bag  %d / %d   -   buy crates at the Pet Store in the plaza; bosses sometimes drop gear"):format(#g.Bag, g.BagSize), TextSize = 12, TextColor3 = C.Dim, Parent = container })
+	local scroll = Kit.new("ScrollingFrame", { Size = UDim2.new(1, 0, 1, -136), Position = UDim2.fromOffset(0, 134), BackgroundTransparency = 1, BorderSizePixel = 0, CanvasSize = UDim2.new(), AutomaticCanvasSize = Enum.AutomaticSize.Y, ScrollBarThickness = 4, Parent = container })
+	Kit.new("UIListLayout", { Padding = UDim.new(0, 4), Parent = scroll })
+	for index, piece in ipairs(g.Bag) do
+		local slot
+		for i, kind in ipairs(g.Kinds) do
+			if kind == piece.Kind then slot = i end
+		end
+		local locked = slot > g.Open
+		local r = Kit.frame({ Size = UDim2.new(1, -8, 0, 40), BackgroundColor3 = C.PanelLight, LayoutOrder = index, Parent = scroll })
+		Kit.new("UIStroke", { Color = Kit.rarityColor(piece.Rarity), Thickness = 1.5, Parent = r })
+		Kit.label({ Size = UDim2.new(1, -190, 1, 0), Position = UDim2.fromOffset(8, 0), RichText = true, Text = ("%s %s  %s\n%s"):format(PetGearConfig.KindGlyph[piece.Kind] or "", Kit.tint(piece.Rarity .. " " .. piece.Kind, Kit.rarityColor(piece.Rarity)), if locked then "(slot locked)" else "", ("+%.1f%% %s"):format(piece.Value * 100, (PetGearConfig.StatUnits[piece.Stat] or {}).Label or piece.Stat)), TextSize = 12, TextColor3 = C.Text, Parent = r })
+		local eq = Kit.button({ Size = UDim2.fromOffset(78, 30), Position = UDim2.new(1, -170, 0.5, -15), Text = "Wear", TextSize = 12, BackgroundColor3 = if locked then C.Panel else C.Accent, TextColor3 = if locked then C.Dim else Color3.fromRGB(30, 24, 10), Parent = r }, function()
+			if not locked then
+				call("EquipPetGear", piece.Id)
+			end
+		end)
+		eq.Active = not locked
+		Kit.button({ Size = UDim2.fromOffset(84, 30), Position = UDim2.new(1, -88, 0.5, -15), Text = "Sell " .. NumberFormat.Short(math.floor(PetGearConfig.SellBase * PetGearConfig.RarityMult[piece.Rarity])) .. "g", TextSize = 11, BackgroundColor3 = C.Panel, Parent = r }, function()
+			call("SellPetGear", piece.Id)
+		end)
+	end
+	if #g.Bag == 0 then
+		Kit.label({ Size = UDim2.new(1, 0, 0, 40), Text = "No pet gear yet. Visit the Pet Store.", TextColor3 = C.Dim, TextSize = 13, Parent = scroll })
+	end
+end
+
 function Screens.Pets(container, state, call, extra)
+	if extra.PetsView == "Gear" then
+		return Screens.PetGear(container, state, call, extra)
+	end
 	Kit.clear(container)
 	local pets = table.clone(state.Player.Pets or {})
 	local rankOf = { Legendary = 4, Epic = 3, Rare = 2, Common = 1 }
@@ -656,9 +720,13 @@ function Screens.Pets(container, state, call, extra)
 		table.insert(parts, ("%s %d"):format(Kit.tint(rarity:sub(1, 1), Kit.rarityColor(rarity)), shards[rarity] or 0))
 	end
 	local bonus = if coll then ("  |  Collection +%.1f%%"):format(coll.Percent or 0) else ""
-	local shardLabel = Kit.label({ Size = UDim2.new(1, -140, 1, 0), Position = UDim2.fromOffset(10, 0), RichText = true, TextSize = 13, Text = ("<b>Shards</b>  %s%s"):format(table.concat(parts, "   "), bonus), Parent = strip })
+	local shardLabel = Kit.label({ Size = UDim2.new(1, -240, 1, 0), Position = UDim2.fromOffset(10, 0), RichText = true, TextSize = 12, Text = ("<b>Shards</b>  %s%s"):format(table.concat(parts, "   "), bonus), Parent = strip })
 	Kit.Hover(shardLabel, function()
 		return ("Spare copies of max-rank pets become shards.\n%d shards buy a pet of that rarity; %d condense into 1 of the next rarity."):format(info.PetCost, info.CondenseCost)
+	end)
+	Kit.button({ Size = UDim2.fromOffset(84, 22), Position = UDim2.new(1, -226, 0, 4), Text = "Pet gear", TextSize = 12, BackgroundColor3 = C.PanelLight, Parent = strip }, function()
+		extra.PetsView = "Gear"
+		Screens.Pets(container, state, call, extra)
 	end)
 	Kit.button({ Size = UDim2.fromOffset(120, 22), Position = UDim2.new(1, -130, 0, 4), Text = "Condense all", TextSize = 12, BackgroundColor3 = C.Accent, TextColor3 = Color3.fromRGB(30, 24, 10), Parent = strip }, function()
 		call("CondensePetShards", "All")

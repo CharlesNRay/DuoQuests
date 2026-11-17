@@ -78,8 +78,14 @@ return function(modulesOverride)
 	local lowRank = Pets.Mods("Slimey", 1, 1)[1].Value
 	local highRank = Pets.Mods("Slimey", 1, PetConfig.MaxRank)[1].Value
 	check("A higher rank gives a bigger bonus", highRank > lowRank * 2)
+	profile.Season.Level = 20
 	Pets.AddXP(profile, "Slimey", 10000000)
+	check("Pets stop at the owner's level", Pets.Level(profile, "Slimey") == 20 and select(2, Pets.AddXP(profile, "Slimey", 5)) == "MaxLevel")
+	profile.Season.Level = 120
+	Pets.AddXP(profile, "Slimey", 1e12)
 	check("Pets stop at the max level", Pets.Level(profile, "Slimey") == Pets.MaxLevel)
+	check("A pet levels faster than its owner", Pets.XPToNext(10) < m.Progression.XPToNext(10))
+	profile.Season.Level = 1
 	profile.Permanent.PetRanks.Slimey = 1
 	profile.Permanent.PetLevels.Slimey = 1
 
@@ -90,10 +96,13 @@ return function(modulesOverride)
 	check("Equipping a pet changes the active pet", Pets.Equip(profile, "Foxling") and Pets.Active(profile) == "Foxling")
 
 	-- a new season keeps ownership, the equipped pet and its levels
+	profile.Season.Level = 30
 	Pets.AddXP(profile, "Foxling", 5000)
 	local foxLevel = Pets.Level(profile, "Foxling")
 	profile.Season = ProfileTemplate.NewSeasonData(2)
-	check("After a season reset the pet and its level carry over", Pets.Active(profile) == "Foxling" and Pets.Level(profile, "Foxling") == foxLevel and foxLevel > 1)
+	check("After a season reset the pet and its level carry over", Pets.Active(profile) == "Foxling" and profile.Permanent.PetLevels.Foxling == foxLevel and foxLevel > 1 and Pets.Level(profile, "Foxling") == 1)
+	profile.Season.Level = 30
+	check("The stored pet level returns as the owner levels back up", Pets.Level(profile, "Foxling") == foxLevel)
 
 	-- combat stats
 	local plain = StatCalc.NewPartyMember("a", "A", "Warrior", 10)

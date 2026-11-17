@@ -10,7 +10,7 @@
 	  Map board, Rankings board, Daily gift chest
 	  Roads running north between the player lots, and a marker on every lot nobody has taken
 
-	  Hub.Build(handlers)       handlers = { Map, Ranks, Season, Daily, Merchant, Blacksmith, Trainer, Tree } (all functions)
+	  Hub.Build(handlers)       handlers = { Map, Ranks, Season, Daily, Merchant, Blacksmith, Trainer, PetStore, Tree } (all functions)
 	  Hub.SetDailyReady(bool)
 	  Hub.SetLots(taken)        taken = { [slot] = true }: lots without a party get an "Open lot" marker
 	  Hub.Update(dt)            animate the townsfolk and the fountain (called every frame by Main)
@@ -382,6 +382,7 @@ function Hub.Build(handlers)
 
 	-- shops
 	shopNpc("Merchant", "Sell gear", "Merchant", { Shirt = Color3.fromRGB(70, 130, 80), Pants = Color3.fromRGB(80, 64, 50), Hat = Color3.fromRGB(150, 110, 50), Apron = Color3.fromRGB(235, 225, 190) }, "Sell gear", handlers.Merchant, centre, Color3.fromRGB(70, 150, 90))
+	shopNpc("Pet Store", "Eggs & pet gear", "PetStore", { Shirt = Color3.fromRGB(200, 120, 160), Pants = Color3.fromRGB(70, 60, 80), Hair = Color3.fromRGB(120, 70, 40), Apron = Color3.fromRGB(250, 235, 235) }, "Browse", handlers.PetStore, centre, Color3.fromRGB(240, 140, 180))
 	shopNpc("Trainer", "Level skill slots", "Trainer", { Shirt = Color3.fromRGB(70, 90, 160), Pants = Color3.fromRGB(44, 44, 70), Hair = Color3.fromRGB(200, 200, 210), Apron = Color3.fromRGB(230, 200, 90) }, "Train skills", handlers.Trainer, centre, Color3.fromRGB(110, 150, 240))
 	local forgeCf = shopNpc("Blacksmith", "Upgrade gear", "Blacksmith", { Shirt = Color3.fromRGB(110, 60, 52), Pants = Color3.fromRGB(50, 50, 58), Hair = Color3.fromRGB(30, 24, 20), Apron = Color3.fromRGB(60, 60, 66) }, "Upgrade gear", handlers.Blacksmith, centre, Color3.fromRGB(200, 100, 60))
 	part(folder, { Name = "Anvil", Size = Vector3.new(1.4, 1.6, 2.6), CFrame = forgeCf * CFrame.new(6.4, 1, -2), Color = Color3.fromRGB(56, 56, 64), Material = Enum.Material.Metal })

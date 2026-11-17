@@ -42,6 +42,7 @@ World.SHOP_RANGE = 30 -- studs from a shop within which buying/selling/upgrading
 World.PlazaSpots = {
 	Merchant = { Angle = -38, Radius = 52 },
 	Blacksmith = { Angle = 38, Radius = 52 },
+	PetStore = { Angle = -14, Radius = 56 }, -- eggs, pet gear crates and pet food
 	Trainer = { Angle = 14, Radius = 56 }, -- the Skill Trainer levels your skill slots
 	Map = { Angle = -100, Radius = 55 },
 	Rankings = { Angle = 100, Radius = 55 },

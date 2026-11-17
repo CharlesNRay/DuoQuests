@@ -4,6 +4,7 @@
 
 	  Shops.Merchant(container, state, call, extra)   sell bagged gear, one piece or in bulk
 	  Shops.Blacksmith(container, state, call, extra) upgrade worn or bagged gear with gold
+	  Shops.PetStore(container, state, call, extra)   eggs, pet gear crates and pet food
 	  Shops.Trainer(container, state, call, extra)    level the skill slots with gold
 ]]
 local Short = require(game:GetService("ReplicatedStorage"):WaitForChild("Shared").Util.NumberFormat).Short
@@ -229,6 +230,40 @@ function Shops.Trainer(container, state, call)
 				end
 			end)
 			b.Active = can
+		end
+	end
+end
+
+-- Pet Store ---------------------------------------------------------------------
+-- Eggs (Pet Wish tickets), pet gear crates and pet food. Wear the gear on the Pets screen.
+function Shops.PetStore(container, state, call)
+	local me = state.Player
+	local g = me.PetGear
+	local scroll = list(container, 26)
+	Kit.label({ Size = UDim2.new(1, 0, 0, 24), Text = ("Gold: %s   -   wear what you buy on the Pets screen (Pet gear)"):format(Short(gold(state))), TextColor3 = C.Accent, TextSize = 13, Parent = container })
+	local function offer(glyph, name, desc, price, buttonText, action, enabled)
+		local r = row(scroll, 60)
+		Kit.label({ Size = UDim2.fromOffset(44, 44), Position = UDim2.fromOffset(8, 8), Text = glyph, TextSize = 28, TextXAlignment = Enum.TextXAlignment.Center, Parent = r })
+		Kit.label({ Size = UDim2.new(1, -170, 1, 0), Position = UDim2.fromOffset(60, 0), Text = name .. "\n" .. desc, TextColor3 = C.Text, TextSize = 12, TextWrapped = true, Parent = r })
+		local can = enabled and gold(state) >= price
+		local b = Kit.button({ Size = UDim2.fromOffset(104, 42), Position = UDim2.new(1, -110, 0.5, -21), Text = buttonText .. "\n" .. Short(price) .. "g", TextSize = 12, BackgroundColor3 = if can then C.Up else C.Panel, TextColor3 = if can then C.Text else C.Dim, Parent = r }, function()
+			if can then
+				action()
+			end
+		end)
+		b.Active = can
+	end
+	offer("🥚", "Pet Egg", ("A Pet Wish: hatch it at the Wishing Tree.  %d left today"):format(g.EggsLeft), g.EggPrice, "Buy", function() call("BuyPetEgg") end, g.EggsLeft > 0)
+	for _, crate in ipairs(g.Crates) do
+		local odds = {}
+		for _, rarity in ipairs({ "Common", "Rare", "Epic", "Legendary" }) do
+			table.insert(odds, ("%s %d%%"):format(rarity:sub(1, 1), crate.Odds[rarity] or 0))
+		end
+		offer(crate.Glyph, crate.Name, "One piece of pet gear.  " .. table.concat(odds, "  "), crate.Price, "Open", function() call("BuyPetGearCrate", crate.Id) end, #g.Bag < g.BagSize)
+	end
+	for _, item in ipairs(me.Supplies or {}) do
+		if item.Kind == "PetFood" then
+			offer(item.Glyph, item.Name, item.Description, item.Price, "Buy", function() call("BuyConsumable", item.Id, 1) end, true)
 		end
 	end
 end

@@ -25,6 +25,8 @@ local Economy = require(script.Parent.Config.Economy)
 local Stages = require(script.Parent.Stages)
 local Passives = require(script.Parent.Passives)
 local Pets = require(script.Parent.Pets)
+local PetGear = require(script.Parent.PetGear)
+local PetsConfig = require(script.Parent.Config.Pets)
 local Gear = require(script.Parent.Gear)
 local Consumables = require(script.Parent.Consumables)
 local Quests = require(script.Parent.Quests)
@@ -156,11 +158,20 @@ function Progression.ApplyClear(profile, stage, rand)
 		Consumables.Grant(profile, consumableId, 1)
 	end
 
+	-- bosses sometimes drop a piece of pet gear
+	local petGearDrop = nil
+	if Stages.IsBoss(stage) then
+		local gotGear, piece = PetGear.BossDrop(profile, rand)
+		if gotGear then
+			petGearDrop = piece
+		end
+	end
+
 	-- the active pet levels up from fighting too
 	local petId = Pets.Active(profile)
 	local petLevelsGained = 0
 	if petId then
-		local okPet, gained = Pets.AddXP(profile, petId, Economy.PetXPPerClear or 12)
+		local okPet, gained = Pets.AddXP(profile, petId, math.floor((rewards.XP or 0) * (PetsConfig.PetXPShare or 1)))
 		petLevelsGained = if okPet then gained else 0
 	end
 
@@ -180,6 +191,7 @@ function Progression.ApplyClear(profile, stage, rand)
 		Item = item,
 		ItemSoldFor = itemSoldFor,
 		Consumable = consumableId,
+		PetGearDrop = petGearDrop,
 		PetLevelsGained = petLevelsGained,
 		LevelsGained = levelsGained,
 		Level = season.Level,

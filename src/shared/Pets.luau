@@ -7,6 +7,7 @@
 	reason, and changes NOTHING when it fails.
 
 	  Pets.MaxLevel
+	  Pets.LevelCap(profile)                the owner's current level: a pet never goes above it
 	  Pets.Level(profile, petId)            -> level (1 if never levelled)
 	  Pets.Active(profile)                  -> petId, level   or nil
 	  Pets.Mods(petId, level)               -> list of { Stat, Mode, Value } for StatCalc
@@ -58,9 +59,14 @@ local function account(profile)
 end
 Pets.Account = account
 
+-- A pet can never be above its owner's current level
+function Pets.LevelCap(profile)
+	return math.clamp((profile.Season and profile.Season.Level) or 1, 1, Config.MaxLevel)
+end
+
 function Pets.Level(profile, petId)
 	local levels = account(profile).PetLevels
-	return math.clamp(levels[petId] or 1, 1, Config.MaxLevel)
+	return math.min(math.clamp(levels[petId] or 1, 1, Config.MaxLevel), Pets.LevelCap(profile))
 end
 
 local function owned(profile, petId)
@@ -254,6 +260,10 @@ function Pets.Collection(profile)
 			table.insert(mods, { Stat = stat, Mode = "Mul", Value = paragon.Level * EconomyConfig.Paragon.PerLevel })
 		end
 	end
+	-- equipped pet gear (unlocked slots only) rides along here too
+	for _, mod in ipairs(require(script.Parent.PetGear).Mods(profile)) do
+		table.insert(mods, mod)
+	end
 	-- the guild's permanent combat upgrades ride along here: this list is already applied at every place a hero's stats are built
 	local guild = profile.Permanent.GuildBuffs
 	if guild and guild.Mods then
@@ -321,8 +331,9 @@ end
 
 -- Pet XP: pets level up from pet food and from fighting (see Progression). XP to go from level L to L+1
 -- is Config.XPPerLevel * L. XP is kept in Season.PetXP[petId], the level in Season.PetLevels[petId].
+local EconomyConfig = require(script.Parent.Config.Economy)
 function Pets.XPToNext(level)
-	return Config.XPPerLevel * level
+	return math.floor(Config.XPFactor * (EconomyConfig.XPBase + EconomyConfig.XPCurve * level ^ EconomyConfig.XPPower) * EconomyConfig.XPNumber)
 end
 
 function Pets.AddXP(profile, petId, amount)
@@ -334,17 +345,18 @@ function Pets.AddXP(profile, petId, amount)
 	end
 	local season = account(profile)
 	local level = Pets.Level(profile, petId)
-	if level >= Config.MaxLevel then
-		return false, "MaxLevel"
+	local cap = Pets.LevelCap(profile)
+	if level >= cap then
+		return false, "MaxLevel" -- at the owner's level: it waits until the hero levels up
 	end
 	local xp = (season.PetXP[petId] or 0) + math.max(0, amount or 0)
 	local gained = 0
-	while level < Config.MaxLevel and xp >= Pets.XPToNext(level) do
+	while level < cap and xp >= Pets.XPToNext(level) do
 		xp -= Pets.XPToNext(level)
 		level += 1
 		gained += 1
 	end
-	if level >= Config.MaxLevel then
+	if level >= cap then
 		xp = 0
 	end
 	season.PetXP[petId] = xp
@@ -368,7 +380,7 @@ function Pets.List(profile)
 			Wish = def.Wish == true,
 			Look = def.Look,
 			Level = level,
-			MaxLevel = Config.MaxLevel,
+			MaxLevel = Pets.LevelCap(profile),
 			Active = petId == activeId,
 			Text = Pets.Describe(petId, level, rank),
 			Rank = rank,

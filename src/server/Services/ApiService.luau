@@ -46,6 +46,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Remotes = require(Shared.Remotes)
 local Economy = require(Shared.Economy)
+local PetGear = require(Shared.PetGear)
 local Passives = require(Shared.Passives)
 local Progression = require(Shared.Progression)
 local Skills = require(Shared.Skills)
@@ -189,6 +190,7 @@ local function buildState(player)
 			Frontier = season.HighestStage,
 			Loadout = table.clone(season.Loadouts[classId]),
 			SlotLevels = SkillProgress.SlotLevelsFor(season, season.Loadouts[classId], classId),
+			PetGear = PetGear.View(profile, os.time()),
 			SlotBase = table.clone(season.SlotLevels[classId] or {}),
 			SkillInfo = SkillProgress.Info(season),
 			SkillReady = SkillProgress.AnyReady(season),
@@ -668,6 +670,45 @@ function handlers.UpgradeBag(player, profile)
 	return ok, data
 end
 
+-- Pet gear: wearing it works anywhere; buying it only at the Pet Store in the plaza
+function handlers.EquipPetGear(player, profile, pieceId)
+	local ok, reason = PetGear.Equip(profile, pieceId)
+	if ok then
+		afterBuildChange(player)
+	end
+	return ok, reason
+end
+
+function handlers.UnequipPetGear(player, profile, slot)
+	local ok, reason = PetGear.Unequip(profile, slot)
+	if ok then
+		afterBuildChange(player)
+	end
+	return ok, reason
+end
+
+function handlers.SellPetGear(player, profile, pieceId)
+	local ok, gold = PetGear.Sell(profile, pieceId)
+	return ok, gold
+end
+
+function handlers.BuyPetGearCrate(player, profile, crateId)
+	if type(crateId) ~= "string" then
+		return false, "BadArgs"
+	end
+	if not nearShop(player, "PetStore") then
+		return false, "TooFar"
+	end
+	return PetGear.BuyCrate(profile, crateId)
+end
+
+function handlers.BuyPetEgg(player, profile)
+	if not nearShop(player, "PetStore") then
+		return false, "TooFar"
+	end
+	return PetGear.BuyEgg(profile, os.time())
+end
+
 -- The Skill Trainer levels a skill SLOT (the level stays with the slot when you swap the skill in it)
 function handlers.LevelSlot(player, profile, slotIndex)
 	if type(slotIndex) ~= "number" then
@@ -716,7 +757,8 @@ function handlers.BuyConsumable(player, profile, id, count)
 	if type(id) ~= "string" or (count ~= nil and type(count) ~= "number") then
 		return false, "BadArgs"
 	end
-	if not nearShop(player, "Merchant") then
+	local isPetFood = Consumables.Defs[id] ~= nil and Consumables.Defs[id].Kind == "PetFood"
+	if not nearShop(player, "Merchant") and not (isPetFood and nearShop(player, "PetStore")) then
 		return false, "TooFar"
 	end
 	return Consumables.Buy(profile, id, count)

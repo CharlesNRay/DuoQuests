@@ -283,6 +283,7 @@ return function(modulesOverride)
 	check("Stage drops can give boosts and pet food but never wish tickets", drops.XPTonic and drops.PetFood and not drops.PetWish and not drops.SkillWish)
 	local fed = ProfileTemplate.New()
 	fed.Permanent.Pets = { Slimey = true }
+	fed.Season.Level = 40
 	C.Grant(fed, "PetFood", 3)
 	local okFeed = C.Use(fed, "PetFood", now, "Slimey")
 	check("Pet food gives a pet XP and levels it", okFeed and fed.Permanent.PetXP.Slimey ~= nil and C.Count(fed, "PetFood") == 2)

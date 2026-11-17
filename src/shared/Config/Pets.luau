@@ -21,8 +21,13 @@
 ]]
 
 return {
-	MaxLevel = 50,
-	XPPerLevel = 4000, -- pet XP to go from level L to L+1 is this * L (pet food and fighting)
+	MaxLevel = 120, -- the same as the player's cap; a pet can never be above the player's CURRENT level though (Pets.LevelCap)
+	-- Pets level from combat: every won fight gives the active pet PetXPShare of the XP the hero earned, and a pet level costs
+	-- XPFactor of what the same hero level costs, so a pet climbs faster than its owner until it meets the owner's level.
+	XPFactor = 0.5,
+	PetXPShare = 1.0,
+	-- The active pet's level opens the pet gear slots (see Config/PetGear): slot n opens at GearSlotLevels[n]
+	GearSlotLevels = { 5, 10, 18, 28 },
 	-- Duplicates are banked as copies (Permanent.PetCopies). The player spends RankCost[rank] copies to rank the
 	-- pet up by hand (Permanent.PetRanks), up to MaxRank. A rank adds RankBonus (a fraction) of the pet's stats and
 	-- raises its skill level by one. Pets level separately from food/fighting.
@@ -44,13 +49,13 @@ return {
 	-- Stat sizes at Share 1 for a Common pet; Share splits them (a one-stat pet gets 1.25, a two-stat pet 0.7 + 0.5,
 	-- so the single-stat pet is better at its stat). Mul = +fraction, Add = raw number.
 	StatUnits = {
-		MaxHealth = { Mode = "Mul", Base = 0.09, PerLevel = 0.008 },
-		Attack = { Mode = "Mul", Base = 0.09, PerLevel = 0.008 },
-		Defense = { Mode = "Mul", Base = 0.09, PerLevel = 0.008 },
-		AttackSpeed = { Mode = "Mul", Base = 0.08, PerLevel = 0.007 },
-		CritChance = { Mode = "Add", Base = 0.06, PerLevel = 0.005 },
-		CritMultiplier = { Mode = "Add", Base = 0.3, PerLevel = 0.02 },
-		Haste = { Mode = "Add", Base = 0.05, PerLevel = 0.004 },
+		MaxHealth = { Mode = "Mul", Base = 0.09, PerLevel = 0.0024 },
+		Attack = { Mode = "Mul", Base = 0.09, PerLevel = 0.0024 },
+		Defense = { Mode = "Mul", Base = 0.09, PerLevel = 0.0024 },
+		AttackSpeed = { Mode = "Mul", Base = 0.08, PerLevel = 0.0021 },
+		CritChance = { Mode = "Add", Base = 0.06, PerLevel = 0.0015 },
+		CritMultiplier = { Mode = "Add", Base = 0.3, PerLevel = 0.006 },
+		Haste = { Mode = "Add", Base = 0.05, PerLevel = 0.0012 },
 	},
 	RarityMult = { Common = 1, Rare = 1.5, Epic = 2.2, Legendary = 3.2 },
 
