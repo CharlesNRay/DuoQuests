@@ -11,7 +11,7 @@ local Market = require(script.Parent.MarketScreen)
 local C = Kit.Colors
 
 local TABS = {
-	{ Id = "Market", Text = "🪙 Market" },
+	{ Id = "Market", Text = "💰 Market" },
 	{ Id = "Premium", Text = "🔶 Premium shop" },
 	{ Id = "Cosmetics", Text = "🎨 Cosmetics" },
 	{ Id = "Codes", Text = "🎁 Redeem a code" },

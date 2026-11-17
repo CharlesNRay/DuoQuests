@@ -246,6 +246,15 @@ local function pullText(piece)
 	return ("Got: %s %s  %s"):format(PetGearConfig.KindGlyph[piece.Kind] or "", Kit.tint(piece.Rarity .. " " .. piece.Kind, Kit.rarityColor(piece.Rarity)), stat)
 end
 
+-- remember what a buy gave and write it into the header call() has just redrawn
+local function showPull(container, text)
+	lastPull = { Text = text, At = os.clock() }
+	local header = container:FindFirstChild("PetStoreHeader")
+	if header then
+		header.Text = (header.Text:match("^Gold: [^ ]+") or "") .. "   -   " .. text
+	end
+end
+
 function Shops.PetStore(container, state, call)
 	local me = state.Player
 	local g = me.PetGear
@@ -270,7 +279,12 @@ function Shops.PetStore(container, state, call)
 		end)
 		b.Active = can
 	end
-	offer("🥚", "Pet Egg", ("A Pet Wish: hatch it at the Wishing Tree.  %d left today"):format(g.EggsLeft), g.EggPrice, "Buy", function() call("BuyPetEgg") end, g.EggsLeft > 0)
+	offer("🥚", "Pet Egg", ("A Pet Wish: hatch it at the Wishing Tree.  %d left today"):format(g.EggsLeft), g.EggPrice, "Buy", function()
+		local ok = call("BuyPetEgg")
+		if ok then
+			showPull(container, "Got: 🥚 a Pet Wish - hatch it at the Wishing Tree")
+		end
+	end, g.EggsLeft > 0)
 	for _, crate in ipairs(g.Crates) do
 		local odds = {}
 		for _, rarity in ipairs({ "Common", "Rare", "Epic", "Legendary" }) do
@@ -279,12 +293,7 @@ function Shops.PetStore(container, state, call)
 		offer(crate.Glyph, crate.Name, "One piece of pet gear.  " .. table.concat(odds, "  "), crate.Price, "Open", function()
 			local ok, piece = call("BuyPetGearCrate", crate.Id)
 			if ok and type(piece) == "table" and piece.Kind then
-				lastPull = { Text = pullText(piece), At = os.clock() }
-				-- call() has already redrawn the screen: update the new header in place
-				local header = container:FindFirstChild("PetStoreHeader")
-				if header then
-					header.Text = (header.Text:match("^Gold: [^ ]+") or "") .. "   -   " .. lastPull.Text
-				end
+				showPull(container, pullText(piece))
 			end
 		end, #g.Bag < g.BagSize)
 	end

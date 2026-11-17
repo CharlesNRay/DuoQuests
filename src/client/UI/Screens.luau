@@ -288,9 +288,17 @@ local function stashTab(container, state, call, extra)
 		local y = 100
 		for _, pet in ipairs(me.Pets or {}) do
 			if pet.Owned and y < 170 then
-				Kit.button({ Size = UDim2.new(1, -16, 0, 26), Position = UDim2.fromOffset(8, y), Text = ("%s  Lv %d%s"):format(pet.Name, pet.Level, pet.Level >= (pet.MaxLevel or 10) and "  (max)" or ""), TextSize = 12, Parent = detail }, function()
-					call("UseConsumable", selRow.Id, pet.Id)
+				-- a pet at its cap (your level) cannot eat: grey it out instead of letting the server answer "MaxLevel"
+				local full = pet.Level >= (pet.MaxLevel or 10)
+				local feed = Kit.button({ Size = UDim2.new(1, -16, 0, 26), Position = UDim2.fromOffset(8, y), Text = ("%s  Lv %d%s"):format(pet.Name, pet.Level, if full then "  (max)" else ""), TextSize = 12, BackgroundColor3 = if full then C.Panel else C.PanelLight, TextColor3 = if full then C.Dim else C.Text, Parent = detail }, function()
+					if not full then
+						call("UseConsumable", selRow.Id, pet.Id)
+					end
 				end)
+				feed.Active = not full
+				if full then
+					Kit.Hover(feed, function() return ("%s is at your level (Lv %d). Level up your hero to feed it more."):format(pet.Name, pet.Level) end)
+				end
 				y += 30
 			end
 		end
@@ -316,11 +324,13 @@ function Screens.Bag(container, state, call, extra)
 		stashTab(container, state, call, extra)
 		return
 	end
-	Kit.label({ Size = UDim2.new(1, -470, 0, 32), Position = UDim2.fromOffset(190, 0), TextWrapped = true, Text = ("Bag %d/%d  -  strongest first.  Hover: green = better than what you wear."):format(#gear.Inventory, gear.Cap), TextColor3 = C.Dim, TextSize = 11, Parent = container })
-	Kit.button({ Name = "EquipBest", Size = UDim2.fromOffset(130, 30), Position = UDim2.new(1, -266, 0, 0), Text = "Equip best", BackgroundColor3 = C.Good, TextColor3 = C.Bg, Parent = container }, function()
+	-- the panel is narrow: just the count here, the hint lives in its hover (the long text wrapped to "Ba/g")
+	local count = Kit.label({ Size = UDim2.new(1, -404, 0, 30), Position = UDim2.fromOffset(184, 0), TextWrapped = false, TextScaled = false, Text = ("Bag %d/%d"):format(#gear.Inventory, gear.Cap), TextColor3 = C.Dim, TextSize = 12, TextXAlignment = Enum.TextXAlignment.Center, Parent = container })
+	Kit.Hover(count, function() return "Strongest first. Hover an item: green = better than what you wear." end)
+	Kit.button({ Name = "EquipBest", Size = UDim2.fromOffset(110, 30), Position = UDim2.new(1, -214, 0, 0), Text = "Equip best", BackgroundColor3 = C.Good, TextColor3 = C.Bg, Parent = container }, function()
 		call("EquipBestGear")
 	end)
-	Kit.button({ Size = UDim2.fromOffset(130, 30), Position = UDim2.new(1, -130, 0, 0), Text = if compact then "View: icons" else "View: list", Parent = container }, function()
+	Kit.button({ Size = UDim2.fromOffset(100, 30), Position = UDim2.new(1, -100, 0, 0), Text = if compact then "View: icons" else "View: list", Parent = container }, function()
 		extra.BagCompact = not compact
 		Screens.Bag(container, state, call, extra)
 	end)
