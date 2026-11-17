@@ -635,7 +635,7 @@ function Screens.PetGear(container, state, call, extra)
 	Kit.label({ Size = UDim2.new(1, -120, 0, 24), Position = UDim2.fromOffset(120, 0), Text = ("Pet gear works for YOU. Your pet is Lv %d; more slots open as it levels."):format(g.PetLevel), TextSize = 12, TextColor3 = C.Dim, Parent = container })
 	for slot = 1, #g.Kinds do
 		local open = slot <= g.Open
-		local piece = g.Equipped[slot]
+		local piece = g.Equipped[g.Kinds[slot]]
 		local tile = Kit.button({ Size = UDim2.new(0.25, -6, 0, 78), Position = UDim2.new((slot - 1) * 0.25, 0, 0, 30), Text = "", BackgroundColor3 = if open then C.PanelLight else C.Panel, Parent = container }, function()
 			if piece then
 				call("UnequipPetGear", slot)

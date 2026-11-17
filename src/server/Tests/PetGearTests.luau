@@ -42,7 +42,7 @@ return function(modulesOverride)
 
 	p.Permanent.PetLevels.Slimey = 5
 	check("Pet level 5 opens the first slot", PetGear.Slots(p) == 1)
-	check("The collar can be worn", PetGear.Equip(p, given.Id) == true and p.Permanent.PetGear.Equipped[1] ~= nil)
+	check("The collar can be worn", PetGear.Equip(p, given.Id) == true and p.Permanent.PetGear.Equipped.Collar ~= nil)
 	local mods = PetGear.Mods(p)
 	check("Worn gear gives a mod", #mods == 1 and mods[1].Stat == "DamageDealt" and mods[1].Mode == "Mul")
 	check("Pets.Collection carries the gear mods (so every stat build uses them)", (function() for _, mod in ipairs(Pets.Collection(p).Mods) do if mod.Stat == "DamageDealt" then return true end end return false end)())
@@ -51,6 +51,14 @@ return function(modulesOverride)
 	p.Permanent.PetLevels.Slimey = 28
 	check("Level 28 opens all four slots", PetGear.Slots(p) == 4)
 	check("Unequip returns it to the bag", PetGear.Unequip(p, 1) == true and #p.Permanent.PetGear.Bag == 1 and select(2, PetGear.Unequip(p, 1)) == "Empty")
+
+	-- older data keyed Equipped by slot number (only [4] worn = a sparse table that remotes drop): it moves to kind names
+	local old = { Kind = "Toy", Rarity = "Common", Stat = "DamageDealt", Value = 0.02, Id = "pgOld" }
+	p.Permanent.PetGear.Equipped = { [4] = old }
+	check("Old slot-number gear is moved to its kind and still gives its mod", #PetGear.Mods(p) == 1 and p.Permanent.PetGear.Equipped.Toy == old and p.Permanent.PetGear.Equipped[4] == nil)
+	check("The view sends gear keyed by kind", PetGear.View(p, 0).Equipped.Toy == old)
+	check("Unequip by slot number still works after the move", PetGear.Unequip(p, 4) == true and p.Permanent.PetGear.Equipped.Toy == nil and #p.Permanent.PetGear.Bag == 2)
+	table.remove(p.Permanent.PetGear.Bag, 2)
 
 	local gold = p.Season.Currencies.Gold
 	local sold, got = PetGear.Sell(p, p.Permanent.PetGear.Bag[1].Id)

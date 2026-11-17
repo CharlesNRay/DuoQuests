@@ -3,7 +3,7 @@
 	Location: ReplicatedStorage > Shared > PetGear
 
 	Gear the active pet wears: 4 slots (collar, charm, saddle, toy) that open as the pet levels. The stats help the player.
-	Data: Config/PetGear. Lives in Permanent.PetGear = { Bag = { piece... }, Equipped = { [slot] = piece }, NextId = n, Store = { Day, Eggs } }.
+	Data: Config/PetGear. Lives in Permanent.PetGear = { Bag = { piece... }, Equipped = { [kind name] = piece }, NextId = n, Store = { Day, Eggs } }.
 
 	  PetGear.Slots(profile)                 -> number of slots open (by the active pet's level)
 	  PetGear.Mods(profile)                  -> list of { Stat, Mode, Value } from the worn pieces in open slots
@@ -31,6 +31,19 @@ local function store(profile)
 	perm.PetGear = perm.PetGear or { Bag = {}, Equipped = {}, NextId = 1, Store = { Day = 0, Eggs = 0 } }
 	local g = perm.PetGear
 	g.Bag, g.Equipped, g.NextId, g.Store = g.Bag or {}, g.Equipped or {}, g.NextId or 1, g.Store or { Day = 0, Eggs = 0 }
+	-- Equipped is keyed by kind name ("Collar"...): a table keyed by slot NUMBER with gaps (only [4], say) is
+	-- dropped when sent to the client and is unsafe in the DataStore. Older data used numbers: move them over.
+	for key, piece in pairs(g.Equipped) do
+		if type(key) == "number" then
+			g.Equipped[key] = nil
+			local kind = Config.Kinds[key]
+			if kind and g.Equipped[kind] == nil then
+				g.Equipped[kind] = piece
+			else
+				table.insert(g.Bag, piece) -- never lose a piece, even past the bag size
+			end
+		end
+	end
 	return g
 end
 
@@ -56,13 +69,13 @@ function PetGear.Describe(piece)
 end
 
 function PetGear.Mods(profile)
-	local g = profile.Permanent.PetGear
-	if g == nil then
+	if profile.Permanent.PetGear == nil then
 		return {}
 	end
+	local g = store(profile)
 	local mods = {}
 	for slot = 1, PetGear.Slots(profile) do
-		local piece = g.Equipped and g.Equipped[slot]
+		local piece = g.Equipped[Config.Kinds[slot]]
 		if piece then
 			table.insert(mods, { Stat = piece.Stat, Mode = Config.StatUnits[piece.Stat].Mode, Value = piece.Value })
 		end
@@ -133,24 +146,25 @@ function PetGear.Equip(profile, pieceId)
 		return false, "SlotLocked"
 	end
 	table.remove(g.Bag, index)
-	local old = g.Equipped[slot]
+	local old = g.Equipped[piece.Kind]
 	if old then
 		table.insert(g.Bag, old)
 	end
-	g.Equipped[slot] = piece
+	g.Equipped[piece.Kind] = piece
 	return true, slot
 end
 
 function PetGear.Unequip(profile, slot)
 	local g = store(profile)
-	if type(slot) ~= "number" or g.Equipped[slot] == nil then
+	local kind = type(slot) == "number" and Config.Kinds[slot]
+	if not kind or g.Equipped[kind] == nil then
 		return false, "Empty"
 	end
 	if #g.Bag >= Config.BagSize then
 		return false, "BagFull"
 	end
-	table.insert(g.Bag, g.Equipped[slot])
-	g.Equipped[slot] = nil
+	table.insert(g.Bag, g.Equipped[kind])
+	g.Equipped[kind] = nil
 	return true
 end
 
