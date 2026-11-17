@@ -99,14 +99,16 @@ function TutorialUI.new(root, hud, call, getContext)
 			local below = center.Y < root.AbsoluteSize.Y / scale * 0.5 -- targets in the top half get an arrow underneath, pointing up
 			local bounce = math.abs(math.sin(os.clock() * 5)) * 10
 			local halfH = target.AbsoluteSize.Y / scale / 2 + 42
+			-- keep "TAP HERE" (110 wide, centred) on screen for buttons at the very edge; the arrow stays on the target
+			local tapX = math.clamp(center.X, 60, root.AbsoluteSize.X / scale - 60)
 			if below then
 				self.Arrow.Text = "▲"
 				self.Arrow.Position = UDim2.fromOffset(center.X, center.Y + halfH + bounce)
-				self.Tap.Position = UDim2.fromOffset(center.X, center.Y + halfH + 44 + bounce)
+				self.Tap.Position = UDim2.fromOffset(tapX, center.Y + halfH + 44 + bounce)
 			else
 				self.Arrow.Text = "▼"
 				self.Arrow.Position = UDim2.fromOffset(center.X, center.Y - halfH - bounce)
-				self.Tap.Position = UDim2.fromOffset(center.X, center.Y - halfH - 44 - bounce)
+				self.Tap.Position = UDim2.fromOffset(tapX, center.Y - halfH - 44 - bounce)
 			end
 		end
 	end)
