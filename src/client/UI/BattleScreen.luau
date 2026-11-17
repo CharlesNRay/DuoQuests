@@ -67,6 +67,10 @@ local function dungeons(container, state, call, extra, redraw)
 	end
 end
 
+local function expeditionMessage(container, text)
+	Kit.label({ Size = UDim2.new(1, 0, 0, 30), Position = UDim2.new(0, 0, 1, -32), Text = text, TextSize = 12, TextColor3 = C.Good, TextWrapped = true, Parent = container })
+end
+
 local function expeditions(container, state, call, extra, redraw)
 	local act = state.Player.Activities or {}
 	local running = act.Expedition
@@ -90,18 +94,25 @@ local function expeditions(container, state, call, extra, redraw)
 			if not enabled then
 				return
 			end
+			-- on success call() has already redrawn this screen with the NEW state; redrawing here would
+			-- put the old state back (the expedition looked like it never started). Only redraw on failure.
+			local ok, result
 			if mine then
-				local ok, lines = call("ExpeditionCollect")
-				extra.BattleMsg = if ok then ("Collected: " .. table.concat(lines, ", ")) else "Not ready yet."
+				ok, result = call("ExpeditionCollect")
+				extra.BattleMsg = if ok then ("Collected: " .. table.concat(result, ", ")) else "Not ready yet."
 			else
-				local ok = call("ExpeditionStart", e.Id)
+				ok = call("ExpeditionStart", e.Id)
 				extra.BattleMsg = if ok then nil else "Already on an expedition."
 			end
-			redraw()
+			if not ok then
+				redraw()
+			elseif extra.BattleMsg then
+				expeditionMessage(container, extra.BattleMsg) -- the fresh screen was drawn before the message existed
+			end
 		end)
 	end
 	if extra.BattleMsg then
-		Kit.label({ Size = UDim2.new(1, 0, 0, 30), Position = UDim2.new(0, 0, 1, -32), Text = extra.BattleMsg, TextSize = 12, TextColor3 = C.Good, TextWrapped = true, Parent = container })
+		expeditionMessage(container, extra.BattleMsg)
 	end
 end
 
