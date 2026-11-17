@@ -88,11 +88,17 @@ function TutorialUI.new(root, hud, call, getContext)
 		end
 		self.Arrow.Visible, self.Tap.Visible = visible, visible and self.PointsAtButton == true
 		if visible then
+			-- Absolute* values are screen pixels, but the arrow sits in root units (root has a UIScale), so convert:
+			-- without this the arrow and "TAP HERE" drift away from targets on screens where the scale is not 1
+			local scale = root.AbsoluteSize.X / math.max(1, root.Size.X.Offset)
+			if scale <= 0 then
+				scale = 1
+			end
 			local origin = root.AbsolutePosition
-			local center = target.AbsolutePosition + target.AbsoluteSize / 2 - origin
-			local below = center.Y < root.AbsoluteSize.Y * 0.5 -- targets in the top half get an arrow underneath, pointing up
+			local center = (target.AbsolutePosition + target.AbsoluteSize / 2 - origin) / scale
+			local below = center.Y < root.AbsoluteSize.Y / scale * 0.5 -- targets in the top half get an arrow underneath, pointing up
 			local bounce = math.abs(math.sin(os.clock() * 5)) * 10
-			local halfH = target.AbsoluteSize.Y / 2 + 42
+			local halfH = target.AbsoluteSize.Y / scale / 2 + 42
 			if below then
 				self.Arrow.Text = "▲"
 				self.Arrow.Position = UDim2.fromOffset(center.X, center.Y + halfH + bounce)
