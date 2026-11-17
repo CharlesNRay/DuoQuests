@@ -808,6 +808,10 @@ function handlers.TutorialFinish(_, profile)
 	return Tutorial.Finish(profile)
 end
 
+function handlers.TutorialComplete(_, profile, step)
+	return Tutorial.Complete(profile, step)
+end
+
 function handlers.ClaimDaily(_, profile)
 	return Daily.Claim(profile, os.time())
 end

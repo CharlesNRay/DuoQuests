@@ -35,6 +35,11 @@ function Stages.Scale(stage)
 			scale *= tier.Mult
 		end
 	end
+	local ease = Config.EarlyEase
+	if ease and stage >= ease.From and stage < ease.To then
+		local t = (stage - ease.From) / (ease.To - ease.From) -- 0 at From, 1 at To
+		scale *= ease.Mult + (1 - ease.Mult) * t
+	end
 	return scale
 end
 

@@ -1,17 +1,19 @@
 --[[
-	Tutorial (ModuleScript): the guided first session, from the first fight to the first boss.
+	Tutorial (ModuleScript): the guided first session, from the first fight to the first boss, then wishing and watching.
 
 	The steps are data; the client shows them (client/UI/Tutorial) and the server only keeps the player's place and pays
 	the finishing reward once.
 
 	  Tutorial.Steps                       ordered list: { Id, Title, Text, Target, Kind, Goal? }
 	      Kind "next"      the player presses Next
-	      Kind "open"      completes when the player opens the panel named in Goal
+	      Kind "open"      completes when the player opens the panel named in Goal ("Watch" = watching a battle)
+	      Go (optional)    a place the card button walks you to (a PlazaSpots name); Target "Go" points at that button
 	      Kind "frontier"  completes when the highest stage reached is at least Goal
 	  Tutorial.Of(profile)                 -> { Step, Done, Rewarded } (created on first use)
 	  Tutorial.Advance(profile, step)      moves from `step` to the next one (only forwards, one at a time)
 	  Tutorial.Skip(profile)               ends the tutorial (the reward still comes with the first boss, see PayIfSkipped)
-	  Tutorial.Finish(profile)             -> ok, reward   pays once, after the first boss is beaten
+	  Tutorial.Finish(profile)             -> ok, reward   pays once, after the first boss is beaten (the wrap-up steps follow)
+	  Tutorial.Complete(profile, step)     ends it from the last step (after the reward)
 ]]
 local Consumables = require(script.Parent.Consumables)
 
@@ -29,8 +31,13 @@ Tutorial.Steps = {
 	{ Id = "PetsOpen", Title = "Your pet", Text = "Tap Pets. Your pet fights for you too.", Target = "Pets", Kind = "open", Goal = "Pets" },
 	{ Id = "QuestsOpen", Title = "Quests", Text = "Tap Quests to collect free rewards.", Target = "Quests", Kind = "open", Goal = "Quests" },
 	{ Id = "Level", Title = "Keep climbing", Text = "Let the fights run. Reach stage 8.", Target = "Stage", Kind = "frontier", Goal = 8 },
-	{ Id = "Boss", Title = "Beat the boss!", Text = "Stage 10 is a boss. Win to finish and get 10 pet wishes and 10 skill wishes.", Target = "Stage", Kind = "frontier", Goal = 11 },
+	{ Id = "Boss", Title = "Beat the boss!", Text = "Stage 10 is a boss. Win to get 10 pet wishes and 10 skill wishes.", Target = "Stage", Kind = "frontier", Goal = 11 },
+	-- after the boss (the wishes are paid when it falls): spend them, then learn you can watch the fight
+	{ Id = "Wish", Title = "Make your wishes", Text = "Your wishes are here! Visit the Wishing Tree for new pets and skills.", Target = "Go", Kind = "open", Goal = "Wish", Go = "Tree", GoText = "Take me there" },
+	{ Id = "Watch", Title = "Watch your battle", Text = "Tap Home to watch your team fight live. You can watch other parties too.", Target = "Home", Kind = "open", Goal = "Watch" },
 }
+-- the step whose goal is beating the first boss (the reward is paid then; the steps after it are the wrap-up)
+Tutorial.BossStep = 9
 
 local function stateOf(profile)
 	local permanent = profile.Permanent
@@ -66,20 +73,40 @@ function Tutorial.Skip(profile)
 	return true
 end
 
+-- Pays the boss reward once (after the first boss falls). The tutorial goes on to its wrap-up steps (wishes, watching);
+-- it only ends here when the player is already on the last step.
 function Tutorial.Finish(profile)
 	local t = stateOf(profile)
 	if t.Rewarded then
-		t.Done = true
 		return false, "AlreadyRewarded"
 	end
 	if profile.Season.HighestStage <= Tutorial.BossStage then
 		return false, "BossNotBeaten"
 	end
-	t.Done, t.Rewarded = true, true
+	t.Rewarded = true
+	if t.Step >= #Tutorial.Steps then
+		t.Done = true
+	end
 	for ticketId, count in pairs(Tutorial.Reward) do
 		Consumables.Grant(profile, ticketId, count)
 	end
 	return true, Tutorial.Reward
+end
+
+-- The last step is done: the tutorial ends (only once the boss reward is paid, so nobody misses it).
+function Tutorial.Complete(profile, step)
+	local t = stateOf(profile)
+	if t.Done then
+		return false, "Done"
+	end
+	if step ~= t.Step or t.Step ~= #Tutorial.Steps then
+		return false, "WrongStep"
+	end
+	if not t.Rewarded then
+		return false, "NotRewarded"
+	end
+	t.Done = true
+	return true
 end
 
 -- Called after every frontier clear: a skipped tutorial (Done without the reward) pays out once the first boss is beaten.

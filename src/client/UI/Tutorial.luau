@@ -57,7 +57,15 @@ function TutorialUI.new(root, hud, call, getContext)
 	self.Fill = Kit.frame({ Size = UDim2.fromScale(0, 1), BackgroundColor3 = GOLD, NoCorner = true, ZIndex = 22, Parent = self.Bar })
 	self.BarText = Kit.label({ Size = UDim2.new(1, -28, 0, 14), Position = UDim2.new(0, 14, 1, -20), Text = "", TextSize = 12, TextColor3 = C.Dim, TextWrapped = false, TextStrokeTransparency = 1, Visible = false, ZIndex = 21, Parent = card })
 
-	self.Next = Kit.button({ Size = UDim2.fromOffset(110, 32), Position = UDim2.new(1, -124, 1, -42), Text = "Next", TextSize = 16, BackgroundColor3 = Color3.fromRGB(214, 160, 44), TextColor3 = Color3.fromRGB(30, 22, 6), Visible = false, ZIndex = 22, Parent = card }, function()
+	-- "Next", or on a step with a Go place, "Take me there" (walks the hero there; the step itself completes on its goal)
+	self.Next = Kit.button({ Size = UDim2.fromOffset(150, 32), Position = UDim2.new(1, -164, 1, -42), Text = "Next", TextSize = 16, BackgroundColor3 = Color3.fromRGB(214, 160, 44), TextColor3 = Color3.fromRGB(30, 22, 6), Visible = false, ZIndex = 22, Parent = card }, function()
+		local def = Tutorial.Steps[self.Step]
+		if def and def.Go then
+			if self.GoTo then
+				self.GoTo(def.Go)
+			end
+			return
+		end
 		self:_run("TutorialAdvance", self.Step)
 	end)
 
@@ -116,7 +124,7 @@ function TutorialUI.new(root, hud, call, getContext)
 	-- the little "tutorial complete" banner
 	local done = Kit.frame({ Size = UDim2.fromOffset(300, 56), Position = UDim2.new(0.5, -150, 0, 150), BackgroundColor3 = Color3.fromRGB(16, 19, 32), Visible = false, ZIndex = 40, Parent = root })
 	Kit.new("UIStroke", { Color = GOLD, Thickness = 1.5, Transparency = 0.3, Parent = done })
-	Kit.label({ Size = UDim2.new(1, -16, 0, 22), Position = UDim2.fromOffset(12, 6), Text = "Tutorial complete", TextSize = 16, Font = Enum.Font.GothamBold, TextColor3 = GOLD, TextWrapped = false, TextStrokeTransparency = 1, ZIndex = 41, Parent = done })
+	self.DoneTitle = Kit.label({ Size = UDim2.new(1, -16, 0, 22), Position = UDim2.fromOffset(12, 6), Text = "Tutorial complete", TextSize = 16, Font = Enum.Font.GothamBold, TextColor3 = GOLD, TextWrapped = false, TextStrokeTransparency = 1, ZIndex = 41, Parent = done })
 	self.DoneText = Kit.label({ Size = UDim2.new(1, -16, 0, 18), Position = UDim2.fromOffset(12, 30), Text = "", TextSize = 12, TextColor3 = C.Text, TextWrapped = false, TextStrokeTransparency = 1, ZIndex = 41, Parent = done })
 	self.DoneCard = done
 
@@ -146,12 +154,21 @@ function TutorialUI:_run(action, ...)
 		self.Busy = false
 		if ok and action == "TutorialFinish" and type(result) == "table" then
 			self:_celebrate(result)
+		elseif ok and action == "TutorialComplete" then
+			-- point at the next big goal so the player has something to chase
+			self.DoneTitle.Text = "Tutorial complete"
+			self.DoneText.Text = "Next goal: reach level 30 and choose your path!"
+			self.DoneCard.Visible = true
+			task.delay(6, function()
+				self.DoneCard.Visible = false
+			end)
 		end
 	end)
 end
 
 function TutorialUI:_celebrate(reward)
 	self.DoneText.Text = ("+%d Pet Wishes   +%d Skill Wishes"):format(reward.PetWish or 0, reward.SkillWish or 0)
+	self.DoneTitle.Text = "First boss beaten!"
 	self.DoneCard.Visible = true
 	task.delay(5, function()
 		self.DoneCard.Visible = false
@@ -224,7 +241,7 @@ function TutorialUI:Update(state, hidden)
 		end
 		local def = Tutorial.Steps[t.Step]
 		if def and ((def.Kind == "frontier" and frontier >= def.Goal) or (def.Kind == "open" and self.Opened_[def.Goal])) then
-			self:_run("TutorialAdvance", t.Step)
+			self:_run(if t.Step >= #Tutorial.Steps then "TutorialComplete" else "TutorialAdvance", t.Step)
 			return
 		end
 	end
@@ -236,7 +253,8 @@ function TutorialUI:Update(state, hidden)
 	self.StepLabel.Text = ("STEP %d OF %d"):format(t.Step, #Tutorial.Steps)
 	self.Title.Text = def.Title
 	self.Body.Text = def.Text
-	self.Next.Visible = def.Kind == "next"
+	self.Next.Visible = def.Kind == "next" or def.Go ~= nil
+	self.Next.Text = def.GoText or "Next"
 	local showBar = def.Kind == "frontier"
 	self.Bar.Visible, self.BarText.Visible = showBar, showBar
 	if showBar then
@@ -246,10 +264,10 @@ function TutorialUI:Update(state, hidden)
 	end
 	local lines = math.ceil(#def.Text / 32)
 	self.Body.Size = UDim2.new(1, -28, 0, lines * 22)
-	self.Card.Size = UDim2.fromOffset(WIDTH, 62 + lines * 22 + (if def.Kind == "next" then 48 elseif showBar then 40 else 12))
+	self.Card.Size = UDim2.fromOffset(WIDTH, 62 + lines * 22 + (if self.Next.Visible then 48 elseif showBar then 40 else 12))
 	self.PointsAtButton = def.Kind == "open"
 	self:_slide(not hidden)
-	self:_point(if hidden then nil else targetOf(self.Hud, def.Target))
+	self:_point(if hidden then nil elseif def.Target == "Go" then self.Next else targetOf(self.Hud, def.Target))
 end
 
 return TutorialUI

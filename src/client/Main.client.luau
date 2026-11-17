@@ -598,6 +598,9 @@ local function watch(slot, origin)
 		end
 	end
 	hud:SetWatching(label, stopWatching)
+	if tutorial then
+		tutorial:Opened("Watch") -- the tutorial's last step: watch a battle
+	end
 end
 arenas.OnWatch = watch
 function extra.WatchMine()
@@ -626,6 +629,20 @@ end)
 -- keep an open panel clear of the tutorial card as the card slides in/out or the screen resizes
 tutorial.Card:GetPropertyChangedSignal("Visible"):Connect(placePanel)
 root:GetPropertyChangedSignal("Size"):Connect(placePanel)
+-- "Take me there" on a tutorial step: stop watching, then stand a few studs from that plaza spot, facing it
+-- (inside its prompt range, so the player only has to press the prompt)
+tutorial.GoTo = function(spot)
+	if not World.PlazaSpots[spot] then
+		return
+	end
+	if BattleCamera.IsBattleView() then
+		stopWatching()
+	end
+	local sx, sz = World.PlazaPoint(spot)
+	local toCentre = Vector3.new(World.PLAZA.X - sx, 0, World.PLAZA.Z - sz)
+	local stand = Vector3.new(sx, 4, sz) + (if toCentre.Magnitude > 0 then toCentre.Unit * 14 else Vector3.new(0, 0, 14))
+	teleport(CFrame.lookAt(stand, Vector3.new(sx, 4, sz)))
+end
 extra.OpenMenu = function()
 	current = nil
 	lastDrawn = nil
