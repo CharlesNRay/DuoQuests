@@ -18,6 +18,7 @@ local PetsLib = require(Shared.Pets)
 local Zones = require(game:GetService("ReplicatedStorage"):WaitForChild("Shared").Zones)
 local Stages = require(game:GetService("ReplicatedStorage"):WaitForChild("Shared").Stages)
 local TweenService = game:GetService("TweenService")
+local StageRewards = require(game:GetService("ReplicatedStorage"):WaitForChild("Shared").StageRewards)
 local Short = require(game:GetService("ReplicatedStorage"):WaitForChild("Shared").Util.NumberFormat).Short
 local Kit = require(script.Parent.Kit)
 local Icons = require(script.Parent.Icons)
@@ -1076,14 +1077,36 @@ function Screens.Map(container, state, call, extra)
 		Screens.Map(Kit.clear(container) or container, state, call, extra)
 	end)
 
+	-- the stages already cleared this season leave a reward to claim (the Shared StageRewards rules; the server pays it)
+	local claimed = state.Player.StageClaims or {}
+	local function status(stage)
+		if claimed[stage] then
+			return "Claimed"
+		end
+		return if stage < party.Frontier then "Ready" else "Locked"
+	end
+	local function readyCount()
+		local n = 0
+		for stage = 1, party.Frontier - 1 do
+			if not claimed[stage] then
+				n += 1
+			end
+		end
+		return n
+	end
+	local function redraw()
+		Screens.Map(Kit.clear(container) or container, state, call, extra)
+	end
+
 	for i = 0, 9 do
 		local stage = zone.FirstStage + i
 		local unlocked = stage <= party.Frontier
 		local isCurrent = stage == party.Stage
 		local label = tostring(stage) .. (Stages.IsBoss(stage) and "\nBOSS" or "")
+		local px, py = (i % 5) * 92, 48 + (i // 5) * 68
 		local button = Kit.button({
 			Size = UDim2.fromOffset(84, 60),
-			Position = UDim2.fromOffset((i % 5) * 92, 48 + (i // 5) * 68),
+			Position = UDim2.fromOffset(px, py),
 			Text = label,
 			BackgroundColor3 = if isCurrent then C.Accent elseif unlocked then C.PanelLight else C.Panel,
 			TextColor3 = if unlocked then C.Text else C.Dim,
@@ -1094,8 +1117,37 @@ function Screens.Map(container, state, call, extra)
 			end
 		end)
 		button.Active = unlocked
+		local st = status(stage)
+		if st ~= "Locked" then
+			local ready = st == "Ready"
+			local badge = Kit.button({
+				Size = UDim2.fromOffset(28, 22), Position = UDim2.fromOffset(px + 58, py - 4), Text = if ready then "🎁" else "✔", TextSize = 14, ZIndex = 5,
+				BackgroundColor3 = if ready then C.Accent else C.Panel, TextColor3 = if ready then Color3.fromRGB(30, 24, 10) else C.Good, Parent = container,
+			}, function()
+				if ready then
+					call("ClaimStage", stage)
+				end
+			end)
+			Kit.Hover(badge, function()
+				return ("<b>Stage %d reward</b>\n%s\n%s"):format(stage, StageRewards.Text(stage), if ready then "Tap to claim" else "Claimed")
+			end)
+		elseif unlocked then
+			Kit.Hover(button, function()
+				return ("<b>Stage %d reward</b>\n%s\nClear this stage to unlock it"):format(stage, StageRewards.Text(stage))
+			end)
+		end
 	end
-	Kit.label({ Size = UDim2.new(1, 0, 0, 20), Position = UDim2.fromOffset(0, 188), Text = ("Fighting stage %d. Furthest: %d. Pick an earlier stage to farm it."):format(party.Stage, party.Frontier), TextColor3 = C.Dim, TextSize = 13, Parent = container })
+	local waiting = readyCount()
+	Kit.label({ Size = UDim2.new(1, -150, 0, 20), Position = UDim2.fromOffset(0, 188), Text = ("Fighting stage %d. Furthest: %d. Pick an earlier stage to farm it."):format(party.Stage, party.Frontier), TextColor3 = C.Dim, TextSize = 13, Parent = container })
+	local claimAll = Kit.button({
+		Size = UDim2.fromOffset(140, 26), Position = UDim2.new(1, -140, 0, 185), Text = if waiting > 0 then ("🎁 Claim all (%d)"):format(waiting) else "All claimed", TextSize = 13,
+		BackgroundColor3 = if waiting > 0 then C.Accent else C.Panel, TextColor3 = if waiting > 0 then Color3.fromRGB(30, 24, 10) else C.Dim, Parent = container,
+	}, function()
+		if waiting > 0 then
+			call("ClaimAllStages")
+		end
+	end)
+	claimAll.Active = waiting > 0
 end
 
 Screens.Msg = msg

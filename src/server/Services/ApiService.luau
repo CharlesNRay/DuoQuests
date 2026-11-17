@@ -64,6 +64,7 @@ local Daily = require(Shared.Daily)
 local Quests = require(Shared.Quests)
 local Premium = require(Shared.Premium)
 local Passes = require(Shared.Passes)
+local StageRewards = require(Shared.StageRewards)
 local Subclasses = require(Shared.Subclasses)
 local Abilities = require(Shared.Config.Abilities)
 
@@ -219,6 +220,7 @@ local function buildState(player)
 			Sunstones = Premium.Sunstones(profile),
 			PremiumShop = Premium.List(profile),
 			Passes = Passes.List(profile),
+			StageClaims = profile.Season.StageClaims or {},
 			Perks = Passes.Perks(profile),
 			PremiumOffer = Premium.Offer(profile),
 			SunstonePacks = Premium.Packs(profile),
@@ -1106,6 +1108,23 @@ end
 
 function handlers.Advance(player, _)
 	return PartyService.Advance(player)
+end
+
+-- Map rewards: every cleared stage leaves one reward to collect (boss stages always include wishes)
+function handlers.ClaimStage(player, profile, stage)
+	local ok, data = StageRewards.Claim(profile, stage)
+	if ok then
+		afterBuildChange(player)
+	end
+	return ok, data
+end
+
+function handlers.ClaimAllStages(player, profile)
+	local ok, data = StageRewards.ClaimAll(profile)
+	if ok and data.Count > 0 then
+		afterBuildChange(player)
+	end
+	return ok, data
 end
 
 function handlers.SetStage(player, _, stage)
