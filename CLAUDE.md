@@ -47,8 +47,8 @@ Git Bash; they find a working Python themselves (`python3`/`python` there are St
      Tanks buffed 2026-11-18 (Warrior health/defense, see BALANCE.md); probe roles with `tools/sim/runners/partyprobe.luau`.
      SEEN in Studio 2026-11-18: solo Summoner gets 3 companions (Mira/Brom/Ilsa) on HUD and Party screen tabs, editing the 3rd companion's
      ghost skills, 4 heroes + imp summon in the arena, dungeon list (levels, waves, daily bonus ready/taken, 4 rows), Crypt run ("Waves 3/3",
-     daily bonus line), Leave fight (skips to results), 5M cheat gold. NOT seen: wave banners (run too fast), guild raid Battle button, world/season Battle!.
-     STILL TO DO: balancing pass (Mage lowest but in range; Summoner trimmed to Warrior's level); Skills screen "Partner" tab only edits the first teammate; plaza arena pads
+     daily bonus line), Leave fight (skips to results), 5M cheat gold, Skills screen tab per teammate (reorder saved on the server). NOT seen: wave banners (run too fast), guild raid Battle button, world/season Battle!.
+     STILL TO DO: balancing pass (Mage lowest but in range; Summoner trimmed to Warrior's level); plaza arena pads
      sized for 2; boss numbers retuned once (DamageScale x2, season 60M; see BALANCE.md), L40 boss damage still overshoots.
    - Studio test cheat (🧪 HUD button, `handlers.DevGrant`) should give much more gold.
    - DONE 2026-11-18 (tests green, NOT seen in Studio): dungeons are one continuous fight (`Simulation` option `Waves`, `Wave` events):
