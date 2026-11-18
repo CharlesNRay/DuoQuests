@@ -2,13 +2,14 @@
 	Party (ModuleScript)
 	Location: ReplicatedStorage > Shared > Party
 
-	The rules of a two-player party, as pure functions on a plain "party record"
+	The rules of a party of up to four players (Party.MAX_MEMBERS), as pure functions on a plain "party record"
 	table. A later PartyService saves the record to its own DataStore and calls
 	these; nothing here touches Roblox APIs, so it is all headless-testable.
 
 	Party record
 	  PartyId, SeasonId
-	  Members      { userIdA, userIdB }
+	  Members      { userId, ... } (1 to 4)
+	  Companions   starter ghosts filling the empty seats, so every fight has Party.SEATS heroes (Party.SyncCompanions)
 	  Stage        the stage the party is fighting now
 	  Frontier     the furthest stage the party has unlocked
 	  Farm         true while replaying an earlier stage picked on the map
@@ -63,14 +64,16 @@ local Party = {}
 
 Party.VERSION = 1
 Party.HISTORY_LIMIT = 5
-Party.COMPANION_ID = -1 -- the starter ghost's id (real user ids are positive)
+Party.COMPANION_ID = -1 -- the first starter ghost's id; the others are -2, -3 (real user ids are positive)
+Party.MAX_MEMBERS = 4
+Party.SEATS = 4 -- every fight has this many heroes: members (or their ghosts) plus companions in the empty seats
 
 local function key(userId)
 	return tostring(userId)
 end
 
 local function isMember(party, userId)
-	return party.Members[1] == userId or party.Members[2] == userId
+	return table.find(party.Members, userId) ~= nil
 end
 
 local function copyList(list)
@@ -118,25 +121,32 @@ function Party.NewOpen(partyId, seasonId, userId, now, startStage)
 	}
 end
 
+-- room for another player
 function Party.IsOpen(party)
-	return #party.Members == 1
+	return #party.Members < Party.MAX_MEMBERS
 end
 
 -- Completes an open party. The pair starts at the WEAKER member's frontier
 -- (the stronger player carries the weaker one up). The first member's frontier
 -- comes from their saved snapshot; the newcomer's from their profile.
 function Party.AddMember(party, userId, name, profile, now)
-	assert(#party.Members == 1, "Party is not open")
-	assert(party.Members[1] ~= userId, "Already a member")
-	local first = party.Snapshots[key(party.Members[1])]
-	local firstFrontier = if first then first.Frontier else party.Frontier
+	assert(#party.Members < Party.MAX_MEMBERS, "Party is full")
+	assert(not isMember(party, userId), "Already a member")
+	local frontier = party.Frontier
+	if #party.Members == 1 then
+		local first = party.Snapshots[key(party.Members[1])]
+		frontier = if first then first.Frontier else party.Frontier
+	end
 	table.insert(party.Members, userId)
 	party.Snapshots[key(userId)] = Party.MakeSnapshot(profile, userId, name, nil, now)
-	local start = math.min(firstFrontier, profile.Season.HighestStage)
+	local start = math.min(frontier, profile.Season.HighestStage)
 	party.Stage = start
 	party.Frontier = start
-	party.Pending = {}
-	party.Companion = nil -- a real partner replaces the starter ghost
+	party.Pending[key(userId)] = nil
+	party.Companion = nil -- (old saves kept one companion here)
+	if party.Companions then -- a real player takes a companion's seat
+		table.remove(party.Companions)
+	end
 	party.LastActiveAt = now
 end
 
@@ -155,13 +165,23 @@ function Party.RemoveMember(party, userId)
 	return #party.Members
 end
 
-function Party.Partner(party, userId)
-	if party.Members[1] == userId then
-		return party.Members[2]
-	elseif party.Members[2] == userId then
-		return party.Members[1]
+-- the other members (user ids), in party order
+function Party.Others(party, userId)
+	local out = {}
+	for _, memberId in ipairs(party.Members) do
+		if memberId ~= userId then
+			table.insert(out, memberId)
+		end
 	end
-	return nil -- also nil for an open party with no partner yet
+	return out
+end
+
+-- the first other member, or nil (alone in the party, or not a member)
+function Party.Partner(party, userId)
+	if not isMember(party, userId) then
+		return nil
+	end
+	return Party.Others(party, userId)[1]
 end
 
 -- A new season wipes the shared stage, not the party itself.
@@ -174,6 +194,7 @@ function Party.EnsureSeason(party, seasonId)
 	party.Frontier = 1
 	party.Pending = {}
 	party.Companion = nil
+	party.Companions = nil
 	return true
 end
 
@@ -257,8 +278,10 @@ end
 -- unlock stage. Its skills can be edited like any ghost's. It earns no rewards, and
 -- it disappears the moment a real partner joins.
 
-local COMPANION_NAMES = { Cleric = "Mira", Warrior = "Brom" }
-local COMPANION_PATHS = { Cleric = "Priest", Warrior = "Guardian" }
+local COMPANION_NAMES = { Cleric = "Mira", Warrior = "Brom", Mage = "Ilsa", Ranger = "Wren", Rogue = "Vex", Summoner = "Morrow" }
+local COMPANION_PATHS = { Cleric = "Priest", Warrior = "Guardian", Mage = "Pyromancer", Ranger = "Sharpshooter", Rogue = "Assassin", Summoner = "SpiritCaller" }
+-- companions take the first classes the party does not have yet, in this order: a healer, a tank, then damage
+local COMPANION_ORDER = { "Cleric", "Warrior", "Mage", "Ranger", "Rogue", "Summoner" }
 
 local function averageSlotLevel(levels)
 	local total, count = 0, 0
@@ -306,11 +329,12 @@ local function followOwner(companion, ownerProfile)
 	end
 end
 
-function Party.MakeCompanion(ownerProfile, now)
-	local classId = if ownerProfile.Season.ClassId == "Cleric" then "Warrior" else "Cleric"
+function Party.MakeCompanion(ownerProfile, now, classId, id)
+	classId = classId or (if ownerProfile.Season.ClassId == "Cleric" then "Warrior" else "Cleric")
 	local fresh = ProfileTemplate.New()
 	fresh.Season.ClassId = classId
-	local snapshot = Party.MakeSnapshot(fresh, Party.COMPANION_ID, COMPANION_NAMES[classId] or "Companion", nil, now)
+	ProfileTemplate.GrantClassStarters(fresh.Season, classId) -- its starter skills and loadout (any class)
+	local snapshot = Party.MakeSnapshot(fresh, id or Party.COMPANION_ID, COMPANION_NAMES[classId] or "Companion", nil, now)
 	snapshot.IsCompanion = true
 	followOwner(snapshot, ownerProfile)
 	return snapshot
@@ -318,23 +342,73 @@ end
 
 -- Call on a one-member party whenever its member is online. Creates the companion
 -- if it is missing and keeps it level with its owner.
-function Party.SyncCompanion(party, ownerProfile, now)
-	if #party.Members ~= 1 then
-		party.Companion = nil
-		return nil
-	end
-	if party.Companion == nil then
-		party.Companion = Party.MakeCompanion(ownerProfile, now)
+-- Fills the empty seats (Party.SEATS minus the members) with companions that follow `ownerProfile` (an online member),
+-- each of a class nobody in the party has yet. Returns the companions list (it is kept on the party as Companions).
+-- `classes` optional: the members' classes (default: read from their snapshots, plus the owner's).
+function Party.SyncCompanions(party, ownerProfile, now, classes)
+	party.Companion = nil -- old saves kept a single companion here
+	local need = math.max(0, Party.SEATS - #party.Members)
+	local taken = {}
+	if classes then
+		for _, c in ipairs(classes) do taken[c] = true end
 	else
-		followOwner(party.Companion, ownerProfile)
+		for _, memberId in ipairs(party.Members) do
+			local snap = party.Snapshots[key(memberId)]
+			if snap then taken[snap.ClassId] = true end
+		end
+		taken[ownerProfile.Season.ClassId] = true
 	end
-	return party.Companion
+	-- keep the companions (and their edited skills) whose class no member plays, up to the free seats
+	local list = {}
+	for _, companion in ipairs(party.Companions or {}) do
+		if #list < need and not taken[companion.ClassId] then
+			table.insert(list, companion)
+		end
+	end
+	for _, companion in ipairs(list) do
+		taken[companion.ClassId] = true
+	end
+	while #list < need do
+		local classId = nil
+		for _, c in ipairs(COMPANION_ORDER) do
+			if not taken[c] then
+				classId = c
+				break
+			end
+		end
+		classId = classId or COMPANION_ORDER[#list + 1]
+		taken[classId] = true
+		table.insert(list, Party.MakeCompanion(ownerProfile, now, classId, Party.COMPANION_ID - #list))
+	end
+	for index, companion in ipairs(list) do
+		companion.UserId = Party.COMPANION_ID - (index - 1)
+		followOwner(companion, ownerProfile)
+	end
+	party.Companions = if #list > 0 then list else nil
+	return list
 end
 
--- The fighters list with the companion added when the party is a single player.
+-- old name: the first companion (or nil)
+function Party.SyncCompanion(party, ownerProfile, now)
+	return Party.SyncCompanions(party, ownerProfile, now)[1]
+end
+
+function Party.CompanionById(party, id)
+	for _, companion in ipairs(party.Companions or {}) do
+		if companion.UserId == id then
+			return companion
+		end
+	end
+	return nil
+end
+
+-- The fighters list with companions in the empty seats.
 local function withCompanion(party, members)
-	if #members == 1 and party.Companion then
-		table.insert(members, { Id = key(Party.COMPANION_ID), Name = party.Companion.Name, Snapshot = party.Companion })
+	for _, companion in ipairs(party.Companions or {}) do
+		if #members >= Party.SEATS then
+			break
+		end
+		table.insert(members, { Id = key(companion.UserId), Name = companion.Name, Snapshot = companion })
 	end
 	return members
 end
@@ -343,11 +417,11 @@ end
 -- owner already owns can be used, and it must fill every slot. Nothing is
 -- spent or unlocked.
 function Party.SetGhostLoadout(party, editorUserId, targetUserId, abilityIds, now)
-	local isCompanion = party.Companion ~= nil and targetUserId == Party.COMPANION_ID
-	if not isMember(party, editorUserId) or not (isMember(party, targetUserId) or isCompanion) then
+	local companion = Party.CompanionById(party, targetUserId)
+	if not isMember(party, editorUserId) or not (isMember(party, targetUserId) or companion) then
 		return false, "NotMember"
 	end
-	local snapshot = if isCompanion then party.Companion else party.Snapshots[key(targetUserId)]
+	local snapshot = companion or party.Snapshots[key(targetUserId)]
 	if snapshot == nil then
 		return false, "NoSnapshot"
 	end
@@ -391,11 +465,18 @@ function Party.SetUltimate(party, userId, ultimateId)
 	if not isMember(party, userId) then
 		return false, "NotMember"
 	end
-	local first, second = party.Snapshots[key(party.Members[1] or 0)], party.Snapshots[key(party.Members[2] or 0)]
-	if #party.Members ~= 2 or first == nil or second == nil then
+	local classes = {}
+	for _, memberId in ipairs(party.Members) do
+		local snap = party.Snapshots[key(memberId)]
+		if snap then table.insert(classes, snap.ClassId) end
+	end
+	for _, companion in ipairs(party.Companions or {}) do
+		table.insert(classes, companion.ClassId)
+	end
+	if #classes < 2 then
 		return false, "NeedPair"
 	end
-	local ok, reason = Ultimates.Validate(first.ClassId, second.ClassId, party.Frontier, ultimateId)
+	local ok, reason = Ultimates.ValidateParty(classes, party.Frontier, ultimateId)
 	if not ok then
 		return false, reason
 	end
@@ -465,7 +546,7 @@ function Party.OpenSession(party, seasonId, userId, name, profile, partnerOnline
 
 	local estimate = nil
 	local gap = now - party.LastActiveAt
-	if not partnerOnline and gap > 0 and #party.Members == 2 and next(party.Snapshots) ~= nil then
+	if not partnerOnline and gap > 0 and #party.Members >= 2 and next(party.Snapshots) ~= nil then
 		-- Both snapshots must exist to simulate the pair; a party whose partner
 		-- has never logged in cannot farm AFK yet.
 		local complete = true
@@ -475,7 +556,7 @@ function Party.OpenSession(party, seasonId, userId, name, profile, partnerOnline
 			end
 		end
 		if complete then
-			local ghosts = ghostMembers(party)
+			local ghosts = withCompanion(party, ghostMembers(party))
 			estimate = Offline.Estimate(
 				ghosts,
 				party.Stage,
@@ -568,8 +649,8 @@ function Party.OnlineTick(party, online, seed, now)
 		end
 	end
 
-	if #party.Members == 1 and online[1] then
-		Party.SyncCompanion(party, online[1].Profile, now)
+	if online[1] then
+		Party.SyncCompanions(party, online[1].Profile, now)
 	end
 	withCompanion(party, members)
 

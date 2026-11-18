@@ -14,6 +14,8 @@ local MODE = ARGS[4] or "full"
 --   <Class>      a second auto-played hero of that class (always plays "full"), plus party ultimates; ARGS[6] = its path
 local PARTNER = ARGS[5] or "solo"
 local PARTNER_PATH = ARGS[6]
+-- seats in a fight (the server fills the empty ones with companions)
+local SEATS = ARGS[7] or m.Party.SEATS
 local doGear = not (MODE == "lazy" or MODE == "nogear")
 local doSkill = not (MODE == "lazy" or MODE == "noskill")
 local doPet = not (MODE == "lazy" or MODE == "nopet")
@@ -134,13 +136,16 @@ local function run(classId, pathId, seedBase, goalLevel)
 	local team = { { Id = "p1", Name = classId, Profile = profile } }
 	local companionParty, partnerProfile, partnerClass
 	if PARTNER == "companion" then
-		companionParty = { Members = { 1 } } -- just enough of a party for Party.SyncCompanion
+		companionParty = { Members = { 1 }, Snapshots = {} } -- just enough of a party for Party.SyncCompanions (3 companions)
 	elseif PARTNER ~= "solo" then
 		partnerClass = PARTNER
 		partnerProfile = m.ProfileTemplate.New()
 		partnerProfile.Permanent.UnlockedClasses[partnerClass] = true
 		partnerProfile.Season.ClassId = partnerClass
 		team[2] = { Id = "p2", Name = partnerClass, Profile = partnerProfile }
+		if SEATS > 2 then -- the empty seats get companions, as on the server
+			companionParty = { Members = { 1, 2 }, Snapshots = {} }
+		end
 	end
 	local clock, stage, seed, fights = 0, 1, seedBase * 1000, 0
 	local levelAt, first = {}, {}
@@ -160,11 +165,15 @@ local function run(classId, pathId, seedBase, goalLevel)
 		if fights % 100 == 0 then print(("progress %s %s fights %d stage %d lv %d game %.1fh cpu %.0fs"):format(classId, pathId, fights, stage, profile.Season.Level, clock / 3600, os.clock())) end
 		local stonesBefore = profile.Season.Currencies.Wishstones or 0
 		if companionParty then
-			-- exactly what the server does for a one-player party: the companion follows the owner's level and build
-			local companion = m.Party.SyncCompanion(companionParty, profile, 0)
-			team[2] = { Id = "c", Name = companion.Name, Snapshot = companion }
+			-- what the server does: companions fill the empty seats and follow the owner's level and build
+			local classes = { classId, partnerClass }
+			local list = m.Party.SyncCompanions(companionParty, profile, 0, classes)
+			local base = if partnerProfile then 2 else 1
+			for index, companion in ipairs(list) do
+				team[base + index] = { Id = "c" .. index, Name = companion.Name, Snapshot = companion }
+			end
 		end
-		local ultimate = if #team == 2 then m.StageRunner.UltimateFor(team, profile.Season.HighestStage, nil) else nil
+		local ultimate = if #team >= 2 then m.StageRunner.UltimateFor(team, profile.Season.HighestStage, nil) else nil
 		local outcome = m.StageRunner.Run(team, stage, seed, ultimate)
 		stonesEarned += (profile.Season.Currencies.Wishstones or 0) - stonesBefore
 		if profile.Season.Level >= 30 and stonesAt30 == nil then stonesAt30 = { stonesEarned, profile.Season.HighestStage, clock / 3600, fights } end

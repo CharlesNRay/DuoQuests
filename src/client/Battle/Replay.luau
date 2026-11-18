@@ -38,7 +38,7 @@ local INTRO = 0.8 -- seconds for monsters to run in before the first blow
 -- Formation: each team stands in a Front and a Back row; fighters in a row stand side by side (spread across the depth lanes).
 local ROW_X = { Party = { Front = -7, Back = -14 }, Enemy = { Front = 8, Back = 16 } }
 local LANE = 3.8
-local HERO_X = { -9, -14 } -- (only used for the idle walk before a fight is set up)
+local HERO_X = { -9, -14, -11, -16 } -- (only used for the idle walk before a fight is set up)
 
 local ELEMENT_COLORS = {
 	Holy = Color3.fromRGB(255, 240, 150),

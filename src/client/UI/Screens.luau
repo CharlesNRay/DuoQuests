@@ -1083,7 +1083,7 @@ function Screens.Party(container, state, call, extra)
 	local party = state.Party
 	if not party then
 		local r = row(scroll, 150)
-		Kit.label({ Size = UDim2.new(1, -16, 0, 40), Position = UDim2.fromOffset(8, 4), Text = "Play with a partner: make a code and share it, or enter theirs.", Parent = r })
+		Kit.label({ Size = UDim2.new(1, -16, 0, 40), Position = UDim2.fromOffset(8, 4), Text = "Play in a party of up to 4: make a code and share it, or enter a friend's.", Parent = r })
 		Kit.button({ Size = UDim2.fromOffset(150, 44), Position = UDim2.fromOffset(8, 50), Text = "Create code", Parent = r }, function()
 			call("CreateCode")
 		end)
@@ -1109,12 +1109,25 @@ function Screens.Party(container, state, call, extra)
 		end)
 	end
 
-	local partner = party.Partner
-	if not partner then
-		Kit.label({ Size = UDim2.new(1, 0, 0, 30), Text = "Waiting for a partner to join.", TextColor3 = C.Dim, Parent = scroll })
+	-- the team: up to three others (players, their ghosts while offline, or companions in the empty seats); pick one to see and edit
+	local mates = party.Teammates or (party.Partner and { party.Partner }) or {}
+	if #mates == 0 then
+		Kit.label({ Size = UDim2.new(1, 0, 0, 30), Text = "Waiting for players to join (up to 4 in a party).", TextColor3 = C.Dim, Parent = scroll })
 		return
 	end
-	Kit.label({ Size = UDim2.new(1, 0, 0, 22), Text = ("Partner: %s (%s Lv %d) %s"):format(partner.Name, partner.ClassId, partner.Level, partner.IsCompanion and "starter ghost - a real partner replaces her" or (partner.Online and "online" or "ghost")), TextColor3 = C.Accent, Parent = scroll })
+	local pick = math.clamp((extra and extra.PartyMate) or 1, 1, #mates)
+	local tabs = row(scroll, 40)
+	for index, mate in ipairs(mates) do
+		local tag = if mate.IsCompanion then "companion" elseif mate.Online then "online" else "ghost"
+		Kit.button({ Size = UDim2.new(1 / #mates, -6, 0, 34), Position = UDim2.new((index - 1) / #mates, 3, 0, 3), Text = ("%s  %s %d  (%s)"):format(mate.Name, mate.ClassId, mate.Level, tag), TextSize = 11, BackgroundColor3 = if index == pick then C.Accent else C.Panel, TextColor3 = if index == pick then Color3.fromRGB(30, 24, 10) else C.Text, Parent = tabs }, function()
+			if extra then
+				extra.PartyMate = index
+				Screens.Party(container, state, call, extra)
+			end
+		end)
+	end
+	local partner = mates[pick]
+	Kit.label({ Size = UDim2.new(1, 0, 0, 22), Text = ("%s (%s Lv %d) %s"):format(partner.Name, partner.ClassId, partner.Level, partner.IsCompanion and "- a companion; a real player takes this seat when one joins" or (partner.Online and "- online" or "- ghost while offline")), TextColor3 = C.Accent, Parent = scroll })
 	Kit.label({ Size = UDim2.new(1, 0, 0, 22), Text = "Their passives: " .. (#partner.PassiveIds > 0 and table.concat(partner.PassiveIds, ", ") or "none"), TextColor3 = C.Dim, TextSize = 12, Parent = scroll })
 	Kit.label({ Size = UDim2.new(1, 0, 0, 22), Text = "Their skills (you can reorder/swap; everything else is view-only)", TextColor3 = C.Dim, Parent = scroll })
 
@@ -1128,7 +1141,7 @@ function Screens.Party(container, state, call, extra)
 		if slot > 1 then
 			Kit.button({ Size = UDim2.fromOffset(44, 44), Position = UDim2.new(1, -160, 0.5, -22), Text = "Up", Parent = rr }, function()
 				ghost[slot], ghost[slot - 1] = ghost[slot - 1], ghost[slot]
-				call("SetGhostLoadout", ghost)
+				call("SetGhostLoadout", ghost, partner.UserId)
 			end)
 		end
 		-- swap with any other skill the partner owns
@@ -1140,7 +1153,7 @@ function Screens.Party(container, state, call, extra)
 			table.sort(owned)
 			if owned[1] then
 				ghost[slot] = owned[1]
-				call("SetGhostLoadout", ghost)
+				call("SetGhostLoadout", ghost, partner.UserId)
 			end
 		end)
 	end

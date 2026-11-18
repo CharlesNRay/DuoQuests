@@ -173,7 +173,7 @@ return function(modulesOverride)
 	check("The pair starts at the weaker member's frontier", joined.Stage == 3 and joined.Frontier == 3)
 	check("The joiner's own solo party is deleted", abandoned == partyB.PartyId and select(2, PartyCore.Get(d, partyB.PartyId)) == "NoParty")
 	check("Membership changes bump the revision", joined.Rev == 2)
-	check("The code is used up", select(2, PartyCore.JoinByCode(dB2, C, "Cy", player(), 1, code)) == "BadCode")
+	check("A pair still has free seats (parties hold up to 4)", Party.IsOpen(joined) and Party.MAX_MEMBERS == 4)
 	check("Both members have ghosts", joined.Snapshots["1001"] ~= nil and joined.Snapshots["1002"].ClassId == "Cleric")
 
 	-- The host sees the membership change instead of overwriting it.
@@ -181,9 +181,10 @@ return function(modulesOverride)
 	local _, afterJoin, membershipChanged = PartyCore.SaveProgress(d, record, { ["1001"] = true })
 	check("A host with a stale revision does not overwrite the new membership", membershipChanged and #afterJoin.Members == 2 and afterJoin.Stage == 3)
 
-	-- A full party cannot be joined
-	local okFull, fullCode = PartyCore.CreateCode(d, partyA.PartyId, A)
-	check("A full party cannot make a code", not okFull and fullCode == "PartyFull")
+	-- A party with a free seat can still make a code; a full one (4) cannot take anyone
+	local okMore = PartyCore.CreateCode(d, partyA.PartyId, A)
+	check("A pair can make another code for its free seats", okMore == true)
+	check("A party of four is full", not Party.IsOpen({ Members = { 1, 2, 3, 4 } }))
 
 	-- Already in a pair
 	local profC = player()

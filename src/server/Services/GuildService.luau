@@ -542,7 +542,7 @@ function GuildService.ClaimMission(player, profile, kind, index)
 end
 
 ---------------------------------------------------------------- the raid
-function GuildService.RaidChallenge(player, profile, partner, playFight)
+function GuildService.RaidChallenge(player, profile, team, playFight)
 	local id = myId(profile)
 	if not id then
 		return false, "NotInGuild"
@@ -569,8 +569,8 @@ function GuildService.RaidChallenge(player, profile, partner, playFight)
 		return false, "NoRaid"
 	end
 	local members = { { Id = tostring(player.UserId), Name = player.Name, Profile = profile } }
-	if partner then
-		table.insert(members, { Id = partner.Id, Name = partner.Name, Snapshot = partner.Snapshot })
+	for _, mate in ipairs(team or {}) do
+		table.insert(members, { Id = mate.Id, Name = mate.Name, Snapshot = mate.Snapshot })
 	end
 	local damage, _, fight = Bosses.Challenge(members, boss, profile.Season.HighestStage, math.random(1, 1e9), true)
 	local ok, result = change(id, function(doc)

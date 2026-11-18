@@ -39,7 +39,13 @@ Git Bash; they find a working Python themselves (`python3`/`python` there are St
      (fading left eyes/decals behind = the "never despawn" pile-up); health uses `Economy.MinionHealthScale` 0.5 (attack keeps `MinionScale` 0.27) so
      tanks live to hold aggro (abl companion: L40 stage 62-68 in 9.4-10h). Boss arena has a "Leave fight" button (skips to results; party fights stay
      held until the server hold ends). Guild raid button says "Battle" (it was already a real auto-combat fight); world/season say "Battle!".
-   - Consider 4-player parties instead of 2, which means rebalancing everything for 4 (tools/sim partner modes take one partner today).
+   - DONE 2026-11-18 (tests green, NOT seen in Studio): parties of up to 4 (`Party.MAX_MEMBERS`); every fight has `Party.SEATS` = 4 heroes,
+     empty seats filled by companions (`party.Companions`, ids -1..-3; old single `Companion` is migrated away). Join codes last until the
+     party is full. Party ultimate = any pair of party classes (`Ultimates.ResolveParty`). Boss/raid/dungeon fights take the whole team
+     (`PartyService.GetTeamSnapshots`); state has `Party.Teammates` (Partner = first). Party screen has teammate tabs, Hero screen tabs per
+     teammate, HUD shows all teammates. Balance: `Config/Stages.PartyScale` 2.2 (docs/BALANCE.md "Four-hero balance").
+     STILL TO DO: balancing pass (Mage lags, Summoner leads); Skills screen "Partner" tab only edits the first teammate; plaza arena pads
+     sized for 2; world/season boss + raid numbers (Config/Bosses) not retuned for 4.
    - Studio test cheat (🧪 HUD button, `handlers.DevGrant`) should give much more gold.
    - DONE 2026-11-18 (tests green, NOT seen in Studio): dungeons are one continuous fight (`Simulation` option `Waves`, `Wave` events):
      2-3 waves then a boss, nothing resets between waves. Fixed difficulty (`Stage`) and recommended `Level` per dungeon, 4 dungeons

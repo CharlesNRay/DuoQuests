@@ -236,7 +236,8 @@ local function buildState(player)
 
 	local party = PartyService.GetState(player)
 	if party then
-		party.Partner = PartyService.GetPartner(player)
+		party.Teammates = PartyService.GetTeammates(player)
+		party.Partner = party.Teammates[1]
 		party.Ultimate = PartyService.GetUltimateInfo(player)
 		party.MyGhostEdits = PartyService.GetMyGhostHistory(player)
 		state.Party = party
@@ -428,7 +429,7 @@ function handlers.GuildInfo(player, profile, fields) return GuildService.SetInfo
 function handlers.GuildBuy(player, profile, upgradeId) return guildCall(player, GuildService.Buy, player, profile, upgradeId) end
 function handlers.GuildClaimMission(player, profile, kind, index) return GuildService.ClaimMission(player, profile, kind, index) end
 function handlers.GuildRaid(player, profile)
-	return GuildService.RaidChallenge(player, profile, PartyService.GetPartnerSnapshot(player), function(fight, label, damage)
+	return GuildService.RaidChallenge(player, profile, PartyService.GetTeamSnapshots(player), function(fight, label, damage)
 		playBossFight(player, fight, label, damage)
 	end)
 end
@@ -467,7 +468,7 @@ function handlers.BossChallenge(player, profile, which)
 	if which ~= "World" and which ~= "Season" then
 		return false, "BadArgs"
 	end
-	local ok, data = BossService.Challenge(player, profile, which, PartyService.GetPartnerSnapshot(player))
+	local ok, data = BossService.Challenge(player, profile, which, PartyService.GetTeamSnapshots(player))
 	if ok then
 		local fight = data.Fight
 		data.Fight = nil
@@ -496,9 +497,8 @@ function handlers.DungeonRun(player, profile, id)
 		return false, "BadArgs"
 	end
 	local members = { { Id = tostring(player.UserId), Name = player.Name, Profile = profile } }
-	local partner = PartyService.GetPartnerSnapshot(player)
-	if partner then
-		table.insert(members, { Id = partner.Id, Name = partner.Name, Snapshot = partner.Snapshot })
+	for _, mate in ipairs(PartyService.GetTeamSnapshots(player)) do
+		table.insert(members, { Id = mate.Id, Name = mate.Name, Snapshot = mate.Snapshot })
 	end
 	local ok, result = Activities.RunDungeon(profile, members, id, math.random(1, 1e9), os.time(), true)
 	if ok then
@@ -1217,15 +1217,24 @@ function handlers.SetUltimate(player, _, ultimateId)
 	return PartyService.SetUltimate(player, ultimateId)
 end
 
-function handlers.SetGhostLoadout(player, _, ids)
+-- targetUserId: which teammate's ghost (optional: the first teammate)
+function handlers.SetGhostLoadout(player, _, ids, targetUserId)
 	if not isList(ids, Skills.SLOTS) then
 		return false, "BadArgs"
 	end
-	local partner = PartyService.GetPartner(player)
-	if not partner then
+	local target = nil
+	for _, mate in ipairs(PartyService.GetTeammates(player)) do
+		if target == nil or mate.UserId == targetUserId then
+			target = mate
+		end
+		if mate.UserId == targetUserId then
+			break
+		end
+	end
+	if not target then
 		return false, "NoPartner"
 	end
-	return PartyService.SetGhostLoadout(player, partner.UserId, ids)
+	return PartyService.SetGhostLoadout(player, target.UserId, ids)
 end
 
 function handlers.RevertMyGhost(player)

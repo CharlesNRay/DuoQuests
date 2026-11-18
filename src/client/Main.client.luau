@@ -420,8 +420,8 @@ extra.ShowBoard = function(categoryId)
 end
 hud.OnMap = function() open("Map", "World Map") end
 hud.OnAdvance = function() call("Advance") end
-hud.OnPartner = function()
-	extra.HeroTab = "Partner"
+hud.OnPartner = function(index)
+	extra.HeroTab = if (index or 1) <= 1 then "Partner" else "Mate" .. index
 	open("Hero", "Hero", true)
 end
 hud.OnParty = function() open("Party", "Party", true) end

@@ -210,7 +210,9 @@ local function describe(state, which)
 			XP = p.XP, XPNeeded = p.XPNeeded, IP = p.IP,
 		}
 	end
-	local partner = state.Party and state.Party.Partner
+	-- "Partner" is the first teammate; "Mate2" / "Mate3" the others (a party has up to 4)
+	local mates = (state.Party and (state.Party.Teammates or (state.Party.Partner and { state.Party.Partner }))) or {}
+	local partner = mates[tonumber(string.match(which, "%d+") or "") or 1]
 	if not partner then
 		return nil
 	end
@@ -227,16 +229,26 @@ function HeroScreen.Hero(container, state, _, extra)
 	extra = extra or {}
 	local which = extra.HeroTab or "You"
 	local hero = describe(state, which)
-	if not hero and which == "Partner" then
+	if not hero and which ~= "You" then
 		which = "You"
 		hero = describe(state, "You")
 	end
 
-	-- tabs
+	-- tabs: you, then each teammate
 	local hasPartner = describe(state, "Partner") ~= nil
-	for index, name in ipairs({ "You", "Partner" }) do
-		local enabled = name == "You" or hasPartner
-		local b = Kit.button({ Size = UDim2.fromOffset(110, 32), Position = UDim2.fromOffset((index - 1) * 116, 0), Text = name, BackgroundColor3 = if name == which then C.Accent else C.Panel, TextColor3 = if enabled then C.Text else C.Dim, Parent = container }, function()
+	local tabNames, tabLabels = { "You" }, { "You" }
+	local mates = (state.Party and (state.Party.Teammates or (state.Party.Partner and { state.Party.Partner }))) or {}
+	for index, mate in ipairs(mates) do
+		table.insert(tabNames, if index == 1 then "Partner" else "Mate" .. index)
+		table.insert(tabLabels, mate.Name)
+	end
+	if #tabNames == 1 then
+		table.insert(tabNames, "Partner")
+		table.insert(tabLabels, "Partner")
+	end
+	for index, name in ipairs(tabNames) do
+		local enabled = name == "You" or describe(state, name) ~= nil
+		local b = Kit.button({ Size = UDim2.fromOffset(110, 32), Position = UDim2.fromOffset((index - 1) * 116, 0), Text = tabLabels[index], TextWrapped = false, TextTruncate = Enum.TextTruncate.AtEnd, BackgroundColor3 = if name == which then C.Accent else C.Panel, TextColor3 = if enabled then C.Text else C.Dim, Parent = container }, function()
 			if enabled then
 				extra.HeroTab = name
 				HeroScreen.Hero(container, state, nil, extra)

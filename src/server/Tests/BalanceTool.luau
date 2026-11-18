@@ -121,9 +121,18 @@ function BalanceTool.Run(m, options)
 
 	local warrior, cleric = m.ProfileTemplate.New(), m.ProfileTemplate.New()
 	cleric.Season.ClassId = "Cleric"
+	-- a full party of four (every fight has four heroes: players, ghosts or companions)
+	local mage, ranger = m.ProfileTemplate.New(), m.ProfileTemplate.New()
+	for _, pair in ipairs({ { mage, "Mage" }, { ranger, "Ranger" } }) do
+		pair[1].Season.ClassId = pair[2]
+		pair[1].Permanent.UnlockedClasses[pair[2]] = true
+		m.ProfileTemplate.GrantClassStarters(pair[1].Season, pair[2])
+	end
 	local team = {
 		{ Id = "p1", Name = "Warrior", Profile = warrior },
 		{ Id = "p2", Name = "Cleric", Profile = cleric },
+		{ Id = "p3", Name = "Mage", Profile = mage },
+		{ Id = "p4", Name = "Ranger", Profile = ranger },
 	}
 	if options.Solo then
 		team = { team[1] }

@@ -69,6 +69,39 @@ function Ultimates.Resolve(classA, classB, frontier, chosenId)
 	return Ultimates.Available(classA, classB, frontier)[1]
 end
 
+-- A party of any size: the ultimate is valid when any two of its classes unlock it.
+function Ultimates.ValidateParty(classes, frontier, ultimateId)
+	local reason = "NoUltimate"
+	for i = 1, #classes do
+		for j = i + 1, #classes do
+			local ok, why = Ultimates.Validate(classes[i], classes[j], frontier, ultimateId)
+			if ok then
+				return true
+			end
+			if why ~= "NoUltimate" then
+				reason = why
+			end
+		end
+	end
+	return false, reason
+end
+
+-- The party's pick when any pair allows it, else the first unlocked one of the first pair (in party order) that has one.
+function Ultimates.ResolveParty(classes, frontier, chosenId)
+	if chosenId ~= nil and Ultimates.ValidateParty(classes, frontier, chosenId) then
+		return chosenId
+	end
+	for i = 1, #classes do
+		for j = i + 1, #classes do
+			local id = Ultimates.Available(classes[i], classes[j], frontier)[1]
+			if id then
+				return id
+			end
+		end
+	end
+	return nil
+end
+
 -- Average of every slot level in every list given (members' SlotLevels).
 function Ultimates.PartyLevel(slotLevelLists)
 	local total, count = 0, 0

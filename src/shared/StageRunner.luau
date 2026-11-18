@@ -104,10 +104,10 @@ function StageRunner.NewParty(members)
 	return party
 end
 
--- Only a full pair has an ultimate. The level is the average slot level of the
--- two members. `chosenId` is the party's pick (used when valid and unlocked).
+-- A party of two or more has an ultimate (any two of its classes may unlock it). The level is the average slot level
+-- of the members. `chosenId` is the party's pick (used when valid and unlocked).
 function StageRunner.UltimateFor(members, frontier, chosenId)
-	if #members ~= 2 then
+	if #members < 2 then
 		return nil
 	end
 	local classes, levelLists = {}, {}
@@ -122,7 +122,7 @@ function StageRunner.UltimateFor(members, frontier, chosenId)
 			levelLists[index] = if snap.SkillLevels then SkillProgress.WithBonus(SkillProgress.LevelsFor(snap.GhostLoadout, snap.SkillLevels), snap.SlotBonus) else snap.SlotLevels
 		end
 	end
-	local id = Ultimates.Resolve(classes[1], classes[2], frontier, chosenId)
+	local id = Ultimates.ResolveParty(classes, frontier, chosenId)
 	if id == nil then
 		return nil
 	end

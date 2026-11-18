@@ -35,10 +35,10 @@ Activities.MaxKeys = 3
 -- Stage = how hard its monsters are (as that map stage), Level = the recommended hero level, Waves = monster waves before
 -- the boss, Unlock = highest stage needed to enter
 Activities.Dungeons = {
-	{ Id = "Crypt", Name = "Forgotten Crypt", Unlock = 5, Stage = 8, Level = 8, Waves = 2, Blurb = "Bones and old curses. A good first dungeon." },
-	{ Id = "Foundry", Name = "Ember Foundry", Unlock = 18, Stage = 21, Level = 20, Waves = 3, Blurb = "Molten halls guarded by constructs." },
-	{ Id = "Abyss", Name = "Sunken Abyss", Unlock = 32, Stage = 34, Level = 31, Waves = 3, Blurb = "Deep water and deeper things." },
-	{ Id = "Spire", Name = "Frostbound Spire", Unlock = 50, Stage = 52, Level = 40, Waves = 3, Blurb = "A frozen tower that never stops climbing." },
+	{ Id = "Crypt", Name = "Forgotten Crypt", Unlock = 5, Stage = 6, Level = 8, Waves = 2, Blurb = "Bones and old curses. A good first dungeon." },
+	{ Id = "Foundry", Name = "Ember Foundry", Unlock = 15, Stage = 17, Level = 20, Waves = 3, Blurb = "Molten halls guarded by constructs." },
+	{ Id = "Abyss", Name = "Sunken Abyss", Unlock = 25, Stage = 27, Level = 31, Waves = 3, Blurb = "Deep water and deeper things." },
+	{ Id = "Spire", Name = "Frostbound Spire", Unlock = 35, Stage = 38, Level = 40, Waves = 3, Blurb = "A frozen tower that never stops climbing." },
 }
 
 Activities.Expeditions = {

@@ -190,7 +190,7 @@ local function saveEntry(entry)
 			entry.Record = record
 			-- Drop anyone who is no longer a member of this party.
 			for userId in pairs(table.clone(entry.Online)) do
-				if record.Members[1] ~= userId and record.Members[2] ~= userId then
+				if not table.find(record.Members, userId) then
 					entry.Online[userId] = nil
 				end
 			end
@@ -548,23 +548,7 @@ local function sheetOfSnapshot(snapshot)
 	})
 end
 
-function PartyService.GetPartner(player)
-	local entry = entryFor(player)
-	if not entry then
-		return nil
-	end
-	local partnerId = Party.Partner(entry.Record, player.UserId)
-	local snapshot = partnerId and entry.Record.Snapshots[tostring(partnerId)]
-	local isCompanion = false
-	if not snapshot and entry.Record.Companion then
-		-- no real partner yet: the starter ghost stands in
-		snapshot = entry.Record.Companion
-		partnerId = Party.COMPANION_ID
-		isCompanion = true
-	end
-	if not snapshot then
-		return nil
-	end
+local function teammateInfo(entry, partnerId, snapshot, isCompanion)
 	return {
 		IsCompanion = isCompanion,
 		UserId = partnerId,
@@ -585,6 +569,30 @@ function PartyService.GetPartner(player)
 		SubclassId = snapshot.SubclassId,
 		Sheet = sheetOfSnapshot(snapshot),
 	}
+end
+
+-- Everyone who fights beside you: the other members (live or ghost), then the companions in the empty seats.
+function PartyService.GetTeammates(player)
+	local entry = entryFor(player)
+	if not entry then
+		return {}
+	end
+	local list = {}
+	for _, memberId in ipairs(Party.Others(entry.Record, player.UserId)) do
+		local snapshot = entry.Record.Snapshots[tostring(memberId)]
+		if snapshot then
+			table.insert(list, teammateInfo(entry, memberId, snapshot, false))
+		end
+	end
+	for _, companion in ipairs(entry.Record.Companions or {}) do
+		table.insert(list, teammateInfo(entry, companion.UserId, companion, true))
+	end
+	return list
+end
+
+-- the first teammate (older screens show one partner)
+function PartyService.GetPartner(player)
+	return PartyService.GetTeammates(player)[1]
 end
 
 -- The member's own snapshot (used to offer "undo partner edits").
@@ -642,19 +650,36 @@ end
 
 function PartyService.GetUltimateInfo(player)
 	local entry = entryFor(player)
-	if not entry or #entry.Record.Members ~= 2 then
+	if not entry then
 		return nil
 	end
-	local first = entry.Record.Snapshots[tostring(entry.Record.Members[1])]
-	local second = entry.Record.Snapshots[tostring(entry.Record.Members[2])]
-	if not first or not second then
+	local classes = {}
+	for _, memberId in ipairs(entry.Record.Members) do
+		local snap = entry.Record.Snapshots[tostring(memberId)]
+		if snap then table.insert(classes, snap.ClassId) end
+	end
+	for _, companion in ipairs(entry.Record.Companions or {}) do
+		table.insert(classes, companion.ClassId)
+	end
+	if #classes < 2 then
 		return nil
 	end
 	local Ultimates = require(Shared.Ultimates)
+	local options, seen = {}, {}
+	for i = 1, #classes do
+		for j = i + 1, #classes do
+			for _, id in ipairs(Ultimates.ForPair(classes[i], classes[j])) do
+				if not seen[id] then
+					seen[id] = true
+					table.insert(options, id)
+				end
+			end
+		end
+	end
 	return {
-		Options = Ultimates.ForPair(first.ClassId, second.ClassId),
+		Options = options,
 		Frontier = entry.Record.Frontier,
-		Chosen = Ultimates.Resolve(first.ClassId, second.ClassId, entry.Record.Frontier, entry.Record.UltimateId),
+		Chosen = Ultimates.ResolveParty(classes, entry.Record.Frontier, entry.Record.UltimateId),
 	}
 end
 
@@ -687,12 +712,12 @@ function PartyService.GetHostedSummaries()
 					Online = online ~= nil,
 				})
 			end
-			if #record.Members == 1 and record.Companion then
+			for _, companion in ipairs(record.Companions or {}) do
 				table.insert(members, {
-					UserId = Party.COMPANION_ID,
-					Name = record.Companion.Name,
-					ClassId = record.Companion.ClassId,
-					Level = record.Companion.Level,
+					UserId = companion.UserId,
+					Name = companion.Name,
+					ClassId = companion.ClassId,
+					Level = companion.Level,
 					Online = false,
 				})
 			end
@@ -702,24 +727,29 @@ function PartyService.GetHostedSummaries()
 	return list
 end
 
--- The ghost snapshot of your partner (nil when solo), used when a boss fight needs a second fighter.
-function PartyService.GetPartnerSnapshot(player)
+-- The ghosts of everyone who fights beside you (other members' snapshots, then the companions), as fight members
+-- { Id, Name, Snapshot }. Boss fights, raids and dungeons use the whole team, as in normal stages.
+function PartyService.GetTeamSnapshots(player)
 	local partyId = partyOf[player.UserId]
 	local entry = partyId and hosted[partyId]
 	if not entry then
-		return nil
+		return {}
 	end
 	local record = entry.Record
-	local partnerId = Party.Partner(record, player.UserId)
-	if partnerId then
-		local snapshot = record.Snapshots[tostring(partnerId)]
-		return snapshot and { Id = tostring(partnerId), Name = snapshot.Name or "Partner", Snapshot = snapshot } or nil
+	local list = {}
+	for _, memberId in ipairs(Party.Others(record, player.UserId)) do
+		local snapshot = record.Snapshots[tostring(memberId)]
+		if snapshot then
+			table.insert(list, { Id = tostring(memberId), Name = snapshot.Name or "Partner", Snapshot = snapshot })
+		end
 	end
-	-- solo: the starter ghost fights beside you, as in normal stages
-	if record.Companion then
-		return { Id = tostring(Party.COMPANION_ID), Name = record.Companion.Name, Snapshot = record.Companion }
+	for _, companion in ipairs(record.Companions or {}) do
+		if #list >= Party.SEATS - 1 then
+			break
+		end
+		table.insert(list, { Id = tostring(companion.UserId), Name = companion.Name, Snapshot = companion })
 	end
-	return nil
+	return list
 end
 
 -- A boss fight takes over your arena: pause the party's normal fights for a while.

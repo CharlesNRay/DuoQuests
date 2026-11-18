@@ -100,3 +100,12 @@ the first boss: a loss there just steps back and the party tries again (new play
 Simulated (companion, 2 seeds): level 30 unchanged at 5.1-6.1h (the subclass stays a 5-6h goal); level at stage 30 24-27;
 L40 9.2-12.3h; a player who upgrades nothing reaches stage 15 by level 15-16 (was 20-22) and still stalls at stage 20-25.
 PacingTests' old Warrior+Cleric bot spends no gold and levels no pets; its boss check now only asks that boss 20 is reached.
+
+## Four-hero balance (2026-11-18)
+
+Parties hold up to 4 players and every fight has 4 heroes: members (or their ghosts while offline) plus companions in the
+empty seats (`Party.SyncCompanions`, classes the party lacks: Cleric, Warrior, Mage, Ranger, ...). Enemies scale with
+`Config/Stages.PartyScale` = 2.2 on top of `Stages.Scale`. `abl.sh ... companion` now fills all three seats.
+Results at 2.2 (full mode, companions): L30 4.8-6h, L40 8.6-11.5h at stage 41-62 (target 40-90 in 9-12h); lazy mode reaches
+stage 20-23 only after 15h+ (walls at boss 20). Dungeon stages were lowered to match (Crypt 6, Foundry 17, Abyss 27, Spire 38).
+Open: Mage lags (stage 40-51 at L40, ~100 losses at boss 20, loses dungeons at the recommended level) while Summoner leads (58-73).

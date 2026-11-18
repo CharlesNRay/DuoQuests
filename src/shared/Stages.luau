@@ -40,7 +40,7 @@ function Stages.Scale(stage)
 		local t = (stage - ease.From) / (ease.To - ease.From) -- 0 at From, 1 at To
 		scale *= ease.Mult + (1 - ease.Mult) * t
 	end
-	return scale
+	return scale * (Config.PartyScale or 1)
 end
 
 -- Enemy HEALTH can grow on a steeper curve than attack (Config.HealthScalePower). Pairs that never die (a tank and a

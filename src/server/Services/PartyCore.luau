@@ -198,14 +198,14 @@ end
 
 -- Join codes ------------------------------------------------------------------------
 
--- Only an open party (one member) can make a code, and only a member can.
+-- Only a party with a free seat can make a code, and only a member can.
 -- Returns true, code, expiresAt.
 function PartyCore.CreateCode(deps, partyId, userId)
 	local ok, party = PartyCore.Get(deps, partyId)
 	if not ok then
 		return false, party
 	end
-	if party.Members[1] ~= userId and party.Members[2] ~= userId then
+	if not table.find(party.Members, userId) then
 		return false, "NotMember"
 	end
 	if not Party.IsOpen(party) then
@@ -265,7 +265,7 @@ function PartyCore.JoinByCode(deps, userId, name, profile, seasonId, code)
 	end
 	if oldId ~= nil then
 		local found, oldParty = PartyCore.Get(deps, oldId)
-		if found and not Party.IsOpen(oldParty) then
+		if found and #oldParty.Members > 1 then -- only a solo party may be given up by joining another
 			return false, "AlreadyInParty"
 		end
 	end
@@ -281,7 +281,7 @@ function PartyCore.JoinByCode(deps, userId, name, profile, seasonId, code)
 			failure = "PartyFull"
 			return nil
 		end
-		if old.Members[1] == userId then
+		if table.find(old.Members, userId) then
 			failure = "OwnParty"
 			return nil
 		end
@@ -299,7 +299,9 @@ function PartyCore.JoinByCode(deps, userId, name, profile, seasonId, code)
 		return false, failure
 	end
 
-	deps.Codes:Remove(codeKey(normalized))
+	if not Party.IsOpen(joined) then -- the code works until the party is full
+		deps.Codes:Remove(codeKey(normalized))
+	end
 	profile.Permanent.PartyId = targetId
 
 	local abandoned = nil
@@ -329,7 +331,7 @@ function PartyCore.Leave(deps, userId, profile)
 			failure = "NoParty"
 			return nil
 		end
-		if old.Members[1] ~= userId and old.Members[2] ~= userId then
+		if not table.find(old.Members, userId) then
 			failure = "NotMember"
 			return nil
 		end

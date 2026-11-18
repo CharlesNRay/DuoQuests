@@ -315,16 +315,16 @@ function BossService.GetState(player, profile)
 	return { World = worldState, Season = seasonState }
 end
 
-local function runFight(profile, player, cfg, frontier, partner)
+local function runFight(profile, player, cfg, frontier, team)
 	local members = { { Id = tostring(player.UserId), Name = player.Name, Profile = profile } }
-	if partner then
-		table.insert(members, { Id = partner.Id, Name = partner.Name, Snapshot = partner.Snapshot })
+	for _, mate in ipairs(team or {}) do
+		table.insert(members, { Id = mate.Id, Name = mate.Name, Snapshot = mate.Snapshot })
 	end
 	local damage, _, fight = Bosses.Challenge(members, cfg, frontier, rng:NextInteger(1, 1e9), true)
 	return damage, fight
 end
 
-function BossService.Challenge(player, profile, which, partner)
+function BossService.Challenge(player, profile, which, team)
 	local frontier = profile.Season.HighestStage
 	if which == "World" then
 		if not world.Active then
@@ -336,7 +336,7 @@ function BossService.Challenge(player, profile, which, partner)
 		end
 		world.LastStrike[userId] = os.clock()
 		world.Strikes[userId] = (world.Strikes[userId] or 0) + 1
-		local damage, fight = runFight(profile, player, WORLD, frontier, partner)
+		local damage, fight = runFight(profile, player, WORLD, frontier, team)
 		Quests.Record(profile, "Strike", 1)
 		world.Totals[userId] = math.max(world.Totals[userId] or 0, damage) -- only your best fight counts
 		return true, { Damage = damage, Best = world.Totals[userId], Total = world.Totals[userId], Reached = #Bosses.TiersReached(WORLD, world.Totals[userId], frontier), Fight = fight, Label = WORLD.Name }
@@ -349,7 +349,7 @@ function BossService.Challenge(player, profile, which, partner)
 			return false, "Cooldown"
 		end
 		lastSeasonChallenge[player.UserId] = os.clock()
-		local damage, fight = runFight(profile, player, SEASON, frontier, partner)
+		local damage, fight = runFight(profile, player, SEASON, frontier, team)
 		Quests.Record(profile, "Strike", 1)
 		-- only a new personal best moves the boss, and only by the improvement
 		local gain = Bosses.RecordBest(profile, seasonId, math.floor(damage))

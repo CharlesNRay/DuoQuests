@@ -455,13 +455,15 @@ function Hud.new(root)
 				end
 			end
 		end
-		if party and party.Partner then
-			local p = party.Partner
-			card(p.Name, p.ClassId, p.Level, p.Online and "" or "  (ghost)", function()
-				if self.OnPartner then
-					self.OnPartner()
-				end
-			end, ("<b>%s</b>  Lv %d %s\n%s\nClick for her stats, skills and gear"):format(p.Name, p.Level, p.ClassId, if p.Online then "Online" else "Fights as a ghost while away"), p.IP)
+		local mates = party and (party.Teammates or (party.Partner and { party.Partner })) or {}
+		if #mates > 0 then
+			for index, p in ipairs(mates) do
+				card(p.Name, p.ClassId, p.Level, if p.IsCompanion then "  (companion)" elseif p.Online then "" else "  (ghost)", function()
+					if self.OnPartner then
+						self.OnPartner(index)
+					end
+				end, ("<b>%s</b>  Lv %d %s\n%s\nClick for stats, skills and gear"):format(p.Name, p.Level, p.ClassId, if p.IsCompanion then "A companion: a real player takes this seat when one joins" elseif p.Online then "Online" else "Fights as a ghost while away"), p.IP)
+			end
 		elseif party then
 			card("Waiting for partner...", "", 0, "", function()
 				if self.OnParty then
