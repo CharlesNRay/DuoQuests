@@ -783,8 +783,8 @@ function handlers.DevGrant(player, profile)
 	if not game:GetService("RunService"):IsStudio() then
 		return false, "Forbidden"
 	end
-	profile.Season.Currencies.Gold += 5000
-	profile.Season.Currencies.Shards += 600
+	profile.Season.Currencies.Gold += 5000000 -- plenty for shops, slot training and pet store at once
+	profile.Season.Currencies.Shards += 6000
 	profile.Season.Currencies.Wishstones = (profile.Season.Currencies.Wishstones or 0) + 60
 	for _, id in ipairs(Consumables.Order) do
 		Consumables.Grant(profile, id, if id == "PetWish" or id == "SkillWish" then 12 else 3)
