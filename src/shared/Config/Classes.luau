@@ -33,16 +33,16 @@ local Classes = {
 		BasicAttack = { Id = "SwordSlash", DisplayName = "Sword Slash", Range = "Melee" },
 
 		BaseStats = {
-			MaxHealth = 200,
+			MaxHealth = 260, -- was 200 (2026-11-18: the tank of a four-hero party died in every fight)
 			Attack = 12,
-			Defense = 10,
+			Defense = 14, -- was 10
 			AttackSpeed = 1.0, -- basic attacks per second
 			CritChance = 0.05,
 		},
 		GrowthPerLevel = {
-			MaxHealth = 25,
+			MaxHealth = 35, -- was 25
 			Attack = 2,
-			Defense = 2,
+			Defense = 3, -- was 2
 			AttackSpeed = 0,
 			CritChance = 0,
 		},

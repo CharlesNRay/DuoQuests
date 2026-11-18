@@ -44,7 +44,8 @@ Git Bash; they find a working Python themselves (`python3`/`python` there are St
      party is full. Party ultimate = any pair of party classes (`Ultimates.ResolveParty`). Boss/raid/dungeon fights take the whole team
      (`PartyService.GetTeamSnapshots`); state has `Party.Teammates` (Partner = first). Party screen has teammate tabs, Hero screen tabs per
      teammate, HUD shows all teammates. Balance: `Config/Stages.PartyScale` 2.2 (docs/BALANCE.md "Four-hero balance").
-     STILL TO DO: balancing pass (Mage lags, Summoner leads); Skills screen "Partner" tab only edits the first teammate; plaza arena pads
+     Tanks buffed 2026-11-18 (Warrior health/defense, see BALANCE.md); probe roles with `tools/sim/runners/partyprobe.luau`.
+     STILL TO DO: balancing pass (Summoner leads, Mage lowest but in range); Skills screen "Partner" tab only edits the first teammate; plaza arena pads
      sized for 2; world/season boss + raid numbers (Config/Bosses) not retuned for 4.
    - Studio test cheat (🧪 HUD button, `handlers.DevGrant`) should give much more gold.
    - DONE 2026-11-18 (tests green, NOT seen in Studio): dungeons are one continuous fight (`Simulation` option `Waves`, `Wave` events):

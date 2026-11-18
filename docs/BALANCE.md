@@ -113,3 +113,7 @@ Mage check (2026-11-18): Mage is NOT low on damage. In four-hero stage fights it
 speed 0.9) did not move its frontier (40-49) while making it the top boss dps, so that was reverted (only MaxHealth 110 -> 120 kept).
 The gap is survival: the Warrior companion (the only tank in a Mage team) dies in every fight (gearless probe, level 30, stage 14),
 while a Summoner team also has taunting skeletons. Next lever: tank survival (Warrior/Guardian companion, or tank aggro/defense).
+Tank buff (2026-11-18): Warrior MaxHealth 200 -> 260 (+35/level, was 25), Defense 10 -> 14 (+3/level, was 2). Probe
+(`tools/sim/runners/partyprobe.luau`): the Warrior now survives every won fight (0/30 deaths, was 30/30). Sims (companion, full):
+Mage fr 42-47 at L40 in 9.4-10.2h (boss 20 now 0 losses, dungeons won at the recommended level), Warrior fr 55-61, Summoner 62-86;
+L30 4.9-5.3h for all. All inside the targets; Summoner is the high outlier (next: trim MinionHealthScale if it stays ahead).
