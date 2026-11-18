@@ -113,7 +113,7 @@ local Classes = {
 		BasicAttack = { Id = "ArcaneMissile", DisplayName = "Arcane Missile", Range = "Ranged" },
 
 		BaseStats = {
-			MaxHealth = 110,
+			MaxHealth = 120, -- was 110 (2026-11-18: the squishiest class died first in long four-hero fights)
 			Attack = 18,
 			Defense = 3,
 			AttackSpeed = 0.8,

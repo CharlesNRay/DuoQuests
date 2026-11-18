@@ -109,3 +109,7 @@ empty seats (`Party.SyncCompanions`, classes the party lacks: Cleric, Warrior, M
 Results at 2.2 (full mode, companions): L30 4.8-6h, L40 8.6-11.5h at stage 41-62 (target 40-90 in 9-12h); lazy mode reaches
 stage 20-23 only after 15h+ (walls at boss 20). Dungeon stages were lowered to match (Crypt 6, Foundry 17, Abyss 27, Spire 38).
 Open: Mage lags (stage 40-51 at L40, ~100 losses at boss 20, loses dungeons at the recommended level) while Summoner leads (58-73).
+Mage check (2026-11-18): Mage is NOT low on damage. In four-hero stage fights it deals the most damage, and +stats (Attack 19,
+speed 0.9) did not move its frontier (40-49) while making it the top boss dps, so that was reverted (only MaxHealth 110 -> 120 kept).
+The gap is survival: the Warrior companion (the only tank in a Mage team) dies in every fight (gearless probe, level 30, stage 14),
+while a Summoner team also has taunting skeletons. Next lever: tank survival (Warrior/Guardian companion, or tank aggro/defense).
