@@ -469,6 +469,16 @@ function Replay:_event(e)
 			if self.Enemies[e.Target] or self.Minions[e.Target] then
 				CosmeticsVisuals.KillEffect(scene.Folder, target:Pos())
 				target:FadeOut()
+				if self.Minions[e.Target] == target then
+					-- a summon leaves the field for good (fading leaves its eyes and decals behind otherwise)
+					task.delay(0.8, function()
+						if self.Minions[e.Target] == target then
+							self.Minions[e.Target] = nil
+							target:Destroy()
+							self:_layout()
+						end
+					end)
+				end
 			else
 				target:Fall()
 			end

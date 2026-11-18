@@ -181,7 +181,9 @@ end
 function StatCalc.NewMinion(id, minionId, owner, statOf, power)
 	local def = Minions[minionId]
 	assert(def ~= nil, "Unknown minion: " .. tostring(minionId))
-	power = (power or 1) * (EconomyConfig.MinionScale or 1)
+	power = power or 1
+	local healthPower = power * (EconomyConfig.MinionHealthScale or 1)
+	local attackPower = power * (EconomyConfig.MinionScale or 1) -- MinionScale trims damage; MinionHealthScale trims health less, so summons live long enough to tank
 	local entity = Entity.new({
 		Id = id,
 		Name = def.DisplayName,
@@ -189,8 +191,8 @@ function StatCalc.NewMinion(id, minionId, owner, statOf, power)
 		DefId = minionId,
 		DamageType = def.DamageType,
 		Stats = {
-			MaxHealth = math.max(8, math.floor(statOf(owner, "MaxHealth") * def.HealthFrac * power + 0.5)),
-			Attack = math.max(1, statOf(owner, "Attack") * def.AttackFrac * power),
+			MaxHealth = math.max(8, math.floor(statOf(owner, "MaxHealth") * def.HealthFrac * healthPower + 0.5)),
+			Attack = math.max(1, statOf(owner, "Attack") * def.AttackFrac * attackPower),
 			Defense = statOf(owner, "Defense") * def.DefenseFrac,
 			AttackSpeed = def.AttackSpeed,
 			CritChance = 0,
@@ -200,6 +202,7 @@ function StatCalc.NewMinion(id, minionId, owner, statOf, power)
 	entity.Minion = true
 	entity.OwnerId = owner.Id
 	entity.Leech = def.Leech
+	entity.Lifetime = def.Lifetime or 20
 	return entity
 end
 

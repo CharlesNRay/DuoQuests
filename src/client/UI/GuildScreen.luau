@@ -19,7 +19,7 @@ local REASONS = {
 	NotAllowed = "Only the leader (or an officer) can do that.", NotEnoughPoints = "Not enough guild points.", MaxLevel = "Already at max level.",
 	NameTaken = "That name is taken.", BadName = "Name: 3-20 letters, numbers and spaces.", BadTag = "Tag: 2-4 letters or numbers.",
 	Inappropriate = "That text was filtered.", NotEnoughGold = "Not enough gold.", LevelTooLow = "Your level is too low.",
-	Full = "That guild is full.", NoAttempts = "No strikes left today.", Defeated = "The boss is already down.",
+	Full = "That guild is full.", NoAttempts = "No battles left today.", Defeated = "The boss is already down.",
 	NotEnoughMarks = "Not enough Guild Marks.", LeaderCannotLeave = "Hand over leadership first.", Unavailable = "Guild service is busy, try again.",
 	AlreadyInGuild = "You are already in a guild.", NotDone = "Not finished yet.", NoShare = "You did not help with that one.",
 }
@@ -282,8 +282,8 @@ function GuildScreen.Guild(container, state, call, extra)
 		Kit.label({ Size = UDim2.new(1, -16, 0, 18), Position = UDim2.fromOffset(8, 30), Text = ("%s  ·  changes in %s"):format(r.Boss.Blurb, span(r.SecondsLeft)), TextSize = 11, TextColor3 = C.Dim, Parent = left })
 		bar(left, r.Health / r.MaxHealth, UDim2.fromOffset(8, 56), UDim2.new(1, -16, 0, 18), if r.Defeated then C.Good else C.Bad)
 		Kit.label({ Size = UDim2.new(1, -16, 0, 18), Position = UDim2.fromOffset(8, 56), Text = if r.Defeated then "DEFEATED" else ("%s / %s"):format(Short(r.Health), Short(r.MaxHealth)), TextSize = 11, TextXAlignment = Enum.TextXAlignment.Center, ZIndex = 3, Parent = left })
-		Kit.label({ Size = UDim2.new(1, -16, 0, 34), Position = UDim2.fromOffset(8, 80), Text = ("Strikes today: %d / %d  ·  your damage this week: %s\nAnyone in the guild can strike at any time - on any server."):format(r.Attempts, r.PerDay, Short(r.MyDamage)), TextSize = 11, TextColor3 = C.Dim, TextYAlignment = Enum.TextYAlignment.Top, Parent = left })
-		local strike = Kit.button({ Size = UDim2.new(1, -16, 0, 34), Position = UDim2.fromOffset(8, 122), Text = if r.Defeated then "Boss defeated" elseif r.Attempts <= 0 then "No strikes left today" else "Strike the boss", BackgroundColor3 = if r.Attempts > 0 and not r.Defeated then C.Accent else C.Panel, TextColor3 = if r.Attempts > 0 and not r.Defeated then DARK else C.Text, Parent = left }, function()
+		Kit.label({ Size = UDim2.new(1, -16, 0, 34), Position = UDim2.fromOffset(8, 80), Text = ("Battles today: %d / %d  ·  your damage this week: %s\nYour party fights it in the boss arena while you watch."):format(r.Attempts, r.PerDay, Short(r.MyDamage)), TextSize = 11, TextColor3 = C.Dim, TextYAlignment = Enum.TextYAlignment.Top, Parent = left })
+		local strike = Kit.button({ Size = UDim2.new(1, -16, 0, 34), Position = UDim2.fromOffset(8, 122), Text = if r.Defeated then "Boss defeated" elseif r.Attempts <= 0 then "No battles left today" else "Battle", BackgroundColor3 = if r.Attempts > 0 and not r.Defeated then C.Accent else C.Panel, TextColor3 = if r.Attempts > 0 and not r.Defeated then DARK else C.Text, Parent = left }, function()
 			if r.Attempts > 0 and not r.Defeated then
 				act("GuildRaid")
 			end
@@ -309,7 +309,7 @@ function GuildScreen.Guild(container, state, call, extra)
 		for index, m in ipairs(board) do
 			Kit.label({ Size = UDim2.new(1, -8, 0, 18), Text = ("%d. %s  -  %d"):format(index, m.Name, m.Dealt), TextSize = 11, Parent = list })
 		end
-		if #board == 0 then Kit.label({ Size = UDim2.new(1, -8, 0, 30), Text = "No strikes yet this week.", TextSize = 11, TextColor3 = C.Dim, Parent = list }) end
+		if #board == 0 then Kit.label({ Size = UDim2.new(1, -8, 0, 30), Text = "No battles yet this week.", TextSize = 11, TextColor3 = C.Dim, Parent = list }) end
 	elseif tab == "Pets" then
 		local w = data.Wish
 		local left = Kit.frame({ Size = UDim2.new(0.45, -4, 1, 0), BackgroundColor3 = C.Panel, Parent = area })

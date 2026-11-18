@@ -35,11 +35,10 @@ Git Bash; they find a working Python themselves (`python3`/`python` there are St
 
 ## Backlog / next steps
 0. **Owner feedback 2026-11-17 (not started, do these first):**
-   - Summoner bug: summons keep spawning (seemingly without limit) and never despawn. Summons should despawn when they die or
-     on a timer; the ones meant to tank are not taking aggro. They also feel underwhelming (may be the bug; re-check
-     `MinionScale` 0.27 after fixing).
-   - Add a way to leave boss fights.
-   - The seasonal or guild boss fight used plain strikes instead of the normal auto combat (skills); find which and fix.
+   - DONE 2026-11-18 (tests green, NOT seen in Studio): summons now expire after `Minions.Lifetime` (20 s), dead ones are destroyed on the client
+     (fading left eyes/decals behind = the "never despawn" pile-up); health uses `Economy.MinionHealthScale` 0.5 (attack keeps `MinionScale` 0.27) so
+     tanks live to hold aggro (abl companion: L40 stage 62-68 in 9.4-10h). Boss arena has a "Leave fight" button (skips to results; party fights stay
+     held until the server hold ends). Guild raid button says "Battle" (it was already a real auto-combat fight); world/season say "Battle!".
    - Consider 4-player parties instead of 2, which means rebalancing everything for 4 (tools/sim partner modes take one partner today).
    - Studio test cheat (🧪 HUD button, `handlers.DevGrant`) should give much more gold.
    - Dungeons: show a recommended level; make them slightly challenging; structure = 2-3 waves of monsters then a boss,

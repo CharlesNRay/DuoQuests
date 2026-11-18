@@ -195,6 +195,7 @@ Simulation.Effects = {
 			local minion = StatCalc.NewMinion("m" .. sim.SummonCount, effect.MinionId, caster, function(entity, stat)
 				return sim:GetStat(entity, stat)
 			end, power)
+			minion.ExpiresAt = sim.Time + (minion.Lifetime or 20) -- summons fade on a timer as well as on death
 			table.insert(sim:_alliesOf(caster), minion)
 			sim:_record({
 				Type = "Spawn",
@@ -1186,7 +1187,7 @@ function Simulation:Step()
 		for _, entity in ipairs(list) do
 			if entity.Minion and entity.Alive and entity.Health > 0 then
 				local owner = self:_entityById(entity.OwnerId)
-				if owner == nil or owner.Health <= 0 then
+				if owner == nil or owner.Health <= 0 or (entity.ExpiresAt and self.Time >= entity.ExpiresAt) then
 					entity.Health = 0
 				end
 			end

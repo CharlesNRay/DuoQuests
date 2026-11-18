@@ -1222,7 +1222,7 @@ function Screens.Boss(container, state, call, extra)
 			Kit.label({ Size = UDim2.new(1, -16, 0, 34), Position = UDim2.fromOffset(8, 68), Text = ("Your best fight: %s damage\nChallenges: %d"):format(Short(w.Damage), w.Challenges), TextSize = 12, Parent = left })
 			local wait = math.max(0, w.CooldownLeft - age)
 			local can = wait <= 0
-			local text = if wait > 0 then ("Ready in %ds"):format(math.ceil(wait)) else "Challenge!"
+			local text = if wait > 0 then ("Ready in %ds"):format(math.ceil(wait)) else "Battle!"
 			local b = Kit.button({ Size = UDim2.new(1, -16, 0, 40), Position = UDim2.fromOffset(8, 110), Text = text, TextSize = 15, BackgroundColor3 = if can then C.Accent else C.Panel, TextColor3 = if can then Color3.fromRGB(30, 24, 10) else C.Text, Parent = left }, function()
 				local ok, data = call("BossChallenge", "World")
 				extra.BossMsg = if ok then nil else ("Could not challenge: " .. tostring(data))
@@ -1247,7 +1247,7 @@ function Screens.Boss(container, state, call, extra)
 		Kit.label({ Size = UDim2.new(1, -16, 0, 34), Position = UDim2.fromOffset(8, 84), Text = ("Your best fight: %s damage\nChallenges: %d  (need %s to share rewards)"):format(Short(s.Damage), s.Challenges, Short(s.MinContribution)), TextSize = 11, TextWrapped = true, Parent = left })
 		local wait = math.max(0, s.CooldownLeft - age)
 		local can = wait <= 0 and not s.Dead
-		local text = if s.Dead then "Defeated" elseif wait > 0 then ("Ready in %ds"):format(math.ceil(wait)) else "Challenge!"
+		local text = if s.Dead then "Defeated" elseif wait > 0 then ("Ready in %ds"):format(math.ceil(wait)) else "Battle!"
 		local b = Kit.button({ Size = UDim2.new(1, -16, 0, 36), Position = UDim2.fromOffset(8, 124), Text = text, TextSize = 14, BackgroundColor3 = if can then C.Accent else C.Panel, TextColor3 = if can then Color3.fromRGB(30, 24, 10) else C.Text, Parent = left }, function()
 			local ok, data = call("BossChallenge", "Season")
 			extra.BossMsg = if ok then nil else ("Could not challenge: " .. tostring(data))

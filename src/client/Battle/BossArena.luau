@@ -26,7 +26,8 @@ local THEME = { Name = "Boss Arena", Ground = { 58, 40, 40 }, Sky = { 96, 30, 28
 local GOLD = Color3.fromRGB(255, 196, 70)
 
 local active = false
-local scene, replay, resultGui, saved
+local scene, replay, resultGui, leaveGui, saved
+local leaving = false
 
 local function restore()
 	pcall(function()
@@ -43,6 +44,10 @@ local function restore()
 	if resultGui then
 		resultGui:Destroy()
 		resultGui = nil
+	end
+	if leaveGui then
+		leaveGui:Destroy()
+		leaveGui = nil
 	end
 	if saved then
 		TweenService:Create(Lighting, TweenInfo.new(0.6), saved):Play()
@@ -146,6 +151,20 @@ function BossArena.Play(info, onClose)
 		local look = ORIGIN + Vector3.new(0, 11, 0)
 		cam.CFrame = CFrame.lookAt(look + Vector3.new(math.sin(os.clock() * 0.2) * 3, 2, distance), look)
 	end)
+	-- Leave fight: the result is already decided on the server, so leaving just skips ahead to the results card
+	leaving = false
+	pcall(function()
+		local gui = Instance.new("ScreenGui")
+		gui.Name = "DuoQuestBossLeave"
+		gui.ResetOnSpawn = false
+		gui.IgnoreGuiInset = true
+		gui.DisplayOrder = 55
+		gui.Parent = Players.LocalPlayer:WaitForChild("PlayerGui")
+		leaveGui = gui
+		Kit.button({ Size = UDim2.fromOffset(150, 36), Position = UDim2.new(1, -16, 0, 70), AnchorPoint = Vector2.new(1, 0), Text = "Leave fight", TextSize = 14, BackgroundColor3 = Color3.fromRGB(150, 50, 50), Parent = gui }, function()
+			leaving = true
+		end)
+	end)
 	task.spawn(function()
 		task.wait(1)
 		local finished = false
@@ -157,11 +176,19 @@ function BossArena.Play(info, onClose)
 			finished = true
 		end
 		local started = os.clock()
-		while active and not finished and os.clock() - started < (info.Duration or 30) + 8 do
+		while active and not finished and not leaving and os.clock() - started < (info.Duration or 30) + 8 do
 			task.wait(0.25)
 		end
+		if leaveGui then
+			leaveGui:Destroy()
+			leaveGui = nil
+		end
 		if active then
-			task.wait(1.2)
+			if leaving then
+				pcall(function() replay.Token += 1 end) -- stop the replay where it is
+			else
+				task.wait(1.2)
+			end
 			showResults(info, onClose)
 		end
 	end)

@@ -11,7 +11,8 @@
 	  Taunt       enemies must hit it first
 	  Leech       fraction of the damage it deals that heals its summoner
 	  Abilities   skill slots it casts on its own (Config/Abilities, Class "Minion")
-	A minion dies when its summoner does.
+	  Lifetime    seconds before it fades on its own (default 20)
+	A minion dies when its summoner does, when its Lifetime runs out, or when it is killed.
 ]]
 
 return {
