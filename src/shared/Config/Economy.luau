@@ -25,7 +25,7 @@ return {
 	-- Gear carries progression: each level adds only LevelGrowth of a class's per-level stats, and flat gear stats (attack, health, defense)
 	-- are GearPower times bigger, so a hero that never changes gear stalls while a geared one keeps climbing.
 	LevelGrowth = 0.35,
-	MinionHealthScale = 0.5, -- a Summoner's minions take this share of their health (more than MinionScale so tanks can hold aggro)
+	MinionHealthScale = 0.4, -- a Summoner's minions take this share of their health (more than MinionScale so tanks can hold aggro)
 	MinionScale = 0.27, -- a Summoner's minions take this share of their attack (their power rides on the summoner's gear, so it is trimmed to keep pace with the other classes)
 	GearPower = 9,
 	DefenseScaleExp = 0.5, -- Defense is measured against 1000 x (attacking enemy scale ^ this), not a flat 1000, so it cannot run away late (see Simulation)

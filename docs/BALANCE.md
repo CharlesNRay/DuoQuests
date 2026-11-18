@@ -117,3 +117,4 @@ Tank buff (2026-11-18): Warrior MaxHealth 200 -> 260 (+35/level, was 25), Defens
 (`tools/sim/runners/partyprobe.luau`): the Warrior now survives every won fight (0/30 deaths, was 30/30). Sims (companion, full):
 Mage fr 42-47 at L40 in 9.4-10.2h (boss 20 now 0 losses, dungeons won at the recommended level), Warrior fr 55-61, Summoner 62-86;
 L30 4.9-5.3h for all. All inside the targets; Summoner is the high outlier (next: trim MinionHealthScale if it stays ahead).
+Summoner trim (2026-11-18): `Economy.MinionHealthScale` 0.5 -> 0.4. Summoner (2 seeds x 2 paths): fr 45-62 at L40 in 8.8-12.4h (was 62-86).

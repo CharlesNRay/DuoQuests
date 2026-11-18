@@ -36,7 +36,7 @@ Git Bash; they find a working Python themselves (`python3`/`python` there are St
 ## Backlog / next steps
 0. **Owner feedback 2026-11-17 (not started, do these first):**
    - DONE 2026-11-18 (tests green, NOT seen in Studio): summons now expire after `Minions.Lifetime` (20 s), dead ones are destroyed on the client
-     (fading left eyes/decals behind = the "never despawn" pile-up); health uses `Economy.MinionHealthScale` 0.5 (attack keeps `MinionScale` 0.27) so
+     (fading left eyes/decals behind = the "never despawn" pile-up); health uses `Economy.MinionHealthScale` 0.4 (0.5 until the four-hero trim) (attack keeps `MinionScale` 0.27) so
      tanks live to hold aggro (abl companion: L40 stage 62-68 in 9.4-10h). Boss arena has a "Leave fight" button (skips to results; party fights stay
      held until the server hold ends). Guild raid button says "Battle" (it was already a real auto-combat fight); world/season say "Battle!".
    - DONE 2026-11-18 (tests green, NOT seen in Studio): parties of up to 4 (`Party.MAX_MEMBERS`); every fight has `Party.SEATS` = 4 heroes,
@@ -45,7 +45,7 @@ Git Bash; they find a working Python themselves (`python3`/`python` there are St
      (`PartyService.GetTeamSnapshots`); state has `Party.Teammates` (Partner = first). Party screen has teammate tabs, Hero screen tabs per
      teammate, HUD shows all teammates. Balance: `Config/Stages.PartyScale` 2.2 (docs/BALANCE.md "Four-hero balance").
      Tanks buffed 2026-11-18 (Warrior health/defense, see BALANCE.md); probe roles with `tools/sim/runners/partyprobe.luau`.
-     STILL TO DO: balancing pass (Summoner leads, Mage lowest but in range); Skills screen "Partner" tab only edits the first teammate; plaza arena pads
+     STILL TO DO: balancing pass (Mage lowest but in range; Summoner trimmed to Warrior's level); Skills screen "Partner" tab only edits the first teammate; plaza arena pads
      sized for 2; world/season boss + raid numbers (Config/Bosses) not retuned for 4.
    - Studio test cheat (🧪 HUD button, `handlers.DevGrant`) should give much more gold.
    - DONE 2026-11-18 (tests green, NOT seen in Studio): dungeons are one continuous fight (`Simulation` option `Waves`, `Wave` events):
