@@ -4,7 +4,7 @@ local m = {
 	Classes = require("./Config/Classes"), Wishing = require("./Wishing"), SkillProgress = require("./SkillProgress"), Subclasses = require("./Subclasses"),
 	Gear = require("./Gear"), Pets = require("./Pets"), PetConfig = require("./Config/Pets"), SubclassConfig = require("./Config/Subclasses"),
 	Party = require("./Party"),
-	Activities = require("./Activities"), TableUtil = require("./Util/TableUtil"),
+	Activities = require("./Activities"), Bosses = require("./Bosses"), BossCfg = require("./Config/Bosses"), TableUtil = require("./Util/TableUtil"),
 }
 local ARGS = require("./cfg")
 local MODE = ARGS[4] or "full"
@@ -151,6 +151,7 @@ local function run(classId, pathId, seedBase, goalLevel)
 	local levelAt, first = {}, {}
 	local lvAtStage = {}
 	local dungeonTried = {}
+	local bossTried = {}
 	local stonesEarned, stonesAt30 = 0, nil
 	local losses = {}
 	local durs = {}
@@ -207,6 +208,25 @@ local function run(classId, pathId, seedBase, goalLevel)
 		end
 		for _, st in ipairs({ 3, 5, 10, 15, 20, 30, 40, 50, 60, 70, 80, 90, 100 }) do
 			if lvAtStage[st] == nil and profile.Season.HighestStage >= st then lvAtStage[st] = profile.Season.Level end
+		end
+		-- bosses: at levels 10/20/30/40, the world and season boss damage as a multiple of Bosses.DamageScale (tiers are multiples)
+		for _, lv in ipairs({ 10, 20, 30, 40 }) do
+			if not bossTried[lv] and profile.Season.Level >= lv then
+				bossTried[lv] = true
+				local parts = {}
+				for _, which in ipairs({ "World", "Season" }) do
+					local total = 0
+					for k = 1, 3 do
+						local copies = {}
+						for i, member in ipairs(team) do
+							copies[i] = if member.Profile then { Id = member.Id, Name = member.Name, Profile = m.TableUtil.DeepCopy(member.Profile) } else member
+						end
+						total += m.Bosses.Challenge(copies, m.BossCfg[which], profile.Season.HighestStage, seed * 10 + k, false)
+					end
+					table.insert(parts, ("%s %.1fx"):format(which, total / 3 / m.Bosses.DamageScale(profile.Season.HighestStage)))
+				end
+				print(("BOSSDMG lv%d frontier%d %s"):format(lv, profile.Season.HighestStage, table.concat(parts, " ")))
+			end
 		end
 		-- dungeons: the first time the hero reaches a dungeon's recommended level (and can enter it), try it 5 times
 		for _, d in ipairs(m.Activities.Dungeons) do

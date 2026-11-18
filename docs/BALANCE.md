@@ -118,3 +118,11 @@ Tank buff (2026-11-18): Warrior MaxHealth 200 -> 260 (+35/level, was 25), Defens
 Mage fr 42-47 at L40 in 9.4-10.2h (boss 20 now 0 losses, dungeons won at the recommended level), Warrior fr 55-61, Summoner 62-86;
 L30 4.9-5.3h for all. All inside the targets; Summoner is the high outlier (next: trim MinionHealthScale if it stays ahead).
 Summoner trim (2026-11-18): `Economy.MinionHealthScale` 0.5 -> 0.4. Summoner (2 seeds x 2 paths): fr 45-62 at L40 in 8.8-12.4h (was 62-86).
+
+Bosses for four heroes (2026-11-18): `abl.sh` now prints `BOSSDMG` lines (world/season boss damage as a multiple of
+`Bosses.DamageScale`; the world tiers are 1/3/6/10/16/20x). Before the change a geared four-hero party dealt 4-7x at L10,
+9-13x at L20-30, 15-137x at L40, i.e. most tiers mid-game. `Bosses.DamageScale` base 260 -> 520 halves those (typical mid-game
+fight = tier 3-4, the top tier a stretch); guild raid health is built from DamageScale so it doubled too; season boss MaxHealth
+30M -> 60M (a guess: it depends on how many players join, tune with live data). L40 still overshoots because DamageScale grows
+linearly with frontier while power grows faster.
+
