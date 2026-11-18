@@ -38,6 +38,7 @@ local INTRO = 0.8 -- seconds for monsters to run in before the first blow
 -- Formation: each team stands in a Front and a Back row; fighters in a row stand side by side (spread across the depth lanes).
 local ROW_X = { Party = { Front = -7, Back = -14 }, Enemy = { Front = 8, Back = 16 } }
 local LANE = 3.8
+local ROW_SPREAD = 19 -- a row never spreads wider than this (4 heroes + pets + summons stay on the pad)
 local HERO_X = { -9, -14, -11, -16 } -- (only used for the idle walk before a fight is set up)
 
 local ELEMENT_COLORS = {
@@ -159,7 +160,7 @@ function Replay:_layout()
 		local n = #list
 		for i, actor in ipairs(list) do
 			local x = ROW_X[team][row] + (if i % 2 == 0 then (if team == "Party" then -1.2 else 1.2) else 0)
-			local z = (i - (n + 1) / 2) * LANE
+			local z = (i - (n + 1) / 2) * math.min(LANE, ROW_SPREAD / math.max(1, n - 1))
 			actor.HomeX, actor.HomeZ = x, z
 			if actor.Arrived then
 				actor:Place(x, z)

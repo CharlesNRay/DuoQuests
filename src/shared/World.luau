@@ -18,7 +18,7 @@ local World = {}
 
 World.PER_ROW = 4
 World.ARENA_WIDTH = 64
-World.ARENA_DEPTH = 42
+World.ARENA_DEPTH = 50 -- was 42; deeper so four heroes, their pets and summons fit between the trees and the front decor
 World.SPACING_X = 84
 World.SPACING_Z = 76
 World.FIRST_ROW_Z = -95

@@ -53,7 +53,7 @@ local function makeCard(origin)
 	anchor.CanQuery = false
 	anchor.Transparency = 1
 	anchor.Size = Vector3.new(1, 1, 1)
-	anchor.Position = origin + Vector3.new(0, 15, 24)
+	anchor.Position = origin + Vector3.new(0, 15, World.ARENA_DEPTH / 2 + 3)
 	anchor.Parent = workspace
 	local gui = Instance.new("BillboardGui")
 	gui.Size = UDim2.fromOffset(260, 120)
@@ -89,7 +89,7 @@ local function makePad(origin)
 	pad.CanCollide = false
 	pad.Shape = Enum.PartType.Cylinder
 	pad.Size = Vector3.new(0.4, 5, 5)
-	pad.CFrame = CFrame.new(origin + Vector3.new(0, 0.2, 27)) * CFrame.Angles(0, 0, math.rad(90))
+	pad.CFrame = CFrame.new(origin + Vector3.new(0, 0.2, World.ARENA_DEPTH / 2 + 6)) * CFrame.Angles(0, 0, math.rad(90))
 	pad.Color = Color3.fromRGB(255, 196, 70)
 	pad.Material = Enum.Material.Neon
 	pad.Transparency = 0.25
