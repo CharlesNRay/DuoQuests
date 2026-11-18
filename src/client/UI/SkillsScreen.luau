@@ -6,7 +6,7 @@
                      { PSlot = n } a passive slot, or { PId = passiveId, Target = slot } one from the passive pool
     Passives live here too: they are skills that are always on and do not use the four skill slots.
 
-	Tabs   You / Partner. The partner tab edits their ghost skills (reorder, swap in skills they own).
+	Tabs   You, then one per teammate (up to 3). A teammate's tab edits their ghost skills (reorder, swap in skills they own).
 	Left   the four equipped skills (cast order, left to right; DRAG to reorder, or drag a skill from the
 	       pool onto a slot), passive slots, then a scrolling pool of unlocked and locked skills
 	Right  the selected skill: everything about it, plus its actions (level up, equip, unlock)
@@ -154,7 +154,10 @@ function SkillsScreen.Skills(container, state, call, extra)
 	Kit.clear(container)
 	extra = extra or {}
 	local me = state.Player
-	local partner = state.Party and state.Party.Partner
+	-- teammates: other members (their ghosts) and companions; extra.SkillsMate picks which one the "Partner" tab shows
+	local mates = (state.Party and (state.Party.Teammates or (state.Party.Partner and { state.Party.Partner }))) or {}
+	local mateIndex = math.clamp(extra.SkillsMate or 1, 1, math.max(1, #mates))
+	local partner = mates[mateIndex]
 	local tab = extra.SkillsTab or "You"
 	if tab == "Partner" and not partner then
 		tab = "You"
@@ -165,17 +168,28 @@ function SkillsScreen.Skills(container, state, call, extra)
 	end
 
 	-- tabs
-	for index, name in ipairs({ "You", "Partner" }) do
-		local enabled = name == "You" or partner ~= nil
-		local label = if name == "Partner" and partner then ("Partner: " .. partner.Name) else name
-		local b = Kit.button({ Size = UDim2.fromOffset(if name == "You" then 80 else 150, 24), Position = UDim2.fromOffset(if name == "You" then 0 else 86, 0), Text = label, TextSize = 12, TextWrapped = false, TextTruncate = Enum.TextTruncate.AtEnd, BackgroundColor3 = if name == tab then C.Accent else C.Panel, TextColor3 = if name == tab then Color3.fromRGB(30, 24, 10) elseif enabled then C.Text else C.Dim, Parent = container }, function()
-			if enabled and name ~= tab then
-				extra.SkillsTab = name
+	local tabs = { { Name = "You", Label = "You" } }
+	for index, mate in ipairs(mates) do
+		table.insert(tabs, { Name = "Partner", Mate = index, Label = mate.Name })
+	end
+	if #mates == 0 then
+		table.insert(tabs, { Name = "Partner", Label = "Partner" })
+	end
+	local x = 0
+	for _, t in ipairs(tabs) do
+		local enabled = t.Name == "You" or mates[t.Mate or 1] ~= nil
+		local on = t.Name == tab and (t.Name == "You" or t.Mate == mateIndex)
+		local width = if t.Name == "You" then 60 else 100
+		local b = Kit.button({ Size = UDim2.fromOffset(width, 24), Position = UDim2.fromOffset(x, 0), Text = t.Label, TextSize = 12, TextWrapped = false, TextTruncate = Enum.TextTruncate.AtEnd, BackgroundColor3 = if on then C.Accent else C.Panel, TextColor3 = if on then Color3.fromRGB(30, 24, 10) elseif enabled then C.Text else C.Dim, Parent = container }, function()
+			if enabled and not on then
+				extra.SkillsTab = t.Name
+				extra.SkillsMate = t.Mate
 				extra.SkillSel = nil
 				redraw()
 			end
 		end)
 		b.Active = enabled
+		x += width + 6
 	end
 	-- which list leads the pool: clicking Skills or Passives puts that kind at the top
 	local focus = extra.SkillsFocus or "Skills"
@@ -212,7 +226,7 @@ function SkillsScreen.Skills(container, state, call, extra)
 		redraw()
 		task.spawn(function()
 			if isPartner then
-				call("SetGhostLoadout", ids)
+				call("SetGhostLoadout", ids, partner.UserId)
 			else
 				call("EquipSkills", ids)
 			end
