@@ -47,9 +47,10 @@ local function dungeons(container, state, call, extra, redraw)
 	local frontier = state.Player.HighestStage or state.Player.Frontier or 1
 	for i, d in ipairs(Activities.Dungeons) do
 		local open = frontier >= d.Unlock
-		local f = Kit.frame({ Size = UDim2.new(1, 0, 0, 62), Position = UDim2.fromOffset(0, (i - 1) * 68), BackgroundColor3 = C.PanelLight, Parent = list })
+		local f = Kit.frame({ Size = UDim2.new(1, 0, 0, 58), Position = UDim2.fromOffset(0, (i - 1) * 62), BackgroundColor3 = C.PanelLight, Parent = list })
 		Kit.label({ Size = UDim2.new(1, -170, 0, 20), Position = UDim2.fromOffset(12, 6), Text = d.Name, TextSize = 15, Font = Enum.Font.GothamBold, TextColor3 = if open then C.Text else C.Dim, Parent = f })
-		Kit.label({ Size = UDim2.new(1, -170, 0, 32), Position = UDim2.fromOffset(12, 26), Text = if open then ("%s %d floors, one key per run. A full clear drops epic gear."):format(d.Blurb, Activities.FloorsPerDungeon) else ("Reach stage %d to unlock."):format(d.Unlock), TextSize = 11, TextColor3 = C.Dim, TextYAlignment = Enum.TextYAlignment.Top, Parent = f })
+		Kit.label({ Size = UDim2.new(1, -170, 0, 32), Position = UDim2.fromOffset(12, 26), Text = if open then ("Recommended level %d  ·  %d waves, then a boss. No healing between waves.
+%s %s"):format(d.Level, d.Waves, d.Blurb, if act.Daily and act.Daily[d.Id] then "Daily bonus taken - back tomorrow." else "Daily bonus ready: clear it today for 2 skill + 2 pet wishes.") else ("Recommended level %d  ·  reach stage %d to unlock."):format(d.Level, d.Unlock), TextSize = 11, TextColor3 = if open and (state.Player.Level or 1) < d.Level then C.Bad else C.Dim, TextYAlignment = Enum.TextYAlignment.Top, Parent = f })
 		local can = open and act.Keys > 0
 		Kit.button({ Size = UDim2.fromOffset(130, 36), Position = UDim2.new(1, -142, 0.5, -18), Text = if not open then "Locked" elseif act.Keys <= 0 then "No keys" else "Enter", TextSize = 14, BackgroundColor3 = if can then C.Accent else C.Panel, TextColor3 = if can then Color3.fromRGB(30, 22, 6) else C.Dim, Parent = f }, function()
 			if not can then

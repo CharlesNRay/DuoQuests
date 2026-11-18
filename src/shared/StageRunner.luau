@@ -10,10 +10,12 @@
 	  StageRunner.UltimateFor(members, frontier, chosenId)
 	                                         -> { Id, Level } or nil: the party
 	                                            ultimate for these two classes
-	  StageRunner.Run(members, stage, seed, ultimate, record)  -> outcome
+	  StageRunner.Run(members, stage, seed, ultimate, record, setup)  -> outcome
 	                                         (ultimate optional, from UltimateFor;
 	                                          record = true adds Events and Roster
-	                                          so a client can replay the fight)
+	                                          so a client can replay the fight; setup =
+                                          { Enemies, Waves, MaxSeconds } fights those
+                                          instead of the stage's own monsters)
 
 	members is a list of { Id, Name, Profile } for a player who is online, or
 	{ Id, Name, Snapshot } for a ghost (an offline partner's saved build, see
@@ -127,13 +129,14 @@ function StageRunner.UltimateFor(members, frontier, chosenId)
 	return { Id = id, Level = Ultimates.PartyLevel(levelLists) }
 end
 
-function StageRunner.Run(members, stage, seed, ultimate, record)
+function StageRunner.Run(members, stage, seed, ultimate, record, setup)
 	local sim = Simulation.new({
 		Party = StageRunner.NewParty(members),
-		Enemies = Stages.NewEnemies(stage),
+		Enemies = if setup then setup.Enemies else Stages.NewEnemies(stage),
+		Waves = setup and setup.Waves,
 		Seed = seed,
 		Ultimate = ultimate,
-		MaxSeconds = Stages.TimeLimit(stage),
+		MaxSeconds = if setup and setup.MaxSeconds then setup.MaxSeconds else Stages.TimeLimit(stage),
 		RecordEvents = record == true,
 		SpawnEnemy = StatCalc.NewEnemy,
 	})

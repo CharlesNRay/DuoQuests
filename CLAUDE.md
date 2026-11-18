@@ -41,8 +41,10 @@ Git Bash; they find a working Python themselves (`python3`/`python` there are St
      held until the server hold ends). Guild raid button says "Battle" (it was already a real auto-combat fight); world/season say "Battle!".
    - Consider 4-player parties instead of 2, which means rebalancing everything for 4 (tools/sim partner modes take one partner today).
    - Studio test cheat (🧪 HUD button, `handlers.DevGrant`) should give much more gold.
-   - Dungeons: show a recommended level; make them slightly challenging; structure = 2-3 waves of monsters then a boss,
-     fought back to back with no healing and no skill-cooldown reset between waves, until fully cleared.
+   - DONE 2026-11-18 (tests green, NOT seen in Studio): dungeons are one continuous fight (`Simulation` option `Waves`, `Wave` events):
+     2-3 waves then a boss, nothing resets between waves. Fixed difficulty (`Stage`) and recommended `Level` per dungeon, 4 dungeons
+     (Crypt/Foundry/Abyss/Spire). Daily bonus: first full clear of each dungeon per day (`Activities.DailyBonus`). `abl.sh` prints
+     `DUNGEON` lines (5 tries at the recommended level): a pair wins once its frontier is ~8 stages past the dungeon's Stage.
 1. **Studio verification** of everything unseen. Seen and working (2026-11-16 evening): class-choose flow, tutorial card, Skill Trainer
    (train a slot), Pet Store (egg, crate, snack; header shows what a crate gave), feeding pet food (Bag > Stash), Pets detail card,
    Pets > Pet gear (wear/remove), map claim badges + Claim all, combat log 3 views, Flame aura on the hero, Store tabs, VIP row,

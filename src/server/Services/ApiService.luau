@@ -441,7 +441,7 @@ function handlers.BossState(player, profile)
 end
 
 -- Only what the client needs to replay a fight as animation.
-local REPLAYED = { Damage = true, Heal = true, Cast = true, Death = true, Revive = true, Ultimate = true, End = true, Spawn = true, Telegraph = true, Status = true, StatusEnd = true }
+local REPLAYED = { Damage = true, Heal = true, Cast = true, Death = true, Revive = true, Ultimate = true, End = true, Spawn = true, Telegraph = true, Status = true, StatusEnd = true, Wave = true }
 local pushRemote
 
 -- A boss challenge is a real fight in YOUR arena: the party's normal fights pause, you (and anyone near) watch it.

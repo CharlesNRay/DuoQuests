@@ -4,6 +4,7 @@ local m = {
 	Classes = require("./Config/Classes"), Wishing = require("./Wishing"), SkillProgress = require("./SkillProgress"), Subclasses = require("./Subclasses"),
 	Gear = require("./Gear"), Pets = require("./Pets"), PetConfig = require("./Config/Pets"), SubclassConfig = require("./Config/Subclasses"),
 	Party = require("./Party"),
+	Activities = require("./Activities"), TableUtil = require("./Util/TableUtil"),
 }
 local ARGS = require("./cfg")
 local MODE = ARGS[4] or "full"
@@ -144,6 +145,7 @@ local function run(classId, pathId, seedBase, goalLevel)
 	local clock, stage, seed, fights = 0, 1, seedBase * 1000, 0
 	local levelAt, first = {}, {}
 	local lvAtStage = {}
+	local dungeonTried = {}
 	local stonesEarned, stonesAt30 = 0, nil
 	local losses = {}
 	local durs = {}
@@ -196,6 +198,23 @@ local function run(classId, pathId, seedBase, goalLevel)
 		end
 		for _, st in ipairs({ 3, 5, 10, 15, 20, 30, 40, 50, 60, 70, 80, 90, 100 }) do
 			if lvAtStage[st] == nil and profile.Season.HighestStage >= st then lvAtStage[st] = profile.Season.Level end
+		end
+		-- dungeons: the first time the hero reaches a dungeon's recommended level (and can enter it), try it 5 times
+		for _, d in ipairs(m.Activities.Dungeons) do
+			if not dungeonTried[d.Id] and profile.Season.Level >= d.Level and profile.Season.HighestStage >= d.Unlock then
+				dungeonTried[d.Id] = true
+				local wins, waves = 0, 0
+				for k = 1, 5 do
+					local copies = {}
+					for i, member in ipairs(team) do
+						copies[i] = if member.Profile then { Id = member.Id, Name = member.Name, Profile = m.TableUtil.DeepCopy(member.Profile) } else member
+					end
+					local beaten, out = m.Activities.FightDungeon(copies, d, seed * 10 + k, false)
+					waves += beaten
+					if out.Won then wins += 1 end
+				end
+				print(("DUNGEON %s lv%d frontier%d wins %d/5 avgWaves %.1f/%d"):format(d.Id, profile.Season.Level, profile.Season.HighestStage, wins, waves / 5, d.Waves + 1))
+			end
 		end
 		for _, g in ipairs({ 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120 }) do
 			if levelAt[g] == nil and profile.Season.Level >= g then levelAt[g] = clock / 3600 end

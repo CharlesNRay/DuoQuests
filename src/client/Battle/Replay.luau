@@ -505,6 +505,18 @@ function Replay:_event(e)
 			self:_layout()
 			flash(scene, actor:Pos(), Color3.fromRGB(150, 230, 150), 4)
 		end
+	elseif t == "Wave" then
+		-- a dungeon's next wave: clear away the fallen and announce it (the boss is the last wave)
+		for id, enemy in pairs(self.Enemies) do
+			if enemy.Alive == false or (enemy.Health or 1) <= 0 then
+				self.Enemies[id] = nil
+				enemy:Destroy()
+			end
+		end
+		self:_layout()
+		if self.OnBanner then
+			self.OnBanner(if e.Wave == e.Of then "The boss appears!" else ("Wave %d / %d"):format(e.Wave, e.Of), Color3.fromRGB(255, 170, 70))
+		end
 	elseif t == "Telegraph" then
 		-- a big hit is coming: warn the player so they can see why a shield matters
 		local def = Abilities[e.Ability]

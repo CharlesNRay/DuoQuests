@@ -1,17 +1,21 @@
 --[[
 	Activities (ModuleScript): dungeons and expeditions, the two repeatable activities beside the stage climb.
 
-	DUNGEONS  a short run of tough floors fought back to back with the normal auto combat. Each run costs one key (the keys
-	  refill every day). The run ends at the first lost floor; every floor cleared pays, and a full clear pays a bonus chest.
-	  Floors are fought on a copy of the profile, so they never pay the normal stage rewards.
+	DUNGEONS  one long fight at a fixed difficulty (Stage) with a recommended level: 2-3 waves of monsters, then a boss.
+	  Each wave walks in when the last one falls, and nothing resets in between (no healing, no cooldown reset), so the
+	  party must last until it is fully cleared. Each run costs one key (the keys refill every day). Every wave beaten
+	  pays; beating the boss pays a bonus chest. Fought on a copy of the profile, so it never pays the normal stage rewards.
 	EXPEDITIONS  send the party away for a while, then collect. One expedition at a time, paid by its length.
 
 	  Activities.Dungeons / Activities.Expeditions       data lists
-	  Activities.Of(profile, now)                        -> { Keys, MaxKeys, Expedition = { Id, EndsAt, Ready } | nil } (rolls the day over)
+	  Activities.Of(profile, now)                        -> { Keys, MaxKeys, Daily = { [dungeonId] = true }, Expedition = { Id, EndsAt, Ready } | nil }
+	                                                        (rolls the day over; Daily = dungeons whose daily bonus was taken today)
+	DAILY BONUS  the first full clear of each dungeon each day also pays Activities.DailyBonus (resets with the keys).
 	  Activities.Unlocked(profile, dungeon)              -> bool
-	  Activities.FloorStage(frontier, dungeon, floor)    -> the stage whose monsters are fought
+	  Activities.BuildDungeon(dungeon)                   -> first wave, later waves (the boss is the last), time limit
+	  Activities.FightDungeon(members, dungeon, seed, record) -> waves beaten, outcome (no keys, no rewards; for tests/sims)
 	  Activities.RunDungeon(profile, members, id, seed, now, record) -> ok, result | false, reason
-	        result = { Name, Floors, Cleared, Full, Lines, Fight? } (Fight = the last floor fought, for the replay)
+	        result = { Name, Floors, Cleared, Full, Lines, Fight? } (Floors = waves including the boss; Fight = the replay)
 	  Activities.StartExpedition(profile, id, now)       -> ok | false, reason
 	  Activities.CollectExpedition(profile, now)         -> ok, lines | false, reason
 ]]
@@ -27,12 +31,14 @@ local Progression = require(script.Parent.Progression)
 local Activities = {}
 
 Activities.MaxKeys = 3
-Activities.FloorsPerDungeon = 4
 
+-- Stage = how hard its monsters are (as that map stage), Level = the recommended hero level, Waves = monster waves before
+-- the boss, Unlock = highest stage needed to enter
 Activities.Dungeons = {
-	{ Id = "Crypt", Name = "Forgotten Crypt", Unlock = 5, Lift = 0, Blurb = "Bones and old curses. A good first dungeon." },
-	{ Id = "Foundry", Name = "Ember Foundry", Unlock = 20, Lift = 3, Blurb = "Molten halls guarded by constructs." },
-	{ Id = "Abyss", Name = "Sunken Abyss", Unlock = 40, Lift = 6, Blurb = "Deep water and deeper things." },
+	{ Id = "Crypt", Name = "Forgotten Crypt", Unlock = 5, Stage = 8, Level = 8, Waves = 2, Blurb = "Bones and old curses. A good first dungeon." },
+	{ Id = "Foundry", Name = "Ember Foundry", Unlock = 18, Stage = 21, Level = 20, Waves = 3, Blurb = "Molten halls guarded by constructs." },
+	{ Id = "Abyss", Name = "Sunken Abyss", Unlock = 32, Stage = 34, Level = 31, Waves = 3, Blurb = "Deep water and deeper things." },
+	{ Id = "Spire", Name = "Frostbound Spire", Unlock = 50, Stage = 52, Level = 40, Waves = 3, Blurb = "A frozen tower that never stops climbing." },
 }
 
 Activities.Expeditions = {
@@ -75,10 +81,14 @@ function Activities.Of(profile, now)
 	if a.Day ~= day then
 		a.Day = day
 		a.Keys = maxKeys(profile)
+		a.Daily = {}
+	end
+	if type(a.Daily) ~= "table" then
+		a.Daily = {}
 	end
 	local e = a.Expedition
 	return {
-		Keys = a.Keys, MaxKeys = maxKeys(profile),
+		Keys = a.Keys, MaxKeys = maxKeys(profile), Daily = table.clone(a.Daily),
 		Expedition = if e then { Id = e.Id, EndsAt = e.EndsAt, Ready = (now or os.time()) >= e.EndsAt } else nil,
 	}
 end
@@ -87,8 +97,63 @@ function Activities.Unlocked(profile, dungeon)
 	return profile.Season.HighestStage >= dungeon.Unlock
 end
 
-function Activities.FloorStage(frontier, dungeon, floor)
-	return math.max(1, math.floor(frontier * 0.8)) + dungeon.Lift + floor - 1
+local StagesConfig = require(script.Parent.Config.Stages)
+
+-- waves of the dungeon's stage (a step harder each wave), then a boss scaled to the stage after the last wave
+function Activities.BuildDungeon(dungeon)
+	local waves = {}
+	for w = 1, dungeon.Waves do
+		local stage = dungeon.Stage + w - 1
+		if Stages.IsBoss(stage) then
+			stage -= 1
+		end
+		local list = {}
+		for _, entry in ipairs(Stages.Build(stage).Enemies) do
+			table.insert(list, StatCalc.NewEnemy(("w%d%s"):format(w, entry.Id), entry.EnemyId, entry.Scale, entry.HealthMult))
+		end
+		table.insert(waves, list)
+	end
+	local bossAt = dungeon.Stage + dungeon.Waves
+	local bossStage = math.max(1, math.ceil(bossAt / StagesConfig.BossEvery)) * StagesConfig.BossEvery
+	local bossEntry = Stages.Build(bossStage).Enemies[1]
+	local scale = Stages.Scale(bossAt) * (StagesConfig.BossScaleMult or 1)
+	table.insert(waves, { StatCalc.NewEnemy("boss", bossEntry.EnemyId, scale, Stages.HealthMult(bossStage) * (Activities.BossHealth or 1)) })
+	local first = table.remove(waves, 1)
+	local seconds = StagesConfig.TimeLimit * dungeon.Waves + StagesConfig.BossTimeLimit
+	return first, waves, seconds
+end
+
+Activities.BossHealth = 1
+
+-- paid once a day per dungeon, on its first full clear (gold in stage clears of the dungeon's stage)
+Activities.DailyBonus = { GoldClears = 40, Items = { SkillWish = 2, PetWish = 2, XPTonic = 1 } }
+
+local function countWaves(events)
+	local n = 0
+	for _, e in ipairs(events) do
+		if e.Type == "Wave" then
+			n = e.Wave - 1
+		end
+	end
+	return n
+end
+
+function Activities.FightDungeon(members, dungeon, seed, record)
+	local first, waves, seconds = Activities.BuildDungeon(dungeon)
+	local frontier = 0
+	for _, m in ipairs(members) do
+		frontier = math.max(frontier, if m.Profile then m.Profile.Season.HighestStage else 0)
+	end
+	local ultimate = StageRunner.UltimateFor(members, math.max(frontier, dungeon.Stage), nil)
+	local outcome = StageRunner.Run(members, dungeon.Stage, seed, ultimate, true, { Enemies = first, Waves = waves, MaxSeconds = seconds })
+	local beaten = countWaves(outcome.Events)
+	if outcome.Won then
+		beaten = dungeon.Waves + 1
+	end
+	if not record then
+		outcome.Events, outcome.Roster = nil, nil
+	end
+	return beaten, outcome
 end
 
 -- gold is paid in "clears": what one frontier stage clear pays right now
@@ -122,30 +187,32 @@ function Activities.RunDungeon(profile, members, id, seed, now, record)
 		return false, "NoKeys"
 	end
 	row(profile).Keys -= 1
-	local frontier = profile.Season.HighestStage
-	-- floors are fought on copies so they never pay the normal stage rewards
+	-- fought on copies so it never pays the normal stage rewards
 	local copies = {}
 	for _, member in ipairs(members) do
 		table.insert(copies, if member.Profile then { Id = member.Id, Name = member.Name, Profile = TableUtil.DeepCopy(member.Profile) } else member)
 	end
-	local cleared, fight = 0, nil
-	for floor = 1, Activities.FloorsPerDungeon do
-		local outcome = StageRunner.Run(copies, Activities.FloorStage(frontier, dungeon, floor), seed + floor, nil, record)
-		if record then
-			fight = { Roster = outcome.Roster, Events = outcome.Events, Duration = outcome.Duration, Won = outcome.Won }
-		end
-		if not outcome.Won then
-			break
-		end
-		cleared += 1
-	end
-	local full = cleared == Activities.FloorsPerDungeon
+	local cleared, outcome = Activities.FightDungeon(copies, dungeon, seed, record)
+	local fight = if record then { Roster = outcome.Roster, Events = outcome.Events, Duration = outcome.Duration, Won = outcome.Won } else nil
+	local floors = dungeon.Waves + 1
+	local full = cleared == floors
 	local lines = {}
 	if cleared > 0 then
-		lines = Bosses.GrantRewards(profile, chestFor(frontier, cleared, full), frontier)
+		lines = Bosses.GrantRewards(profile, chestFor(dungeon.Stage, cleared, full), dungeon.Stage)
 		Quests.Record(profile, "Strike", 1, now)
 	end
-	return true, { Name = dungeon.Name, Floors = Activities.FloorsPerDungeon, Cleared = cleared, Full = full, Lines = lines, Fight = fight, Keys = row(profile).Keys }
+	local daily = false
+	if full and not row(profile).Daily[dungeon.Id] then
+		row(profile).Daily[dungeon.Id] = true
+		daily = true
+		local bonus = Activities.DailyBonus
+		local extra = Bosses.GrantRewards(profile, { Gold = math.floor(clearGold(dungeon.Stage) * bonus.GoldClears), Items = table.clone(bonus.Items) }, dungeon.Stage)
+		table.insert(lines, "Daily bonus:")
+		for _, line in ipairs(extra) do
+			table.insert(lines, line)
+		end
+	end
+	return true, { Name = dungeon.Name, Floors = floors, Cleared = cleared, Full = full, Lines = lines, Fight = fight, Keys = row(profile).Keys, Level = dungeon.Level, Daily = daily }
 end
 
 function Activities.StartExpedition(profile, id, now)

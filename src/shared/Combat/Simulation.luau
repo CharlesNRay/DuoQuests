@@ -404,6 +404,10 @@ function Simulation.new(options)
 		StatusDefs = options.StatusDefs or Statuses,
 
 		SpawnEnemy = options.SpawnEnemy or StatCalc.NewEnemy,
+		-- Waves: more enemy lists that join one after another when the enemies on the field all fall (dungeons). Nothing
+		-- resets between waves: health, cooldowns, statuses and the ultimate charge carry on.
+		Waves = options.Waves,
+		WaveIndex = 0,
 		SummonCount = 0,
 		Ticks = 0,
 		Time = 0,
@@ -1113,6 +1117,10 @@ function Simulation:_checkEnd()
 	if not anyAlive(self.Party) then
 		winner = "Enemy"
 	elseif not anyAlive(self.Enemies) then
+		if self.Waves and self.WaveIndex < #self.Waves then
+			self:_nextWave()
+			return
+		end
 		winner = "Party"
 	elseif self.Time >= self.MaxSeconds - EPSILON then
 		winner = "Timeout"
@@ -1131,6 +1139,19 @@ function Simulation:_checkEnd()
 	self.Result = { Winner = winner, Duration = self.Time, Survivors = survivors }
 	self:_record({ Type = "End", Winner = winner })
 	self.Hooks:Fire("OnBattleEnd", self.Result)
+end
+
+-- the next wave walks in (see options.Waves); a Wave event marks it (Wave = its number counting the first, Of = how many)
+function Simulation:_nextWave()
+	self.WaveIndex += 1
+	self:_record({ Type = "Wave", Wave = self.WaveIndex + 1, Of = #self.Waves + 1 })
+	for _, enemy in ipairs(self.Waves[self.WaveIndex]) do
+		table.insert(self.Enemies, enemy)
+		self:_record({
+			Type = "Spawn",
+			Entity = { Id = enemy.Id, Name = enemy.Name, Team = enemy.Team, DefId = enemy.DefId, MaxHealth = enemy.Stats.MaxHealth, Row = self:RowOf(enemy) },
+		})
+	end
 end
 
 -- Advances the fight by one tick.

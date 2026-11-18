@@ -35,7 +35,7 @@ return function(modulesOverride)
 	local gold, level, stage = p.Season.Currencies.Gold, p.Season.Level, p.Season.HighestStage
 	local ok, result = Activities.RunDungeon(p, members, "Crypt", 5, now, true)
 	check("A run works and costs one key", ok == true and Activities.Of(p, now).Keys == Activities.MaxKeys - 1)
-	check("The run reports floors and a replay of the last fight", ok and result.Floors == Activities.FloorsPerDungeon and result.Cleared >= 0 and result.Fight ~= nil and #result.Fight.Events > 0)
+	check("The run reports floors and a replay of the last fight", ok and result.Floors == crypt.Waves + 1 and result.Cleared >= 0 and result.Fight ~= nil and #result.Fight.Events > 0)
 	check("Clearing floors pays, losing everything pays nothing", ok and ((result.Cleared > 0 and p.Season.Currencies.Gold > gold) or (result.Cleared == 0 and p.Season.Currencies.Gold == gold)))
 	check("Floors never pay the normal stage rewards", p.Season.Level == level and p.Season.HighestStage == stage)
 	for _ = 1, 5 do
@@ -43,6 +43,24 @@ return function(modulesOverride)
 	end
 	check("Keys run out", select(2, Activities.RunDungeon(p, members, "Crypt", 9, now, false)) == "NoKeys")
 	check("Keys refill the next day", Activities.Of(p, now + 86400).Keys == Activities.MaxKeys)
+
+	-- waves and the daily bonus: a strong hero clears the Crypt (waves, then the boss) in one fight
+	local strong = ProfileTemplate.New()
+	strong.Season.Level, strong.Season.HighestStage = 60, 60
+	local team = { { Id = "1", Name = "Strong", Profile = strong } }
+	local realStage = crypt.Stage
+	crypt.Stage = 1 -- an easy copy of the dungeon, so the test is about waves and the bonus, not balance
+	local beaten, out = Activities.FightDungeon(team, crypt, 3, true)
+	local waveEvents = 0
+	for _, e in ipairs(out.Events) do
+		if e.Type == "Wave" then waveEvents += 1 end
+	end
+	check("A dungeon is one fight: every wave and then the boss", out.Won and beaten == crypt.Waves + 1 and waveEvents == crypt.Waves)
+	local ok1, r1 = Activities.RunDungeon(strong, team, "Crypt", 3, now, false)
+	local ok2, r2 = Activities.RunDungeon(strong, team, "Crypt", 3, now, false)
+	check("The first full clear of the day pays the daily bonus, the next does not", ok1 and r1.Full and r1.Daily == true and ok2 and r2.Daily == false and Activities.Of(strong, now).Daily.Crypt == true)
+	check("The daily bonus comes back the next day", Activities.Of(strong, now + 86400).Daily.Crypt == nil)
+	crypt.Stage = realStage
 
 	local q = ProfileTemplate.New()
 	q.Season.HighestStage = 12

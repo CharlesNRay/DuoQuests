@@ -87,8 +87,8 @@ local function showResults(info, onClose)
 
 	local extra = info.Extra
 	local won = if extra then extra.Cleared >= extra.Floors else info.Won == true
-	local headline = if won then "VICTORY" elseif extra and extra.Cleared > 0 then "FLOORS CLEARED" else "DEFEATED"
-	local summary = if extra then ("Floors  %d / %d     Time  %ds"):format(extra.Cleared, extra.Floors, math.floor(info.Duration or 0)) else ("Damage dealt  %s     Time  %ds"):format(commas(info.Damage or 0), math.floor(info.Duration or 0))
+	local headline = if won then "VICTORY" elseif extra and extra.Cleared > 0 then "WAVES CLEARED" else "DEFEATED"
+	local summary = if extra then ("Waves  %d / %d     Time  %ds"):format(extra.Cleared, extra.Floors, math.floor(info.Duration or 0)) else ("Damage dealt  %s     Time  %ds"):format(commas(info.Damage or 0), math.floor(info.Duration or 0))
 	local prize = if extra and #(extra.Lines or {}) > 0 then "Rewards: " .. table.concat(extra.Lines, ", ") else nil
 	local prizeHeight = if prize then 16 * math.ceil(#prize / 46) + 6 else 0
 	local accent = if won then Color3.fromRGB(96, 214, 130) else Color3.fromRGB(235, 90, 90)
@@ -164,6 +164,13 @@ function BossArena.Play(info, onClose)
 		Kit.button({ Size = UDim2.fromOffset(150, 36), Position = UDim2.new(1, -16, 0, 70), AnchorPoint = Vector2.new(1, 0), Text = "Leave fight", TextSize = 14, BackgroundColor3 = Color3.fromRGB(150, 50, 50), Parent = gui }, function()
 			leaving = true
 		end)
+		-- banners from the replay (dungeon waves, ultimates, big boss attacks)
+		replay.OnBanner = function(text, color)
+			local label = Kit.label({ Size = UDim2.fromOffset(500, 40), Position = UDim2.new(0.5, 0, 0, 120), AnchorPoint = Vector2.new(0.5, 0), Text = text, TextSize = 26, Font = Enum.Font.GothamBlack, TextColor3 = color or GOLD, TextXAlignment = Enum.TextXAlignment.Center, TextWrapped = false, Parent = gui })
+			task.delay(2.2, function()
+				label:Destroy()
+			end)
+		end
 	end)
 	task.spawn(function()
 		task.wait(1)
