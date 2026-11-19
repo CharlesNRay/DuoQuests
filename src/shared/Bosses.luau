@@ -95,7 +95,10 @@ end
 -- what a typical party deals in one fight at this frontier (see Config.World.Tiers: thresholds are multiples of it)
 function Bosses.DamageScale(frontier)
 	-- 520 (was 260) since 2026-11-18: four heroes per fight deal about twice as much (abl.sh BOSSDMG lines: ~10x at L20-30 before)
-	return 520 * require(script.Parent.Config.Economy).NumberScale * (1 + math.max(0, frontier - 1) * 0.22)
+	-- past stage 35 party power grows much faster than the frontier (BOSSDMG at L40: 3-34x, median ~14), so the scale
+	-- grows 2% more per stage there (2026-11-19: L40 median ~8.5x, the top tier 20x a stretch; L10-30 barely move)
+	local late = 1 + math.max(0, frontier - 35) * 0.02
+	return 520 * require(script.Parent.Config.Economy).NumberScale * (1 + math.max(0, frontier - 1) * 0.22) * late
 end
 
 function Bosses.TiersReached(cfg, damage, frontier)

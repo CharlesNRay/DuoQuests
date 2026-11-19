@@ -49,7 +49,7 @@ Git Bash; they find a working Python themselves (`python3`/`python` there are St
      ghost skills, 4 heroes + imp summon in the arena, dungeon list (levels, waves, daily bonus ready/taken, 4 rows), Crypt run ("Waves 3/3",
      daily bonus line), Leave fight (skips to results), 5M cheat gold, Skills screen tab per teammate (reorder saved on the server). NOT seen: wave banners (run too fast), guild raid Battle button, world/season Battle!.
      STILL TO DO: balancing pass (Mage lowest but in range; Summoner trimmed to Warrior's level); plaza arena pads
-     (DONE 2026-11-18, SEEN in Studio 2026-11-19: pad 64x50, trees at z -11..-19, 4 heroes + skeleton + imp + pets in front of the trees; `World.ARENA_DEPTH` 50, rows pack within 19 studs); boss numbers retuned once (DamageScale x2, season 60M; see BALANCE.md), L40 boss damage still overshoots.
+     (DONE 2026-11-18, SEEN in Studio 2026-11-19: pad 64x50, trees at z -11..-19, 4 heroes + skeleton + imp + pets in front of the trees; `World.ARENA_DEPTH` 50, rows pack within 19 studs); boss numbers retuned once (DamageScale x2, season 60M; see BALANCE.md), L40 boss overshoot fixed 2026-11-19 (DamageScale +2%/stage past 35, BALANCE.md "Late boss scale").
    - Studio test cheat (🧪 HUD button, `handlers.DevGrant`) should give much more gold.
    - DONE 2026-11-18 (tests green, NOT seen in Studio): dungeons are one continuous fight (`Simulation` option `Waves`, `Wave` events):
      2-3 waves then a boss, nothing resets between waves. Fixed difficulty (`Stage`) and recommended `Level` per dungeon, 4 dungeons

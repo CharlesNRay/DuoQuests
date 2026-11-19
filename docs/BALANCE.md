@@ -125,4 +125,8 @@ Bosses for four heroes (2026-11-18): `abl.sh` now prints `BOSSDMG` lines (world/
 fight = tier 3-4, the top tier a stretch); guild raid health is built from DamageScale so it doubled too; season boss MaxHealth
 30M -> 60M (a guess: it depends on how many players join, tune with live data). L40 still overshoots because DamageScale grows
 linearly with frontier while power grows faster.
+Late boss scale (2026-11-19): fresh runs (3 classes x 2 paths x 2 seeds, companions, full) at base 520 gave world-boss
+damage of L10 1.4-3.2x, L20 2.9-6x, L30 4.6-10.7x (on target) but L40 2.8-34x (median ~14.5, 4/12 reach the 20x top tier).
+`Bosses.DamageScale` now also grows 2% per stage past stage 35 (x1.32 at 51, x2.1 at 92): L40 median ~8.5x (tier 3-4,
+1/12 reach the top tier), L30 almost unchanged. Guild raid health follows DamageScale, so it grows the same way late.
 
