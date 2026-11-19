@@ -180,4 +180,9 @@ Follow-up checks after the rework (2026-11-19):
 - Boss tiers: damage went up with combos and the aura (L40 median ~12x), so `Bosses.DamageScale` base 520 -> 600 and the
   late growth past stage 35 0.02 -> 0.03 per stage. Now L10 ~2.3x, L20 ~5x, L30 ~7.5x, L40 ~10x (tier 4; top tier 20x a stretch).
 - Lazy (upgrades nothing): stage 20-25 after 16-17h, ~1000 losses at boss 20 (walls there). No gear: stage 23-30 at L40 in 11-13h.
+Combo bot (2026-11-19): `balance90.luau` now wears an owned finisher with its owned builders (builders first, then the
+finisher, then the best remaining skill); cfg entry 7 = false brings back the level-only bot. Results (2 paths x 2 seeds):
+Mage fr 40-65 (8.1-10.8h), Warrior 39-56 (9.0-10.2h), Summoner 40-54 (8.9-11.3h), Ranger 43-52 (9.2-10.1h), Rogue 40-54
+(8.9-10.8h), Cleric 37-53 (10.2-11.2h); L30 4.4-6.0h. Same pace as the level-only bot, classes closer together
+(medians ~45-52), so no retune.
 

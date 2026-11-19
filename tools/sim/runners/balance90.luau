@@ -3,11 +3,12 @@ local m = {
 	ProfileTemplate = require("./ProfileTemplate"), StageRunner = require("./StageRunner"), Skills = require("./Skills"), Economy = require("./Economy"),
 	Classes = require("./Config/Classes"), Wishing = require("./Wishing"), SkillProgress = require("./SkillProgress"), Subclasses = require("./Subclasses"),
 	Gear = require("./Gear"), Pets = require("./Pets"), PetConfig = require("./Config/Pets"), SubclassConfig = require("./Config/Subclasses"),
-	Party = require("./Party"),
+	Party = require("./Party"), Abilities = require("./Config/Abilities"),
 	Activities = require("./Activities"), Bosses = require("./Bosses"), BossCfg = require("./Config/Bosses"), TableUtil = require("./Util/TableUtil"),
 }
 local ARGS = require("./cfg")
 local MODE = ARGS[4] or "full"
+local COMBOS = ARGS[7] ~= false -- the bot wears full combos (cfg entry 7 = false: the old level-only bot, for comparison)
 -- who fights next to the tested hero (the game is played in pairs):
 --   "solo"       nobody (the old behaviour; a real lone player always has the companion)
 --   "companion"  the starter ghost the server gives a one-player party (Party.SyncCompanion), plus party ultimates
@@ -81,7 +82,34 @@ local function equipBest(profile, classId)
 	end
 	table.sort(owned, function(a, b) if a.Level ~= b.Level then return a.Level > b.Level end return a.Order > b.Order end)
 	local best = {}
-	for i = 1, math.min(#owned, m.Skills.SLOTS) do table.insert(best, owned[i].Id) end
+	-- combos (2026-11-19): like a player who reads the skill text, wear an owned finisher with its owned builders first
+	-- (builders in the first slots so the layers go on before the finisher fires), then fill the rest by level
+	if COMBOS then
+		local bestCombo, bestScore = nil, -1
+		for _, f in ipairs(owned) do
+			local consume = nil
+			for _, e in ipairs(m.Abilities[f.Id].Effects) do if e.Consume then consume = e.Consume.Status end end
+			if consume then
+				local builders, score = {}, f.Level
+				for _, b in ipairs(owned) do
+					if b.Id ~= f.Id and #builders < m.Skills.SLOTS - 1 then
+						for _, e in ipairs(m.Abilities[b.Id].Effects) do
+							if e.Type == "ApplyStatus" and e.Status == consume then table.insert(builders, b.Id) score += b.Level break end
+						end
+					end
+				end
+				if #builders > 0 and score > bestScore then
+					bestCombo, bestScore = builders, score
+					table.insert(bestCombo, f.Id)
+				end
+			end
+		end
+		for _, id in ipairs(bestCombo or {}) do table.insert(best, id) end
+	end
+	for i = 1, #owned do
+		if #best >= m.Skills.SLOTS then break end
+		if not table.find(best, owned[i].Id) then table.insert(best, owned[i].Id) end
+	end
 	m.Economy.Equip(profile, classId, best)
 end
 local function equipGear(profile)

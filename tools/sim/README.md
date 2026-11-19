@@ -6,6 +6,7 @@ Roblox `require(script.Parent...)` calls into file requires.
 
 - `./runall.sh`  all test suites (every suite must end "0 failed"). `LUAU=/path/to/luau ./runall.sh` if luau is not on PATH.
 - `./abl.sh tag goal mode Class|Path [partner] [partnerPath]`  balance simulation (see the header of the script).
+  The auto-player wears full combos (a finisher with its builders) since 2026-11-19, otherwise the highest-level skills.
   partner = `solo` (default, nobody), `companion` (the starter ghost a lone player really gets) or a class name (a second
   auto-played hero). The game is played in pairs, so judge balance with `companion` or a class partner, not `solo`.
   `SEEDS=3` for three runs per path: single runs vary a lot (the same Berserker build reached stage 60 and 89).
