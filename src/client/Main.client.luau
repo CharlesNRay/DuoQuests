@@ -539,6 +539,9 @@ push.OnClientEvent:Connect(function(kind, info)
 		fighting = true
 		arenas:Play(info.Slot, info, function()
 			fighting = false
+			if info.Reward and info.Reward.Tutorial then
+				hud:Notify(info.Reward.Tutorial)
+			end
 			local ok, fresh = api:InvokeServer("GetState")
 			if ok and fresh then
 				state = fresh

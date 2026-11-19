@@ -212,7 +212,7 @@ function Hud.new(root)
 	end)
 	self.Fight = Kit.frame({ Size = UDim2.fromOffset(180, 5), Position = UDim2.new(0.5, -90, 0, 128), BackgroundColor3 = Color3.fromRGB(16, 18, 30), Parent = combat })
 	self.FightFill = Kit.frame({ Size = UDim2.fromScale(0, 1), BackgroundColor3 = C.Accent, Parent = self.Fight })
-	self.Toast = Kit.label({ Size = UDim2.new(0, 400, 0, 20), Position = UDim2.new(0.5, -200, 0, 135), Text = "", TextSize = 14, TextXAlignment = Enum.TextXAlignment.Center, TextColor3 = C.Accent, Parent = combat })
+	self.Toast = Kit.label({ Size = UDim2.new(0, 520, 0, 40), Position = UDim2.new(0.5, -260, 0, 135), Text = "", TextSize = 14, TextWrapped = true, TextYAlignment = Enum.TextYAlignment.Top, TextXAlignment = Enum.TextXAlignment.Center, TextColor3 = C.Accent, Parent = combat })
 
 	self.Bar = pill(combat, { Size = UDim2.fromOffset(340, 56), Position = UDim2.new(0.5, -170, 1, -128) })
 	self.Slots = Kit.frame({ Size = UDim2.fromOffset(250, 48), Position = UDim2.fromOffset(8, 4), BackgroundTransparency = 1, NoCorner = true, Parent = self.Bar })

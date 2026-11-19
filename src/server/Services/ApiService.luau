@@ -1342,6 +1342,17 @@ function ApiService.Init()
 			local player = Players:GetPlayerByUserId(member.UserId)
 			if player then
 				local reward = outcome.Rewards and outcome.Rewards[tostring(member.UserId)]
+				-- a skipped tutorial pays its wishes when the first boss falls: tell the player what arrived
+				local tutorialText = nil
+				if reward and reward.TutorialReward then
+					local parts = {}
+					for id, count in pairs(reward.TutorialReward) do
+						local def = Consumables.Defs[id]
+						table.insert(parts, ("%d %s%s"):format(count, if def then def.DisplayName else id, if count > 1 then "es" else ""))
+					end
+					table.sort(parts)
+					tutorialText = "🎁 First boss beaten! Tutorial reward: " .. table.concat(parts, " + ") .. ". Spend them at the Wishing Tree."
+				end
 				push:FireClient(player, "Fight", {
 					Slot = slot,
 					Stage = outcome.Stage,
@@ -1352,7 +1363,7 @@ function ApiService.Init()
 					Wait = waitSeconds,
 					Roster = outcome.Roster,
 					Events = events,
-					Reward = reward and { Gold = reward.Gold, XP = reward.XP, Shards = reward.Shards, Wishstones = reward.Wishstones, Item = reward.Item and Gear.Name(reward.Item, member.Profile and member.Profile.Season.ClassId) or nil, Pets = reward.PetsGained } or nil,
+					Reward = reward and { Gold = reward.Gold, XP = reward.XP, Shards = reward.Shards, Wishstones = reward.Wishstones, Item = reward.Item and Gear.Name(reward.Item, member.Profile and member.Profile.Season.ClassId) or nil, Pets = reward.PetsGained, Tutorial = tutorialText } or nil,
 				})
 			end
 		end
