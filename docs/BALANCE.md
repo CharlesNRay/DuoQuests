@@ -174,4 +174,10 @@ Result (companion, full, 2 paths x 2 seeds):
 | Cleric | 42-45 | 10.0-11.1 | 5.0-5.7h |
 Caveat: the bot equips skills by level, so it does not plan combos (it may wear a finisher without its builders). Real
 players who build a combo should do better. Not checked after the change: lazy/nogear walls, dungeons, boss tiers.
+Follow-up checks after the rework (2026-11-19):
+- Dungeons: the Spire (stage 38, recommended L40) failed for most L40 parties (frontier 41-46), the Abyss was mixed, so
+  Abyss Stage 27 -> 25 and Spire 38 -> 35. Now won 5/5 at the recommended level unless the party is behind (Spire fails at fr <= 41).
+- Boss tiers: damage went up with combos and the aura (L40 median ~12x), so `Bosses.DamageScale` base 520 -> 600 and the
+  late growth past stage 35 0.02 -> 0.03 per stage. Now L10 ~2.3x, L20 ~5x, L30 ~7.5x, L40 ~10x (tier 4; top tier 20x a stretch).
+- Lazy (upgrades nothing): stage 20-25 after 16-17h, ~1000 losses at boss 20 (walls there). No gear: stage 23-30 at L40 in 11-13h.
 

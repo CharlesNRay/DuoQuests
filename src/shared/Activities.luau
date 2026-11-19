@@ -37,8 +37,8 @@ Activities.MaxKeys = 3
 Activities.Dungeons = {
 	{ Id = "Crypt", Name = "Forgotten Crypt", Unlock = 5, Stage = 6, Level = 8, Waves = 2, Blurb = "Bones and old curses. A good first dungeon." },
 	{ Id = "Foundry", Name = "Ember Foundry", Unlock = 15, Stage = 17, Level = 20, Waves = 3, Blurb = "Molten halls guarded by constructs." },
-	{ Id = "Abyss", Name = "Sunken Abyss", Unlock = 25, Stage = 27, Level = 31, Waves = 3, Blurb = "Deep water and deeper things." },
-	{ Id = "Spire", Name = "Frostbound Spire", Unlock = 35, Stage = 38, Level = 40, Waves = 3, Blurb = "A frozen tower that never stops climbing." },
+	{ Id = "Abyss", Name = "Sunken Abyss", Unlock = 25, Stage = 25, Level = 31, Waves = 3, Blurb = "Deep water and deeper things." },
+	{ Id = "Spire", Name = "Frostbound Spire", Unlock = 35, Stage = 35, Level = 40, Waves = 3, Blurb = "A frozen tower that never stops climbing." },
 }
 
 Activities.Expeditions = {
