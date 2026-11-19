@@ -78,7 +78,7 @@ return {
 		Id = "Blessed",
 		DisplayName = "Blessed",
 		Description = "Attack increased.",
-		Mods = { { Stat = "Attack", Mode = "Mult", Value = 1.2 } },
+		Mods = { { Stat = "Attack", Mode = "Mult", Value = 1.25 } }, -- was 1.2 (2026-11-19: the Cleric's main way to add party damage)
 	},
 
 	ArcaneSurge = {
@@ -182,6 +182,12 @@ return {
 		DisplayName = "Cursed",
 		Description = "Takes more damage and hits weaker.",
 		Mods = { { Stat = "DamageTaken", Mode = "Mult", Value = 1.2 }, { Stat = "Attack", Mode = "Mult", Value = 0.85 } },
+	},
+	Consecrated = {
+		Id = "Consecrated",
+		DisplayName = "Consecrated",
+		Description = "Takes more damage and hits weaker (holy ground from a Cleric's Purify).",
+		Mods = { { Stat = "DamageTaken", Mode = "Mult", Value = 1.15 }, { Stat = "Attack", Mode = "Mult", Value = 0.9 } },
 	},
 	Hasted = {
 		Id = "Hasted",

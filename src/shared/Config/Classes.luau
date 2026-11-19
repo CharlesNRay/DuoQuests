@@ -73,14 +73,14 @@ local Classes = {
 
 		BaseStats = {
 			MaxHealth = 130,
-			Attack = 14,
+			Attack = 16, -- was 14 (2026-11-19: Cleric teams cleared stages slowest, fr 39-45 at L40)
 			Defense = 4,
 			AttackSpeed = 0.9,
 			CritChance = 0.05,
 		},
 		GrowthPerLevel = {
 			MaxHealth = 15,
-			Attack = 2.5,
+			Attack = 2.9, -- was 2.5
 			Defense = 1,
 			AttackSpeed = 0,
 			CritChance = 0,

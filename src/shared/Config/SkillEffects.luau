@@ -74,6 +74,7 @@ return {
 		Snared = { Buff = "Glyph", Color = { 160, 170, 100 }, Glyph = "🕸" },
 		Marked = { Buff = "Glyph", Color = { 255, 80, 70 }, Glyph = "🎯" },
 		Cursed = { Buff = "Glyph", Color = { 170, 100, 220 }, Glyph = "💀" },
+		Consecrated = { Buff = "Glyph", Color = { 255, 225, 130 }, Glyph = "☀" },
 		Hasted = { Buff = "Chevrons", Color = { 255, 230, 110 } },
 		Evasive = { Buff = "Pulse", Color = { 200, 205, 225 } },
 		DeadEye = { Buff = "Pulse", Color = { 255, 90, 80 } },

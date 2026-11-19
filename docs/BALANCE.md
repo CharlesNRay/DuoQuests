@@ -139,3 +139,15 @@ Class roster check (2026-11-19, companion, full, 2 paths x 2 seeds, frontier at 
 | Ranger | 40-64 (~54) | 8.8-11.1 | |
 | Rogue | 40-62 (~51) | 8.6-11.6 | |
 | Cleric | 39-45 (~40) | 10.6-11.7 | lowest: Templar 39 sits at the bottom of the 40-90 target |
+
+Cleric buff (2026-11-19). Cause found with a loadout dump: the bot's Cleric wears sensible skills (Judgment, Radiant Burst,
+Heal, Blessing). The gap is structural. A lone player's skill upgrades go into their own hero. A Mage owner turns them into damage, but a
+Cleric owner turns them into healing that a party that never dies does not need, while its companion damage dealers stay on
+starter skills. Raw Attack barely helps (14/2.5 -> 16/2.9 gave +3 stages; 18/3.2 no more). Changes kept:
+- Cleric Attack 14 -> 16, growth 2.5 -> 2.9.
+- Purify reworked: still cleanses and heals, now also applies `Consecrated` to every enemy (takes x1.15 damage, deals x0.9,
+  Strength +0.04/level, 7 s), no longer waits for a debuff, cooldown 18 -> 14 (min 8).
+- Blessing (party Attack buff) x1.2 -> x1.25 and Strength per level 0.03 -> 0.05, so a high-level Blessing is the healer's damage.
+Result (2 paths x 2 seeds): fr 39-48 at L40 (median ~45, was ~40) in 9.3-11.6h. The stage 40 boss is reached at 365-486 min (was 470-600).
+Mage check after the Blessing change: fr 51-52 (companion Clerics' Blessing is low level, so other teams gain little).
+

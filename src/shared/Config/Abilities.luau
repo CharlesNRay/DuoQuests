@@ -265,7 +265,7 @@ return {
 				Target = "AllAllies",
 				Status = "Blessed",
 				Duration = 8,
-				PerLevel = { Duration = 0.3, Strength = 0.03 },
+				PerLevel = { Duration = 0.3, Strength = 0.05 }, -- Strength was 0.03 (2026-11-19)
 			},
 		},
 	},
@@ -2374,12 +2374,14 @@ return {
 		},
 	},
 	Purify = {
-		Id = "Purify", DisplayName = "Purify", Description = "Cleanses every harmful effect from the whole party and heals a little.",
-		Class = "Cleric", Rarity = "Rare", Cooldown = 18, CooldownPerLevel = -0.3, MinCooldown = 10, Element = "Holy",
-		Conditions = { AllyHasDebuff = true },
+		-- 2026-11-19: also consecrates the enemies (a party-wide damage boost) and no longer waits for a debuff, so a
+		-- Cleric adds damage to a four-hero party instead of only healing it (Cleric teams were the slowest)
+		Id = "Purify", DisplayName = "Purify", Description = "Cleanses the party, heals a little and consecrates every enemy: they take more damage and hit weaker.",
+		Class = "Cleric", Rarity = "Rare", Cooldown = 14, CooldownPerLevel = -0.25, MinCooldown = 8, Element = "Holy",
 		Effects = {
 			{ Type = "Cleanse", Target = "AllAllies", PerLevel = {} },
 			{ Type = "Heal", Target = "AllAllies", Multiplier = 0.5, PerLevel = { Multiplier = 0.05 } },
+			{ Type = "ApplyStatus", Target = "AllEnemies", Status = "Consecrated", Duration = 7, PerLevel = { Duration = 0.2, Strength = 0.04 } },
 		},
 	},
 

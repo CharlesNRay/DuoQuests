@@ -574,7 +574,7 @@ end
 -- reach the front-most row that still has someone alive; fighters in the Back row, and skills marked Reach = "Any", can pick
 -- targets in other rows. Area attacks hit only the row of their main target (unless the skill is marked AllRows, which ultimates
 -- and boss attacks are).
-Simulation.DEBUFFS = { Chilled = true, Burning = true, Poisoned = true, Bleeding = true, Frozen = true, Stunned = true, Snared = true, Marked = true, Cursed = true }
+Simulation.DEBUFFS = { Chilled = true, Burning = true, Poisoned = true, Bleeding = true, Frozen = true, Stunned = true, Snared = true, Marked = true, Cursed = true, Consecrated = true }
 Simulation.MAX_HASTE = 0.5 -- Haste shortens skill cooldowns by 1/(1+Haste); capped at +50%
 Simulation.RANGED_REACH = 0.35 -- chance a back-row attacker's basic attack goes past the front row
 
