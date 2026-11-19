@@ -28,7 +28,7 @@ return {
 	BossTimeLimit = 90, -- seconds to clear a boss stage
 	MaxEnemies = 3, -- regular stages grow from 1 enemy up to this many
 	ScalePerStage = 0.045, -- enemy scale = 1 + ScalePerStage * (stage - 1) ^ ScalePower
-	PartyScale = 2.2, -- every fight has 4 heroes (players, ghosts or companions; since 2026-11-18): enemies are this much stronger
+	PartyScale = 2.6, -- every fight has 4 heroes (players, ghosts or companions; since 2026-11-18): enemies are this much stronger
 	ScalePower = 1.6, -- 1 = linear growth; above 1 gets steeper at higher stages. 1.6 (was 1.35) since 2026-11-16: tuned for PAIRS (a partner or the companion), see docs/BALANCE.md
 	-- HealthScalePower = nil, -- when set, enemy HEALTH grows on this (steeper) curve and attack on ScalePower (see Stages.HealthExtra)
 	-- Content gets tougher in steps to keep up with the power spikes the player gets

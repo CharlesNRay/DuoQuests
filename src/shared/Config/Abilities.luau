@@ -61,7 +61,7 @@ return {
 	ShieldBash = {
 		Id = "ShieldBash",
 		DisplayName = "Shield Bash",
-		Description = "Bashes an enemy, hurting a sliver of its health, and fortifies you.",
+		Description = "Bashes an enemy, hurting a sliver of its health, and fortifies you. Combo: adds a layer of Sundered.",
 		Class = "Warrior",
 		Rarity = "Common",
 		Cooldown = 6,
@@ -76,13 +76,14 @@ return {
 				Duration = 5,
 				PerLevel = { Duration = 0.15, Strength = 0.02 },
 			},
+			{ Type = "ApplyStatus", Target = "Primary", Status = "Sundered", Duration = 10, Stacks = 1, PerLevel = {} }, -- combo layer for CrushingBlow
 		},
 	},
 
 	Taunt = {
 		Id = "Taunt",
 		DisplayName = "Taunt",
-		Description = "Redirects enemy attacks toward the Warrior.",
+		Description = "Redirects enemy attacks toward the Warrior; while they focus on it, every enemy is exposed and takes more damage.",
 		Class = "Warrior",
 		Rarity = "Common",
 		Cooldown = 12,
@@ -91,6 +92,8 @@ return {
 		Conditions = { SelfLacksStatus = "Taunting" },
 		Effects = {
 			{ Type = "ApplyStatus", Target = "Self", Status = "Taunting", Duration = 6, PerLevel = { Duration = 0.3 } },
+			-- 2026-11-19: tanks add party damage too (a four-hero party rarely needs all of a tank's defense)
+			{ Type = "ApplyStatus", Target = "AllEnemies", Status = "Exposed", Duration = 6, PerLevel = { Duration = 0.3, Strength = 0.03 } },
 		},
 	},
 
@@ -118,7 +121,7 @@ return {
 	Whirlwind = {
 		Id = "Whirlwind",
 		DisplayName = "Whirlwind",
-		Description = "Spins through every enemy and leaves them bleeding.",
+		Description = "Spins through every enemy and leaves them bleeding. Combo: adds a layer of Sundered.",
 		Class = "Warrior",
 		Rarity = "Common",
 		Cooldown = 8,
@@ -128,6 +131,7 @@ return {
 		Effects = {
 			{ Type = "Damage", Target = "AllEnemies", Multiplier = 0.9, PerLevel = { Multiplier = 0.07 } },
 			{ Type = "ApplyStatus", Target = "AllEnemies", Status = "Bleeding", Duration = 6, PerLevel = { Duration = 0.3 } },
+			{ Type = "ApplyStatus", Target = "AllEnemies", Status = "Sundered", Duration = 10, Stacks = 1, PerLevel = {} }, -- combo layer for CrushingBlow
 		},
 	},
 
@@ -161,14 +165,14 @@ return {
 	CrushingBlow = {
 		Id = "CrushingBlow",
 		DisplayName = "Crushing Blow",
-		Description = "A huge blow that opens a deep, stacking wound.",
+		Description = "A huge blow that opens a deep, stacking wound. Combo finisher: +25% damage per layer of Sundered on the target, then the layers are used up.",
 		Class = "Warrior",
 		Rarity = "Rare",
 		Cooldown = 9,
 		CooldownPerLevel = -0.15,
 		MinCooldown = 5,
 		Effects = {
-			{ Type = "Damage", Target = "Primary", Multiplier = 2.4, PerLevel = { Multiplier = 0.18 } },
+			{ Type = "Damage", Consume = { Status = "Sundered", PerStack = 0.25 }, Target = "Primary", Multiplier = 2.4, PerLevel = { Multiplier = 0.18 } },
 			{ Type = "ApplyStatus", Target = "Primary", Status = "Bleeding", Duration = 8, Stacks = 2, PerLevel = { Duration = 0.3 } },
 		},
 	},
@@ -176,7 +180,7 @@ return {
 	LastStand = {
 		Id = "LastStand",
 		DisplayName = "Last Stand",
-		Description = "Temporarily prevents lethal damage.",
+		Description = "Temporarily prevents lethal damage, and the Warrior fights in a frenzy meanwhile.",
 		Class = "Warrior",
 		Rarity = "Epic",
 		Cooldown = 30,
@@ -185,13 +189,14 @@ return {
 		Conditions = { SelfHealthBelow = 0.5 },
 		Effects = {
 			{ Type = "ApplyStatus", Target = "Self", Status = "LastStand", Duration = 4, PerLevel = { Duration = 0.15 } },
+			{ Type = "ApplyStatus", Target = "Self", Status = "Frenzied", Duration = 6, PerLevel = { Duration = 0.2 } }, -- 2026-11-19
 		},
 	},
 
 	RallyingCry = {
 		Id = "RallyingCry",
 		DisplayName = "Rallying Cry",
-		Description = "Increases the whole party's defense.",
+		Description = "Increases the whole party's defense and attack.",
 		Class = "Warrior",
 		Rarity = "Epic",
 		Cooldown = 20,
@@ -215,7 +220,7 @@ return {
 		Id = "Smite",
 		Reach = "Any",
 		DisplayName = "Smite",
-		Description = "Holy light that also burns a little of the foe's health.",
+		Description = "Holy light that also burns a little of the foe's health. Combo: adds a layer of Judged.",
 		Class = "Cleric",
 		Rarity = "Common",
 		Cooldown = 3,
@@ -230,6 +235,7 @@ return {
 				DamageType = "Magical",
 				PerLevel = { Multiplier = 0.12 },
 			},
+			{ Type = "ApplyStatus", Target = "Primary", Status = "Judged", Duration = 10, Stacks = 1, PerLevel = {} }, -- combo layer for Judgment
 		},
 	},
 
@@ -274,7 +280,7 @@ return {
 		Id = "RadiantBurst",
 		AllRows = true,
 		DisplayName = "Radiant Burst",
-		Description = "Damages all enemies and heals all allies.",
+		Description = "Damages all enemies and heals all allies. Combo: adds a layer of Judged.",
 		Class = "Cleric",
 		Rarity = "Common",
 		Cooldown = 10,
@@ -290,6 +296,7 @@ return {
 				PerLevel = { Multiplier = 0.06 },
 			},
 			{ Type = "Heal", Target = "AllAllies", Multiplier = 0.6, PerLevel = { Multiplier = 0.05 } },
+			{ Type = "ApplyStatus", Target = "AllEnemies", Status = "Judged", Duration = 10, Stacks = 1, PerLevel = {} }, -- combo layer for Judgment
 		},
 	},
 
@@ -333,24 +340,20 @@ return {
 	},
 
 	GuardianAngel = {
+		-- 2026-11-19: was "only when an ally drops below 35%", so it hardly ever cast in a won fight. Now an angel guards
+		-- the most wounded ally and inspires the whole party (Emboldened), on its own cooldown.
 		Id = "GuardianAngel",
 		DisplayName = "Guardian Angel",
-		Description = "Protects a dying ally from lethal damage.",
+		Description = "An angel guards the most wounded ally from lethal damage and inspires the whole party: more attack and attack speed.",
 		Class = "Cleric",
 		Rarity = "Epic",
-		Cooldown = 30,
-		CooldownPerLevel = -0.5,
-		MinCooldown = 15,
+		Cooldown = 20,
+		CooldownPerLevel = -0.4,
+		MinCooldown = 10,
 		Element = "Holy",
-		Conditions = { AllyHealthBelow = 0.35 },
 		Effects = {
-			{
-				Type = "ApplyStatus",
-				Target = "LowestAlly",
-				Status = "GuardianAngel",
-				Duration = 4,
-				PerLevel = { Duration = 0.15 },
-			},
+			{ Type = "ApplyStatus", Target = "LowestAlly", Status = "GuardianAngel", Duration = 4, PerLevel = { Duration = 0.15 } },
+			{ Type = "ApplyStatus", Target = "AllAllies", Status = "Emboldened", Duration = 7, PerLevel = { Duration = 0.2, Strength = 0.03 } },
 		},
 	},
 
@@ -358,7 +361,7 @@ return {
 		Id = "Judgment",
 		Reach = "Any",
 		DisplayName = "Judgment",
-		Description = "Calls down devastating holy damage on one enemy.",
+		Description = "Calls down devastating holy damage on one enemy. Combo finisher: +30% damage per layer of Judged on the target, then the layers are used up.",
 		Class = "Cleric",
 		Rarity = "Epic",
 		Cooldown = 14,
@@ -367,7 +370,7 @@ return {
 		Element = "Holy",
 		Effects = {
 			{
-				Type = "Damage",
+				Type = "Damage", Consume = { Status = "Judged", PerStack = 0.3 },
 				Target = "Primary",
 				Multiplier = 3.2,
 				DamageType = "Magical",
@@ -395,7 +398,7 @@ return {
 	Fireball = {
 		Id = "Fireball",
 		DisplayName = "Fireball",
-		Description = "A fireball that sets the target alight. Burns stack.",
+		Description = "A fireball that sets the target alight. Burns stack. Combo: adds a layer of Arcane Charge.",
 		Class = "Mage",
 		Rarity = "Common",
 		Cooldown = 5,
@@ -418,6 +421,7 @@ return {
 		Effects = {
 			{ Type = "Damage", Target = "AllEnemies", Multiplier = 0.9, DamageType = "Magical" },
 			{ Type = "ApplyStatus", Target = "AllEnemies", Status = "Chilled", Duration = 4 },
+			{ Type = "ApplyStatus", Target = "Primary", Status = "ArcaneCharge", Duration = 10, Stacks = 1, PerLevel = {} }, -- combo layer for ArcaneBlast
 		},
 	},
 
@@ -425,12 +429,13 @@ return {
 		Id = "LightningBolt",
 		Reach = "Any",
 		DisplayName = "Lightning Bolt",
-		Description = "Deals high single-target damage.",
+		Description = "Deals high single-target damage. Combo: adds a layer of Arcane Charge.",
 		Class = "Mage",
 		Rarity = "Rare",
 		Cooldown = 10,
 		Element = "Lightning",
 		Effects = {
+			{ Type = "ApplyStatus", Target = "Primary", Status = "ArcaneCharge", Duration = 10, Stacks = 1, PerLevel = {} }, -- combo layer for ArcaneBlast
 			{ Type = "Damage", Target = "Primary", Multiplier = 3.2, DamageType = "Magical" },
 		},
 	},
@@ -1293,7 +1298,7 @@ return {
 	ArcaneBlast = {
 		Id = "ArcaneBlast",
 		DisplayName = "Arcane Blast",
-		Description = "A burst of arcane force hits every enemy.",
+		Description = "A burst of arcane force hits every enemy. Combo finisher: +30% damage per layer of Arcane Charge on the target, then the layers are used up.",
 		Class = "Mage",
 		Rarity = "Common",
 		Cooldown = 8,
@@ -1302,7 +1307,7 @@ return {
 		Element = "Arcane",
 		Conditions = { MinEnemies = 2 },
 		Effects = {
-			{ Type = "Damage", Target = "AllEnemies", Multiplier = 1.1, PercentTargetHealth = 0.01, PerLevel = { Multiplier = 0.1 } },
+			{ Type = "Damage", Consume = { Status = "ArcaneCharge", PerStack = 0.3 }, Target = "AllEnemies", Multiplier = 1.1, PercentTargetHealth = 0.01, PerLevel = { Multiplier = 0.1 } },
 		},
 	},
 
@@ -1467,7 +1472,7 @@ return {
 		Id = "PowerShot",
 		Reach = "Any",
 		DisplayName = "Power Shot",
-		Description = "A hard-pulled arrow into one enemy.",
+		Description = "A hard-pulled arrow into one enemy. Combo: adds a layer of Tracked.",
 		Class = "Ranger",
 		Rarity = "Common",
 		Cooldown = 5,
@@ -1492,6 +1497,7 @@ return {
 		Conditions = { MinEnemies = 2 },
 		Effects = {
 			{ Type = "Damage", Target = "AllEnemies", Multiplier = 1.1, PercentTargetHealth = 0.008, PerLevel = { Multiplier = 0.08 } },
+			{ Type = "ApplyStatus", Target = "Primary", Status = "Tracked", Duration = 10, Stacks = 1, PerLevel = {} }, -- combo layer for ExplosiveArrow
 		},
 	},
 
@@ -1499,13 +1505,14 @@ return {
 		Id = "PiercingArrow",
 		AllRows = true,
 		DisplayName = "Piercing Arrow",
-		Description = "An armor-piercing shot for big single-target damage.",
+		Description = "An armor-piercing shot for big single-target damage. Combo: adds a layer of Tracked.",
 		Class = "Ranger",
 		Rarity = "Rare",
 		Cooldown = 10,
 		CooldownPerLevel = -0.2,
 		MinCooldown = 6,
 		Effects = {
+			{ Type = "ApplyStatus", Target = "Primary", Status = "Tracked", Duration = 10, Stacks = 1, PerLevel = {} }, -- combo layer for ExplosiveArrow
 			{ Type = "Damage", Target = "Primary", Multiplier = 3.3, PerLevel = { Multiplier = 0.22 } },
 			{ Type = "ApplyStatus", Target = "Primary", Status = "Bleeding", Duration = 8, Stacks = 2, PerLevel = { Duration = 0.3 } },
 		},
@@ -1576,7 +1583,7 @@ return {
 		Id = "ExplosiveArrow",
 		Reach = "Any",
 		DisplayName = "Explosive Arrow",
-		Description = "An arrow that explodes among the enemies.",
+		Description = "An arrow that explodes among the enemies. Combo finisher: +25% damage per layer of Tracked on the target, then the layers are used up.",
 		Class = "Ranger",
 		Rarity = "Epic",
 		Cooldown = 14,
@@ -1585,7 +1592,7 @@ return {
 		Element = "Fire",
 		Conditions = { MinEnemies = 2 },
 		Effects = {
-			{ Type = "Damage", Target = "AllEnemies", Multiplier = 2.2, PercentTargetHealth = 0.012, PerLevel = { Multiplier = 0.16 } },
+			{ Type = "Damage", Consume = { Status = "Tracked", PerStack = 0.25 }, Target = "AllEnemies", Multiplier = 2.2, PercentTargetHealth = 0.012, PerLevel = { Multiplier = 0.16 } },
 			{ Type = "ApplyStatus", Target = "AllEnemies", Status = "Burning", Duration = 8, Stacks = 2, PerLevel = { Duration = 0.3 } },
 		},
 	},
@@ -1689,7 +1696,7 @@ return {
 		Id = "Backstab",
 		Reach = "Any",
 		DisplayName = "Backstab",
-		Description = "Stabs from behind and coats the wound in poison.",
+		Description = "Stabs from behind and coats the wound in poison. Combo: adds a layer of Opened.",
 		Class = "Rogue",
 		Rarity = "Common",
 		Cooldown = 5,
@@ -1714,13 +1721,14 @@ return {
 		Effects = {
 			{ Type = "Damage", Target = "AllEnemies", Multiplier = 1.1, PerLevel = { Multiplier = 0.08 } },
 			{ Type = "ApplyStatus", Target = "AllEnemies", Status = "Poisoned", Duration = 10, PerLevel = { Duration = 0.3 } },
+			{ Type = "ApplyStatus", Target = "Primary", Status = "Opened", Duration = 10, Stacks = 1, PerLevel = {} }, -- combo layer for Eviscerate
 		},
 	},
 
 	PoisonBlade = {
 		Id = "PoisonBlade",
 		DisplayName = "Poison Blade",
-		Description = "A coated blade: damage and poison.",
+		Description = "A coated blade: damage and poison. Combo: adds a layer of Opened.",
 		Class = "Rogue",
 		Rarity = "Rare",
 		Cooldown = 9,
@@ -1728,6 +1736,7 @@ return {
 		MinCooldown = 5,
 		Element = "Poison",
 		Effects = {
+			{ Type = "ApplyStatus", Target = "Primary", Status = "Opened", Duration = 10, Stacks = 1, PerLevel = {} }, -- combo layer for Eviscerate
 			{ Type = "Damage", Target = "Primary", Multiplier = 1.0, PerLevel = { Multiplier = 0.08 } },
 			{ Type = "ApplyStatus", Target = "Primary", Status = "Poisoned", Duration = 12, Stacks = 2, PerLevel = { Duration = 0.3 } },
 		},
@@ -1767,14 +1776,14 @@ return {
 		Id = "Eviscerate",
 		Reach = "Any",
 		DisplayName = "Eviscerate",
-		Description = "A brutal finishing strike.",
+		Description = "A brutal finishing strike. Combo finisher: +30% damage per layer of Opened on the target, then the layers are used up.",
 		Class = "Rogue",
 		Rarity = "Epic",
 		Cooldown = 13,
 		CooldownPerLevel = -0.2,
 		MinCooldown = 7,
 		Effects = {
-			{ Type = "Damage", Target = "Primary", Multiplier = 4.0, PercentTargetHealth = 0.02, PercentCap = 0.9, PerLevel = { Multiplier = 0.28 } },
+			{ Type = "Damage", Consume = { Status = "Opened", PerStack = 0.3 }, Target = "Primary", Multiplier = 4.0, PercentTargetHealth = 0.02, PercentCap = 0.9, PerLevel = { Multiplier = 0.28 } },
 		},
 	},
 
@@ -1949,7 +1958,7 @@ return {
 	SoulLeech = {
 		Id = "SoulLeech",
 		DisplayName = "Soul Leech",
-		Description = "Drains an enemy's life to mend the summoner.",
+		Description = "Drains an enemy's life to mend the summoner. Combo finisher: +20% damage per layer of Soul Rot on the target, then the layers are used up.",
 		Class = "Summoner",
 		Rarity = "Rare",
 		Cooldown = 9,
@@ -1957,7 +1966,7 @@ return {
 		MinCooldown = 5,
 		Element = "Shadow",
 		Effects = {
-			{ Type = "Damage", Target = "Primary", Multiplier = 1.6, PercentTargetHealth = 0.01, PerLevel = { Multiplier = 0.12 } },
+			{ Type = "Damage", Consume = { Status = "SoulRot", PerStack = 0.2 }, Target = "Primary", Multiplier = 1.6, PercentTargetHealth = 0.01, PerLevel = { Multiplier = 0.12 } },
 			{ Type = "Heal", Target = "Self", Multiplier = 0, PercentMaxHealth = 0.09, PerLevel = { PercentMaxHealth = 0.005 } },
 		},
 	},
@@ -1982,7 +1991,7 @@ return {
 	Haunt = {
 		Id = "Haunt",
 		DisplayName = "Haunt",
-		Description = "A haunting that makes an enemy take more damage and hit weaker.",
+		Description = "A haunting that makes an enemy take more damage and hit weaker. Combo: adds a layer of Soul Rot.",
 		Class = "Summoner",
 		Rarity = "Rare",
 		Cooldown = 11,
@@ -1992,6 +2001,7 @@ return {
 		Effects = {
 			{ Type = "Damage", Target = "Primary", Multiplier = 0.9, PercentTargetHealth = 0.012, PerLevel = { Multiplier = 0.07 } },
 			{ Type = "ApplyStatus", Target = "Primary", Status = "Cursed", Duration = 7, PerLevel = { Duration = 0.3 } },
+			{ Type = "ApplyStatus", Target = "Primary", Status = "SoulRot", Duration = 10, Stacks = 1, PerLevel = {} }, -- combo layer for SoulLeech
 		},
 	},
 

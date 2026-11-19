@@ -118,6 +118,39 @@ return function(modulesOverride)
 	check("Purify removes harmful statuses", not left.Bleeding and not left.Cursed)
 	check("Purify keeps helpful statuses", left.Fortified or hadBuff == nil)
 
+	-- combo layers (2026-11-19): a finisher deals more per layer of its class mark and uses the layers up
+	local function finisherHit(layers)
+		local rogue = fighter("rg", "Party", "Melee", { { Id = "Eviscerate", Level = 1 } })
+		local dummy = fighter("dm", "Enemy", "Melee")
+		local fs = Simulation.new({ Party = { rogue }, Enemies = { dummy }, Seed = 1, MaxSeconds = 5, CastTimes = false })
+		if layers > 0 then fs:ApplyStatus(dummy, "Opened", 30, rogue, nil, 1, layers) end
+		local before = dummy.Health
+		fs:Step()
+		local still = false
+		for _, st in ipairs(dummy.Statuses) do if st.Id == "Opened" then still = true end end
+		return before - dummy.Health, still
+	end
+	local plain = finisherHit(0)
+	local combo, kept = finisherHit(3)
+	check("a finisher hits harder with combo layers (3 layers x30% = x1.9)", combo > plain * 1.8 and combo < plain * 2.0)
+	check("a finisher uses its combo layers up", not kept)
+	local stacked = fighter("st", "Enemy", "Melee")
+	local ls = Simulation.new({ Party = { fighter("x1", "Party", "Melee") }, Enemies = { stacked }, Seed = 1, MaxSeconds = 5, CastTimes = false })
+	for _ = 1, 9 do ls:ApplyStatus(stacked, "Opened", 30, nil, nil, 1, 1) end
+	check("combo layers stop at 5", stacked.Statuses[1].Stacks == 5)
+
+	-- team aura: a tank, a healer and two damage heroes lift everyone's stats
+	local function team(classes)
+		local list = {}
+		for i, c in ipairs(classes) do list[i] = fighter("h" .. i, "Party", "Melee", {}, { DefId = c }) end
+		local ts = Simulation.new({ Party = list, Enemies = { fighter("e", "Enemy", "Melee") }, Seed = 1, MaxSeconds = 5, CastTimes = false })
+		return ts, list[1]
+	end
+	local full, hero = team({ "Warrior", "Cleric", "Mage", "Rogue" })
+	check("a full team gets the team aura", full.TeamAura == true and hero.Stats.Attack > 100 and hero.Health == hero.Stats.MaxHealth)
+	local noHealer = team({ "Warrior", "Ranger", "Mage", "Rogue" })
+	check("no healer, no team aura", noHealer.TeamAura == nil)
+
 	-- hard crowd control is for bosses only
 	local hardCC = { Stunned = true, Frozen = true }
 	local smallOk = true

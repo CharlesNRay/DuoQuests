@@ -70,6 +70,11 @@ Git Bash; they find a working Python themselves (`python3`/`python` there are St
 5. Owner-side: create the VIP Game Pass + Sunstone Developer Products and give the ids (`GamePassId`/`ProductId` are 0); upload `branding/logo.png` and set `Config/Branding.LogoImage`.
 6. `docs/ROADMAP.md` only covers up to the 2026-11-16 morning entry; add the items above.
 
+- **Skill rework 2026-11-19** (tests green, NOT seen in Studio): class combos (builders add layers, a finisher consumes them),
+  team aura for tank+healer+2 damage (`Config/TeamAura`), Taunt/Purify debuff enemies (Exposed/Consecrated), Guardian Angel,
+  Rallying Cry, Last Stand, Blessing reworked; `PartyScale` 2.6. See docs/BALANCE.md "Skill rework". New status icons
+  (✦ ➶ ✂ ⚒ ⚖ ☠ ☀ ⚔ ★) not seen in Studio.
+
 ## Gotchas
 - Studio testing: the HUD 🧪 button grants test gold/items and ⬆ gives +5 levels (Studio only). Vendor prompts need you within 14 studs;
   teleport from the command bar (Client view): `game.Players.LocalPlayer.Character:PivotTo(CFrame.new(x, 4, z))` - Trainer (13.5, -5), Pet Store (-13.5, -5).

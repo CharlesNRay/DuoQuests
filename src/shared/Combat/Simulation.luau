@@ -79,6 +79,8 @@ local PetConfig = require(script.Parent.Parent.Config.Pets)
 local EconomyConfig = require(script.Parent.Parent.Config.Economy)
 local StatCalc = require(script.Parent.StatCalc)
 local EnemyConfig = require(script.Parent.Parent.Config.Enemies)
+local Classes = require(script.Parent.Parent.Config.Classes)
+local TeamAura = require(script.Parent.Parent.Config.TeamAura)
 
 local Simulation = {}
 Simulation.__index = Simulation
@@ -239,6 +241,16 @@ Simulation.Effects = {
 				if effect.PercentTargetHealth then -- a small slice of the target's health on top (capped, see percentDamage)
 					amount += percentDamage(sim, caster, target, effect.PercentTargetHealth * (1 + 0.05 * math.max(0, castCtx.Level - 1)), effect.PercentCap)
 				end
+				if effect.Consume then -- combo finisher: more damage per layer of the class mark, then the layers are used up
+					for index = #target.Statuses, 1, -1 do
+						local status = target.Statuses[index]
+						if status.Id == effect.Consume.Status then
+							amount *= 1 + (status.Stacks or 1) * effect.Consume.PerStack
+							table.remove(target.Statuses, index)
+							sim:_record({ Type = "StatusEnd", Target = target.Id, Status = status.Id, Reason = "Consumed", Stacks = status.Stacks })
+						end
+					end
+				end
 				sim:DealDamage(caster, target, amount, {
 					Tag = castCtx.Ability.Id,
 					DamageType = damageType,
@@ -388,7 +400,7 @@ function Simulation.new(options)
 		end
 	end
 
-	return setmetatable({
+	local sim = setmetatable({
 		Party = party,
 		Enemies = enemies,
 		Hooks = options.Hooks or Hooks.new(),
@@ -414,6 +426,39 @@ function Simulation.new(options)
 		Events = {},
 		Result = nil,
 	}, Simulation)
+	sim:_applyTeamAura()
+	return sim
+end
+
+-- Team aura: a tank, a healer and two damage heroes in the party lift every hero's health, attack and defense (Config/TeamAura).
+function Simulation:_applyTeamAura()
+	local roles = {}
+	local heroes = {}
+	for _, entity in ipairs(self.Party) do
+		local class = Classes[entity.DefId]
+		if class and class.Role then
+			roles[class.Role] = (roles[class.Role] or 0) + 1
+			table.insert(heroes, entity)
+		end
+	end
+	for role, count in pairs(TeamAura.Needs) do
+		if (roles[role] or 0) < count then
+			return
+		end
+	end
+	self.TeamAura = true
+	for _, entity in ipairs(heroes) do
+		local full = entity.Health >= entity.Stats.MaxHealth
+		for stat, mult in pairs(TeamAura.Mult) do
+			if entity.Stats[stat] then
+				entity.Stats[stat] *= mult
+			end
+		end
+		if full then
+			entity.Health = entity.Stats.MaxHealth
+		end
+		self:ApplyStatus(entity, "TeamAura", self.MaxSeconds + 60)
+	end
 end
 
 function Simulation:_record(event)
@@ -574,7 +619,7 @@ end
 -- reach the front-most row that still has someone alive; fighters in the Back row, and skills marked Reach = "Any", can pick
 -- targets in other rows. Area attacks hit only the row of their main target (unless the skill is marked AllRows, which ultimates
 -- and boss attacks are).
-Simulation.DEBUFFS = { Chilled = true, Burning = true, Poisoned = true, Bleeding = true, Frozen = true, Stunned = true, Snared = true, Marked = true, Cursed = true, Consecrated = true }
+Simulation.DEBUFFS = { Chilled = true, Burning = true, Poisoned = true, Bleeding = true, Frozen = true, Stunned = true, Snared = true, Marked = true, Cursed = true, Consecrated = true, Exposed = true }
 Simulation.MAX_HASTE = 0.5 -- Haste shortens skill cooldowns by 1/(1+Haste); capped at +50%
 Simulation.RANGED_REACH = 0.35 -- chance a back-row attacker's basic attack goes past the front row
 

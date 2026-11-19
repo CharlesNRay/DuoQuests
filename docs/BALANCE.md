@@ -151,3 +151,27 @@ starter skills. Raw Attack barely helps (14/2.5 -> 16/2.9 gave +3 stages; 18/3.2
 Result (2 paths x 2 seeds): fr 39-48 at L40 (median ~45, was ~40) in 9.3-11.6h. The stage 40 boss is reached at 365-486 min (was 470-600).
 Mage check after the Blessing change: fr 51-52 (companion Clerics' Blessing is low level, so other teams gain little).
 
+## Skill rework: combos, team aura, support skills that add damage (2026-11-19)
+Ideas borrowed from idle RPGs like Ulala (combo skill sets, a full-team aura, support classes that add damage by
+weakening enemies); names and numbers are ours.
+- Combos (`Consume` on a Damage effect, layer statuses with `Combo = true`, up to 5 layers, 10 s): builders add a layer of the
+  class mark, the finisher deals +X% per layer and removes them. Mage Fireball/Lightning Bolt -> Arcane Charge -> Arcane Blast
+  (+30%); Ranger Power Shot/Piercing Arrow -> Tracked -> Explosive Arrow (+25%); Rogue Backstab/Poison Blade -> Opened ->
+  Eviscerate (+30%); Warrior Shield Bash/Whirlwind -> Sundered -> Crushing Blow (+25%); Cleric Smite/Radiant Burst -> Judged ->
+  Judgment (+30%); Summoner Haunt -> Soul Rot -> Soul Leech (+20%; Haunt gave 2 layers at first, Summoner ran ahead).
+- Team aura (`Config/TeamAura`): 1 tank + 1 healer + 2 damage heroes in a fight = x1.06 health, attack and defense for all.
+- Support skills: Taunt also Exposes every enemy (x1.1 damage taken, +3%/level); Last Stand adds Frenzied; Rallied also
+  gives x1.1 Attack; Guardian Angel casts on cooldown (20 s) and Emboldens the party; plus the Cleric changes above.
+- Everything together made L40 come in 4.9-9.9h at frontier 45-117, so `Config/Stages.PartyScale` 2.2 -> 2.6.
+Result (companion, full, 2 paths x 2 seeds):
+| Class | frontier at L40 | hours to L40 | L30 |
+|---|---|---|---|
+| Mage | 41-45 | 9.0-10.5 | 4.9-5.5h |
+| Warrior | 42-56 | 9.0-10.4 | 4.9-5.5h |
+| Summoner | 44-62 | 8.6-11.6 | 4.9-6.1h |
+| Ranger | 41-48 | 9.1-10.8 | 4.9-5.3h |
+| Rogue | 48-61 | 7.9-9.6 | 4.6-5.3h |
+| Cleric | 42-45 | 10.0-11.1 | 5.0-5.7h |
+Caveat: the bot equips skills by level, so it does not plan combos (it may wear a finisher without its builders). Real
+players who build a combo should do better. Not checked after the change: lazy/nogear walls, dungeons, boss tiers.
+

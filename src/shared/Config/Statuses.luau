@@ -70,8 +70,8 @@ return {
 	Rallied = {
 		Id = "Rallied",
 		DisplayName = "Rallied",
-		Description = "Defense increased by a rallying cry.",
-		Mods = { { Stat = "Defense", Mode = "Mult", Value = 1.4 } },
+		Description = "Defense and attack increased by a rallying cry.",
+		Mods = { { Stat = "Defense", Mode = "Mult", Value = 1.4 }, { Stat = "Attack", Mode = "Mult", Value = 1.1 } }, -- Attack added 2026-11-19
 	},
 
 	Blessed = {
@@ -182,6 +182,60 @@ return {
 		DisplayName = "Cursed",
 		Description = "Takes more damage and hits weaker.",
 		Mods = { { Stat = "DamageTaken", Mode = "Mult", Value = 1.2 }, { Stat = "Attack", Mode = "Mult", Value = 0.85 } },
+	},
+	-- Combo layers (2026-11-19): builder skills add a layer, the class finisher deals more per layer and removes them all.
+	ArcaneCharge = {
+		Id = "ArcaneCharge",
+		DisplayName = "Arcane Charge",
+		Description = "Combo layers: ArcaneBlast hits 30% harder per layer and uses them up (up to 5).",
+		Stacks = { Max = 5 },
+		Combo = true,
+	},
+	Tracked = {
+		Id = "Tracked",
+		DisplayName = "Tracked",
+		Description = "Combo layers: ExplosiveArrow hits 25% harder per layer and uses them up (up to 5).",
+		Stacks = { Max = 5 },
+		Combo = true,
+	},
+	Opened = {
+		Id = "Opened",
+		DisplayName = "Opened",
+		Description = "Combo layers: Eviscerate hits 30% harder per layer and uses them up (up to 5).",
+		Stacks = { Max = 5 },
+		Combo = true,
+	},
+	Sundered = {
+		Id = "Sundered",
+		DisplayName = "Sundered",
+		Description = "Combo layers: CrushingBlow hits 25% harder per layer and uses them up (up to 5).",
+		Stacks = { Max = 5 },
+		Combo = true,
+	},
+	Judged = {
+		Id = "Judged",
+		DisplayName = "Judged",
+		Description = "Combo layers: Judgment hits 30% harder per layer and uses them up (up to 5).",
+		Stacks = { Max = 5 },
+		Combo = true,
+	},
+	SoulRot = {
+		Id = "SoulRot",
+		DisplayName = "Soul Rot",
+		Description = "Combo layers: SoulLeech hits 20% harder per layer and uses them up (up to 5).",
+		Stacks = { Max = 5 },
+		Combo = true,
+	},
+	TeamAura = {
+		Id = "TeamAura",
+		DisplayName = "Team Aura",
+		Description = "A full team (a tank, a healer and two damage heroes): more health, attack and defense for the whole fight.",
+	},
+	Exposed = {
+		Id = "Exposed",
+		DisplayName = "Exposed",
+		Description = "Takes more damage (busy fighting a taunting Warrior).",
+		Mods = { { Stat = "DamageTaken", Mode = "Mult", Value = 1.1 } },
 	},
 	Consecrated = {
 		Id = "Consecrated",

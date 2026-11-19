@@ -17,7 +17,7 @@ local StatusLook = {}
 local LOOK = {
 	Burning = { "Dot", rgb(255, 130, 50), "🔥" }, Poisoned = { "Dot", rgb(130, 225, 90), "☠" }, Bleeding = { "Dot", rgb(225, 55, 65), "🩸" },
 	Chilled = { "Debuff", rgb(130, 210, 255), "❄" }, Snared = { "Debuff", rgb(190, 150, 95), "⛓" }, Marked = { "Debuff", rgb(255, 95, 95), "🎯" },
-	Cursed = { "Debuff", rgb(175, 95, 225), "💀" }, Consecrated = { "Debuff", rgb(255, 225, 130), "☀" }, Shadowed = { "Debuff", rgb(120, 100, 170), "🌑" },
+	Cursed = { "Debuff", rgb(175, 95, 225), "💀" }, Consecrated = { "Debuff", rgb(255, 225, 130), "☀" }, Exposed = { "Debuff", rgb(240, 150, 90), "⚔" }, ArcaneCharge = { "Debuff", rgb(170, 120, 255), "✦" }, Tracked = { "Debuff", rgb(120, 220, 140), "➶" }, Opened = { "Debuff", rgb(230, 230, 120), "✂" }, Sundered = { "Debuff", rgb(200, 160, 120), "⚒" }, Judged = { "Debuff", rgb(255, 230, 160), "⚖" }, SoulRot = { "Debuff", rgb(150, 110, 190), "☠" }, TeamAura = { "Buff", rgb(255, 210, 110), "★" }, Shadowed = { "Debuff", rgb(120, 100, 170), "🌑" },
 	Frozen = { "Cc", rgb(175, 230, 255), "❄" }, Stunned = { "Cc", rgb(255, 235, 90), "💫" },
 	Taunting = { "Buff", rgb(240, 120, 80), "📣" }, Fortified = { "Buff", rgb(120, 160, 230), "🛡" }, IronSkin = { "Buff", rgb(150, 165, 195), "🛡" },
 	Unbreakable = { "Buff", rgb(110, 170, 240), "🛡" }, LastStand = { "Buff", rgb(235, 110, 70), "💪" }, GuardianAngel = { "Buff", rgb(255, 245, 200), "✨" },
