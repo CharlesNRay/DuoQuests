@@ -186,3 +186,14 @@ Mage fr 40-65 (8.1-10.8h), Warrior 39-56 (9.0-10.2h), Summoner 40-54 (8.9-11.3h)
 (8.9-10.8h), Cleric 37-53 (10.2-11.2h); L30 4.4-6.0h. Same pace as the level-only bot, classes closer together
 (medians ~45-52), so no retune.
 
+## Pets in the sim (2026-11-19)
+`balance90.luau` now also spends wish tickets (tutorial, bosses, eggs; it ignored them before), wears the best pet gear in
+every open slot and sells spare pieces, feeds all pet food to the active pet, and spends up to a fifth of its gold at the
+Pet Store (eggs 3/day, gear crates once a slot is open). Pet levels from fights and boss pet gear drops were already in.
+Each run prints a `PET` line (pet level, worn gear). Results (companion, full, 2 paths x 2 seeds):
+L40 in 8.0-10.8h (median ~9.1h, was ~10h without the pet habits), frontier 40-66, L30 4.6-5.8h; by L40 the pet wears 3-4
+pieces, mostly Epic with some Legendary. No pets (nopet, Mage and Warrior): L40 in 12.6-14.4h at frontier 34-45, so pets
+are clearly worth it. No retune (inside 9-12h at the fast edge; PartyScale 2.6 -> 2.7 if it should be slower).
+Finding: pet food piles up (10-95 left at L40) because a pet cannot level past its owner; food is only useful while the pet
+lags behind (e.g. a new pet). Worth a design look: let food overflow into pet rank/shards, or sell less of it.
+

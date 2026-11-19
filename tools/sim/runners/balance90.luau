@@ -4,6 +4,7 @@ local m = {
 	Classes = require("./Config/Classes"), Wishing = require("./Wishing"), SkillProgress = require("./SkillProgress"), Subclasses = require("./Subclasses"),
 	Gear = require("./Gear"), Pets = require("./Pets"), PetConfig = require("./Config/Pets"), SubclassConfig = require("./Config/Subclasses"),
 	Party = require("./Party"), Abilities = require("./Config/Abilities"),
+	PetGear = require("./PetGear"), PetGearConfig = require("./Config/PetGear"), Consumables = require("./Consumables"),
 	Activities = require("./Activities"), Bosses = require("./Bosses"), BossCfg = require("./Config/Bosses"), TableUtil = require("./Util/TableUtil"),
 }
 local ARGS = require("./cfg")
@@ -25,6 +26,50 @@ local lcg = 12345
 local function rand() lcg = (lcg * 1103515245 + 12345) % 2147483648 return lcg / 2147483648 end
 
 local RARITY_SCORE = { Common = 1, Rare = 2, Epic = 3, Legendary = 4 }
+-- wish tickets (tutorial, bosses, Pet Store eggs): each ticket buys one wish on the best tier unlocked (2026-11-19)
+local function spendTickets(profile)
+	for _, kind in ipairs({ "Pet", "Skill" }) do
+		if (kind == "Pet" and doPet) or (kind == "Skill" and doSkill) then
+			for _ = 1, 200 do
+				local pick
+				for _, tier in ipairs(m.Wishing.Info(profile, kind).Tiers) do
+					if tier.Unlocked then pick = tier end
+				end
+				if pick == nil or not m.Wishing.Wish(profile, kind, pick.Id, "Ticket", 1, rand) then break end
+			end
+		end
+	end
+end
+-- pets (2026-11-19): wear the best pet gear in every open slot, sell spare pieces, feed all pet food to the active pet
+local RARITY_RANK = { Common = 1, Rare = 2, Epic = 3, Legendary = 4 }
+local function petScore(piece) return (RARITY_RANK[piece.Rarity] or 0) * 100 + (piece.Value or 0) * 1000 end
+local function petCare(profile)
+	if not doPet then return end
+	local petId = m.Pets.Active(profile)
+	if petId == nil then return end
+	for _, food in ipairs({ "GrandPetFood", "PetFood" }) do
+		for _ = 1, 100 do
+			if not m.Consumables.Use(profile, food, 0, petId) then break end
+		end
+	end
+	local g = profile.Permanent.PetGear
+	if g == nil then return end
+	local open = m.PetGear.Slots(profile)
+	for slot = 1, open do
+		local kind = m.PetGearConfig.Kinds[slot]
+		local best, bestScore = nil, (g.Equipped[kind] and petScore(g.Equipped[kind])) or -1
+		for _, piece in ipairs(g.Bag) do
+			if piece.Kind == kind and petScore(piece) > bestScore then best, bestScore = piece, petScore(piece) end
+		end
+		if best then m.PetGear.Equip(profile, best.Id) end
+	end
+	-- the bag holds 30: sell everything that is not better than what is worn
+	for i = #g.Bag, 1, -1 do
+		local piece = g.Bag[i]
+		local worn = g.Equipped[piece.Kind]
+		if worn and petScore(piece) <= petScore(worn) then m.PetGear.Sell(profile, piece.Id) end
+	end
+end
 local function wishAll(profile)
 	-- split the Wishstones on hand evenly between pet and skill wishes (pets matter: they add damage and stats)
 	local start = profile.Season.Currencies.Wishstones or 0
@@ -127,10 +172,28 @@ local function asFull(fn)
 end
 
 local LAZY = MODE == "lazy"
-local function goldSpend(profile, classId)
+local function goldSpend(profile, classId, now)
 	-- half the gold trains skill slots, half upgrades worn gear (cheapest first), like a player using the Trainer and the Blacksmith
 	local cur = profile.Season.Currencies
 	local budget = cur.Gold
+	-- the Pet Store first (2026-11-19): up to a fifth of the gold on eggs (3 a day) and, once a pet gear slot is open, crates
+	if doPet then
+		local petBudget = budget * 0.2
+		local spent = 0
+		while spent < petBudget and m.PetGear.EggsLeft(profile, now) > 0 and m.PetGear.EggPrice(profile.Season.HighestStage) <= petBudget - spent do
+			local ok, price = m.PetGear.BuyEgg(profile, now)
+			if not ok then break end
+			spent += price
+		end
+		if m.PetGear.Slots(profile) > 0 then
+			for _ = 1, 10 do
+				local price = m.PetGear.CratePrice("PetCrate", profile.Season.HighestStage)
+				if spent + price > petBudget or not m.PetGear.BuyCrate(profile, "PetCrate", rand) then break end
+				spent += price
+			end
+		end
+		budget = cur.Gold
+	end
 	for _ = 1, 60 do
 		local did = false
 		local levels = profile.Season.SlotLevels[classId] or {}
@@ -219,9 +282,11 @@ local function run(classId, pathId, seedBase, goalLevel)
 			m.Subclasses.Choose(profile, classId, pathId)
 		end
 		if doGear then equipGear(profile) end
+		if doGold then goldSpend(profile, classId, clock) end
+		spendTickets(profile)
 		spend(profile, classId)
+		petCare(profile)
 		if doSkill then equipBest(profile, classId) end
-		if doGold then goldSpend(profile, classId) end
 		if partnerProfile then
 			asFull(function()
 				if not m.Subclasses.Current(partnerProfile, partnerClass) and partnerProfile.Season.Level >= 30 then
@@ -229,9 +294,11 @@ local function run(classId, pathId, seedBase, goalLevel)
 					m.Subclasses.Choose(partnerProfile, partnerClass, path)
 				end
 				equipGear(partnerProfile)
+				goldSpend(partnerProfile, partnerClass, clock)
+				spendTickets(partnerProfile)
 				spend(partnerProfile, partnerClass)
+				petCare(partnerProfile)
 				equipBest(partnerProfile, partnerClass)
-				goldSpend(partnerProfile, partnerClass)
 			end)
 		end
 		for _, st in ipairs({ 3, 5, 10, 15, 20, 30, 40, 50, 60, 70, 80, 90, 100 }) do
@@ -276,6 +343,14 @@ local function run(classId, pathId, seedBase, goalLevel)
 		for _, g in ipairs({ 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120 }) do
 			if levelAt[g] == nil and profile.Season.Level >= g then levelAt[g] = clock / 3600 end
 		end
+	end
+	-- pet summary: active pet level, worn pet gear, eggs bought
+	do
+		local petId, petLevel = m.Pets.Active(profile)
+		local worn = {}
+		for kind, piece in pairs((profile.Permanent.PetGear or {}).Equipped or {}) do table.insert(worn, kind .. "=" .. piece.Rarity) end
+		table.sort(worn)
+		print(("PET %s %s pet=%s lv%s gear[%s] stash food=%d"):format(classId, pathId, tostring(petId), tostring(petLevel), table.concat(worn, " "), m.Consumables.Count(profile, "PetFood")))
 	end
 	-- final build summary
 	local pet = m.Pets.Active(profile)
