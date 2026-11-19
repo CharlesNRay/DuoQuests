@@ -419,6 +419,10 @@ function Replay:_event(e)
 	elseif t == "StatusEnd" then
 		local target = actorFor(self, e.Target)
 		if target then
+			if e.Reason == "Consumed" and (e.Stacks or 0) > 0 then -- a finisher used up its combo layers
+				local look = StatusLook.Of(e.Status)
+				safely(floatText, scene, target:Pos() + Vector3.new(0, 4.5, 0), ("COMBO x%d!"):format(e.Stacks), look.Color, 15 + math.min(e.Stacks, 5) * 2)
+			end
 			safely(target.RemoveStatus, target, e.Status, e.Reason)
 		end
 	elseif t == "Cast" then

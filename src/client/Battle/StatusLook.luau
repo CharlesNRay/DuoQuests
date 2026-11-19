@@ -35,7 +35,7 @@ function StatusLook.Of(statusId)
 	end
 	local own = LOOK[statusId]
 	if own then
-		return { Kind = own[1], Color = own[2], Glyph = own[3] }
+		return { Kind = own[1], Color = own[2], Glyph = own[3], Combo = (def and def.Combo) or nil }
 	end
 	if def and def.Dot then
 		return { Kind = "Dot", Color = rgb(230, 120, 80), Glyph = "☠" }

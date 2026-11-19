@@ -66,7 +66,7 @@ Git Bash; they find a working Python themselves (`python3`/`python` there are St
    at stage 6 paid ~9.7K gold (3 keys/day). (and season auras), tutorial arrow/card, combat log views, map claim badges, tooltips, class-choose flow, pet follower, Battle hub dungeons/expeditions, Market tab, VIP row. Rojo must be reconnected via VS Code first.
 2. Test hero in `tools/sim` does not yet use pet gear, pet food or pet leveling; pets are probably worth more than the numbers show. Check replay Wishstone income (maybe too generous).
 3. Restyle remaining screens (Hero, Skills, Party, Bag, Map, Quests, Boss, Store, Wish) in the card/detail style. VIP second pet slot done 2026-11-16 (`Pets.Second`, support pet: its stats count, only the main pet fights; Pets screen "Set 2nd"; not seen in Studio).
-4. Not started: stack counts on monsters, guild chat, gifting, cosmetics try-on; show an on-screen notice for the skipped-tutorial payout.
+4. Not started: guild chat, gifting, cosmetics try-on; show an on-screen notice for the skipped-tutorial payout.
 5. Owner-side: create the VIP Game Pass + Sunstone Developer Products and give the ids (`GamePassId`/`ProductId` are 0); upload `branding/logo.png` and set `Config/Branding.LogoImage`.
 6. `docs/ROADMAP.md` only covers up to the 2026-11-16 morning entry; add the items above.
 
@@ -74,6 +74,7 @@ Git Bash; they find a working Python themselves (`python3`/`python` there are St
   team aura for tank+healer+2 damage (`Config/TeamAura`), Taunt/Purify debuff enemies (Exposed/Consecrated), Guardian Angel,
   Rallying Cry, Last Stand, Blessing reworked; `PartyScale` 2.6. See docs/BALANCE.md "Skill rework". New status icons
   (✦ ➶ ✂ ⚒ ⚖ ☠ ☀ ⚔ ★) not seen in Studio.
+  Combo pips show the layer count from 1 and a finisher pops "COMBO xN!" over the enemy (not seen in Studio).
 
 ## Gotchas
 - Studio testing: the HUD 🧪 button grants test gold/items and ⬆ gives +5 levels (Studio only). Vendor prompts need you within 14 studs;

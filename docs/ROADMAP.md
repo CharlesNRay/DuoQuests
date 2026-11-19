@@ -46,7 +46,7 @@ Newest first.
 - ✅ Pets attack independently (`Pet_Strike`) with a visible lunge and damage in the meter. 🔨 Active pets follow you in town (not yet seen).
 - ✅ Combat HUD: smaller log, damage meter first, skill bar clear of the dock. Window chrome restyle, travel buttons in their own corner, 17-step tutorial.
 - 🔨 Pets screen rebuilt as card grid + detail pane + slim shard strip (compiles, not seen).
-- ⬜ Still to do: same style for Hero / Skills / Party / Bag / Map / Quests / Boss / Store / Wish, text overflow audit with big numbers, levels 90 to 120 + Paragon + second subclass tier, pets to level 50, guild raids, stack counts on monsters, VIP pass / second pet slot / gifting / Robux IDs / PolicyService, upload `branding/logo.png` and set `Config/Branding.LogoImage`.
+- ⬜ Still to do: same style for Hero / Skills / Party / Bag / Map / Quests / Boss / Store / Wish, text overflow audit with big numbers, levels 90 to 120 + Paragon + second subclass tier, pets to level 50, guild raids, VIP pass / second pet slot / gifting / Robux IDs / PolicyService, upload `branding/logo.png` and set `Config/Branding.LogoImage`.
 
 ### 2026-11-15 (overnight, code only, not yet checked in Studio)
 - 🔨 Gear and inventory: Weapon / Armor / Trinket drops from stages (rarity rolls, boss drops, ItemRarity passive helps), bag of 30 (full bag sells new drops), equip / unequip / sell, ghost partners keep their gear, Gear screen (29 tests with daily login)
@@ -352,7 +352,7 @@ two paths of 3 skills, a season prize pet (Arcanix, Skyhawk, Shadowcat, Spiritli
 - Stacking DoTs: Burning (max 5, Mage/fire), Poisoned (max 8, Rogue, the deepest stacker) and the new Bleeding (max 5, Warrior/Ranger). Each stack ticks for a slice of the caster's Attack plus a slice of the target's max health; the %-health part is capped by the caster's Attack and bosses take only 40% of it (`Simulation.percentDamage`).
 - Damage effects can carry `PercentTargetHealth` (+`PercentCap`); low-damage skills across all classes got a small %HP hit and/or a stacking DoT (Fireball/Meteor burn, Backstab/Fan of Knives/Flurry/Poison Blade poison, Whirlwind/Crushing Blow/Power Shot bleed, Smite/Volley/Haunt etc. small %HP). Skill tooltips show the %HP and stack lines.
 - Measured on the world boss (where %HP is reduced): Rogue +26%, Ranger +20%, Mage +12%, others +3-5%; against ordinary monsters the %HP portion matters more.
-- Not yet: stack counts are not drawn on the monsters in the battle view (the Status event carries `Stacks`).
+- Stack counts are drawn on the status pips over each fighter (`Actor:_updatePip`); combo layers show from 1 and a finisher pops "COMBO xN!" (2026-11-19).
 
 ## IP (Item Power) score
 - `shared/Power.luau`: one number for hero strength. Level x5, equipped gear (Gear.ItemPower), skills (tier + level), passives, active pet (rarity, level, rank), pet collection, subclass, titles, guild bonuses. Never affects combat.

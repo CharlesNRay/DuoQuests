@@ -534,7 +534,7 @@ function Actor:AddStatus(id, info)
 	local st = self.Statuses[id]
 	local fresh = st == nil
 	if fresh then
-		st = { Id = id, Kind = look.Kind, Color = look.Color, Glyph = look.Glyph }
+		st = { Id = id, Kind = look.Kind, Color = look.Color, Glyph = look.Glyph, Combo = look.Combo }
 		self.Statuses[id] = st
 	end
 	local amountBefore = st.Amount or 0
@@ -679,7 +679,8 @@ function Actor:_updatePip(st, fresh)
 		frame.Size = UDim2.fromOffset(6, 6)
 		tween(frame, 0.22, { Size = UDim2.fromOffset(15, 15) }, Enum.EasingStyle.Back)
 	end
-	pip.Count.Text = if st.Stacks and st.Stacks > 1 then tostring(st.Stacks) else ""
+	-- combo layers show their count from 1 (players watch them build up); other stacks from 2
+	pip.Count.Text = if st.Stacks and (st.Stacks > 1 or st.Combo) then tostring(st.Stacks) else ""
 end
 
 -- Per-frame: expire timed-out statuses, drain the little duration bars, shimmer the shield, pulse the damage-over-time tint.
