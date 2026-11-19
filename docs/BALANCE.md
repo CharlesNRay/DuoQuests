@@ -130,3 +130,12 @@ damage of L10 1.4-3.2x, L20 2.9-6x, L30 4.6-10.7x (on target) but L40 2.8-34x (m
 `Bosses.DamageScale` now also grows 2% per stage past stage 35 (x1.32 at 51, x2.1 at 92): L40 median ~8.5x (tier 3-4,
 1/12 reach the top tier), L30 almost unchanged. Guild raid health follows DamageScale, so it grows the same way late.
 
+Class roster check (2026-11-19, companion, full, 2 paths x 2 seeds, frontier at L40 / hours):
+| Class | frontier at L40 | hours | note |
+|---|---|---|---|
+| Mage | 45-52 (median ~50) | 8.9-12.0 | tightest spread, mid-pack: no change needed |
+| Warrior | 40-92 (~51) | 7.8-11.8 | Guardian seed 1 ran away to 92 |
+| Summoner | 57-81 (~61) | 8.8-10.5 | highest |
+| Ranger | 40-64 (~54) | 8.8-11.1 | |
+| Rogue | 40-62 (~51) | 8.6-11.6 | |
+| Cleric | 39-45 (~40) | 10.6-11.7 | lowest: Templar 39 sits at the bottom of the 40-90 target |
