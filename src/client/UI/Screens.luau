@@ -260,6 +260,33 @@ local function stashTab(container, state, call, extra)
 	end
 	Kit.label({ Size = UDim2.new(1, -16, 0, 22), Position = UDim2.fromOffset(8, 6), Text = ("%s  %s  x%d"):format(selRow.Glyph, selRow.Name, selRow.Count), TextSize = 15, Font = Enum.Font.GothamBold, TextColor3 = Kit.rarityColor(selRow.Rarity), Parent = detail })
 	Kit.label({ Size = UDim2.new(1, -16, 0, 50), Position = UDim2.fromOffset(8, 30), Text = selRow.Description, TextSize = 12, TextYAlignment = Enum.TextYAlignment.Top, Parent = detail })
+	-- gifting (2026-11-22): everyday items can go to a party member or guild mate online on this server
+	local giftable = (me.Giftable or {})[selRow.Id] == true
+	if giftable then
+		local gifting = extra.StashGift == selRow.Id
+		Kit.button({ Size = UDim2.fromOffset(64, 22), Position = UDim2.new(1, -72, 0, 6), Text = if gifting then "Back" else "🎁 Gift", TextSize = 11, BackgroundColor3 = if gifting then C.Panel else C.Accent, TextColor3 = if gifting then C.Text else Color3.fromRGB(30, 24, 10), ZIndex = 3, Parent = detail }, function()
+			extra.StashGift = if gifting then nil else selRow.Id
+			Screens.Bag(container, state, call, extra)
+		end)
+		if gifting then
+			local left = me.GiftsLeft or { Send = 0, Receive = 0 }
+			Kit.label({ Size = UDim2.new(1, -16, 0, 16), Position = UDim2.fromOffset(8, 84), Text = ("Give one to (you can send %d more today):"):format(left.Send), TextSize = 11, TextColor3 = C.Dim, Parent = detail })
+			local targets = me.GiftTargets or {}
+			if #targets == 0 then
+				Kit.label({ Size = UDim2.new(1, -16, 0, 44), Position = UDim2.fromOffset(8, 104), Text = "Nobody to gift to here. Party members and guild mates who are online on this server show up here.", TextSize = 11, TextColor3 = C.Dim, TextYAlignment = Enum.TextYAlignment.Top, Parent = detail })
+			end
+			local y = 104
+			for _, t in ipairs(targets) do
+				if y < 200 then
+					Kit.button({ Size = UDim2.new(1, -16, 0, 26), Position = UDim2.fromOffset(8, y), Text = ("%s  (%s)"):format(t.Name, t.Via), TextSize = 12, BackgroundColor3 = C.PanelLight, Parent = detail }, function()
+						call("Gift", t.UserId, selRow.Id, 1)
+					end)
+					y += 30
+				end
+			end
+			return
+		end
+	end
 	if selRow.Kind == "Buff" then
 		-- using a boost adds its time up to a cap: warn first so nothing is wasted
 		local remaining = 0

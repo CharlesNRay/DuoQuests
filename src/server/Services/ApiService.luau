@@ -56,6 +56,7 @@ local Pets = require(Shared.Pets)
 local Power = require(Shared.Power)
 local Gear = require(Shared.Gear)
 local Consumables = require(Shared.Consumables)
+local Gifts = require(Shared.Gifts)
 local Wishing = require(Shared.Wishing)
 local BossService = require(script.Parent.BossService)
 local GuildService = require(script.Parent.GuildService)
@@ -164,6 +165,28 @@ end
 local cosmeticsOf -- defined below
 local characterOf -- defined below
 
+-- Who you can gift to (2026-11-22): real players online on this server who share your party or your guild.
+local function giftTargets(player, profile)
+	local out, seen = {}, {}
+	for _, mate in ipairs(PartyService.GetTeammates(player)) do
+		local other = (not mate.IsCompanion) and Players:GetPlayerByUserId(mate.UserId)
+		if other and DataService.GetProfile(other) then
+			seen[other.UserId] = true
+			table.insert(out, { UserId = other.UserId, Name = mate.Name, Via = "Party" })
+		end
+	end
+	local myGuild = profile.Permanent.Guild and profile.Permanent.Guild.Id
+	if myGuild then
+		for _, other in ipairs(Players:GetPlayers()) do
+			local theirs = other ~= player and not seen[other.UserId] and DataService.GetProfile(other)
+			if theirs and theirs.Permanent.Guild and theirs.Permanent.Guild.Id == myGuild then
+				table.insert(out, { UserId = other.UserId, Name = other.DisplayName, Via = "Guild" })
+			end
+		end
+	end
+	return out
+end
+
 local function buildState(player)
 	local profile = DataService.GetProfile(player)
 	if not profile then
@@ -207,6 +230,9 @@ local function buildState(player)
 			PetShardInfo = { PetCost = require(Shared.Config.Pets).Shards.PetCost, CondenseCost = require(Shared.Config.Pets).Shards.CondenseCost },
 			PetCollection = (function() local c = Pets.Collection(profile) return { Points = c.Points, Percent = c.Percent } end)(),
 			PetFoodOverflow = math.floor(profile.Permanent.PetFoodOverflow or 0), -- pet shard bar filled by food fed to capped pets
+			GiftTargets = giftTargets(player, profile),
+			GiftsLeft = Gifts.Left(profile, os.time()),
+			Giftable = Gifts.Giftable,
 			Wishing = { Pet = Wishing.Info(profile, "Pet"), Skill = Wishing.Info(profile, "Skill") },
 			ActivePet = (Pets.Active(profile)),
 			SecondPet = (Pets.Second(profile)), -- VIP second pet slot (nil when empty or not VIP)
@@ -307,6 +333,7 @@ end
 local function afterBuildChange(player)
 	PartyService.RefreshSnapshot(player)
 end
+
 
 local handlers = {}
 
@@ -765,6 +792,27 @@ function handlers.UseConsumable(player, profile, id, petId, force)
 			Quests.Record(profile, "Feed", 1)
 		end
 		afterBuildChange(player)
+	end
+	return ok, result
+end
+
+function handlers.Gift(player, profile, targetUserId, itemId, count)
+	if type(targetUserId) ~= "number" or type(itemId) ~= "string" then
+		return false, "BadArgs"
+	end
+	local allowed = false
+	for _, t in ipairs(giftTargets(player, profile)) do
+		if t.UserId == targetUserId then allowed = true end
+	end
+	local target = Players:GetPlayerByUserId(targetUserId)
+	local targetProfile = target and DataService.GetProfile(target)
+	if not allowed or not targetProfile then
+		return false, "NotReachable" -- must be online here and in your party or guild
+	end
+	local ok, result = Gifts.Give(profile, targetProfile, itemId, count, os.time())
+	if ok and pushRemote then
+		local def = Consumables.Defs[itemId]
+		pushRemote:FireClient(target, "Gift", { From = player.DisplayName, Item = def and def.DisplayName or itemId, Glyph = def and def.Glyph or "🎁", Count = count })
 	end
 	return ok, result
 end

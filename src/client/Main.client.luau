@@ -482,6 +482,15 @@ hud.OnLog = function() open("Log", "Last Fight") end
 push.OnClientEvent:Connect(function(kind, info)
 	if kind == "World" then
 		applyWorld(info)
+	elseif kind == "Gift" then
+		hud:Notify(("🎁 %s sent you %s %s x%d!"):format(tostring(info.From), tostring(info.Glyph), tostring(info.Item), info.Count or 1))
+		task.spawn(function()
+			local ok, fresh = api:InvokeServer("GetState")
+			if ok and fresh then
+				state = fresh
+				redraw()
+			end
+		end)
 	elseif kind == "Purchase" then
 		-- a Robux purchase went through: refresh so the new Sunstones show
 		task.spawn(function()
