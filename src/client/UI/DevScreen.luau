@@ -13,7 +13,7 @@ local ROWS = {
 	{ Title = "Hero", Buttons = { { "+1 level", "Level", 1 }, { "+5 levels", "Level", 5 }, { "+10 levels", "Level", 10 } } },
 	{ Title = "Stage (cleared like real wins)", Buttons = { { "+5 stages", "Stage", 5 }, { "+10 stages", "Stage", 10 }, { "+25 stages", "Stage", 25 } } },
 	{ Title = "Currency", Buttons = { { "+50M gold", "Gold", 1 }, { "+500M gold", "Gold", 10 }, { "+1K Sunstones", "Sunstones", 1 } } },
-	{ Title = "Items and pets", Buttons = { { "Test items", "Items", 1 }, { "All pets, max level", "Pets", 1 } } },
+	{ Title = "Items and pets", Buttons = { { "Test items", "Items", 1 }, { "Gear for my stage", "StageGear", 1 }, { "All pets, max level", "Pets", 1 } } },
 	{ Title = "Timers and events", Buttons = { { "Reset dailies", "Daily", 1 }, { "Spawn world boss", "WorldBoss", 1 }, { "Toggle premium pass", "Premium", 1 } } },
 }
 

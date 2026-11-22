@@ -133,8 +133,11 @@ function GuildScreen.Guild(container, state, call, extra)
 		end)
 		Kit.label({ Size = UDim2.new(1, -16, 0, 60), Position = UDim2.fromOffset(8, 102), Text = ("Costs %s gold. You need level %d.\nMembers share missions and a weekly raid boss, and you choose the guild upgrades together."):format(Short(data.Create.Gold), data.Create.MinLevel), TextSize = 11, TextColor3 = C.Dim, TextYAlignment = Enum.TextYAlignment.Top, Parent = right })
 		Kit.button({ Size = UDim2.new(1, -16, 0, 34), Position = UDim2.new(0, 8, 1, -42), Text = "Create guild", BackgroundColor3 = C.Accent, TextColor3 = DARK, Parent = right }, function()
-			extra.GuildNewName, extra.GuildNewTag = nil, nil
-			act("GuildCreate", nameBox.Text, tagBox.Text, open)
+			-- keep what was typed until the guild exists (a failed create redraws the form)
+			extra.GuildNewName, extra.GuildNewTag = nameBox.Text, tagBox.Text
+			if act("GuildCreate", nameBox.Text, tagBox.Text, open) then
+				extra.GuildNewName, extra.GuildNewTag = nil, nil
+			end
 		end)
 		return
 	end

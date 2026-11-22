@@ -437,6 +437,7 @@ function handlers.Wish(player, profile, kind, tierId, method, count)
 end
 
 -- Guilds (shared across servers, see GuildService)
+local playBossFight -- defined below with the boss handlers; the guild raid uses it too
 local function guildCall(player, fn, ...)
 	local ok, data = fn(...)
 	if ok then
@@ -475,7 +476,7 @@ local REPLAYED = { Damage = true, Heal = true, Cast = true, Death = true, Revive
 local pushRemote
 
 -- A boss challenge is a real fight in YOUR arena: the party's normal fights pause, you (and anyone near) watch it.
-local function playBossFight(player, fight, label, damage, extraInfo)
+function playBossFight(player, fight, label, damage, extraInfo)
 	local partyState = PartyService.GetState(player)
 	local slot = partyState and WorldService.SlotOf(partyState.PartyId)
 	if not slot then
@@ -846,6 +847,17 @@ function DEV_ACTIONS.Items(profile)
 		Gear.Grant(profile, math.max(5, profile.Season.HighestStage) + i, { Slot = t, Rarity = if i % 5 == 0 then "Epic" elseif i % 2 == 0 then "Rare" else "Common" })
 	end
 	return "Shards, wishes, boosts and 12 gear"
+end
+function DEV_ACTIONS.StageGear(profile)
+	-- an Epic piece of every type at the current frontier (two rings), then wear the best
+	local stage = profile.Season.HighestStage
+	for _, t in ipairs(Gear.Types) do
+		for _ = 1, if t == "Ring" then 2 else 1 do
+			Gear.Grant(profile, stage, { Slot = t, Rarity = "Epic", Roll = 1 })
+		end
+	end
+	local _, changed = Gear.EquipBest(profile)
+	return ("Epic stage %d gear, %d pieces worn"):format(stage, changed or 0)
 end
 function DEV_ACTIONS.Level(profile, n)
 	for _ = 1, n do

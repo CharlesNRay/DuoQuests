@@ -47,7 +47,8 @@ Git Bash; they find a working Python themselves (`python3`/`python` there are St
      Tanks buffed 2026-11-18 (Warrior health/defense, see BALANCE.md); probe roles with `tools/sim/runners/partyprobe.luau`.
      SEEN in Studio 2026-11-18: solo Summoner gets 3 companions (Mira/Brom/Ilsa) on HUD and Party screen tabs, editing the 3rd companion's
      ghost skills, 4 heroes + imp summon in the arena, dungeon list (levels, waves, daily bonus ready/taken, 4 rows), Crypt run ("Waves 3/3",
-     daily bonus line), Leave fight (skips to results), 5M cheat gold, Skills screen tab per teammate (reorder saved on the server). NOT seen: wave banners (run too fast), guild raid Battle button, world/season Battle!.
+     daily bonus line), Leave fight (skips to results), 5M cheat gold, Skills screen tab per teammate (reorder saved on the server). NOT seen: wave banners (run too fast). SEEN 2026-11-22: guild raid Battle (was broken: ServerError, `playBossFight` was used
+     before its local was declared; fixed), world boss and season boss Battle! fights + results cards, expedition send/collect.
      STILL TO DO: balancing pass (2026-11-19 roster check in BALANCE.md: Mage mid-pack now, Summoner highest; Cleric buffed 2026-11-19 to fr ~45: Attack, Purify -> Consecrated enemy debuff, stronger Blessing; not seen in Studio); plaza arena pads
      (DONE 2026-11-18, SEEN in Studio 2026-11-19: pad 64x50, trees at z -11..-19, 4 heroes + skeleton + imp + pets in front of the trees; `World.ARENA_DEPTH` 50, rows pack within 19 studs); boss numbers retuned once (DamageScale x2, season 60M; see BALANCE.md), L40 boss overshoot fixed 2026-11-19 (DamageScale +2%/stage past 35, BALANCE.md "Late boss scale").
    - Studio test cheat (🧪 HUD button, `handlers.DevGrant`) should give much more gold.
@@ -58,7 +59,7 @@ Git Bash; they find a working Python themselves (`python3`/`python` there are St
 1. **Studio verification** of everything unseen. Seen and working (2026-11-16 evening): class-choose flow, tutorial card, Skill Trainer
    (train a slot), Pet Store (egg, crate, snack; header shows what a crate gave), feeding pet food (Bag > Stash), Pets detail card,
    Pets > Pet gear (wear/remove), map claim badges + Claim all, combat log 3 views, Flame aura on the hero, Store tabs, VIP row,
-   Battle hub, dungeon run (victory card), expedition send. Still unseen: expedition collect, season auras once won, the other
+   Battle hub, dungeon run (victory card), expedition send. Still unseen: season auras once won, the other
    auras/kill effects, tutorial arrow steps past 1, pet follower, guild raid / world + season boss screens.
    Open UI nit: the map badge hover tooltip has not been seen.
    Watch for: tables keyed by numbers with gaps do not survive remotes (pet gear Equipped and StageClaims were hit); ✔ and newer emoji (🪙 🪢 🪦, Unicode 13+) do not render.
@@ -80,7 +81,7 @@ Git Bash; they find a working Python themselves (`python3`/`python` there are St
 
 ## Gotchas
 - Studio testing: the HUD 🧪 button opens the "Test cheats" panel (Studio only, `UI/DevScreen` -> `handlers.Dev(action, n)`, `DEV_ACTIONS` in ApiService):
-  +1/5/10 levels, +5/10/25 stages (cleared like real wins, party moves there), +50M/500M gold, Sunstones, test items, all pets at max level,
+  +1/5/10 levels, +5/10/25 stages (cleared like real wins, party moves there), +50M/500M gold, Sunstones, test items, Epic gear for your stage, all pets at max level,
   reset dailies (keys, dungeon bonuses, gifts, expedition ready), spawn world boss, toggle premium pass. Add new cheats there, not as new HUD buttons. SEEN in Studio 2026-11-22. Vendor prompts need you within 14 studs;
   teleport from the command bar (Client view): `game.Players.LocalPlayer.Character:PivotTo(CFrame.new(x, 4, z))` - Trainer (13.5, -5), Pet Store (-13.5, -5).
   The command bar has its own module cache, so `require(DataService).GetProfile` there returns nil.
