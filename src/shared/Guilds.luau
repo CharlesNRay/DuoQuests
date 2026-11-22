@@ -260,6 +260,25 @@ function Guilds.SetInfo(g, byId, info)
 	return true
 end
 
+-- Guild chat (2026-11-22): the last Config.ChatKeep messages live in the guild document. The server filters the text
+-- (TextService) and rate-limits before this runs; this only checks membership and keeps the list short.
+function Guilds.Chat(g, byId, text, now)
+	local m = g.Members[key(byId)]
+	if m == nil then
+		return false, "NotInGuild"
+	end
+	text = tostring(text or ""):sub(1, Config.ChatMax)
+	if text:match("^%s*$") then
+		return false, "Empty"
+	end
+	g.Chat = g.Chat or {}
+	table.insert(g.Chat, { UserId = byId, Name = m.Name, Text = text, At = now })
+	while #g.Chat > Config.ChatKeep do
+		table.remove(g.Chat, 1)
+	end
+	return true
+end
+
 -- Mark that a member was seen (login or contribution) and refresh what the roster shows about them.
 function Guilds.Touch(g, userId, now, info)
 	local m = g.Members[key(userId)]
@@ -709,6 +728,13 @@ function Guilds.View(g, userId, now)
 		Leader = g.Leader, Rank = Guilds.Rank(g, userId), Points = g.Points, Earned = g.Earned,
 		Count = Guilds.Count(g), Capacity = Guilds.Capacity(g), Members = members, Requests = requests,
 		Upgrades = upgrades, Log = g.Log,
+		Chat = (function()
+			local rows = {}
+			for _, c in ipairs(g.Chat or {}) do
+				table.insert(rows, { UserId = c.UserId, Name = c.Name, Text = c.Text, SecondsAgo = math.max(0, now - c.At) })
+			end
+			return rows
+		end)(),
 		Daily = { Rows = dailyRows, Reward = dailyReward, Bonus = Config.Missions.Daily.BonusPoints, SecondsLeft = (dayOf(now) + 1) * DAY - now },
 		Weekly = { Rows = weeklyRows, Reward = weeklyReward, Bonus = Config.Missions.Weekly.BonusPoints, SecondsLeft = ((weekOf(now) * 7 - 3) + 7) * DAY - now },
 		Raid = {

@@ -16,7 +16,7 @@
 	  GuildService.OnPlayerReady(player, profile) / OnPlayerLeaving(player, profile)
 	  GuildService.State(player, profile)               -> true, { Guild = view|nil, Marks, Wish, Create }
 	  GuildService.Create / Join / Leave / Kick / SetRank / Transfer / Approve / SetInfo / Buy / ClaimMission /
-	  GuildService.RaidChallenge / RaidClaim / Search / Wish
+	  GuildService.RaidChallenge / RaidClaim / Search / Wish / Chat(text)   (chat: filtered, 1 message per Config.ChatGap s)
 ]]
 
 local Players = game:GetService("Players")
@@ -509,6 +509,33 @@ function GuildService.SetInfo(player, profile, fields)
 		end
 	end
 	return onMember(player, profile, "SetInfo", { Desc = desc, Open = fields.Open, MinLevel = fields.MinLevel })
+end
+
+local lastChat = {} -- [userId] = os.clock() of the last message
+function GuildService.Chat(player, profile, text)
+	if type(text) ~= "string" then
+		return false, "BadArgs"
+	end
+	text = text:gsub("[%c]", " "):match("^%s*(.-)%s*$"):sub(1, Config.ChatMax)
+	if text == "" then
+		return false, "Empty"
+	end
+	if os.clock() - (lastChat[player.UserId] or -math.huge) < Config.ChatGap then
+		return false, "TooFast"
+	end
+	-- players whose account cannot chat (age or parental settings) cannot post either
+	local okChat, canChat = pcall(function()
+		return game:GetService("TextChatService"):CanUserChatAsync(player.UserId)
+	end)
+	if okChat and canChat == false then
+		return false, "ChatOff"
+	end
+	local safe = filtered(text, player)
+	if safe == nil then
+		return false, "Inappropriate"
+	end
+	lastChat[player.UserId] = os.clock()
+	return onMember(player, profile, "Chat", safe, os.time())
 end
 
 function GuildService.Buy(player, profile, upgradeId)

@@ -23,6 +23,7 @@ return {
 	CreateGold = 300000,
 	CreateMinLevel = 10,
 	NameMin = 3, NameMax = 20, TagMin = 2, TagMax = 4, DescMax = 80,
+	ChatMax = 120, ChatKeep = 30, ChatGap = 3, -- guild chat: characters per message, messages kept, seconds between messages (2026-11-22)
 	BaseMembers = 20, MaxMembers = 50,
 	MaxRequests = 30,
 

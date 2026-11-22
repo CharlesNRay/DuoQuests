@@ -242,6 +242,17 @@ return function(modulesOverride)
 		check("epic pity", best >= 3)
 	end
 
+	-- guild chat (2026-11-22)
+	local cg = Guilds.New("gc", "Chatty", "CHAT", 1, info("Talker"), t0)
+	check("A member can post to guild chat", Guilds.Chat(cg, 1, "hello guild", t0) == true and #cg.Chat == 1 and cg.Chat[1].Name == "Talker")
+	check("A stranger cannot post", select(2, Guilds.Chat(cg, 999, "hi", t0)) == "NotInGuild")
+	check("An empty message is refused", select(2, Guilds.Chat(cg, 1, "   ", t0)) == "Empty")
+	for i = 1, 40 do Guilds.Chat(cg, 1, "msg " .. i, t0 + i) end
+	check("Chat keeps only the newest messages", #cg.Chat == Config.ChatKeep and cg.Chat[#cg.Chat].Text == "msg 40")
+	Guilds.Chat(cg, 1, string.rep("x", 500), t0 + 50)
+	check("A long message is cut to ChatMax", #cg.Chat[#cg.Chat].Text == Config.ChatMax)
+	check("The guild view carries the chat", #Guilds.View(cg, 1, t0 + 60).Chat == Config.ChatKeep)
+
 	print(("GuildTests done: %d passed, %d failed"):format(passed, failed))
 	return passed, failed
 end

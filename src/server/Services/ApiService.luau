@@ -427,6 +427,7 @@ function handlers.GuildRank(player, profile, userId, rank) return GuildService.S
 function handlers.GuildTransfer(player, profile, userId) return GuildService.Transfer(player, profile, userId) end
 function handlers.GuildApprove(player, profile, userId, accept) return GuildService.Approve(player, profile, userId, accept) end
 function handlers.GuildInfo(player, profile, fields) return GuildService.SetInfo(player, profile, fields) end
+function handlers.GuildChat(player, profile, text) return GuildService.Chat(player, profile, text) end
 function handlers.GuildBuy(player, profile, upgradeId) return guildCall(player, GuildService.Buy, player, profile, upgradeId) end
 function handlers.GuildClaimMission(player, profile, kind, index) return GuildService.ClaimMission(player, profile, kind, index) end
 function handlers.GuildRaid(player, profile)

@@ -20,7 +20,7 @@ local REASONS = {
 	NameTaken = "That name is taken.", BadName = "Name: 3-20 letters, numbers and spaces.", BadTag = "Tag: 2-4 letters or numbers.",
 	Inappropriate = "That text was filtered.", NotEnoughGold = "Not enough gold.", LevelTooLow = "Your level is too low.",
 	Full = "That guild is full.", NoAttempts = "No battles left today.", Defeated = "The boss is already down.",
-	NotEnoughMarks = "Not enough Guild Marks.", LeaderCannotLeave = "Hand over leadership first.", Unavailable = "Guild service is busy, try again.",
+	NotEnoughMarks = "Not enough Guild Marks.", TooFast = "Wait a moment before sending another message.", ChatOff = "Chat is turned off for your account.", Empty = "Type a message first.", LeaderCannotLeave = "Hand over leadership first.", Unavailable = "Guild service is busy, try again.",
 	AlreadyInGuild = "You are already in a guild.", NotDone = "Not finished yet.", NoShare = "You did not help with that one.",
 }
 
@@ -148,9 +148,9 @@ function GuildScreen.Guild(container, state, call, extra)
 			if row.CanClaim then waiting.Missions = true end
 		end
 	end
-	local names = { "Overview", "Members", "Missions", "Upgrades", "Raid", "Pets" }
+	local names = { "Overview", "Members", "Missions", "Upgrades", "Raid", "Pets", "Chat" }
 	for index, name in ipairs(names) do
-		local b = Kit.button({ Size = UDim2.fromOffset(98, 28), Position = UDim2.fromOffset((index - 1) * 102, 0), Text = name, TextSize = 13, BackgroundColor3 = if name == tab then C.Accent else C.Panel, TextColor3 = if name == tab then DARK else C.Text, Parent = container }, function()
+		local b = Kit.button({ Size = UDim2.fromOffset(84, 28), Position = UDim2.fromOffset((index - 1) * 88, 0), Text = name, TextSize = 13, BackgroundColor3 = if name == tab then C.Accent else C.Panel, TextColor3 = if name == tab then DARK else C.Text, Parent = container }, function()
 			extra.GuildTab = name
 			extra.GuildMsg = nil
 			redraw()
@@ -310,6 +310,40 @@ function GuildScreen.Guild(container, state, call, extra)
 			Kit.label({ Size = UDim2.new(1, -8, 0, 18), Text = ("%d. %s  -  %d"):format(index, m.Name, m.Dealt), TextSize = 11, Parent = list })
 		end
 		if #board == 0 then Kit.label({ Size = UDim2.new(1, -8, 0, 30), Text = "No battles yet this week.", TextSize = 11, TextColor3 = C.Dim, Parent = list }) end
+	elseif tab == "Chat" then
+		-- guild chat (2026-11-22): the last 30 messages; other servers' messages show within ~15 s (the guild cache)
+		local panel = Kit.frame({ Size = UDim2.fromScale(1, 1), BackgroundColor3 = C.Panel, Parent = area })
+		local list = scroller(panel, UDim2.new(1, -8, 1, -46), UDim2.fromOffset(4, 4))
+		local rows = g.Chat or {}
+		if #rows == 0 then
+			Kit.label({ Size = UDim2.new(1, -8, 0, 20), Text = "No messages yet. Say hello to your guild!", TextSize = 12, TextColor3 = C.Dim, Parent = list })
+		end
+		for index, row in ipairs(rows) do
+			local ago = if row.SecondsAgo < 60 then "now" else span(row.SecondsAgo) .. " ago"
+			local line = Kit.frame({ Size = UDim2.new(1, -8, 0, 34), BackgroundColor3 = if row.UserId == state.Player.UserId then C.PanelLight else C.Panel, LayoutOrder = index, Parent = list })
+			Kit.label({ Size = UDim2.new(1, -12, 0, 14), Position = UDim2.fromOffset(6, 2), Text = ("%s  ·  %s"):format(row.Name, ago), TextSize = 10, Font = Enum.Font.GothamBold, TextColor3 = C.Accent, TextWrapped = false, Parent = line })
+			Kit.label({ Size = UDim2.new(1, -12, 0, 16), Position = UDim2.fromOffset(6, 16), Text = row.Text, TextSize = 12, TextColor3 = C.Text, TextWrapped = false, TextTruncate = Enum.TextTruncate.AtEnd, Parent = line })
+		end
+		task.defer(function()
+			list.CanvasPosition = Vector2.new(0, math.huge) -- newest at the bottom, in view
+		end)
+		local box = input(panel, { Size = UDim2.new(1, -184, 0, 30), Position = UDim2.new(0, 8, 1, -38), PlaceholderText = ("Message your guild (max %d)"):format(Config.ChatMax), Text = extra.GuildDraft or "" })
+		box:GetPropertyChangedSignal("Text"):Connect(function()
+			if #box.Text > Config.ChatMax then box.Text = box.Text:sub(1, Config.ChatMax) end
+			extra.GuildDraft = box.Text
+		end)
+		local function send()
+			local text = box.Text
+			if text:match("^%s*$") then return end
+			local ok = act("GuildChat", text)
+			if ok then
+				extra.GuildDraft = ""
+				redraw()
+			end
+		end
+		box.FocusLost:Connect(function(enter) if enter then send() end end)
+		Kit.button({ Size = UDim2.fromOffset(80, 30), Position = UDim2.new(1, -168, 1, -38), Text = "Send", TextSize = 13, BackgroundColor3 = C.Up, Parent = panel }, send)
+		Kit.button({ Size = UDim2.fromOffset(80, 30), Position = UDim2.new(1, -84, 1, -38), Text = "Refresh", TextSize = 12, Parent = panel }, function() act("GuildState") end)
 	elseif tab == "Pets" then
 		local w = data.Wish
 		local left = Kit.frame({ Size = UDim2.new(0.45, -4, 1, 0), BackgroundColor3 = C.Panel, Parent = area })
