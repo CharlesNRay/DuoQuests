@@ -204,3 +204,11 @@ First clears pay ~76 (2 each) and the stage 10/20/30 bosses ~12 more; the rest, 
 Kept as is: replaying is the idle loop, and every balance target above was tuned with this income included. To make wishes
 scarcer, raise WishstonesReplayEvery (5 = -20% of the total) and re-run abl.sh (skills and pets would slow down).
 
+
+## Roster check and Berserker buff (2026-11-22)
+Fresh roster (companion, full, 2 paths x 2 seeds, frontier at L40): Mage 48-61, Cleric 45-51, Ranger 45-53, Rogue 45-61,
+Summoner 58-66 (highest, inside the 40-90 target, left alone), Warrior Guardian 61-69 but **Berserker 37-40** (only path
+below target). Cause: the Warrior is still the party's tank, and the Berserker mods took -24% health and -31% damage dealt
+on top of its attack bonus, so the front line fell and the extra attack did not make up for it.
+Change: Berserker DamageDealt -0.313 -> -0.15, MaxHealth -0.240 -> -0.12.
+Result (3 seeds): fr 42-61 (median 57) at L40 in 8.3-10.3h, L30 in 4.6-5.5h: mid-pack.
