@@ -10,6 +10,7 @@ local Power = require(Shared.Power)
 local NumberFormat = require(Shared.Util.NumberFormat)
 local PassiveCfg = require(Shared.Config.Passives)
 local UltCfg = require(Shared.Config.Ultimates)
+local ClassCfg = require(Shared.Config.Classes)
 local AbilityStats = require(Shared.Combat.AbilityStats)
 local Passives = require(Shared.Passives)
 local Skills = require(Shared.Skills)
@@ -178,7 +179,6 @@ local function tabs(scroll, current, options, onPick)
 	end
 end
 
-local VERDICT_TINT = { Up = C.Up, Down = C.Down }
 
 local WORN_ORDER = { "Helmet", "Amulet", "Armor", "Weapon", "Pants", "Ring1", "Ring2", "Boots" }
 
@@ -334,7 +334,6 @@ end
 function Screens.Bag(container, state, call, extra)
 	local gear = state.Player.Gear
 	extra = extra or {}
-	local compact = extra.BagCompact == true
 	local tab = extra.BagTab or "Gear"
 	Kit.clear(container)
 	-- header: tabs, count, view toggle
@@ -348,55 +347,58 @@ function Screens.Bag(container, state, call, extra)
 		stashTab(container, state, call, extra)
 		return
 	end
-	-- the panel is narrow: just the count here, the hint lives in its hover (the long text wrapped to "Ba/g")
+	-- header: count, Equip best
 	local count = Kit.label({ Size = UDim2.new(1, -404, 0, 30), Position = UDim2.fromOffset(184, 0), TextWrapped = false, TextScaled = false, Text = ("Bag %d/%d"):format(#gear.Inventory, gear.Cap), TextColor3 = C.Dim, TextSize = 12, TextXAlignment = Enum.TextXAlignment.Center, Parent = container })
-	Kit.Hover(count, function() return "Strongest first. Hover an item: green = better than what you wear." end)
-	Kit.button({ Name = "EquipBest", Size = UDim2.fromOffset(110, 30), Position = UDim2.new(1, -214, 0, 0), Text = "Equip best", BackgroundColor3 = C.Good, TextColor3 = C.Bg, Parent = container }, function()
+	Kit.Hover(count, function() return "Strongest first. ▲ = better than what you wear. Sell spare gear at the Merchant." end)
+	Kit.button({ Name = "EquipBest", Size = UDim2.fromOffset(110, 30), Position = UDim2.new(1, -110, 0, 0), Text = "Equip best", BackgroundColor3 = C.Good, TextColor3 = C.Bg, Parent = container }, function()
 		call("EquipBestGear")
 	end)
-	Kit.button({ Size = UDim2.fromOffset(100, 30), Position = UDim2.new(1, -100, 0, 0), Text = if compact then "View: icons" else "View: list", Parent = container }, function()
-		extra.BagCompact = not compact
-		Screens.Bag(container, state, call, extra)
-	end)
-	local scroll = Kit.new("ScrollingFrame", {
-		Size = UDim2.new(1, 0, 1, -36), Position = UDim2.fromOffset(0, 36), BackgroundTransparency = 1, BorderSizePixel = 0,
-		CanvasSize = UDim2.new(), AutomaticCanvasSize = Enum.AutomaticSize.Y, ScrollBarThickness = 5, Parent = container,
-	})
 	if #gear.Inventory == 0 then
-		Kit.label({ Size = UDim2.new(1, 0, 0, 30), Text = "Empty. Win fights to find gear.", TextColor3 = C.Dim, Parent = scroll })
+		Kit.label({ Size = UDim2.new(1, 0, 0, 30), Position = UDim2.fromOffset(0, 40), Text = "Empty. Win fights to find gear.", TextColor3 = C.Dim, Parent = container })
 		return
 	end
-	if compact then
-		Kit.new("UIPadding", { PaddingLeft = UDim.new(0, 2), PaddingTop = UDim.new(0, 2), Parent = scroll })
-		Kit.new("UIGridLayout", { CellSize = UDim2.fromOffset(46, 46), CellPadding = UDim2.fromOffset(6, 6), SortOrder = Enum.SortOrder.LayoutOrder, Parent = scroll })
-		for index, item in ipairs(gear.Inventory) do
-			local cmp = Tips.Compare(item, gear)
-			local tile = Icons.Item(scroll, item, { Size = UDim2.fromOffset(46, 46), Level = item.ItemPower, LayoutOrder = index })
-			if cmp.Verdict == "Up" then
-				Kit.label({ Size = UDim2.fromOffset(14, 14), Position = UDim2.fromOffset(2, 0), Text = "▲", TextSize = 11, TextColor3 = C.Good, TextWrapped = false, ZIndex = 3, Parent = tile })
-			end
-			Kit.Hover(tile, function() return Tips.Item(item, gear) end)
-			local click = Kit.new("TextButton", { Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1, Text = "", ZIndex = 6, Parent = tile })
-			click.Activated:Connect(function()
-				call("EquipGear", item.Id)
-			end)
+	local selected = nil
+	for _, item in ipairs(gear.Inventory) do
+		if item.Id == extra.BagSel then
+			selected = item
 		end
-		return
 	end
-	Kit.new("UIListLayout", { Padding = UDim.new(0, 6), SortOrder = Enum.SortOrder.LayoutOrder, Parent = scroll })
+	selected = selected or gear.Inventory[1]
+
+	-- card grid on the left
+	local grid = Kit.new("ScrollingFrame", { Size = UDim2.new(0.56, -8, 1, -38), Position = UDim2.fromOffset(0, 36), BackgroundTransparency = 1, BorderSizePixel = 0, CanvasSize = UDim2.new(), AutomaticCanvasSize = Enum.AutomaticSize.Y, ScrollBarThickness = 4, Parent = container })
+	Kit.new("UIGridLayout", { CellSize = UDim2.fromOffset(62, 74), CellPadding = UDim2.fromOffset(6, 6), SortOrder = Enum.SortOrder.LayoutOrder, Parent = grid })
+	Kit.new("UIPadding", { PaddingTop = UDim.new(0, 3), PaddingLeft = UDim.new(0, 3), Parent = grid })
 	for index, item in ipairs(gear.Inventory) do
 		local cmp = Tips.Compare(item, gear)
-		local r = row(scroll, 52)
-		r.LayoutOrder = index
-		r.BackgroundColor3 = VERDICT_TINT[cmp.Verdict] or C.PanelLight
-		Icons.Item(r, item, { Size = UDim2.fromOffset(40, 40), Position = UDim2.fromOffset(8, 6) })
-		Kit.Hover(r, function() return Tips.Item(item, gear) end)
-		local arrow = if cmp.Verdict == "Up" then "  ▲" elseif cmp.Verdict == "Down" then "  ▼" else ""
-		Kit.label({ Size = UDim2.new(1, -170, 1, 0), Position = UDim2.fromOffset(58, 0), Text = ("%s%s%s\n%s   -   %s   -   IP %s"):format(item.Name, (item.Upgrade or 0) > 0 and ("  +" .. item.Upgrade) or "", arrow, item.Slot, item.StatText, Short(item.ItemPower or 0)), TextColor3 = C.Text, Parent = r })
-		Kit.button({ Size = UDim2.fromOffset(90, 40), Position = UDim2.new(1, -104, 0.5, -20), Text = "Equip", Parent = r }, function()
-			call("EquipGear", item.Id)
+		local isSel = item.Id == selected.Id
+		local color = Kit.rarityColor(if item.SetId then "Set" else item.Rarity)
+		local card = Kit.button({ LayoutOrder = index, Text = "", BackgroundColor3 = if isSel then C.Panel else C.PanelLight, Parent = grid }, function()
+			extra.BagSel = item.Id
+			Screens.Bag(container, state, call, extra)
 		end)
+		Kit.new("UIStroke", { Color = if isSel then C.Accent else color, Thickness = if isSel then 3 else 1.5, ApplyStrokeMode = Enum.ApplyStrokeMode.Border, Parent = card })
+		Icons.Item(card, item, { Size = UDim2.fromOffset(40, 40), Position = UDim2.new(0.5, -20, 0, 6) })
+		Kit.label({ Size = UDim2.new(1, -4, 0, 14), Position = UDim2.fromOffset(2, 52), Text = Short(item.ItemPower or 0) .. (if (item.Upgrade or 0) > 0 then (" +" .. item.Upgrade) else ""), TextSize = 11, Font = Enum.Font.GothamBold, TextXAlignment = Enum.TextXAlignment.Center, TextColor3 = color, Parent = card })
+		if cmp.Verdict == "Up" then
+			Kit.label({ Size = UDim2.fromOffset(16, 14), Position = UDim2.fromOffset(3, 2), Text = "▲", TextSize = 12, TextColor3 = C.Good, ZIndex = 3, Parent = card })
+		elseif cmp.Verdict == "Down" then
+			Kit.label({ Size = UDim2.fromOffset(16, 14), Position = UDim2.fromOffset(3, 2), Text = "▼", TextSize = 11, TextColor3 = C.Bad, ZIndex = 3, Parent = card })
+		end
 	end
+
+	-- detail pane on the right: the full tooltip text plus Equip
+	local detail = Kit.frame({ Size = UDim2.new(0.44, -4, 1, -38), Position = UDim2.new(0.56, 0, 0, 36), BackgroundColor3 = C.Panel, Parent = container })
+	local item = selected
+	Icons.Item(detail, item, { Size = UDim2.fromOffset(48, 48), Position = UDim2.fromOffset(10, 10) })
+	local info = Kit.new("ScrollingFrame", { Size = UDim2.new(1, -76, 1, -54), Position = UDim2.fromOffset(66, 8), BackgroundTransparency = 1, BorderSizePixel = 0, CanvasSize = UDim2.new(), AutomaticCanvasSize = Enum.AutomaticSize.Y, ScrollBarThickness = 3, Parent = detail })
+	Kit.label({ Size = UDim2.new(1, -6, 0, 0), AutomaticSize = Enum.AutomaticSize.Y, RichText = true, Text = Tips.Item(item, gear), TextSize = 12, TextYAlignment = Enum.TextYAlignment.Top, Parent = info })
+	local cmp = Tips.Compare(item, gear)
+	local better = cmp.Verdict == "Up"
+	Kit.button({ Size = UDim2.new(1, -20, 0, 30), Position = UDim2.new(0, 10, 1, -38), Text = if better then "Equip  ▲" else "Equip", TextSize = 13, BackgroundColor3 = if better then C.Accent else C.PanelLight, TextColor3 = if better then Color3.fromRGB(30, 24, 10) else C.Text, Parent = detail }, function()
+		extra.BagSel = nil
+		call("EquipGear", item.Id)
+	end)
 end
 
 -- Combat log: the last fight, with times, so a hard boss can be studied -------
@@ -1102,92 +1104,222 @@ function Screens.Ultimate(container, state, call)
 end
 
 -- Party --------------------------------------------------------------------
-function Screens.Party(container, state, call, extra)
-	local scroll = list(container)
-	local party = state.Party
-	if not party then
-		local r = row(scroll, 150)
-		Kit.label({ Size = UDim2.new(1, -16, 0, 40), Position = UDim2.fromOffset(8, 4), Text = "Play in a party of up to 4: make a code and share it, or enter a friend's.", Parent = r })
-		Kit.button({ Size = UDim2.fromOffset(150, 44), Position = UDim2.fromOffset(8, 50), Text = "Create code", Parent = r }, function()
-			call("CreateCode")
-		end)
-		local box = Kit.new("TextBox", { Size = UDim2.fromOffset(150, 44), Position = UDim2.fromOffset(8, 100), PlaceholderText = "Enter code", Text = "", BackgroundColor3 = C.Panel, TextColor3 = C.Text, Font = Enum.Font.GothamBold, TextSize = 16, ClearTextOnFocus = false, Parent = r })
-		Kit.corner(8).Parent = box
-		Kit.button({ Size = UDim2.fromOffset(90, 44), Position = UDim2.fromOffset(166, 100), Text = "Join", Parent = r }, function()
-			call("JoinByCode", box.Text)
-		end)
-		Kit.label({ Size = UDim2.new(1, -16, 0, 40), Position = UDim2.fromOffset(270, 100), Text = "Friend invites and random matchmaking: coming soon", TextColor3 = C.Dim, TextSize = 12, Parent = r })
-		return
-	end
+-- Card layout: member cards down the left (you + up to 3 teammates), a detail pane on the right with
+-- the picked teammate's skills (reorder, swap from the skills they own) or the party ultimate.
+local CLASS_GLYPH = { Warrior = "🛡️", Cleric = "✨", Mage = "🔮", Ranger = "🏹", Rogue = "🗡️", Summoner = "👻" }
+local ROLE_COLOR = { Tank = Color3.fromRGB(110, 170, 255), Healer = Color3.fromRGB(130, 235, 150), Damage = Color3.fromRGB(255, 130, 110) }
+local DARK_TEXT = Color3.fromRGB(30, 24, 10)
 
-	local r = row(scroll, 60)
-	local codeText = extra and extra.Code and ("Your code: " .. extra.Code .. "\n") or ""
-	Kit.label({ Size = UDim2.new(1, -110, 1, 0), Position = UDim2.fromOffset(8, 0), Text = codeText .. ("Stage %d   Frontier %d"):format(party.Stage, party.Frontier), Parent = r })
-	Kit.button({ Size = UDim2.fromOffset(92, 44), Position = UDim2.new(1, -100, 0.5, -22), Text = "Leave", BackgroundColor3 = C.Bad, Parent = r }, function()
-		call("Leave")
+local function memberCard(parent, order, info, selected, onClick)
+	local classDef = ClassCfg[info.ClassId]
+	local role = classDef and classDef.Role or "Damage"
+	local card = Kit.button({ Size = UDim2.new(1, -6, 0, 52), LayoutOrder = order, Text = "", BackgroundColor3 = if selected then C.Panel else C.PanelLight, Parent = parent }, onClick)
+	Kit.new("UIStroke", { Color = if selected then C.Accent else ROLE_COLOR[role], Thickness = if selected then 3 else 1.2, Transparency = if selected then 0 else 0.4, ApplyStrokeMode = Enum.ApplyStrokeMode.Border, Parent = card })
+	local badge = Kit.frame({ Size = UDim2.fromOffset(38, 38), Position = UDim2.fromOffset(7, 7), BackgroundColor3 = ROLE_COLOR[role], Parent = card })
+	Kit.label({ Size = UDim2.fromScale(1, 1), Text = CLASS_GLYPH[info.ClassId] or "?", TextSize = 20, TextXAlignment = Enum.TextXAlignment.Center, Parent = badge })
+	Kit.label({ Size = UDim2.new(1, -58, 0, 18), Position = UDim2.fromOffset(52, 6), Text = info.Name, TextSize = 13, Font = Enum.Font.GothamBold, TextWrapped = false, TextTruncate = Enum.TextTruncate.AtEnd, Parent = card })
+	local tagColor = if info.Tag == "online" or info.Tag == "you" then C.Good elseif info.Tag == "companion" then ROLE_COLOR.Tank else C.Dim
+	Kit.label({ Size = UDim2.new(1, -58, 0, 16), Position = UDim2.fromOffset(52, 27), RichText = true, Text = ("%s Lv %d  %s"):format(classDef and classDef.DisplayName or info.ClassId, info.Level or 1, Kit.tint(info.Tag, tagColor)), TextSize = 11, TextColor3 = C.Dim, Parent = card })
+	return card
+end
+
+local function partyLobby(container, call)
+	local card = Kit.frame({ Size = UDim2.new(1, -8, 0, 170), BackgroundColor3 = C.PanelLight, Parent = container })
+	Kit.label({ Size = UDim2.new(1, -20, 0, 40), Position = UDim2.fromOffset(10, 6), Text = "Play in a party of up to 4: make a code and share it, or enter a friend's. Empty seats are filled by companions.", TextSize = 13, Parent = card })
+	Kit.button({ Size = UDim2.fromOffset(160, 44), Position = UDim2.fromOffset(10, 54), Text = "Create code", BackgroundColor3 = C.Accent, TextColor3 = DARK_TEXT, Parent = card }, function()
+		call("CreateCode")
 	end)
-	if party.IsOpen then
-		Kit.button({ Size = UDim2.fromOffset(150, 44), Parent = scroll, Text = "Show join code" }, function()
-			local ok, code = call("CreateCode")
-			if ok and extra then extra.Code = code end
-		end)
-	end
+	local box = Kit.new("TextBox", { Size = UDim2.fromOffset(160, 44), Position = UDim2.fromOffset(10, 108), PlaceholderText = "Enter code", Text = "", BackgroundColor3 = C.Panel, TextColor3 = C.Text, Font = Enum.Font.GothamBold, TextSize = 16, ClearTextOnFocus = false, Parent = card })
+	Kit.corner(8).Parent = box
+	Kit.button({ Size = UDim2.fromOffset(90, 44), Position = UDim2.fromOffset(178, 108), Text = "Join", Parent = card }, function()
+		call("JoinByCode", box.Text)
+	end)
+end
 
-	-- the team: up to three others (players, their ghosts while offline, or companions in the empty seats); pick one to see and edit
-	local mates = party.Teammates or (party.Partner and { party.Partner }) or {}
-	if #mates == 0 then
-		Kit.label({ Size = UDim2.new(1, 0, 0, 30), Text = "Waiting for players to join (up to 4 in a party).", TextColor3 = C.Dim, Parent = scroll })
-		return
-	end
-	local pick = math.clamp((extra and extra.PartyMate) or 1, 1, #mates)
-	local tabs = row(scroll, 40)
-	for index, mate in ipairs(mates) do
-		local tag = if mate.IsCompanion then "companion" elseif mate.Online then "online" else "ghost"
-		Kit.button({ Size = UDim2.new(1 / #mates, -6, 0, 34), Position = UDim2.new((index - 1) / #mates, 3, 0, 3), Text = ("%s  %s %d  (%s)"):format(mate.Name, mate.ClassId, mate.Level, tag), TextSize = 11, BackgroundColor3 = if index == pick then C.Accent else C.Panel, TextColor3 = if index == pick then Color3.fromRGB(30, 24, 10) else C.Text, Parent = tabs }, function()
-			if extra then
-				extra.PartyMate = index
-				Screens.Party(container, state, call, extra)
-			end
-		end)
-	end
-	local partner = mates[pick]
-	Kit.label({ Size = UDim2.new(1, 0, 0, 22), Text = ("%s (%s Lv %d) %s"):format(partner.Name, partner.ClassId, partner.Level, partner.IsCompanion and "- a companion; a real player takes this seat when one joins" or (partner.Online and "- online" or "- ghost while offline")), TextColor3 = C.Accent, Parent = scroll })
-	Kit.label({ Size = UDim2.new(1, 0, 0, 22), Text = "Their passives: " .. (#partner.PassiveIds > 0 and table.concat(partner.PassiveIds, ", ") or "none"), TextColor3 = C.Dim, TextSize = 12, Parent = scroll })
-	Kit.label({ Size = UDim2.new(1, 0, 0, 22), Text = "Their skills (you can reorder/swap; everything else is view-only)", TextColor3 = C.Dim, Parent = scroll })
-
-	local ghost = table.clone(partner.GhostLoadout or {})
-	for slot, id in ipairs(ghost) do
+local function ghostSkills(pane, call, extra, mate, redraw)
+	local ghost = table.clone(mate.GhostLoadout or {})
+	local levels = mate.SlotLevels or {}
+	local slot = math.clamp(extra.PartySlot or 1, 1, math.max(1, #ghost))
+	Kit.label({ Size = UDim2.new(1, -16, 0, 16), Position = UDim2.fromOffset(8, 4), Text = "Their skills in cast order. Pick one, then move it or swap in another skill they own.", TextSize = 11, TextColor3 = C.Dim, Parent = pane })
+	local bar = Kit.frame({ Size = UDim2.new(1, -16, 0, 56), Position = UDim2.fromOffset(8, 22), BackgroundTransparency = 1, NoCorner = true, Parent = pane })
+	Kit.new("UIListLayout", { FillDirection = Enum.FillDirection.Horizontal, Padding = UDim.new(0, 6), Parent = bar })
+	for index, id in ipairs(ghost) do
 		local def = Abilities[id]
-		local rr = row(scroll, 52)
-		Icons.Skill(rr, def, { Size = UDim2.fromOffset(40, 40), Position = UDim2.fromOffset(8, 6), Level = partner.SlotLevels[slot] or 1 })
-		Kit.Hover(rr, function() return Tips.Skill(def, partner.SlotLevels[slot] or 1) end)
-		Kit.label({ Size = UDim2.new(1, -230, 1, 0), Position = UDim2.fromOffset(56, 0), Text = ("%d. %s  Lv %d"):format(slot, def.DisplayName, partner.SlotLevels[slot] or 1), TextColor3 = Kit.rarityColor(def.Rarity), Parent = rr })
-		if slot > 1 then
-			Kit.button({ Size = UDim2.fromOffset(44, 44), Position = UDim2.new(1, -160, 0.5, -22), Text = "Up", Parent = rr }, function()
-				ghost[slot], ghost[slot - 1] = ghost[slot - 1], ghost[slot]
-				call("SetGhostLoadout", ghost, partner.UserId)
+		if def then
+			local t = Icons.Skill(bar, def, { Size = UDim2.fromOffset(50, 50), Level = levels[index] or 1 })
+			local border = t:FindFirstChildOfClass("UIStroke")
+			if index == slot and border then
+				border.Color, border.Thickness = C.Accent, 3
+			end
+			Kit.label({ Size = UDim2.fromOffset(14, 14), Position = UDim2.fromOffset(3, 1), Text = tostring(index), TextSize = 10, Font = Enum.Font.GothamBold, ZIndex = 5, Parent = t })
+			Kit.Hover(t, function() return Tips.Skill(def, levels[index] or 1) end)
+			local click = Kit.new("TextButton", { Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1, Text = "", ZIndex = 6, Parent = t })
+			click.Activated:Connect(function()
+				extra.PartySlot = index
+				redraw()
 			end)
 		end
-		-- swap with any other skill the partner owns
-		Kit.button({ Size = UDim2.fromOffset(100, 44), Position = UDim2.new(1, -108, 0.5, -22), Text = "Swap", Parent = rr }, function()
-			local owned = {}
-			for ownedId in pairs(partner.Owned or {}) do
-				if not table.find(ghost, ownedId) then table.insert(owned, ownedId) end
-			end
-			table.sort(owned)
-			if owned[1] then
-				ghost[slot] = owned[1]
-				call("SetGhostLoadout", ghost, partner.UserId)
-			end
+	end
+	local def = Abilities[ghost[slot] or ""]
+	if not def then
+		return
+	end
+	-- the picked skill: name and move buttons
+	Kit.label({ Size = UDim2.new(1, -200, 0, 20), Position = UDim2.fromOffset(8, 82), Text = ("%d. %s  Lv %d"):format(slot, def.DisplayName, levels[slot] or 1), TextSize = 13, Font = Enum.Font.GothamBold, TextColor3 = Kit.rarityColor(def.Rarity), Parent = pane })
+	local function move(to)
+		ghost[slot], ghost[to] = ghost[to], ghost[slot]
+		extra.PartySlot = to
+		call("SetGhostLoadout", ghost, mate.UserId)
+	end
+	local left = Kit.button({ Size = UDim2.fromOffset(84, 24), Position = UDim2.new(1, -184, 0, 80), Text = "◀ Earlier", TextSize = 11, BackgroundColor3 = if slot > 1 then C.PanelLight else C.Panel, TextColor3 = if slot > 1 then C.Text else C.Dim, Parent = pane }, function()
+		if slot > 1 then
+			move(slot - 1)
+		end
+	end)
+	left.Active = slot > 1
+	local right = Kit.button({ Size = UDim2.fromOffset(84, 24), Position = UDim2.new(1, -94, 0, 80), Text = "Later ▶", TextSize = 11, BackgroundColor3 = if slot < #ghost then C.PanelLight else C.Panel, TextColor3 = if slot < #ghost then C.Text else C.Dim, Parent = pane }, function()
+		if slot < #ghost then
+			move(slot + 1)
+		end
+	end)
+	right.Active = slot < #ghost
+	-- the skills they own but have not slotted: click one to put it in the picked slot
+	local spare = {}
+	for ownedId in pairs(mate.Owned or {}) do
+		if Abilities[ownedId] and not table.find(ghost, ownedId) then
+			table.insert(spare, ownedId)
+		end
+	end
+	table.sort(spare, function(a, b) return Abilities[a].DisplayName < Abilities[b].DisplayName end)
+	Kit.label({ Size = UDim2.new(1, -16, 0, 16), Position = UDim2.fromOffset(8, 108), Text = if #spare > 0 then ("Swap %s for:"):format(def.DisplayName) else "They own no other skills to swap in.", TextSize = 11, TextColor3 = C.Dim, Parent = pane })
+	local grid = Kit.new("ScrollingFrame", { Size = UDim2.new(1, -16, 1, -160), Position = UDim2.fromOffset(8, 126), BackgroundTransparency = 1, BorderSizePixel = 0, CanvasSize = UDim2.new(), AutomaticCanvasSize = Enum.AutomaticSize.Y, ScrollBarThickness = 3, Parent = pane })
+	Kit.new("UIGridLayout", { CellSize = UDim2.fromOffset(44, 44), CellPadding = UDim2.fromOffset(6, 6), Parent = grid })
+	for _, id in ipairs(spare) do
+		local sdef = Abilities[id]
+		local t = Icons.Skill(grid, sdef, { Size = UDim2.fromOffset(44, 44) })
+		Kit.Hover(t, function() return Tips.Skill(sdef, 1) end)
+		local click = Kit.new("TextButton", { Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1, Text = "", ZIndex = 6, Parent = t })
+		click.Activated:Connect(function()
+			ghost[slot] = id
+			call("SetGhostLoadout", ghost, mate.UserId)
 		end)
 	end
-	if partner.CanRevert then
-		Kit.button({ Size = UDim2.fromOffset(160, 44), Parent = scroll, Text = "Undo partner's edit" }, function()
+	local passives = if #(mate.PassiveIds or {}) > 0 then table.concat(mate.PassiveIds, ", ") else "none"
+	Kit.label({ Size = UDim2.new(1, -16 - (if mate.CanRevert then 150 else 0), 0, 26), Position = UDim2.new(0, 8, 1, -30), Text = "Passives: " .. passives, TextSize = 11, TextColor3 = C.Dim, TextWrapped = false, TextTruncate = Enum.TextTruncate.AtEnd, Parent = pane })
+	if mate.CanRevert then
+		Kit.button({ Size = UDim2.fromOffset(140, 26), Position = UDim2.new(1, -148, 1, -30), Text = "Undo partner's edit", TextSize = 11, Parent = pane }, function()
 			call("RevertMyGhost")
 		end)
 	end
-	Kit.label({ Size = UDim2.new(1, 0, 0, 22), Text = "Party ultimate (fires on its own when the shared gauge fills)", TextColor3 = C.Dim, Parent = scroll })
-	ultimateRows(scroll, state, call)
+end
+
+local function ultimatePane(pane, state, call, extra, redraw)
+	local info = state.Party and state.Party.Ultimate
+	if not info then
+		Kit.label({ Size = UDim2.new(1, -16, 0, 40), Position = UDim2.fromOffset(8, 4), Text = "Join a party to unlock a party ultimate.", TextColor3 = C.Dim, Parent = pane })
+		return
+	end
+	Kit.label({ Size = UDim2.new(1, -16, 0, 16), Position = UDim2.fromOffset(8, 4), Text = "Fires on its own when the shared gauge fills. The options depend on the classes in the party.", TextSize = 11, TextColor3 = C.Dim, Parent = pane })
+	local sel = extra.PartyUlt
+	if not sel or not table.find(info.Options, sel) then
+		sel = info.Chosen or info.Options[1]
+	end
+	local grid = Kit.new("ScrollingFrame", { Size = UDim2.new(1, -16, 0, 54), Position = UDim2.fromOffset(8, 24), BackgroundTransparency = 1, BorderSizePixel = 0, CanvasSize = UDim2.new(), AutomaticCanvasSize = Enum.AutomaticSize.Y, ScrollBarThickness = 3, Parent = pane })
+	Kit.new("UIGridLayout", { CellSize = UDim2.fromOffset(44, 44), CellPadding = UDim2.fromOffset(6, 6), Parent = grid })
+	Kit.new("UIPadding", { PaddingTop = UDim.new(0, 3), PaddingLeft = UDim.new(0, 3), Parent = grid })
+	for _, id in ipairs(info.Options) do
+		local def = UltCfg.Defs[id]
+		local unlocked = info.Frontier >= def.UnlockStage
+		local t = Icons.Ultimate(grid, def, { Size = UDim2.fromOffset(44, 44), Locked = not unlocked })
+		local border = t:FindFirstChildOfClass("UIStroke")
+		if border and (id == sel or id == info.Chosen) then
+			border.Color, border.Thickness = if id == sel then C.Accent else C.Good, 3
+		end
+		Kit.Hover(t, function() return Tips.Ultimate(def, 1) end)
+		local click = Kit.new("TextButton", { Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1, Text = "", ZIndex = 6, Parent = t })
+		click.Activated:Connect(function()
+			extra.PartyUlt = id
+			redraw()
+		end)
+	end
+	local def = UltCfg.Defs[sel]
+	if not def then
+		return
+	end
+	local unlocked = info.Frontier >= def.UnlockStage
+	Kit.label({ Size = UDim2.new(1, -16, 0, 22), Position = UDim2.fromOffset(8, 82), Text = def.DisplayName .. (if info.Chosen == sel then "  (equipped)" else ""), TextSize = 15, Font = Enum.Font.GothamBold, TextColor3 = Kit.rarityColor(def.Rarity), Parent = pane })
+	Kit.label({ Size = UDim2.new(1, -16, 0, 40), Position = UDim2.fromOffset(8, 104), TextWrapped = true, Text = if unlocked then (def.Description or "") else ("Unlocks at stage %d."):format(def.UnlockStage), TextSize = 12, TextColor3 = C.Dim, TextYAlignment = Enum.TextYAlignment.Top, Parent = pane })
+	local canEquip = unlocked and info.Chosen ~= sel
+	local b = Kit.button({ Size = UDim2.new(1, -16, 0, 30), Position = UDim2.new(0, 8, 1, -38), Text = if info.Chosen == sel then "Equipped" elseif unlocked then "Equip" else "Locked", TextSize = 13, BackgroundColor3 = if canEquip then C.Accent else C.PanelLight, TextColor3 = if canEquip then DARK_TEXT else C.Dim, Parent = pane }, function()
+		if canEquip then
+			call("SetUltimate", sel)
+		end
+	end)
+	b.Active = canEquip
+end
+
+function Screens.Party(container, state, call, extra)
+	Kit.clear(container)
+	extra = extra or {}
+	local party = state.Party
+	if not party then
+		partyLobby(container, call)
+		return
+	end
+	local function redraw()
+		Screens.Party(container, extra.State or state, call, extra)
+	end
+	-- top strip: stage, code, buttons
+	local strip = Kit.frame({ Size = UDim2.new(1, -8, 0, 32), BackgroundColor3 = C.Panel, Parent = container })
+	local codeText = if extra.Code then ("   Code: <b>%s</b>"):format(extra.Code) else ""
+	Kit.label({ Size = UDim2.new(1, -260, 1, 0), Position = UDim2.fromOffset(10, 0), RichText = true, Text = ("Stage %d   Frontier %d%s"):format(party.Stage, party.Frontier, codeText), TextSize = 13, Parent = strip })
+	if party.IsOpen then
+		Kit.button({ Size = UDim2.fromOffset(130, 24), Position = UDim2.new(1, -226, 0, 4), Text = "Show join code", TextSize = 12, BackgroundColor3 = C.Accent, TextColor3 = DARK_TEXT, Parent = strip }, function()
+			local ok, code = call("CreateCode")
+			if ok then
+				extra.Code = code
+			end
+		end)
+	end
+	Kit.button({ Size = UDim2.fromOffset(86, 24), Position = UDim2.new(1, -92, 0, 4), Text = "Leave", TextSize = 12, BackgroundColor3 = C.Bad, Parent = strip }, function()
+		call("Leave")
+	end)
+
+	-- member cards on the left: you, then up to three teammates
+	local mates = party.Teammates or (party.Partner and { party.Partner }) or {}
+	local pick = math.clamp(extra.PartyMate or 1, 1, math.max(1, #mates))
+	local paneTab = if #mates == 0 then "Ultimate" else (extra.PartyPane or "Skills")
+	local cards = Kit.new("ScrollingFrame", { Size = UDim2.new(0, 220, 1, -38), Position = UDim2.fromOffset(0, 38), BackgroundTransparency = 1, BorderSizePixel = 0, CanvasSize = UDim2.new(), AutomaticCanvasSize = Enum.AutomaticSize.Y, ScrollBarThickness = 3, Parent = container })
+	Kit.new("UIListLayout", { Padding = UDim.new(0, 6), SortOrder = Enum.SortOrder.LayoutOrder, Parent = cards })
+	Kit.new("UIPadding", { PaddingTop = UDim.new(0, 3), PaddingLeft = UDim.new(0, 3), Parent = cards })
+	local me = state.Player
+	memberCard(cards, 0, { Name = me.Name, ClassId = me.ClassId, Level = me.Level, Tag = "you" }, false, function() end)
+	for index, mate in ipairs(mates) do
+		local tag = if mate.IsCompanion then "companion" elseif mate.Online then "online" else "ghost"
+		memberCard(cards, index, { Name = mate.Name, ClassId = mate.ClassId, Level = mate.Level, Tag = tag }, index == pick and paneTab == "Skills", function()
+			extra.PartyMate = index
+			extra.PartySlot = 1
+			extra.PartyPane = "Skills"
+			redraw()
+		end)
+	end
+	if #mates == 0 then
+		Kit.label({ Size = UDim2.new(1, -6, 0, 40), LayoutOrder = 10, Text = "Waiting for players to join (up to 4).", TextSize = 12, TextColor3 = C.Dim, Parent = cards })
+	end
+
+	-- right pane: their skills / party ultimate
+	for index, name in ipairs({ "Skills", "Ultimate" }) do
+		Kit.button({ Size = UDim2.fromOffset(120, 26), Position = UDim2.fromOffset(228 + (index - 1) * 126, 38), Text = if name == "Skills" then "Their skills" else "Party ultimate", TextSize = 12, BackgroundColor3 = if name == paneTab then C.Accent else C.Panel, TextColor3 = if name == paneTab then DARK_TEXT else C.Text, Parent = container }, function()
+			extra.PartyPane = name
+			redraw()
+		end)
+	end
+	local pane = Kit.frame({ Size = UDim2.new(1, -236, 1, -72), Position = UDim2.fromOffset(228, 70), BackgroundColor3 = C.Panel, Parent = container })
+	if paneTab == "Ultimate" then
+		ultimatePane(pane, state, call, extra, redraw)
+	else
+		ghostSkills(pane, call, extra, mates[pick], redraw)
+	end
 end
 
 -- Map: the world map lives in MapScreen.luau (Main sets Screens.Map = MapScreen.Map).
