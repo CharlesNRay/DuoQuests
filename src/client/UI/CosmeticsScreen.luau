@@ -8,6 +8,7 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Kit = require(script.Parent.Kit)
+local CosmeticsVisuals = require(script.Parent.Parent.Battle.CosmeticsVisuals)
 local C = Kit.Colors
 local Classes = require(ReplicatedStorage:WaitForChild("Shared").Config.Classes)
 
@@ -87,9 +88,9 @@ function CosmeticsScreen.Cosmetics(container, state, call, extra)
 				swatch(frame, row)
 			end
 			local left = if slot == "Title" then 10 else 52
-			Kit.label({ Size = UDim2.new(1, -left - 150, 0, 22), Position = UDim2.fromOffset(left, 5), Text = row.Name, TextSize = 14, Font = Enum.Font.GothamBold, TextColor3 = if row.Owned then C.Text else C.Dim, Parent = frame })
+			Kit.label({ Size = UDim2.new(1, -left - 206, 0, 22), Position = UDim2.fromOffset(left, 5), Text = row.Name, TextSize = 14, Font = Enum.Font.GothamBold, TextColor3 = if row.Owned then C.Text else C.Dim, Parent = frame })
 			local sub = if row.Equipped then "Equipped" elseif row.Owned then "Owned" elseif row.Source == "Season" then "Season prize - win it at the end of a season" else "For sale"
-			Kit.label({ Size = UDim2.new(1, -left - 150, 0, 16), Position = UDim2.fromOffset(left, 28), Text = sub, TextSize = 11, TextColor3 = if row.Equipped then GOOD else C.Dim, Parent = frame })
+			Kit.label({ Size = UDim2.new(1, -left - 206, 0, 16), Position = UDim2.fromOffset(left, 28), Text = sub, TextSize = 11, TextColor3 = if row.Equipped then GOOD else C.Dim, Parent = frame })
 			local text, enabled, color
 			if row.Equipped then
 				text, enabled, color = "Take off", true, C.Panel
@@ -116,6 +117,14 @@ function CosmeticsScreen.Cosmetics(container, state, call, extra)
 				redraw()
 			end)
 			btn.Active = enabled
+			-- try it on (2026-11-22): 60 s, only you see it; auras and kill effects show in your battle and on your hero
+			if not row.Owned and row.Source == "Shop" then
+				Kit.button({ Size = UDim2.fromOffset(52, 34), Position = UDim2.new(1, -198, 0.5, -17), Text = "Try", TextSize = 13, BackgroundColor3 = C.Panel, Parent = frame }, function()
+					CosmeticsVisuals.TryOn(slot, row.Id, 60)
+					extra.CosmeticMsg = ("Trying on %s for 60 s (only you can see it)%s."):format(row.Name, if slot == "Kill" then ": defeat a monster to see it" elseif slot == "Aura" then ": look at your hero or your battle" else "")
+					redraw()
+				end)
+			end
 		end
 	end
 end

@@ -4,6 +4,9 @@
 	                                 attributes the server sets (CosAura, CosName, CosTitle)
 	  CosmeticsVisuals.SetKill(id)   the local player's kill effect (nil = none)
 	  CosmeticsVisuals.KillEffect(parent, position)   a burst where an enemy fell (the fight scene calls this)
+	  CosmeticsVisuals.TryOn(slot, id, seconds)       try a cosmetic on for a while, seen only by you (2026-11-22):
+	                                 Aura/Name/Title set the attribute on your own Player locally (never replicates),
+	                                 Kill overrides the kill effect; afterwards the real one comes back
 
 	NOT yet seen in Studio.
 ]]
@@ -304,8 +307,41 @@ function CosmeticsVisuals.SetKill(id)
 	killId = id
 end
 
+local tryKill, tryKillUntil = nil, 0
+local ATTRIBUTE = { Aura = "CosAura", Name = "CosName", Title = "CosTitle" }
+local tryToken = {}
+function CosmeticsVisuals.TryOn(slot, id, seconds)
+	seconds = seconds or 60
+	if slot == "Kill" then
+		tryKill, tryKillUntil = id, os.clock() + seconds
+		return
+	end
+	local attribute = ATTRIBUTE[slot]
+	local me = Players.LocalPlayer
+	if not attribute or not me then
+		return
+	end
+	-- remember what the server gave us (only the first time: trying a second item keeps the real one to restore)
+	if tryToken[slot] == nil then
+		tryToken[slot] = { Real = me:GetAttribute(attribute) }
+	end
+	local token = {}
+	tryToken[slot].Current = token
+	me:SetAttribute(attribute, id)
+	task.delay(seconds, function()
+		local t = tryToken[slot]
+		if t and t.Current == token then
+			tryToken[slot] = nil
+			if me:GetAttribute(attribute) == id then
+				me:SetAttribute(attribute, t.Real)
+			end
+		end
+	end)
+end
+
 function CosmeticsVisuals.KillEffect(parent, position)
-	local def = killId and Cosmetics.Def(killId)
+	local useId = if tryKill and os.clock() < tryKillUntil then tryKill else killId
+	local def = useId and Cosmetics.Def(useId)
 	if not def or not parent then
 		return
 	end
