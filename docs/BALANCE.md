@@ -197,3 +197,10 @@ are clearly worth it. No retune (inside 9-12h at the fast edge; PartyScale 2.6 -
 Finding: pet food piles up (10-95 left at L40) because a pet cannot level past its owner; food is only useful while the pet
 lags behind (e.g. a new pet). Worth a design look: let food overflow into pet rank/shards, or sell less of it.
 
+## Replay Wishstone income (checked 2026-11-22, no change)
+`STONES30` lines (Mage, companion, full): 321-332 Wishstones earned by L30 (~5h, ~1950 fights, frontier 36-40).
+First clears pay ~76 (2 each) and the stage 10/20/30 bosses ~12 more; the rest, ~240 (~75%), comes from replays
+(1 per `Economy.WishstonesReplayEvery` = 4 replay wins). That is one wish (3-8 stones) every ~4 minutes of play.
+Kept as is: replaying is the idle loop, and every balance target above was tuned with this income included. To make wishes
+scarcer, raise WishstonesReplayEvery (5 = -20% of the total) and re-run abl.sh (skills and pets would slow down).
+
