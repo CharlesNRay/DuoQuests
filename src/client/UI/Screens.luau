@@ -461,6 +461,10 @@ local function buildLog(fight, everyHit)
 			add(t, ("%s is revived"):format(who(e.Target)))
 		elseif kind == "Status" and everyHit then
 			add(t, ("%s gets %s (%.0fs)"):format(who(e.Target), e.Status, e.Duration or 0))
+		elseif kind == "StatusEnd" and e.Reason == "Consumed" then
+			-- a finisher used up the combo layers (shown in both log views, so combos can be checked after a fight)
+			local mark = tostring(e.Status):gsub("(%l)(%u)", "%1 %2")
+			add(t, ("%s  %d %s used up on %s"):format(Kit.tint(("COMBO x%d!"):format(e.Stacks or 1), Kit.Colors.Epic), e.Stacks or 1, mark, who(e.Target)))
 		elseif kind == "StatusEnd" and everyHit then
 			add(t, ("%s loses %s%s"):format(who(e.Target), e.Status, e.Reason == "Broken" and " (shield broken)" or ""))
 		elseif kind == "Damage" then
