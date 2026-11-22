@@ -1,7 +1,7 @@
 # Duo Quest Roadmap
 
 > Living document. Updated whenever we finish or reprioritise something.
-> **Last updated:** 2026-11-16
+> **Last updated:** 2026-11-22
 
 **Jump to:** [Now](#now) · [Next up](#next-up) · [Later](#later) · [Done](#done) · [Open questions](#open-questions) · [Known gaps](#known-gaps)
 
@@ -35,6 +35,16 @@ In rough order.
 
 ## Done
 Newest first.
+
+### 2026-11-17 to 2026-11-22 (four-hero parties, combat rework, balance)
+- 🔨 Parties of up to 4: every fight has 4 heroes, companions fill empty seats (classes the party lacks), party ultimate from any pair of classes, boss/raid/dungeon fights take the whole team. ✅ Seen: 3 companions on HUD and Party tabs, ghost skill edits, Hero and Skills tabs per teammate.
+- ✅ Bigger arena pads for 4 heroes (64x50, scenery pushed back, rows pack tighter). Seen in Studio.
+- 🔨 Summons expire after 20 s and dead ones are removed (the "never despawn" pile-up). ✅ Boss arena "Leave fight"; raid/world/season buttons say Battle.
+- ✅ Dungeons are one continuous fight: 2-3 waves then a boss, fixed stage and recommended level, daily bonus for the first clear of each per day. Seen: list, Crypt run, daily bonus. 🔨 Wave banners not seen.
+- 🔨 Combat rework (ideas from idle RPGs like Ulala): class combos (builder skills add layers of a class mark, a finisher hits harder per layer and uses them up), a team aura for tank + healer + 2 damage, support skills that weaken enemies (Taunt: Exposed, Purify: Consecrated) or buff the party (Guardian Angel, Rallying Cry, Blessing). Combo layer counts on the status pips and a "COMBO xN!" pop.
+- 🔨 Balance: tanks and Cleric buffed, Summoner trimmed, enemy party scale 2.6, boss damage scale and dungeon stages retuned; all six classes reach stage ~40-66 by L40 in 8-11 h (docs/BALANCE.md). The balance bot now plays combos, pets (gear, food, Pet Store) and wish tickets.
+- 🔨 Pet food fed to a pet at your level becomes pet shard progress; Market Pet Food has a fixed price; skipped-tutorial payout shows a notice.
+- ⬜ Still to do: Studio check of the combat rework, guild chat, gifting, cosmetics try-on, restyle of the older screens.
 
 ### 2026-11-16 (numbers, Battle hub, activities, market)
 - ✅ Number scale: health / attack / defense x10 (`Economy.NumberScale`), XP x20 (`Economy.XPNumber`), gold on a new curve (thousands early, millions later), costs ~x60. Percentages unchanged, so balance is invariant. Large numbers print short (`Util/NumberFormat`: 12.4K, 3.2M).

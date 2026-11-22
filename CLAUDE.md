@@ -68,7 +68,7 @@ Git Bash; they find a working Python themselves (`python3`/`python` there are St
 3. Restyle remaining screens (Hero, Skills, Party, Bag, Map, Quests, Boss, Store, Wish) in the card/detail style. VIP second pet slot done 2026-11-16 (`Pets.Second`, support pet: its stats count, only the main pet fights; Pets screen "Set 2nd"; not seen in Studio).
 4. Not started: guild chat, gifting, cosmetics try-on. (Skipped-tutorial payout notice DONE 2026-11-19: the Fight push carries `Reward.Tutorial`, the HUD toast shows it after that fight; toast is now 520x40 and wraps. Not seen in Studio.)
 5. Owner-side: create the VIP Game Pass + Sunstone Developer Products and give the ids (`GamePassId`/`ProductId` are 0); upload `branding/logo.png` and set `Config/Branding.LogoImage`.
-6. `docs/ROADMAP.md` only covers up to the 2026-11-16 morning entry; add the items above.
+6. DONE 2026-11-22: `docs/ROADMAP.md` has a 2026-11-17..22 entry; keep adding a dated entry when a batch of work lands.
 
 - **Skill rework 2026-11-19** (tests green, NOT seen in Studio): class combos (builders add layers, a finisher consumes them),
   team aura for tank+healer+2 damage (`Config/TeamAura`), Taunt/Purify debuff enemies (Exposed/Consecrated), Guardian Angel,
