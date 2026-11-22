@@ -67,6 +67,12 @@ function Consumables.Use(profile, id, now, petId, force)
 			return false, "NoPet"
 		end
 		local ok, reason = Pets.AddXP(profile, petId, def.PetXP)
+		if not ok and reason == "MaxLevel" then
+			-- the pet is at your level: the food turns into pet shard progress instead of being wasted
+			s[id] -= 1
+			local shards, bar, rarity = Pets.OverflowFood(profile, petId, def.PetXP)
+			return true, { Overflow = def.PetXP, Shards = shards, Bar = bar, Rarity = rarity }
+		end
 		if not ok then
 			return false, reason
 		end

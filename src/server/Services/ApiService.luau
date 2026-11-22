@@ -206,6 +206,7 @@ local function buildState(player)
 			PetShards = Pets.Shards(profile),
 			PetShardInfo = { PetCost = require(Shared.Config.Pets).Shards.PetCost, CondenseCost = require(Shared.Config.Pets).Shards.CondenseCost },
 			PetCollection = (function() local c = Pets.Collection(profile) return { Points = c.Points, Percent = c.Percent } end)(),
+			PetFoodOverflow = math.floor(profile.Permanent.PetFoodOverflow or 0), -- pet shard bar filled by food fed to capped pets
 			Wishing = { Pet = Wishing.Info(profile, "Pet"), Skill = Wishing.Info(profile, "Skill") },
 			ActivePet = (Pets.Active(profile)),
 			SecondPet = (Pets.Second(profile)), -- VIP second pet slot (nil when empty or not VIP)

@@ -39,6 +39,9 @@ return {
 	-- its rarity. PetCost shards of a rarity buy a pet of that rarity (a copy, or the pet itself if not owned yet).
 	-- CondenseCost shards of one rarity make one shard of the next rarity up.
 	Shards = { PetCost = 30, CondenseCost = 10, Order = { "Common", "Rare", "Epic", "Legendary" } },
+	-- Pet food fed to a pet already at its owner's level is not wasted (2026-11-22): its XP fills a bar that pays one pet
+	-- shard of that pet's rarity per XPPerShard (16,000 = 10 Pet Snacks or 1.6 Pet Feasts).
+	FoodOverflow = { XPPerShard = 16000 },
 	-- Collecting counts: every owned pet adds points (more for rarer pets, times its rank) and each point is a small permanent
 	-- bonus to Attack and Max Health, whether or not that pet is equipped.
 	Collection = { Points = { Common = 1, Rare = 2, Epic = 4, Legendary = 8 }, PerPoint = 0.002, Stats = { "Attack", "MaxHealth" } },

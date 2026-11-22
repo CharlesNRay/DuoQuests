@@ -50,12 +50,12 @@ return {
 		},
 		PetFood = {
 			Id = "PetFood", DisplayName = "Pet Snack", Kind = "PetFood", Glyph = "🍖", Rarity = "Common", PetXP = 1600,
-			Description = "Feed it to a pet for 1600 pet XP.",
+			Description = "Feed it to a pet for 1600 pet XP. A pet at your level turns it into pet shard progress instead.",
 			Price = { Base = 6900, PerStage = 0 }, Drop = 40,
 		},
 		GrandPetFood = {
 			Id = "GrandPetFood", DisplayName = "Pet Feast", Kind = "PetFood", Glyph = "🍗", Rarity = "Rare", PetXP = 10000,
-			Description = "Feed it to a pet for 10000 pet XP.",
+			Description = "Feed it to a pet for 10000 pet XP. A pet at your level turns it into pet shard progress instead.",
 			Price = { Base = 34200, PerStage = 0 }, Drop = 6,
 		},
 		PetWish = {

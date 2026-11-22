@@ -288,16 +288,13 @@ local function stashTab(container, state, call, extra)
 		local y = 100
 		for _, pet in ipairs(me.Pets or {}) do
 			if pet.Owned and y < 170 then
-				-- a pet at its cap (your level) cannot eat: grey it out instead of letting the server answer "MaxLevel"
+				-- a pet at its cap (your level) still eats: the food becomes pet shard progress (2026-11-22)
 				local full = pet.Level >= (pet.MaxLevel or 10)
-				local feed = Kit.button({ Size = UDim2.new(1, -16, 0, 26), Position = UDim2.fromOffset(8, y), Text = ("%s  Lv %d%s"):format(pet.Name, pet.Level, if full then "  (max)" else ""), TextSize = 12, BackgroundColor3 = if full then C.Panel else C.PanelLight, TextColor3 = if full then C.Dim else C.Text, Parent = detail }, function()
-					if not full then
-						call("UseConsumable", selRow.Id, pet.Id)
-					end
+				local feed = Kit.button({ Size = UDim2.new(1, -16, 0, 26), Position = UDim2.fromOffset(8, y), Text = ("%s  Lv %d%s"):format(pet.Name, pet.Level, if full then "  (max: -> shards)" else ""), TextSize = 12, BackgroundColor3 = C.PanelLight, TextColor3 = if full then C.Accent else C.Text, Parent = detail }, function()
+					call("UseConsumable", selRow.Id, pet.Id)
 				end)
-				feed.Active = not full
 				if full then
-					Kit.Hover(feed, function() return ("%s is at your level (Lv %d). Level up your hero to feed it more."):format(pet.Name, pet.Level) end)
+					Kit.Hover(feed, function() return ("%s is at your level (Lv %d), so this food fills the pet shard bar instead (%s): every 16,000 XP of food = 1 %s pet shard."):format(pet.Name, pet.Level, me.PetFoodOverflow and ("%d / 16000"):format(me.PetFoodOverflow) or "0 / 16000", pet.Rarity) end)
 				end
 				y += 30
 			end

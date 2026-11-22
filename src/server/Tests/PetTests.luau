@@ -19,6 +19,7 @@ local function loadModules(override)
 		Progression = require(Shared.Progression),
 		StatCalc = require(Shared.Combat.StatCalc),
 		Party = require(Shared.Party),
+		Consumables = require(Shared.Consumables),
 	}
 end
 
@@ -208,6 +209,26 @@ return function(modulesOverride)
 	vp.Permanent.Passes = {}
 	Pets.EquipSecond(vp, nil)
 	check("Losing VIP switches the second pet off", Pets.Second(vp) == nil and #Pets.SecondMods(vp) == 0)
+
+	-- food for a pet at its cap turns into pet shard progress (2026-11-22)
+	local fp = m.ProfileTemplate.New()
+	fp.Permanent.Pets = fp.Permanent.Pets or {}
+	fp.Permanent.Pets.Slimey = true
+	Pets.Equip(fp, "Slimey")
+	fp.Season.PetLevels = fp.Season.PetLevels or {}
+	fp.Season.PetLevels.Slimey = Pets.LevelCap(fp)
+	local rarity = m.PetConfig.Defs.Slimey.Rarity
+	local before = Pets.Shards(fp)[rarity]
+	m.Consumables.Grant(fp, "PetFood", 10)
+	local fed = 0
+	for _ = 1, 10 do
+		if m.Consumables.Use(fp, "PetFood", 0, "Slimey") then fed += 1 end
+	end
+	check("A capped pet still eats (food is not wasted)", fed == 10 and m.Consumables.Count(fp, "PetFood") == 0)
+	check("10 snacks at the cap = 1 pet shard of the pet's rarity", Pets.Shards(fp)[rarity] == before + 1 and (fp.Permanent.PetFoodOverflow or 0) == 0)
+	m.Consumables.Grant(fp, "PetFood", 1)
+	m.Consumables.Use(fp, "PetFood", 0, "Slimey")
+	check("Leftover overflow XP is kept for the next shard", fp.Permanent.PetFoodOverflow == 1600)
 
 	print(("PetTests done: %d passed, %d failed"):format(passed, failed))
 end

@@ -162,6 +162,21 @@ function Pets.AddDuplicate(profile, petId)
 	return "Copy", copies
 end
 
+-- Food for a pet at its cap: the XP fills Permanent.PetFoodOverflow and every Config.FoodOverflow.XPPerShard pays one
+-- shard of the pet's rarity. Returns shards gained now, the bar's progress (0..XPPerShard) and the rarity.
+function Pets.OverflowFood(profile, petId, xp)
+	local def = Config.Defs[petId]
+	local per = Config.FoodOverflow.XPPerShard
+	local bar = (profile.Permanent.PetFoodOverflow or 0) + math.max(0, xp or 0)
+	local shards = bar // per
+	bar -= shards * per
+	profile.Permanent.PetFoodOverflow = bar
+	if shards > 0 then
+		addShards(profile, def.Rarity, shards)
+	end
+	return shards, bar, def.Rarity
+end
+
 -- Shards of each rarity: { Common = n, Rare = n, Epic = n, Legendary = n }
 function Pets.Shards(profile)
 	local out = {}

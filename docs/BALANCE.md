@@ -195,7 +195,7 @@ L40 in 8.0-10.8h (median ~9.1h, was ~10h without the pet habits), frontier 40-66
 pieces, mostly Epic with some Legendary. No pets (nopet, Mage and Warrior): L40 in 12.6-14.4h at frontier 34-45, so pets
 are clearly worth it. No retune (inside 9-12h at the fast edge; PartyScale 2.6 -> 2.7 if it should be slower).
 Finding: pet food piles up (10-95 left at L40) because a pet cannot level past its owner; food is only useful while the pet
-lags behind (e.g. a new pet). Worth a design look: let food overflow into pet rank/shards, or sell less of it.
+lags behind (e.g. a new pet). Fixed 2026-11-22: food fed to a capped pet fills a bar that pays 1 pet shard of its rarity per 16,000 XP (`Config/Pets.FoodOverflow`, `Pets.OverflowFood`).
 
 ## Replay Wishstone income (checked 2026-11-22, no change)
 `STONES30` lines (Mage, companion, full): 321-332 Wishstones earned by L30 (~5h, ~1950 fights, frontier 36-40).
