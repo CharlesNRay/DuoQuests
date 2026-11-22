@@ -476,6 +476,22 @@ function PartyService.SetStage(player, stage)
 	return ok, reason
 end
 
+-- Studio cheat: the party jumps to a frontier (the player's own frontier was already moved).
+function PartyService.DevSetFrontier(player, frontier)
+	local entry = entryFor(player)
+	if not entry then
+		return false, "NoParty"
+	end
+	local record = entry.Record
+	record.Frontier = math.max(record.Frontier, frontier)
+	record.Stage = record.Frontier
+	record.Farm = nil
+	entry.Dirty = true
+	entry.NextFightAt = 0
+	entry.FightUntil = nil
+	return true
+end
+
 function PartyService.Advance(player)
 	local entry = entryFor(player)
 	if not entry then

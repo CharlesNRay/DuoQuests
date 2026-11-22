@@ -32,6 +32,7 @@ Screens.Guild = require(script.Parent.UI.GuildScreen).Guild
 Screens.Premium = require(script.Parent.UI.PremiumScreen).Premium
 Screens.Season = require(script.Parent.UI.SeasonScreen).Season
 Screens.Cosmetics = require(script.Parent.UI.CosmeticsScreen).Cosmetics
+Screens.Dev = require(script.Parent.UI.DevScreen).Dev
 Screens.Codes = require(script.Parent.UI.CodesScreen).Codes
 Screens.Store = require(script.Parent.UI.StoreScreen).Store
 Screens.Character = require(script.Parent.UI.CharacterScreen).Character
@@ -161,7 +162,7 @@ end
 local PANEL_DEFAULT = Vector2.new(500, 286)
 local PANEL_SIZES = {
 	Map = Vector2.new(640, 298), Hero = Vector2.new(640, 298), Skills = Vector2.new(660, 344),
-	Merchant = Vector2.new(540, 292), Blacksmith = Vector2.new(540, 292), Trainer = Vector2.new(540, 330), PetStore = Vector2.new(560, 330), Wish = Vector2.new(640, 352), Store = Vector2.new(640, 336), Boss = Vector2.new(640, 310), Battle = Vector2.new(640, 330), Quests = Vector2.new(640, 330), Premium = Vector2.new(640, 330), Season = Vector2.new(640, 330), Cosmetics = Vector2.new(640, 330), Codes = Vector2.new(540, 300), Character = Vector2.new(640, 340), Guild = Vector2.new(720, 340),
+	Merchant = Vector2.new(540, 292), Blacksmith = Vector2.new(540, 292), Trainer = Vector2.new(540, 330), PetStore = Vector2.new(560, 330), Wish = Vector2.new(640, 352), Store = Vector2.new(640, 336), Boss = Vector2.new(640, 310), Battle = Vector2.new(640, 330), Quests = Vector2.new(640, 330), Premium = Vector2.new(640, 330), Season = Vector2.new(640, 330), Cosmetics = Vector2.new(640, 330), Codes = Vector2.new(540, 300), Character = Vector2.new(640, 340), Guild = Vector2.new(720, 340), Dev = Vector2.new(640, 330),
 }
 local SHOP_NPC = { Merchant = "Merchant", Blacksmith = "Blacksmith", Trainer = "Trainer", PetStore = "PetStore", Wish = "Tree" }
 local panel = Kit.frame({ Name = "Panel", Size = UDim2.new(0, 500, 0, 286), Position = UDim2.new(0.5, -250, 0, 42), BackgroundColor3 = Kit.Colors.Bg, Visible = false, ZIndex = 5, Parent = root })
@@ -430,11 +431,9 @@ hud:AddButton("Skills", "dock", "⚔️", "Skills", function() open("Skills", "S
 hud:AddButton("Pets", "dock", "🐱", "Pets", function() open("Pets", "Pets") end)
 hud:AddButton("Party", "dock", "👥", "Party", function() open("Party", "Party") end)
 
--- Studio only: a test button that grants gold, boosts and gear so every screen can be exercised.
+-- Studio only: one test panel with every cheat (levels, stages, gold, items, pets, dailies, world boss, premium).
 if RunService:IsStudio() then
-	hud:AddButton("DevLevel", "mini", "⬆", "+5 levels (Studio only)", function() call("DevLevel") end)
-	hud:AddButton("Dev", "mini", "🧪", "Test items (Studio only)", function() call("DevGrant") end)
-	hud:AddButton("DevPremium", "mini", "★", "Toggle premium pass (Studio only)", function() call("DevPremium") end)
+	hud:AddButton("Dev", "mini", "🧪", "Test cheats (Studio only)", function() open("Dev", "Test cheats") end)
 end
 
 hud:AddButton("Bag", "dock", "🎒", "Bag", function() open("Bag", "Bag") end)

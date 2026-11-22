@@ -828,35 +828,91 @@ function handlers.BuyConsumable(player, profile, id, count)
 	return Consumables.Buy(profile, id, count)
 end
 
--- Studio-only test helper (the 🧪 "Test items" HUD button): gold, shards and a few of everything.
-function handlers.DevGrant(player, profile)
-	if not game:GetService("RunService"):IsStudio() then
-		return false, "Forbidden"
-	end
-	profile.Season.Currencies.Gold += 5000000 -- plenty for shops, slot training and pet store at once
-	profile.Season.Currencies.Shards += 6000
-	profile.Season.Currencies.Wishstones = (profile.Season.Currencies.Wishstones or 0) + 60
+-- Studio-only cheat panel (HUD 🧪 "Test"): every test shortcut goes through here.
+local DEV_ACTIONS = {}
+function DEV_ACTIONS.Gold(profile, n)
+	profile.Season.Currencies.Gold += 50000000 * n
+	return ("+%dM gold"):format(50 * n)
+end
+function DEV_ACTIONS.Items(profile)
+	local c = profile.Season.Currencies
+	c.Shards += 6000
+	c.Wishstones = (c.Wishstones or 0) + 60
 	for _, id in ipairs(Consumables.Order) do
 		Consumables.Grant(profile, id, if id == "PetWish" or id == "SkillWish" then 12 else 3)
 	end
 	for i = 1, 12 do
 		local t = Gear.Types[(i - 1) % #Gear.Types + 1]
-		Gear.Grant(profile, 5 + i * 3, { Slot = t, Rarity = if i % 5 == 0 then "Epic" elseif i % 2 == 0 then "Rare" else "Common" })
+		Gear.Grant(profile, math.max(5, profile.Season.HighestStage) + i, { Slot = t, Rarity = if i % 5 == 0 then "Epic" elseif i % 2 == 0 then "Rare" else "Common" })
 	end
-	afterBuildChange(player)
-	return true
+	return "Shards, wishes, boosts and 12 gear"
+end
+function DEV_ACTIONS.Level(profile, n)
+	for _ = 1, n do
+		Progression.AddXP(profile.Season, Progression.XPToNext(profile.Season.Level))
+	end
+	return "Level " .. profile.Season.Level
+end
+function DEV_ACTIONS.Stage(profile, n, player)
+	-- clears each stage like a real win (rewards, XP, frontier quests), then moves the party there
+	local season = profile.Season
+	local target = season.HighestStage + n
+	while season.HighestStage < target do
+		Progression.ApplyClear(profile, season.HighestStage)
+	end
+	PartyService.DevSetFrontier(player, season.HighestStage)
+	return ("Stage %d, level %d"):format(season.HighestStage, season.Level)
+end
+function DEV_ACTIONS.Pets(profile)
+	local PetConfig = require(Shared.Config.Pets)
+	profile.Permanent.Pets = profile.Permanent.Pets or {}
+	local acc = Pets.Account(profile)
+	for _, petId in ipairs(PetConfig.Order) do
+		profile.Permanent.Pets[petId] = true
+		acc.PetLevels[petId] = PetConfig.MaxLevel -- shown capped at the hero's level
+	end
+	return "All pets, max level (capped at your level)"
+end
+function DEV_ACTIONS.Daily(profile)
+	local a = profile.Permanent.Activities
+	if type(a) == "table" then
+		a.Day = 0 -- refills dungeon keys and daily bonuses on the next read
+		if a.Expedition then
+			a.Expedition.EndsAt = 0
+		end
+	end
+	profile.Season.Gifts = nil
+	return "Dungeon keys, daily bonuses and gift limits reset; expedition ready"
+end
+function DEV_ACTIONS.WorldBoss()
+	local ok, reason = BossService.DevStartWorld()
+	return if ok then "World boss is up" else nil, reason
+end
+function DEV_ACTIONS.Sunstones(profile)
+	Premium.AddSunstones(profile, 1000)
+	return "+1,000 Sunstones"
+end
+function DEV_ACTIONS.Premium(profile)
+	local owned = not Quests.Pass(profile).Premium
+	Quests.SetPremium(profile, owned)
+	return if owned then "Premium pass on" else "Premium pass off"
 end
 
--- Studio-only: level up (5 levels per press) to test progression quickly.
-function handlers.DevLevel(player, profile)
+function handlers.Dev(player, profile, action, n)
 	if not game:GetService("RunService"):IsStudio() then
 		return false, "Forbidden"
 	end
-	for _ = 1, 5 do
-		Progression.AddXP(profile.Season, Progression.XPToNext(profile.Season.Level))
+	local fn = type(action) == "string" and DEV_ACTIONS[action]
+	if not fn then
+		return false, "BadArgs"
+	end
+	n = if type(n) == "number" then math.clamp(math.floor(n), 1, 100) else 1
+	local text, reason = fn(profile, n, player)
+	if text == nil then
+		return false, reason
 	end
 	afterBuildChange(player)
-	return true, profile.Season.Level
+	return true, text
 end
 
 -- the guided first session: the client moves through the steps, the server keeps the place and pays once
@@ -948,25 +1004,6 @@ function handlers.DismissPremiumOffer(_, profile, itemId)
 		return false, "BadArgs"
 	end
 	return Premium.DismissOffer(profile, itemId)
-end
-
--- Studio only: Sunstones without paying, so the shop can be tried.
-function handlers.DevSunstones(_, profile)
-	if not game:GetService("RunService"):IsStudio() then
-		return false, "Forbidden"
-	end
-	Premium.AddSunstones(profile, 1000)
-	return true
-end
-
--- Studio only: flips the premium pass track so it can be tried without a purchase.
-function handlers.DevPremium(_, profile)
-	if not game:GetService("RunService"):IsStudio() then
-		return false, "Forbidden"
-	end
-	local owned = not Quests.Pass(profile).Premium
-	Quests.SetPremium(profile, owned)
-	return true, owned
 end
 
 -- End-of-season rewards. Live standing is cached for a minute (it reads the shared boards).

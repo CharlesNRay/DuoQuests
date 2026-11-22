@@ -77,7 +77,9 @@ Git Bash; they find a working Python themselves (`python3`/`python` there are St
   Combo pips show the layer count from 1 and a finisher pops "COMBO xN!" over the enemy (not seen in Studio).
 
 ## Gotchas
-- Studio testing: the HUD 🧪 button grants test gold/items and ⬆ gives +5 levels (Studio only). Vendor prompts need you within 14 studs;
+- Studio testing: the HUD 🧪 button opens the "Test cheats" panel (Studio only, `UI/DevScreen` -> `handlers.Dev(action, n)`, `DEV_ACTIONS` in ApiService):
+  +1/5/10 levels, +5/10/25 stages (cleared like real wins, party moves there), +50M/500M gold, Sunstones, test items, all pets at max level,
+  reset dailies (keys, dungeon bonuses, gifts, expedition ready), spawn world boss, toggle premium pass. Add new cheats there, not as new HUD buttons. SEEN in Studio 2026-11-22. Vendor prompts need you within 14 studs;
   teleport from the command bar (Client view): `game.Players.LocalPlayer.Character:PivotTo(CFrame.new(x, 4, z))` - Trainer (13.5, -5), Pet Store (-13.5, -5).
   The command bar has its own module cache, so `require(DataService).GetProfile` there returns nil.
 - Don't launch Studio via the Start menu while it is open: it starts a second instance (close it).

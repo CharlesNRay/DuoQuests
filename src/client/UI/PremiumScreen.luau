@@ -92,11 +92,6 @@ local function packsTab(area, state, call, extra, redraw)
 			end
 		end)
 	end
-	if RunService:IsStudio() then
-		Kit.button({ Size = UDim2.new(1, -8, 0, 36), Text = "Studio only: add 1,000 Sunstones", BackgroundColor3 = C.Panel, Parent = scroll }, function()
-			call("DevSunstones")
-		end)
-	end
 end
 
 -- The pop-up shown once when the player reaches a milestone (the subclass level): offer = state.Player.PremiumOffer.

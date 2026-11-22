@@ -371,6 +371,18 @@ function BossService.Hatch(player, profile)
 	return Bosses.Hatch(profile, seasonId, SEASON)
 end
 
+-- Studio cheat: start the world boss now (it ends on its normal timer).
+function BossService.DevStartWorld()
+	if not IS_STUDIO then
+		return false, "Forbidden"
+	end
+	if world.Active then
+		return false, "AlreadyActive"
+	end
+	startWorldEvent()
+	return true
+end
+
 function BossService.Init(pushRemote, profileGetter)
 	push, getProfile = pushRemote, profileGetter
 	worldModel = buildWorldBoss()
