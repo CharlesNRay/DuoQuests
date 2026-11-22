@@ -73,7 +73,7 @@ Git Bash; they find a working Python themselves (`python3`/`python` there are St
 - **Skill rework 2026-11-19** (tests green, NOT seen in Studio): class combos (builders add layers, a finisher consumes them),
   team aura for tank+healer+2 damage (`Config/TeamAura`), Taunt/Purify debuff enemies (Exposed/Consecrated), Guardian Angel,
   Rallying Cry, Last Stand, Blessing reworked; `PartyScale` 2.6. See docs/BALANCE.md "Skill rework". New status icons
-  (✦ ➶ ✂ ⚒ ⚖ ☠ ☀ ⚔ ★) not seen in Studio.
+  (✦ ➶ ✂ ⚒ ⚖ 🕯 ☀ ⚔ ★) not seen in Studio.
   Combo pips show the layer count from 1 and a finisher pops "COMBO xN!" over the enemy (not seen in Studio).
 
 ## Gotchas

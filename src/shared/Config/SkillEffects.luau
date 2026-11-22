@@ -81,7 +81,7 @@ return {
 		Opened = { Buff = "Glyph", Color = { 230, 230, 120 }, Glyph = "✂" },
 		Sundered = { Buff = "Glyph", Color = { 200, 160, 120 }, Glyph = "⚒" },
 		Judged = { Buff = "Glyph", Color = { 255, 230, 160 }, Glyph = "⚖" },
-		SoulRot = { Buff = "Glyph", Color = { 150, 110, 190 }, Glyph = "☠" },
+		SoulRot = { Buff = "Glyph", Color = { 150, 110, 190 }, Glyph = "🕯" },
 		TeamAura = { Buff = "Pulse", Color = { 255, 210, 110 } },
 		Hasted = { Buff = "Chevrons", Color = { 255, 230, 110 } },
 		Evasive = { Buff = "Pulse", Color = { 200, 205, 225 } },
