@@ -44,7 +44,11 @@ Newest first.
 - 🔨 Combat rework (ideas from idle RPGs like Ulala): class combos (builder skills add layers of a class mark, a finisher hits harder per layer and uses them up), a team aura for tank + healer + 2 damage, support skills that weaken enemies (Taunt: Exposed, Purify: Consecrated) or buff the party (Guardian Angel, Rallying Cry, Blessing). Combo layer counts on the status pips and a "COMBO xN!" pop.
 - 🔨 Balance: tanks and Cleric buffed, Summoner trimmed, enemy party scale 2.6, boss damage scale and dungeon stages retuned; all six classes reach stage ~40-66 by L40 in 8-11 h (docs/BALANCE.md). The balance bot now plays combos, pets (gear, food, Pet Store) and wish tickets.
 - 🔨 Pet food fed to a pet at your level becomes pet shard progress; Market Pet Food has a fixed price; skipped-tutorial payout shows a notice.
-- ⬜ Still to do: Studio check of the combat rework, guild chat, gifting, cosmetics try-on, restyle of the older screens.
+- ✅ Guild chat, gifting (Bag > Stash), cosmetics try-on, team aura and Exposed icons, Market pet food, capped-pet feeding: seen in Studio 2026-11-22.
+- ✅ 2026-11-22: Studio "Test cheats" panel (HUD 🧪): levels, stage jumps, gold, items, gear for your stage, pets, daily resets, world boss, premium.
+- ✅ 2026-11-22: Bag gear and Party screens restyled as card grids with detail panes (swap a teammate's skill from the ones they own).
+- ✅ 2026-11-22: guild raid Battle fixed (it failed with ServerError); world/season boss fights, expedition collect seen. Boss fights start with the meter collapsed.
+- ⬜ Still to do: catch a "COMBO xN!" pop and wave banners in Studio (fights are fast).
 
 ### 2026-11-16 (numbers, Battle hub, activities, market)
 - ✅ Number scale: health / attack / defense x10 (`Economy.NumberScale`), XP x20 (`Economy.XPNumber`), gold on a new curve (thousands early, millions later), costs ~x60. Percentages unchanged, so balance is invariant. Large numbers print short (`Util/NumberFormat`: 12.4K, 3.2M).
