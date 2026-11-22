@@ -521,6 +521,7 @@ push.OnClientEvent:Connect(function(kind, info)
 			panel.Visible = false
 			Kit.HideTip()
 			liveLog:Play(info, 0.8)
+			liveLog:SetOpen(false) -- the boss stands on the right where the meter sits; "+" opens it again
 			hud:Notify("⚔ " .. tostring(info.Label) .. "!")
 			local started = BossArena.Play(info, function()
 				local ok, fresh = api:InvokeServer("GetState")
