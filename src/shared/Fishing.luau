@@ -4,9 +4,13 @@
 
 	Season.Fishing = { Day, Rewarded, Log = { [fishId] = count } }   (made on first catch)
 
-	  Fishing.Cast(now, rng)                       -> cast = { BiteAt }, wait seconds (the client shows the bite then)
-	  Fishing.Reel(profile, cast, now, day, rng)   -> true, { Fish, Name, Glyph, Reward = {lines}, Paid, Left }
-	                                                | false, "NoCast" | "TooEarly" | "TooLate"
+	  Fishing.Cast(now, rng)                       -> cast = { BiteAt, Zone }, info = { Wait, Zone, ZoneWidth, Speed, Laps }
+	                                                  (the client starts the dial at the bite; Zone = start angle of the gold zone)
+	  Fishing.Reel(profile, cast, now, day, rng, clientElapsed)
+	                                               -> true, { Fish, Name, Glyph, Reward = {lines}, Paid, Left }
+	                                                | false, "NoCast" | "TooEarly" | "TooLate" | "Missed"
+	      clientElapsed = seconds the player saw the needle spin; the server only trusts it within the round-trip slack
+	  Fishing.InZone(elapsed, zone)                -> was the needle in the gold zone after `elapsed` seconds?
 	  Fishing.Roll(rng)                            -> a fish def
 	  Fishing.Status(profile, day)                 -> { Left, Caught, Log = { { Id, Name, Glyph, Count } } }
 ]]
@@ -24,7 +28,14 @@ end
 function Fishing.Cast(now, rng)
 	rng = rng or math.random
 	local wait = Config.WaitMin + rng() * (Config.WaitMax - Config.WaitMin)
-	return { BiteAt = now + wait }, wait
+	-- the zone never covers the top, so the needle always has to travel to it
+	local zone = 50 + rng() * (360 - 100 - Config.ZoneWidth)
+	return { BiteAt = now + wait, Zone = zone }, { Wait = wait, Zone = zone, ZoneWidth = Config.ZoneWidth, Speed = Config.Speed, Laps = Config.Laps }
+end
+
+function Fishing.InZone(elapsed, zone)
+	local angle = (elapsed * Config.Speed) % 360
+	return angle >= zone - Config.Tolerance and angle <= zone + Config.ZoneWidth + Config.Tolerance
 end
 
 function Fishing.Roll(rng)
@@ -63,15 +74,25 @@ local function rewardLines(reward)
 	return lines
 end
 
-function Fishing.Reel(profile, cast, now, day, rng)
+function Fishing.Reel(profile, cast, now, day, rng, clientElapsed)
 	if not cast then
 		return false, "NoCast"
 	end
 	if now < cast.BiteAt - 0.15 then
 		return false, "TooEarly"
 	end
-	if now > cast.BiteAt + Config.Window + Config.Grace then
+	local spin = Config.Laps * 360 / Config.Speed
+	local serverElapsed = now - cast.BiteAt
+	if serverElapsed > spin + Config.Grace then
 		return false, "TooLate"
+	end
+	-- what the player saw, held to the server's clock within the round trip
+	local elapsed = math.clamp(tonumber(clientElapsed) or serverElapsed, serverElapsed - 0.8, serverElapsed + 0.2)
+	if elapsed > spin then
+		return false, "TooLate"
+	end
+	if not Fishing.InZone(math.max(elapsed, 0), cast.Zone or 0) then
+		return false, "Missed"
 	end
 	local fish = Fishing.Roll(rng)
 	local s = state(profile, day)

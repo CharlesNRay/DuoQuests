@@ -95,6 +95,44 @@ function Celebrate.Show(root, title, subtitle, color)
 	end)
 end
 
+-- a burst of little stars from the mouse (or the middle of the screen), for claiming and buying things
+local burstGui = nil
+function Celebrate.Burst(color, count)
+	local UserInputService = game:GetService("UserInputService")
+	if not burstGui or not burstGui.Parent then
+		burstGui = Instance.new("ScreenGui")
+		burstGui.Name = "DuoQuestBursts"
+		burstGui.IgnoreGuiInset = true
+		burstGui.ResetOnSpawn = false
+		burstGui.DisplayOrder = 80
+		burstGui.Parent = Players.LocalPlayer:WaitForChild("PlayerGui")
+	end
+	local at = UserInputService:GetMouseLocation()
+	if at.Magnitude < 1 then
+		local cam = workspace.CurrentCamera
+		at = cam and cam.ViewportSize / 2 or Vector2.new(400, 300)
+	end
+	color = color or Color3.fromRGB(255, 214, 90)
+	for i = 1, count or 14 do
+		local star = Instance.new("TextLabel")
+		star.BackgroundTransparency = 1
+		star.Text = if i % 3 == 0 then "✦" else "★"
+		star.TextColor3 = if i % 2 == 0 then color else Color3.new(1, 1, 1)
+		star.TextStrokeTransparency = 0.5
+		star.Font = Enum.Font.GothamBlack
+		star.TextSize = 14 + (i % 4) * 4
+		star.Size = UDim2.fromOffset(30, 30)
+		star.AnchorPoint = Vector2.new(0.5, 0.5)
+		star.Position = UDim2.fromOffset(at.X, at.Y)
+		star.Parent = burstGui
+		local a = (i / (count or 14)) * math.pi * 2 + math.random() * 0.4
+		local dist = 50 + math.random() * 60
+		local info = TweenInfo.new(0.6 + math.random() * 0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+		TweenService:Create(star, info, { Position = UDim2.fromOffset(at.X + math.cos(a) * dist, at.Y + math.sin(a) * dist - 20), TextTransparency = 1, TextStrokeTransparency = 1, Rotation = math.random(-90, 90) }):Play()
+		Debris:AddItem(star, 1)
+	end
+end
+
 function Celebrate.Sparkle(color)
 	local character = Players.LocalPlayer.Character
 	local root = character and character:FindFirstChild("HumanoidRootPart")

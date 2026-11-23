@@ -1,14 +1,19 @@
 --[[
 	Config/Fishing: the fishing pond in the Wishing Grove (docs/TOWN.md phase 3).
 
-	Cast, wait for the bite (WaitMin..WaitMax seconds), reel within Window seconds. A catch is rolled from Fish by
+	Cast, wait for the bite (WaitMin..WaitMax seconds); then a skill check: a needle sweeps round a dial (Speed degrees a
+	second, from the top) and you press REEL while it is inside the gold zone (ZoneWidth degrees, placed at random). After
+	Laps turns without a press the fish gets away. A catch is rolled from Fish by
 	Weight. The first DailyRewarded catches each day pay their Reward (pet food mostly: fishing feeds your pet); after
 	that the pond is just for fun (and the fish log). Rewards stay small (docs/TOWN.md: town income <= ~10%).
 ]]
 return {
 	WaitMin = 2,
 	WaitMax = 6,
-	Window = 1.4, -- seconds after the bite to reel in
+	Speed = 220, -- needle, degrees a second
+	ZoneWidth = 70, -- degrees of the gold zone ("relatively easy")
+	Laps = 2, -- turns before the fish gets away
+	Tolerance = 8, -- extra degrees each side of the zone, for frame timing
 	Grace = 0.6, -- extra slack for the round trip to the server
 	DailyRewarded = 12,
 	Fish = {

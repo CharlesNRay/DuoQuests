@@ -227,6 +227,31 @@ return function(modulesOverride)
 		end
 	end
 	check("The Dungeon Gate and Expedition Camp stand outside town, clear of everything", outsideOk)
+	-- the town wall rings everything that is the town, and the places outside it are outside it
+	local wall = World.TOWN_WALL
+	local function r(x, z)
+		return math.sqrt((x - World.PLAZA.X) ^ 2 + (z - World.PLAZA.Z) ^ 2)
+	end
+	local inside = true
+	for _, did in ipairs(ids) do
+		local x, z = World.DistrictPoint(did)
+		inside = inside and r(x, z) + World.Districts[did].Size + 8 < wall.Radius
+	end
+	for slot = 1, World.MAX_LOTS do
+		local ax, _, az = World.ArenaOrigin(slot)
+		for _, c in ipairs({ { -1, -1 }, { 1, -1 }, { -1, 1 }, { 1, 1 } }) do
+			inside = inside and r(ax + c[1] * World.ARENA_WIDTH / 2, az + c[2] * World.ARENA_DEPTH / 2) + 8 < wall.Radius
+		end
+	end
+	check("The town wall rings the plaza, every district and every lot", inside)
+	local dgx, dgz = World.TownSpot("DungeonGate")
+	local ecx, ecz = World.TownSpot("ExpeditionCamp")
+	check("The Boss Field, Dungeon Gate and Expedition Camp are outside the wall", r(f.X, f.Z) - f.Radius > wall.Radius + 4 and r(dgx, dgz) - 30 > wall.Radius and r(ecx, ecz) - 24 > wall.Radius)
+	local mainGate = false
+	for _, g in ipairs(wall.Gates) do
+		mainGate = mainGate or (g.Main and g.Angle == 180)
+	end
+	check("The main gate is in the wall, facing the Boss Field", mainGate)
 	local spacingOk = true
 	for a, sa in pairs(World.PlazaSpots) do
 		for b, sb in pairs(World.PlazaSpots) do

@@ -308,6 +308,23 @@ local function redraw()
 end
 
 local QUIET_ACTIONS = { ChooseClass = true, MakeCharacter = true, PlayCharacter = true, CreateCharacter = true, RenameCharacter = true, UpdateCharacter = true }
+-- feedback for claiming, buying and upgrading (2026-11-23, owner: "a sound effect or special effect when claiming things")
+local CLAIM_FX = {
+	ClaimDaily = "claim", ClaimQuest = "claim", ClaimWeeklyQuest = "claim", ClaimPass = "claim", ClaimStage = "claim",
+	ExpeditionCollect = "claim", GuildClaimMission = "claim", GuildRaidClaim = "claim", Gift = "claim",
+	ClaimQuestBonus = "big", ClaimWeeklyBonus = "big", ClaimAllStages = "big", BossClaim = "big", ClaimSeasonRewards = "big", RedeemCode = "big", BossHatch = "big",
+	MarketBuy = "buy", BuyConsumable = "buy", BuyPetEgg = "buy", BuyPetGearCrate = "buy", BuyRunePouch = "buy", BuyCosmetic = "buy", BuyCosmeticBundle = "buy", BuyPremium = "buy", BuyPetWithShards = "buy",
+	UpgradeGear = "upgrade", CarveRune = "upgrade", UpgradeBag = "upgrade", GuildBuy = "upgrade",
+	LevelSlot = "power", RankUpSkill = "power", RankUpPet = "power", UpgradeSkill = "power", LevelPassiveSlot = "power", ConsumeSkillCopies = "power",
+	SpendTalent = "power", AutoTalents = "power", UseConsumable = "power", UnlockSkillWithPick = "power", ChooseSubclass = "big",
+}
+local FX_LOOKS = {
+	claim = { Sounds = { "Coins", "Reward" }, Color = Color3.fromRGB(255, 214, 90), Count = 14 },
+	big = { Sounds = { "Coins", "Errand" }, Color = Color3.fromRGB(255, 214, 90), Count = 24, Sparkle = true },
+	buy = { Sounds = { "Purchase" }, Color = Color3.fromRGB(120, 230, 140), Count = 10 },
+	upgrade = { Sounds = { "Upgrade", "Reward" }, Color = Color3.fromRGB(255, 150, 70), Count = 16 },
+	power = { Sounds = { "PowerUp" }, Color = Color3.fromRGB(130, 190, 255), Count = 14 },
+}
 function call(action, ...)
 	local ok, data = api:InvokeServer(action, ...)
 	if action == "CreateCode" and ok then
@@ -320,6 +337,18 @@ function call(action, ...)
 		end
 		Kit.label({ Size = UDim2.new(1, 0, 0, 20), Position = UDim2.new(0, 0, 1, -20), Text = "Could not do that: " .. tostring(data), TextColor3 = Kit.Colors.Bad, Parent = body })
 	else
+		-- something claimed, bought or upgraded: a sound and a burst of stars where you clicked
+		local fx = CLAIM_FX[action]
+		if fx then
+			local look = FX_LOOKS[fx]
+			for _, name in ipairs(look.Sounds) do
+				Sound.Play(name)
+			end
+			Celebrate.Burst(look.Color, look.Count)
+			if look.Sparkle then
+				Celebrate.Sparkle(look.Color)
+			end
+		end
 		-- the server rate-limits back-to-back calls (0.1s), so a refresh sent right after an action can be
 		-- refused: retry shortly instead of leaving the screen stale
 		local fresh, newState
@@ -580,7 +609,7 @@ do
 		end
 	end
 	local busy = false
-	local REFUSALS = { Busy = "Finish the errand you have first!", DoneToday = "Thanks again! Come back tomorrow." }
+	local REFUSALS = { Busy = "Finish the errand you have first!", DoneToday = "Thanks again! Come back tomorrow.", Nothing = "Nothing I need today - try the Notice Board!" }
 	Town.OnErrand = function(spotId)
 		if busy then
 			return

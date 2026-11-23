@@ -70,10 +70,22 @@ World.DistrictOrder = { "Grove", "Gate", "Training" }
 
 -- The Boss Field: open ground outside the Town Gate (south) where the world boss and the season Colossus stand.
 -- (Until 2026-11-23 they stood at (105, 150) and (0, 190): on the ring road and in the middle of the new Town Gate.)
-World.BossField = { X = 0, Z = 320, Radius = 60 } -- its north edge (z 260) stays clear of the town wall (z ~232)
+World.BossField = { X = 0, Z = 365, Radius = 55 } -- outside the town wall's main gate (the wall is at z 302 there)
 World.BossSpots = {
-	World = { X = -40, Z = 312 }, -- the roaming world boss (26 studs tall)
-	Season = { X = 38, Z = 335 }, -- the season Colossus on its altar (90 studs tall, altar 34 wide)
+	World = { X = -36, Z = 372 }, -- the roaming world boss (26 studs tall)
+	Season = { X = 36, Z = 382 }, -- the season Colossus on its altar (90 studs tall, altar 34 wide)
+}
+
+-- The town wall (2026-11-23, owner: "the castle walls should encompass the entire town"): a ring round the plaza,
+-- the districts and the lots, with the main gate to the south (to the Boss Field) and small gates where the roads
+-- leave for the Dungeon Gate (west) and the Expedition Camp (south-east). Angle as for PlazaSpots (0 = north).
+World.TOWN_WALL = {
+	Radius = 262,
+	Gates = {
+		{ Angle = 180, Width = 26, Name = "DUO QUEST TOWN", Main = true },
+		{ Angle = -90, Width = 16, Name = "TO THE DUNGEONS" },
+		{ Angle = 150, Width = 16, Name = "TO THE EXPEDITION CAMP" },
+	},
 }
 
 -- Town errand spots (docs/TOWN.md phase 2, Shared/Errands): where the errand NPCs stand and the things you pick up.
@@ -82,12 +94,19 @@ World.BossSpots = {
 World.TownSpots = {
 	Mabel = { District = "Gate", X = -18, Z = 17 }, -- Old Mabel, by her cottage
 	Tavern = { District = "Gate", X = 15, Z = 4 }, -- the barkeep at the Sleepy Griffin
-	Board = { District = "Gate", X = -18, Z = 2 }, -- the notice board (opens the errand list)
+	Board = { District = "Gate", X = -14, Z = -28 }, -- the notice board by the road into the square (opens the errand list)
+	Elder = { District = "Grove", X = -8, Z = -24 }, -- Elder Thessaly, in front of the Wishing Tree
+	Courier = { District = "Gate", X = 10, Z = -26 }, -- Pip the Courier, by the road into the square
+	Flowers = { District = "Grove", X = 14, Z = -30 }, -- the flower bed inside the Grove arch
+	Shallows = { District = "Grove", X = -36, Z = 26 }, -- the far edge of the fishing pond
+	Well = { District = "Gate", X = 4.5, Z = 0 }, -- the town well
+	Crates = { District = "Training", X = 36, Z = 6 }, -- supply crates beside the Guild Hall
+	Arrows = { District = "Training", X = 12, Z = 32 }, -- stray arrows by the archery targets
 	Sergeant = { District = "Training", X = 18, Z = -20 }, -- at the end of the row of training dummies
 	Guildmaster = { District = "Training", X = 14, Z = 11 }, -- at the guild hall door
 	Hay = { District = "Grove", X = 19, Z = 20 }, -- hay pile beside the pet park
-	Warden = { X = -12, Z = 272 }, -- the Beast Warden, just inside the Boss Field arch
-	Altar = { X = 0, Z = 296 }, -- the offering stone on the Boss Field
+	Warden = { X = -12, Z = 322 }, -- the Beast Warden, just inside the Boss Field arch
+	Altar = { X = 0, Z = 340 }, -- the offering stone on the Boss Field
 	-- places that open a screen (not errands)
 	Dummy = { District = "Training", X = 0, Z = -22 }, -- the middle training dummy ("test your build")
 	Pond = { District = "Grove", X = -34, Z = 2 }, -- the fishing dock
@@ -99,12 +118,14 @@ World.TownSpots = {
 	Relic4 = { District = "Gate", X = -14, Z = 36 }, -- by the town wall behind Old Mabel's garden
 	Relic5 = { District = "Training", X = -34, Z = -2 }, -- under the sparring ring corner
 	Relic6 = { District = "Training", X = 34, Z = 32 }, -- behind the Guild Hall
-	Relic7 = { X = -56, Z = 282 }, -- among the rocks of the Boss Field
+	Relic7 = { X = -40, Z = 340 }, -- among the rocks of the Boss Field
 	Relic8 = { X = -280, Z = 64 }, -- by the Dungeon Gate hill
-	Relic9 = { X = 120, Z = 272 }, -- at the Expedition Camp
+	Relic9 = { X = 132, Z = 312 }, -- at the Expedition Camp
 	Relic10 = { X = -99, Z = 139 }, -- under a tree on the road between the Grove and the Gate
-	DungeonGate = { X = -290, Z = 40 }, -- outside town, west of the Wishing Grove
-	ExpeditionCamp = { X = 100, Z = 262 }, -- outside the town wall, south-east
+	DungeonGate = { X = -310, Z = 40 }, -- outside the town wall, west of the Wishing Grove
+	ExpeditionCamp = { X = 150, Z = 300 }, -- outside the town wall, south-east
+	Bones = { X = -292, Z = 30 }, -- a bone pile in front of the Dungeon Gate
+	CampDrop = { X = 161, Z = 296 }, -- the camp's stores
 	GuildBoard = { District = "Training", X = 6, Z = 24 }, -- beside the Guild Hall, the other side from Guildmaster Orin
 	Cat1 = { District = "Grove", X = -22, Z = 30 }, -- past the fishing pond
 	Cat2 = { District = "Training", X = -36, Z = 22 }, -- behind the sparring ring

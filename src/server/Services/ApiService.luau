@@ -1433,15 +1433,15 @@ function handlers.FishCast(player)
 	if not nearSpot(player, "Pond") then
 		return false, "TooFar"
 	end
-	local cast, wait = Fishing.Cast(os.clock(), math.random)
+	local cast, info = Fishing.Cast(os.clock(), math.random)
 	fishCasts[player.UserId] = cast
-	return true, { Wait = wait }
+	return true, info
 end
 
-function handlers.FishReel(player, profile)
+function handlers.FishReel(player, profile, elapsed)
 	local cast = fishCasts[player.UserId]
 	fishCasts[player.UserId] = nil
-	return Fishing.Reel(profile, cast, os.clock(), Daily.DayNumber(os.time()), math.random)
+	return Fishing.Reel(profile, cast, os.clock(), Daily.DayNumber(os.time()), math.random, if type(elapsed) == "number" then elapsed else nil)
 end
 
 function handlers.PetPlay(player, profile)

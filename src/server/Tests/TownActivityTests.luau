@@ -32,12 +32,19 @@ return function(modulesOverride)
 
 	-- fishing
 	local profile = PT.New()
-	local cast, wait = Fishing.Cast(100, seq(0.5))
+	local cast, castInfo = Fishing.Cast(100, seq(0.5))
+	local wait = castInfo.Wait
 	check("A cast bites between the min and max wait", wait >= Config.WaitMin and wait <= Config.WaitMax and math.abs(cast.BiteAt - (100 + wait)) < 1e-9)
+	check("The gold zone is placed away from the top of the dial", cast.Zone >= 40 and cast.Zone + Config.ZoneWidth <= 320)
+	-- the moment the needle is in the middle of the zone
+	local good = (cast.Zone + Config.ZoneWidth / 2) / Config.Speed
+	local bad = (cast.Zone - 30) / Config.Speed
 	check("Reeling with no cast is refused", select(2, Fishing.Reel(profile, nil, 100, 1, seq(0))) == "NoCast")
 	check("Reeling before the bite scares the fish", select(2, Fishing.Reel(profile, cast, cast.BiteAt - 1, 1, seq(0))) == "TooEarly")
-	check("Reeling long after the bite misses", select(2, Fishing.Reel(profile, cast, cast.BiteAt + Config.Window + Config.Grace + 0.5, 1, seq(0))) == "TooLate")
-	local ok, info = Fishing.Reel(profile, cast, cast.BiteAt + 0.3, 1, seq(0.01))
+	check("Reeling after the needle's laps: the fish got away", select(2, Fishing.Reel(profile, cast, cast.BiteAt + Config.Laps * 360 / Config.Speed + Config.Grace + 0.5, 1, seq(0))) == "TooLate")
+	check("Reeling with the needle outside the zone misses", select(2, Fishing.Reel(profile, cast, cast.BiteAt + bad + 0.1, 1, seq(0), bad)) == "Missed")
+	check("A client cannot claim a time far from the server's clock", select(2, Fishing.Reel(profile, cast, cast.BiteAt + bad - 0.3, 1, seq(0), good + 1)) == "Missed")
+	local ok, info = Fishing.Reel(profile, cast, cast.BiteAt + good + 0.1, 1, seq(0.01), good)
 	check("Reeling in the window catches the first fish (a Minnow at roll 0)", ok and info.Fish == "Minnow" and info.Paid == true and #info.Reward == 1)
 	local food = function()
 		for _, row in ipairs(m.Consumables.List(profile)) do
@@ -49,7 +56,7 @@ return function(modulesOverride)
 	end
 	check("A minnow pays a pet snack", food() == 1)
 	for _ = 1, Config.DailyRewarded + 3 do
-		Fishing.Reel(profile, cast, cast.BiteAt, 1, seq(0.01))
+		Fishing.Reel(profile, cast, cast.BiteAt + good, 1, seq(0.01), good)
 	end
 	local status = Fishing.Status(profile, 1)
 	check("Only the first DailyRewarded catches a day pay", status.Left == 0 and food() == Config.DailyRewarded)

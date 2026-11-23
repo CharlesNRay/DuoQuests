@@ -158,6 +158,18 @@ Git Bash; they find a working Python themselves (`python3`/`python` there are St
   10 relics `TownSpots.Relic1..10` (2 Wishstones each per season, all 10 = +10 and title "Relic Hunter",
   `Season.Relics`, handler `TakeRelic`). Not seen: the all-relics title moment; sparring ring not built (owner undecided).
 
+- **Owner feedback 2026-11-23 evening** (tests green, NOT seen in Studio: the owner was playing in Studio): carried
+  items hang from an unrotated invisible handle (the platter and keg were sideways), keg stands upright; errands are a
+  pool of 11 (`Config/Errands`), `Errands.Offered(day)` picks 5 a day (one per townsperson, same for everyone);
+  new townsfolk Elder Thessaly (Grove, by the tree) and Pip the Courier (Gate), Greta gives errands too; new pick-up
+  spots Flowers, Shallows, Well, Crates, Arrows, Bones, CampDrop. Town wall ring `World.TOWN_WALL` (radius 262, main
+  gate south, small gates west and south-east); the Gate district's own gate is gone; Boss Field (z 365),
+  Dungeon Gate (-310, 40) and Expedition Camp (150, 300) moved outside the wall. Notice board moved by the road into
+  the Gate square; flower beds are real flowers now (the pink balls); ringside houses 146/158 removed (they blocked the
+  camp road), lamps stand beside houses not before their doors. Fishing is a skill check: a needle sweeps a dial, REEL in
+  the gold zone (`Config/Fishing` Speed/ZoneWidth/Laps; the server holds the client's elapsed time to its clock).
+  Claim/buy/upgrade feedback: `CLAIM_FX` in Main (sounds + `Celebrate.Burst` stars at the cursor).
+
 ## Gotchas
 - Studio testing: the HUD 🧪 button opens the "Test cheats" panel (Studio only, `UI/DevScreen` -> `handlers.Dev(action, n)`, `DEV_ACTIONS` in ApiService):
   +1/5/10 levels, +5/10/25 stages (cleared like real wins, party moves there), +50M/500M gold, Sunstones, test items, Epic gear for your stage, all pets at max level,

@@ -153,11 +153,25 @@ local function fence(a, b, height, color)
 	end
 end
 
+-- a flower bed: soil, a low leafy bush, and flowers on stems (petals round a yellow middle), so it reads as flowers
 local function flowerBed(position, color)
-	disc(position, 2.6, 0.5, 0.2, Color3.fromRGB(110, 80, 56), Enum.Material.Ground)
-	for index = 1, 6 do
-		local a = index * math.pi / 3
-		part({ Name = "Flower", Shape = Enum.PartType.Ball, Size = Vector3.new(0.9, 0.9, 0.9), Position = position + Vector3.new(math.cos(a) * 1.5, 1.1, math.sin(a) * 1.5), Color = color, Material = Enum.Material.SmoothPlastic, CanCollide = false })
+	disc(position, 2.6, 0.4, 0.2, Color3.fromRGB(110, 80, 56), Enum.Material.Ground)
+	for index = 1, 4 do
+		local a = index * math.pi / 2 + 0.4
+		part({ Name = "Leaves", Shape = Enum.PartType.Ball, Size = Vector3.new(1.6, 0.9, 1.6), Position = position + Vector3.new(math.cos(a) * 1.1, 0.75, math.sin(a) * 1.1), Color = Color3.fromRGB(70, 150, 70), Material = Enum.Material.Grass, CanCollide = false })
+	end
+	for index = 1, 7 do
+		local a = index * math.pi * 2 / 7
+		local r = if index % 2 == 0 then 1.6 else 0.8
+		local h = 1.4 + (index % 3) * 0.25
+		local base = position + Vector3.new(math.cos(a) * r, 0, math.sin(a) * r)
+		part({ Name = "Stem", Size = Vector3.new(0.12, h, 0.12), Position = base + Vector3.new(0, 0.4 + h / 2, 0), Color = Color3.fromRGB(60, 130, 60), Material = Enum.Material.Grass, CanCollide = false })
+		local top = base + Vector3.new(0, 0.45 + h, 0)
+		for petal = 1, 5 do
+			local pa = petal * math.pi * 2 / 5 + index
+			part({ Name = "Petal", Size = Vector3.new(0.32, 0.08, 0.2), CFrame = CFrame.new(top + Vector3.new(math.cos(pa) * 0.22, 0, math.sin(pa) * 0.22)) * CFrame.Angles(0, -pa, 0), Color = color, Material = Enum.Material.SmoothPlastic, CanCollide = false })
+		end
+		part({ Name = "FlowerMiddle", Shape = Enum.PartType.Ball, Size = Vector3.new(0.18, 0.18, 0.18), Position = top + Vector3.new(0, 0.04, 0), Color = Color3.fromRGB(255, 210, 60), Material = Enum.Material.SmoothPlastic, CanCollide = false })
 	end
 end
 
@@ -203,20 +217,7 @@ local function gate()
 	local cf = districtFrame("Gate")
 	disc(cf.Position, d.Size, 0.4, 0, STONE, Enum.Material.Cobblestone)
 	disc(cf.Position, d.Size - 3, 0.45, 0, Color3.fromRGB(184, 176, 160), Enum.Material.Cobblestone)
-	-- the town gate at the back (away from the plaza), with walls running out to the sides
-	local back = cf * CFrame.new(0, 0, d.Size - 4)
-	for _, side in ipairs({ -1, 1 }) do
-		part({ Name = "GateTower", Size = Vector3.new(7, 17, 7), CFrame = back * CFrame.new(side * 9, 8.5, 0), Color = STONE_DARK, Material = Enum.Material.Brick })
-		part({ Name = "GateTowerTop", Size = Vector3.new(8.4, 1.4, 8.4), CFrame = back * CFrame.new(side * 9, 17.7, 0), Color = STONE, Material = Enum.Material.Brick })
-		for index = -1, 1 do
-			part({ Name = "Merlon", Size = Vector3.new(1.6, 1.6, 1.6), CFrame = back * CFrame.new(side * 9 + index * 3, 19.2, -3.4), Color = STONE, Material = Enum.Material.Brick })
-		end
-		part({ Name = "TownWall", Size = Vector3.new(26, 9, 3), CFrame = back * CFrame.new(side * (12.5 + 13), 4.5, 1), Color = STONE_DARK, Material = Enum.Material.Brick })
-		part({ Name = "Banner", Size = Vector3.new(3, 6, 0.2), CFrame = back * CFrame.new(side * 9, 11, -3.6), Color = Color3.fromRGB(176, 60, 60), Material = Enum.Material.Fabric })
-	end
-	local lintel = part({ Name = "GateLintel", Size = Vector3.new(12, 4, 6), CFrame = back * CFrame.new(0, 13, 0), Color = STONE_DARK, Material = Enum.Material.Brick })
-	sign(lintel, Enum.NormalId.Front, "DUO QUEST TOWN")
-	sign(lintel, Enum.NormalId.Back, "DUO QUEST TOWN")
+	-- (the town gate stands in the town wall now, south of this square: see townWall)
 	-- the well in the middle
 	disc(cf.Position, 3.2, 2.6, 0.4, STONE_DARK, Enum.Material.Brick)
 	disc(cf.Position, 2.4, 0.2, 2.9, Color3.fromRGB(60, 110, 160), Enum.Material.Glass)
@@ -227,7 +228,8 @@ local function gate()
 	-- the tavern (left as you come from the plaza) and the notice board (right)
 	house(facing(cf, 27, 8), 22, 16, 13, Color3.fromRGB(230, 214, 180), Color3.fromRGB(140, 60, 44), "THE SLEEPY GRIFFIN")
 	-- (the tavern sign names it; Greta the barkeep stands at its door, see errands())
-	local boardCf = facing(cf, -18, 2)
+	local bx, bz = -14, -28 -- World.TownSpots.Board: beside the road into the square, clear of the houses
+	local boardCf = facing(cf, bx, bz)
 	for _, side in ipairs({ -1, 1 }) do
 		part({ Name = "BoardPost", Size = Vector3.new(0.8, 8, 0.8), CFrame = boardCf * CFrame.new(side * 4.4, 4, 0.3), Color = WOOD, Material = Enum.Material.Wood })
 	end
@@ -240,10 +242,10 @@ local function gate()
 	-- houses and lamps round the square
 	house(facing(cf, -28, 24), 16, 13, 11, Color3.fromRGB(220, 200, 170), Color3.fromRGB(90, 110, 150))
 	house(facing(cf, -32, -8), 14, 12, 10, Color3.fromRGB(235, 225, 200), Color3.fromRGB(120, 140, 80))
-	for _, off in ipairs({ { -12, -16 }, { 12, -16 }, { -24, 12 }, { 24, 12 } }) do
+	for _, off in ipairs({ { -12, -16 }, { 12, -16 }, { -38, 6 }, { 38, -2 } }) do -- beside the houses, not before their doors
 		lamp((cf * CFrame.new(off[1], 0.4, off[2])).Position)
 	end
-	for _, off in ipairs({ { -8, -8 }, { 8, -8 } }) do
+	for _, off in ipairs({ { -20, 4 }, { 20, -6 } }) do
 		flowerBed((cf * CFrame.new(off[1], 0.2, off[2])).Position, Color3.fromRGB(255, 120, 140))
 	end
 end
@@ -388,6 +390,70 @@ local function bossField()
 	end
 end
 
+-- the town wall: a ring round the whole town (plaza, districts, lots) with the main gate to the south and small gates
+-- where the roads leave for the Dungeon Gate and the Expedition Camp (World.TOWN_WALL)
+local function townWall()
+	local w = World.TOWN_WALL
+	local R = w.Radius
+	local centre = Vector3.new(World.PLAZA.X, 0, World.PLAZA.Z)
+	local function point(deg, r)
+		local a = math.rad(deg)
+		return centre + Vector3.new(math.sin(a) * (r or R), 0, -math.cos(a) * (r or R))
+	end
+	local function nearGate(deg, extra)
+		for _, g in ipairs(w.Gates) do
+			local half = math.deg((g.Width / 2 + (extra or 0)) / R)
+			local diff = math.abs(((deg - g.Angle + 180) % 360) - 180)
+			if diff < half then
+				return true
+			end
+		end
+		return false
+	end
+	local HEIGHT = 12
+	local STEP = 3
+	for deg = 0, 360 - STEP, STEP do
+		local mid = deg + STEP / 2
+		if not nearGate(mid, 6) then
+			local p1, p2 = point(deg), point(deg + STEP)
+			local m = (p1 + p2) / 2
+			local cf = CFrame.lookAt(m + Vector3.new(0, HEIGHT / 2, 0), p2 + Vector3.new(0, HEIGHT / 2, 0))
+			part({ Name = "TownWall", Size = Vector3.new(3, HEIGHT, (p2 - p1).Magnitude + 0.6), CFrame = cf, Color = STONE_DARK, Material = Enum.Material.Brick })
+			part({ Name = "Merlon", Size = Vector3.new(3.2, 1.6, 2), CFrame = cf * CFrame.new(0, HEIGHT / 2 + 0.8, 0), Color = STONE, Material = Enum.Material.Brick })
+		end
+	end
+	-- towers round the ring
+	for deg = 15, 345, 30 do
+		if not nearGate(deg, 14) then
+			local at = point(deg)
+			part({ Name = "WallTower", Shape = Enum.PartType.Cylinder, Size = Vector3.new(HEIGHT + 6, 9, 9), CFrame = CFrame.new(at + Vector3.new(0, (HEIGHT + 6) / 2, 0)) * CFrame.Angles(0, 0, math.rad(90)), Color = STONE_DARK, Material = Enum.Material.Brick })
+			part({ Name = "WallTowerTop", Shape = Enum.PartType.Cylinder, Size = Vector3.new(1.4, 10.4, 10.4), CFrame = CFrame.new(at + Vector3.new(0, HEIGHT + 6.7, 0)) * CFrame.Angles(0, 0, math.rad(90)), Color = STONE, Material = Enum.Material.Brick })
+		end
+	end
+	-- the gates: two towers and a named lintel; the main gate is bigger and has banners
+	for _, g in ipairs(w.Gates) do
+		local cf = CFrame.lookAt(point(g.Angle), centre) -- front (-Z) faces into town
+		local big = g.Main == true
+		local tw = if big then 8 else 6
+		local th = if big then HEIGHT + 9 else HEIGHT + 5
+		local off = g.Width / 2 + tw / 2
+		for _, side in ipairs({ -1, 1 }) do
+			part({ Name = "GateTower", Size = Vector3.new(tw, th, tw), CFrame = cf * CFrame.new(side * off, th / 2, 0), Color = STONE_DARK, Material = Enum.Material.Brick })
+			part({ Name = "GateTowerTop", Size = Vector3.new(tw + 1.4, 1.4, tw + 1.4), CFrame = cf * CFrame.new(side * off, th + 0.7, 0), Color = STONE, Material = Enum.Material.Brick })
+			if big then
+				for _, face in ipairs({ -1, 1 }) do
+					part({ Name = "Banner", Size = Vector3.new(3.4, 7, 0.2), CFrame = cf * CFrame.new(side * off, th - 6, face * (tw / 2 + 0.15)), Color = Color3.fromRGB(176, 60, 60), Material = Enum.Material.Fabric })
+				end
+			end
+		end
+		local lintel = part({ Name = "GateLintel", Size = Vector3.new(g.Width + 2, if big then 4.5 else 3.4, tw - 1), CFrame = cf * CFrame.new(0, th - (if big then 3 else 2.4), 0), Color = STONE_DARK, Material = Enum.Material.Brick })
+		sign(lintel, Enum.NormalId.Front, g.Name)
+		sign(lintel, Enum.NormalId.Back, g.Name)
+		-- the road through the gate
+		part({ Name = "GateRoad", Size = Vector3.new(g.Width - 4, 0.34, tw + 10), CFrame = cf * CFrame.new(0, 0.17, 0), Color = ROAD, Material = Enum.Material.Pebble, CanCollide = false })
+	end
+end
+
 -- houses and trees along the ring between the districts, so the walk feels like a town
 local function ringside()
 	local centre = Vector3.new(World.PLAZA.X, 0, World.PLAZA.Z)
@@ -395,7 +461,8 @@ local function ringside()
 	local walls = { Color3.fromRGB(230, 214, 180), Color3.fromRGB(220, 200, 170), Color3.fromRGB(235, 225, 200), Color3.fromRGB(210, 190, 160) }
 	local roofs = { Color3.fromRGB(140, 60, 44), Color3.fromRGB(90, 110, 150), Color3.fromRGB(120, 140, 80), Color3.fromRGB(150, 100, 60) }
 	local index = 0
-	for _, angle in ipairs({ 116, 128, 146, 158, 202, 214, 232, 244 }) do -- clear of the districts
+	-- clear of the districts and of the road out to the Expedition Camp (angle ~150: 146 and 158 stood on it)
+	for _, angle in ipairs({ 116, 128, 136, 202, 214, 232, 244 }) do
 		index += 1
 		local a = math.rad(angle)
 		local dir = Vector3.new(math.sin(a), 0, -math.cos(a))
@@ -403,7 +470,9 @@ local function ringside()
 		local at = centre + dir * (R + 18)
 		house(CFrame.lookAt(at, centre + dir * R), 16, 13, 11, walls[index % 4 + 1], roofs[index % 4 + 1])
 		tree(centre + dir * (R - 14), 0.9 + (index % 3) * 0.12)
-		lamp(centre + dir * (R + 6))
+		-- the lamp stands beside the house, by the road, never in front of its door
+		local la = math.rad(angle + 6)
+		lamp(centre + Vector3.new(math.sin(la), 0, -math.cos(la)) * (R + 7))
 	end
 end
 
@@ -525,7 +594,58 @@ local function catModel(parent)
 	return model, body
 end
 
+local function looseParts(model, list)
+	for _, props in ipairs(list) do
+		props.Parent = model
+		props.CanCollide = false
+		part(props)
+	end
+end
+
 local CARRY_LOOKS = {
+	Flowers = function(model)
+		looseParts(model, {
+			{ Name = "Wrap", Size = Vector3.new(0.7, 1.2, 0.7), CFrame = CFrame.new(0, -0.3, 0), Color = Color3.fromRGB(240, 230, 200), Material = Enum.Material.Fabric },
+			{ Name = "Bloom", Shape = Enum.PartType.Ball, Size = Vector3.new(0.6, 0.6, 0.6), CFrame = CFrame.new(-0.3, 0.5, 0), Color = Color3.fromRGB(255, 120, 160) },
+			{ Name = "Bloom", Shape = Enum.PartType.Ball, Size = Vector3.new(0.6, 0.6, 0.6), CFrame = CFrame.new(0.3, 0.55, 0.1), Color = Color3.fromRGB(200, 120, 255) },
+			{ Name = "Bloom", Shape = Enum.PartType.Ball, Size = Vector3.new(0.6, 0.6, 0.6), CFrame = CFrame.new(0, 0.7, -0.25), Color = Color3.fromRGB(255, 210, 80) },
+		})
+	end,
+	Bones = function(model)
+		for i = 1, 3 do
+			looseParts(model, { { Name = "Bone", Size = Vector3.new(1.8, 0.25, 0.25), CFrame = CFrame.new(0, (i - 2) * 0.3, 0) * CFrame.Angles(0, math.rad(i * 40), 0), Color = Color3.fromRGB(235, 230, 215), Material = Enum.Material.SmoothPlastic } })
+		end
+	end,
+	Crate = function(model)
+		looseParts(model, {
+			{ Name = "Crate", Size = Vector3.new(1.8, 1.4, 1.4), CFrame = CFrame.new(), Color = Color3.fromRGB(170, 126, 80), Material = Enum.Material.WoodPlanks },
+			{ Name = "Strap", Size = Vector3.new(1.85, 0.2, 1.45), CFrame = CFrame.new(0, 0.3, 0), Color = Color3.fromRGB(90, 60, 40), Material = Enum.Material.Fabric },
+		})
+	end,
+	Arrows = function(model)
+		looseParts(model, { { Name = "Quiver", Shape = Enum.PartType.Cylinder, Size = Vector3.new(1.4, 0.6, 0.6), CFrame = CFrame.Angles(0, 0, math.rad(90)), Color = Color3.fromRGB(120, 80, 50), Material = Enum.Material.Fabric } })
+		for i = 1, 4 do
+			looseParts(model, { { Name = "Arrow", Size = Vector3.new(0.08, 1.2, 0.08), CFrame = CFrame.new((i - 2.5) * 0.12, 0.9, 0), Color = Color3.fromRGB(200, 60, 60), Material = Enum.Material.SmoothPlastic } })
+		end
+	end,
+	Fish = function(model)
+		looseParts(model, {
+			{ Name = "FishBody", Shape = Enum.PartType.Ball, Size = Vector3.new(1.4, 0.7, 0.5), CFrame = CFrame.new(), Color = Color3.fromRGB(120, 170, 220), Material = Enum.Material.SmoothPlastic },
+			{ Name = "FishTail", Size = Vector3.new(0.1, 0.6, 0.5), CFrame = CFrame.new(0.8, 0, 0), Color = Color3.fromRGB(90, 140, 200), Material = Enum.Material.SmoothPlastic },
+		})
+	end,
+	Bucket = function(model)
+		looseParts(model, {
+			{ Name = "Bucket", Shape = Enum.PartType.Cylinder, Size = Vector3.new(1.1, 1.1, 1.1), CFrame = CFrame.Angles(0, 0, math.rad(90)), Color = Color3.fromRGB(150, 110, 70), Material = Enum.Material.WoodPlanks },
+			{ Name = "Water", Shape = Enum.PartType.Cylinder, Size = Vector3.new(0.05, 0.95, 0.95), CFrame = CFrame.new(0, 0.5, 0) * CFrame.Angles(0, 0, math.rad(90)), Color = Color3.fromRGB(80, 160, 220), Material = Enum.Material.Glass },
+		})
+	end,
+	Parcel = function(model)
+		looseParts(model, {
+			{ Name = "Parcel", Size = Vector3.new(1.4, 1, 1.2), CFrame = CFrame.new(), Color = Color3.fromRGB(190, 150, 100), Material = Enum.Material.Cardboard },
+			{ Name = "String", Size = Vector3.new(1.45, 1.05, 0.12), CFrame = CFrame.new(), Color = Color3.fromRGB(180, 40, 40), Material = Enum.Material.Fabric },
+		})
+	end,
 	Boar = function(model)
 		local base = part({ Name = "Platter", Shape = Enum.PartType.Cylinder, Size = Vector3.new(0.2, 2.6, 2.6), CFrame = CFrame.Angles(0, 0, math.rad(90)), Color = Color3.fromRGB(200, 200, 210), Material = Enum.Material.Metal, Parent = model, CanCollide = false })
 		part({ Name = "Roast", Shape = Enum.PartType.Ball, Size = Vector3.new(1.8, 1.2, 2.2), CFrame = CFrame.new(0, 0.6, 0), Color = Color3.fromRGB(150, 80, 40), Parent = model, CanCollide = false })
@@ -533,9 +653,10 @@ local CARRY_LOOKS = {
 		return base
 	end,
 	Keg = function(model)
-		local keg = part({ Name = "Keg", Shape = Enum.PartType.Cylinder, Size = Vector3.new(2, 1.6, 1.6), CFrame = CFrame.Angles(0, math.rad(90), 0), Color = Color3.fromRGB(150, 100, 60), Material = Enum.Material.WoodPlanks, Parent = model, CanCollide = false })
-		for _, x in ipairs({ -0.6, 0.6 }) do
-			part({ Name = "Hoop", Shape = Enum.PartType.Cylinder, Size = Vector3.new(0.15, 1.7, 1.7), CFrame = CFrame.new(0, 0, x) * CFrame.Angles(0, math.rad(90), 0), Color = Color3.fromRGB(70, 70, 80), Material = Enum.Material.Metal, Parent = model, CanCollide = false })
+		-- standing upright in your arms (a cylinder's length runs along X, so tip it onto Y)
+		local keg = part({ Name = "Keg", Shape = Enum.PartType.Cylinder, Size = Vector3.new(2, 1.6, 1.6), CFrame = CFrame.Angles(0, 0, math.rad(90)), Color = Color3.fromRGB(150, 100, 60), Material = Enum.Material.WoodPlanks, Parent = model, CanCollide = false })
+		for _, y in ipairs({ -0.6, 0.6 }) do
+			part({ Name = "Hoop", Shape = Enum.PartType.Cylinder, Size = Vector3.new(0.15, 1.7, 1.7), CFrame = CFrame.new(0, y, 0) * CFrame.Angles(0, 0, math.rad(90)), Color = Color3.fromRGB(70, 70, 80), Material = Enum.Material.Metal, Parent = model, CanCollide = false })
 		end
 		return keg
 	end,
@@ -572,7 +693,10 @@ local function setCarry(kind)
 	local model = Instance.new("Model")
 	model.Name = "ErrandCarry"
 	model:SetAttribute("Kind", kind)
-	local main = CARRY_LOOKS[kind](model)
+	-- an invisible, unrotated handle carries everything: pivoting by a rotated visual part (the platter, the keg)
+	-- used to throw away its own rotation and hold it sideways
+	CARRY_LOOKS[kind](model)
+	local main = part({ Name = "CarryHandle", Size = Vector3.new(0.2, 0.2, 0.2), CFrame = CFrame.new(), Transparency = 1, CanCollide = false, Parent = model })
 	for _, d in ipairs(model:GetDescendants()) do
 		if d:IsA("BasePart") then
 			d.Anchored = false
@@ -682,11 +806,52 @@ local function errands()
 	barModel.Parent = folder
 	barModel:PivotTo(barCf * CFrame.new(0, kit.TORSO_HEIGHT, 0))
 	kit.nameTag(barRoot, "GRETA", "Barkeep, the Sleepy Griffin", Color3.fromRGB(230, 140, 90), 4.6)
-	pickup("Tavern", barRoot, "Collect", "Greta")
-	spots.Tavern.Marker.Parent.StudsOffset = Vector3.new(0, 7.6, 0)
+	-- Greta gives errands of her own and hands out the boar and the keg
+	spots.Tavern = { Anchor = barRoot, Prompt = errandPrompt(barRoot, "Tavern", "Talk", "Greta"), Marker = marker(barRoot, 7.6), Kind = "Giver" }
 	for index, y in ipairs({ 1.3, 3.5 }) do
 		part({ Name = "Barrel", Shape = Enum.PartType.Cylinder, Size = Vector3.new(2.2, 2.2, 2.2), CFrame = barCf * CFrame.new(3.4, y, 0.6) * CFrame.Angles(0, 0, math.rad(90)), Color = if index == 1 then Color3.fromRGB(150, 100, 60) else Color3.fromRGB(140, 92, 54), Material = Enum.Material.WoodPlanks })
 	end
+	npc("Elder", "Elder Thessaly", "Keeper of the Wishing Tree", { Shirt = Color3.fromRGB(70, 130, 110), Pants = Color3.fromRGB(50, 80, 70), Hair = Color3.fromRGB(235, 235, 240), Skin = Color3.fromRGB(230, 200, 175), Robe = Color3.fromRGB(80, 150, 120), Trim = Color3.fromRGB(200, 240, 220), Held = "Staff", Glow = Color3.fromRGB(110, 230, 200) }, Color3.fromRGB(110, 210, 170))
+	npc("Courier", "Pip the Courier", "Parcels and letters", { Shirt = Color3.fromRGB(60, 110, 190), Pants = Color3.fromRGB(70, 60, 50), Hair = Color3.fromRGB(200, 120, 50), Hat = Color3.fromRGB(50, 90, 160), Held = "Scroll" }, Color3.fromRGB(110, 160, 240))
+	-- small props at the new pick-up spots (their prompts only show while an errand needs them)
+	local function propSpot(id, action, object, build)
+		local cf = spotFrame(id)
+		local anchor = build(cf)
+		pickup(id, anchor, action, object)
+	end
+	propSpot("Flowers", "Pick flowers", "Flower bed", function(cf)
+		return part({ Name = "FlowerAnchor", Size = Vector3.new(1, 1, 1), CFrame = cf * CFrame.new(0, 1.5, 0), Transparency = 1, CanCollide = false })
+	end)
+	propSpot("Shallows", "Scoop a fish", "Pond shallows", function(cf)
+		part({ Name = "Net", Size = Vector3.new(0.15, 4, 0.15), CFrame = cf * CFrame.new(1.2, 1.6, 0) * CFrame.Angles(0, 0, math.rad(25)), Color = DARK_WOOD, Material = Enum.Material.Wood })
+		return part({ Name = "FishBasket", Shape = Enum.PartType.Cylinder, Size = Vector3.new(1, 1.6, 1.6), CFrame = cf * CFrame.new(0, 0.5, 0) * CFrame.Angles(0, 0, math.rad(90)), Color = Color3.fromRGB(170, 130, 80), Material = Enum.Material.Fabric })
+	end)
+	propSpot("Well", "Fill the bucket", "Town well", function(cf)
+		return part({ Name = "WellBucket", Shape = Enum.PartType.Cylinder, Size = Vector3.new(1, 1, 1), CFrame = cf * CFrame.new(0, 0.5, 0) * CFrame.Angles(0, 0, math.rad(90)), Color = Color3.fromRGB(150, 110, 70), Material = Enum.Material.WoodPlanks })
+	end)
+	propSpot("Crates", "Lift a crate", "Supply crates", function(cf)
+		for i = 0, 2 do
+			part({ Name = "SupplyCrate", Size = Vector3.new(2.2, 2.2, 2.2), CFrame = cf * CFrame.new((i % 2) * 2.4 - 1.2, 1.1 + (if i == 2 then 2.2 else 0), 0) * CFrame.Angles(0, math.rad(i * 8), 0), Color = Color3.fromRGB(170, 126, 80), Material = Enum.Material.WoodPlanks })
+		end
+		return part({ Name = "CrateAnchor", Size = Vector3.new(1, 1, 1), CFrame = cf * CFrame.new(0, 2, 0), Transparency = 1, CanCollide = false })
+	end)
+	propSpot("Arrows", "Collect arrows", "Stray arrows", function(cf)
+		for i = 1, 5 do
+			part({ Name = "StrayArrow", Size = Vector3.new(0.1, 1.6, 0.1), CFrame = cf * CFrame.new((i - 3) * 0.9, 0.6, (i % 2) * 0.8) * CFrame.Angles(math.rad(20 + i * 6), math.rad(i * 30), 0), Color = Color3.fromRGB(200, 60, 60), Material = Enum.Material.SmoothPlastic, CanCollide = false })
+		end
+		return part({ Name = "ArrowAnchor", Size = Vector3.new(1, 1, 1), CFrame = cf * CFrame.new(0, 1, 0), Transparency = 1, CanCollide = false })
+	end)
+	propSpot("Bones", "Gather bones", "Bone pile", function(cf)
+		for i = 1, 6 do
+			part({ Name = "PileBone", Size = Vector3.new(1.8, 0.3, 0.3), CFrame = cf * CFrame.new((i % 3) * 0.6 - 0.6, 0.2 + (i // 3) * 0.3, (i % 2) * 0.5) * CFrame.Angles(0, math.rad(i * 47), 0), Color = Color3.fromRGB(235, 230, 215), Material = Enum.Material.SmoothPlastic })
+		end
+		part({ Name = "Skull", Shape = Enum.PartType.Ball, Size = Vector3.new(1, 0.9, 1), CFrame = cf * CFrame.new(0.9, 0.5, -0.6), Color = Color3.fromRGB(240, 236, 220), Material = Enum.Material.SmoothPlastic })
+		return part({ Name = "BoneAnchor", Size = Vector3.new(1, 1, 1), CFrame = cf * CFrame.new(0, 1, 0), Transparency = 1, CanCollide = false })
+	end)
+	propSpot("CampDrop", "Drop off the crate", "Camp stores", function(cf)
+		part({ Name = "StoresTarp", Size = Vector3.new(5, 0.2, 4), CFrame = cf * CFrame.new(0, 0.1, 0), Color = Color3.fromRGB(110, 120, 80), Material = Enum.Material.Fabric })
+		return part({ Name = "StoresAnchor", Size = Vector3.new(1, 1, 1), CFrame = cf * CFrame.new(0, 1, 0), Transparency = 1, CanCollide = false })
+	end)
 	-- the hay pile beside the pet park
 	local hayCf = spotFrame("Hay")
 	local hay = part({ Name = "HayPile", Shape = Enum.PartType.Ball, Size = Vector3.new(6, 6, 6), CFrame = hayCf * CFrame.new(0, 0.8, 0), Color = Color3.fromRGB(226, 196, 100), Material = Enum.Material.Grass })
@@ -934,6 +1099,7 @@ function Town.Build(parentFolder, hubPulsers, hubKit)
 	training()
 	ringside()
 	bossField()
+	townWall()
 	if kit then
 		errands()
 	end

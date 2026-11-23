@@ -26,6 +26,9 @@ return {
 		Coins = { Ids = { 9113849492, 9113849445 }, Volume = 0.5, Group = "Interface" }, -- Coins Or Keys Jingle 6 / 5
 		Reward = { Ids = { 9126073001 }, Volume = 0.5, Group = "Interface" }, -- Synth Sparkle Tone ... Bell Tone Ding
 		Errand = { Ids = { 125706237686412 }, Volume = 0.55, Group = "Interface" }, -- Glistening Harp - Sting (APM)
+		Purchase = { Ids = { 9113728049 }, Volume = 0.45, Group = "Interface" }, -- Cash Register 2
+		Upgrade = { Ids = { 9113445305 }, Volume = 0.5, Pitch = { 0.95, 1.08 }, Group = "Interface" }, -- Blacksmith Anvil Hammer Hits 1
+		PowerUp = { Ids = { 9117886252 }, Volume = 0.45, Group = "Interface" }, -- Power Up Sweeteners 12
 		-- big moments
 		LevelUp = { Ids = { 1845411858 }, Volume = 0.6, Group = "Interface" }, -- Top Prize (APM)
 		StageClear = { Ids = { 9126073318 }, Volume = 0.35, Pitch = { 0.95, 1.08 }, Group = "Interface" }, -- sparkle ding
