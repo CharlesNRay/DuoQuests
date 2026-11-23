@@ -84,8 +84,8 @@ Git Bash; they find a working Python themselves (`python3`/`python` there are St
   Equipping a replacement moves the old piece's rune onto it (`Gear.MoveRune`), unless the new piece has an equal or better rune.
   11 stats (Attack, Health, Defense, Damage dealt, Damage taken, Crit chance, Crit damage, Crit resist (new sim stat: lowers the
   chance to BE crit), Haste/cooldowns, Attack speed, Healing), 4 tiers. Uncarved runes live in `Season.Runes["Stat:Tier"]`.
-  Sources: every frontier boss, 3% of frontier wins, a full dungeon clear, Blacksmith rune pouch (25K gold). Handlers `CarveRune`, `BuyRunePouch`.
-  Bag > Gear now lists worn pieces first (W) with Unequip + "Carve rune". Rune glyph on gear cards, rune line in item tooltips.
+  Sources: every frontier boss, 3% of frontier wins, a full dungeon clear, rune pouch (25K gold). Handlers `CarveRune`, `BuyRunePouch`.
+  Carving and pouches moved 2026-11-23 to the **Rune Carver** plaza NPC (`Shops.RuneCarver`, spot `RuneCarver`); Bag > Gear only shows the rune. Rune glyph on gear cards, rune line in item tooltips.
   Crits now pop: big orange "CRIT!" number, red body flash, burst + slashes (`Replay.critText/critBurst`); not seen in Studio.
 
 - **Gear bad-luck protection 2026-11-22** (tests green, NOT seen in Studio): `Config/Gear.Pity`, `Gear.PityDrop`/`Gear.IsUpgrade`,
@@ -100,6 +100,16 @@ Git Bash; they find a working Python themselves (`python3`/`python` there are St
   penalties eased. The bot keeps Heal+Blessing / Taunt+IronSkin. Berserker -0.15 dmg / -0.12 health (2026-11-23; the 11-22 halving
   had only reached the docs). Open: Judgment is a weak 4th Cleric skill (BALANCE.md).
   Berserker 2026-11-23: no damage penalty, Lifesteal +0.25; Guardian loses DamageDealt +0.142 (L40: Berserker ~60, Guardian ~62; label "Lifesteal" in path text not seen in Studio).
+
+- **Owner feedback 2026-11-23** (tests green, NONE seen in Studio): combat log stays minimized across fights (`LiveLog:Play`);
+  town pet faced backwards (PetFollower turned it 180); companions' pets were the default orange "chick" in the arena until a
+  fight (`GetHostedSummaries` left out companion PetId); Test cheats "Wishes" row (+500/5K Wishstones, 25/250 Skill + Pet Wish
+  tickets); a fallen ally gets a red outline, "💀 Name is down" tag, "Name fell!" pop and a banner (`Actor:MarkDown`); Pets
+  shard strip no longer wraps (guess at "text hiding behind shards": ask the owner where if it persists); Rune Carver NPC
+  (hooded robe, staff, glowing rune stones, standing stone); every stall shows its trade (Merchant crates/coins/sword+shield,
+  Pet Store eggs/cage/paw sign, Trainer dummy/scrolls/book + robe, Blacksmith hammer/rack); vendors spread around the plaza
+  ring (`World.PlazaSpots`); lots 12 -> 8 (`MAX_LOTS`), spacing 84x76 -> 100x92. One lot per PARTY (WorldService.claimSlot):
+  4 partied players share one lot, so Max Players 8 (Roblox game settings) never needs more than 8 lots.
 
 ## Gotchas
 - Studio testing: the HUD 🧪 button opens the "Test cheats" panel (Studio only, `UI/DevScreen` -> `handlers.Dev(action, n)`, `DEV_ACTIONS` in ApiService):

@@ -12,10 +12,6 @@ local PassiveCfg = require(Shared.Config.Passives)
 local UltCfg = require(Shared.Config.Ultimates)
 local ClassCfg = require(Shared.Config.Classes)
 local RuneCfg = require(Shared.Config.Runes)
-local RuneRank = {}
-for index, tier in ipairs(RuneCfg.Tiers) do
-	RuneRank[tier] = index
-end
 local AbilityStats = require(Shared.Combat.AbilityStats)
 local Passives = require(Shared.Passives)
 local Skills = require(Shared.Skills)
@@ -380,9 +376,6 @@ function Screens.Bag(container, state, call, extra)
 		end
 	end
 	chosen = chosen or entries[1]
-	if extra.BagRunePick ~= chosen.Item.Id then
-		extra.BagRunePick, extra.BagRuneConfirm = nil, nil
-	end
 
 	-- card grid on the left
 	local grid = Kit.new("ScrollingFrame", { Size = UDim2.new(0.56, -8, 1, -38), Position = UDim2.fromOffset(0, 36), BackgroundTransparency = 1, BorderSizePixel = 0, CanvasSize = UDim2.new(), AutomaticCanvasSize = Enum.AutomaticSize.Y, ScrollBarThickness = 4, Parent = container })
@@ -417,78 +410,22 @@ function Screens.Bag(container, state, call, extra)
 	local detail = Kit.frame({ Size = UDim2.new(0.44, -4, 1, -38), Position = UDim2.new(0.56, 0, 0, 36), BackgroundColor3 = C.Panel, Parent = container })
 	local item = chosen.Item
 	Icons.Item(detail, item, { Size = UDim2.fromOffset(48, 48), Position = UDim2.fromOffset(10, 10) })
-	local runes = state.Player.Runes or {}
-	local function redraw()
-		Screens.Bag(container, extra.State or state, call, extra)
-	end
 	local info = Kit.new("ScrollingFrame", { Size = UDim2.new(1, -76, 1, -54), Position = UDim2.fromOffset(66, 8), BackgroundTransparency = 1, BorderSizePixel = 0, CanvasSize = UDim2.new(), AutomaticCanvasSize = Enum.AutomaticSize.Y, ScrollBarThickness = 3, Parent = detail })
 	Kit.new("UIListLayout", { Padding = UDim.new(0, 4), SortOrder = Enum.SortOrder.LayoutOrder, Parent = info })
 
-	if extra.BagRunePick == item.Id then
-		-- rune picker: every rune you own; a rune on this piece of a higher tier asks first
-		local confirmKey = extra.BagRuneConfirm
-		if confirmKey then
-			local newRow
-			for _, r in ipairs(runes) do
-				if r.Key == confirmKey then
-					newRow = r
-				end
-			end
-			Kit.label({ Size = UDim2.new(1, -6, 0, 0), AutomaticSize = Enum.AutomaticSize.Y, LayoutOrder = 1, RichText = true, TextSize = 12, TextYAlignment = Enum.TextYAlignment.Top, Text = ("%s\n%s\n\nwill be replaced by\n%s\n\nThe old rune is lost."):format(Kit.tint("Replace a higher-tier rune?", C.Bad), Kit.tint(item.Rune and item.Rune.Label or "?", Kit.rarityColor(item.Rune and item.Rune.Tier or "Common")), Kit.tint(newRow and newRow.Label or "?", Kit.rarityColor(newRow and newRow.Tier or "Common"))), Parent = info })
-			Kit.button({ Size = UDim2.new(0.5, -14, 0, 30), Position = UDim2.new(0, 10, 1, -38), Text = "Replace", TextSize = 13, BackgroundColor3 = C.Bad, Parent = detail }, function()
-				extra.BagRuneConfirm, extra.BagRunePick = nil, nil
-				call("CarveRune", item.Id, confirmKey, true)
-			end)
-			Kit.button({ Size = UDim2.new(0.5, -14, 0, 30), Position = UDim2.new(0.5, 4, 1, -38), Text = "Cancel", TextSize = 13, BackgroundColor3 = C.PanelLight, Parent = detail }, function()
-				extra.BagRuneConfirm = nil
-				redraw()
-			end)
-			return
-		end
-		Kit.label({ Size = UDim2.new(1, -6, 0, 16), LayoutOrder = 0, Text = if item.Rune then ("Now: " .. item.Rune.Label) else "No rune on this piece yet.", TextSize = 11, TextColor3 = C.Dim, TextWrapped = true, Parent = info })
-		if #runes == 0 then
-			Kit.label({ Size = UDim2.new(1, -6, 0, 40), LayoutOrder = 1, Text = "You have no runes. Bosses and dungeons drop them; the Blacksmith sells rune pouches.", TextSize = 11, TextColor3 = C.Dim, Parent = info })
-		end
-		for index, r in ipairs(runes) do
-			local b = Kit.button({ Size = UDim2.new(1, -6, 0, 30), LayoutOrder = index + 1, RichText = true, Text = ("%s %s  x%d"):format(r.Glyph or "", Kit.tint(r.Label, Kit.rarityColor(r.Tier)), r.Count), TextSize = 11, TextXAlignment = Enum.TextXAlignment.Left, BackgroundColor3 = C.PanelLight, Parent = info }, function()
-				local oldRank = item.Rune and RuneRank[item.Rune.Tier] or 0
-				if oldRank > (RuneRank[r.Tier] or 0) then
-					extra.BagRuneConfirm = r.Key
-					redraw()
-				else
-					extra.BagRunePick = nil
-					call("CarveRune", item.Id, r.Key, false)
-				end
-			end)
-			Kit.new("UIPadding", { PaddingLeft = UDim.new(0, 8), Parent = b })
-		end
-		Kit.button({ Size = UDim2.new(1, -20, 0, 30), Position = UDim2.new(0, 10, 1, -38), Text = "Back", TextSize = 13, BackgroundColor3 = C.PanelLight, Parent = detail }, function()
-			extra.BagRunePick = nil
-			redraw()
-		end)
-		return
-	end
-
 	Kit.label({ Size = UDim2.new(1, -6, 0, 0), AutomaticSize = Enum.AutomaticSize.Y, LayoutOrder = 1, RichText = true, Text = Tips.Item(item, gear), TextSize = 12, TextYAlignment = Enum.TextYAlignment.Top, Parent = info })
-	-- bottom row: Equip / Unequip and Carve rune
+	-- bottom row: Equip / Unequip (runes are carved at the Rune Carver)
 	if chosen.Worn then
-		Kit.button({ Size = UDim2.new(0.5, -14, 0, 30), Position = UDim2.new(0, 10, 1, -38), Text = "Unequip", TextSize = 13, BackgroundColor3 = C.PanelLight, Parent = detail }, function()
+		Kit.button({ Size = UDim2.new(1, -20, 0, 30), Position = UDim2.new(0, 10, 1, -38), Text = "Unequip", TextSize = 13, BackgroundColor3 = C.PanelLight, Parent = detail }, function()
 			call("UnequipGear", chosen.Worn)
 		end)
 	else
 		local better = Tips.Compare(item, gear).Verdict == "Up"
-		Kit.button({ Size = UDim2.new(0.5, -14, 0, 30), Position = UDim2.new(0, 10, 1, -38), Text = if better then "Equip  ▲" else "Equip", TextSize = 13, BackgroundColor3 = if better then C.Accent else C.PanelLight, TextColor3 = if better then Color3.fromRGB(30, 24, 10) else C.Text, Parent = detail }, function()
+		Kit.button({ Size = UDim2.new(1, -20, 0, 30), Position = UDim2.new(0, 10, 1, -38), Text = if better then "Equip  ▲" else "Equip", TextSize = 13, BackgroundColor3 = if better then C.Accent else C.PanelLight, TextColor3 = if better then Color3.fromRGB(30, 24, 10) else C.Text, Parent = detail }, function()
 			call("EquipGear", item.Id)
 		end)
 	end
-	local owned = 0
-	for _, r in ipairs(runes) do
-		owned += r.Count
-	end
-	Kit.button({ Size = UDim2.new(0.5, -14, 0, 30), Position = UDim2.new(0.5, 4, 1, -38), Text = ("🔮 Carve rune (%d)"):format(owned), TextSize = 12, BackgroundColor3 = if owned > 0 then Color3.fromRGB(120, 80, 200) else C.PanelLight, TextColor3 = if owned > 0 then C.Text else C.Dim, Parent = detail }, function()
-		extra.BagRunePick = item.Id
-		redraw()
-	end)
+	Kit.label({ Size = UDim2.new(1, -6, 0, 16), LayoutOrder = 2, Text = "Runes are carved at the Rune Carver in the plaza.", TextSize = 11, TextColor3 = C.Dim, Parent = info })
 end
 
 -- Combat log: the last fight, with times, so a hard boss can be studied -------
@@ -852,7 +789,7 @@ function Screens.Pets(container, state, call, extra)
 		table.insert(parts, ("%s %d"):format(Kit.tint(rarity:sub(1, 1), Kit.rarityColor(rarity)), shards[rarity] or 0))
 	end
 	local bonus = if coll then ("  |  Collection +%.1f%%"):format(coll.Percent or 0) else ""
-	local shardLabel = Kit.label({ Size = UDim2.new(1, -240, 1, 0), Position = UDim2.fromOffset(10, 0), RichText = true, TextSize = 12, Text = ("<b>Shards</b>  %s%s"):format(table.concat(parts, "   "), bonus), Parent = strip })
+	local shardLabel = Kit.label({ Size = UDim2.new(1, -240, 1, 0), Position = UDim2.fromOffset(10, 0), RichText = true, TextSize = 12, TextWrapped = false, TextTruncate = Enum.TextTruncate.AtEnd, ClipsDescendants = true, Text = ("<b>Shards</b>  %s%s"):format(table.concat(parts, "   "), bonus), Parent = strip })
 	Kit.Hover(shardLabel, function()
 		return ("Spare copies of max-rank pets become shards.\n%d shards buy a pet of that rarity; %d condense into 1 of the next rarity."):format(info.PetCost, info.CondenseCost)
 	end)

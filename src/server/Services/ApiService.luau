@@ -777,6 +777,9 @@ function handlers.CarveRune(player, profile, itemId, key, confirm)
 	if type(itemId) ~= "string" or type(key) ~= "string" then
 		return false, "BadArgs"
 	end
+	if not nearShop(player, "RuneCarver") then
+		return false, "TooFar"
+	end
 	local ok, data = Runes.Carve(profile, itemId, key, confirm == true)
 	if ok then
 		afterBuildChange(player)
@@ -785,7 +788,7 @@ function handlers.CarveRune(player, profile, itemId, key, confirm)
 end
 
 function handlers.BuyRunePouch(player, profile)
-	if not nearShop(player, "Blacksmith") then
+	if not nearShop(player, "RuneCarver") then
 		return false, "TooFar"
 	end
 	return Runes.BuyPouch(profile)
@@ -922,6 +925,14 @@ end
 function DEV_ACTIONS.WorldBoss()
 	local ok, reason = BossService.DevStartWorld()
 	return if ok then "World boss is up" else nil, reason
+end
+function DEV_ACTIONS.Wishes(profile, n)
+	-- Wishstones (every wish costs 3-8) plus Skill and Pet Wish tickets
+	local c = profile.Season.Currencies
+	c.Wishstones = (c.Wishstones or 0) + 500 * n
+	Consumables.Grant(profile, "SkillWish", 25 * n)
+	Consumables.Grant(profile, "PetWish", 25 * n)
+	return ("+%d Wishstones, +%d Skill and Pet Wish tickets"):format(500 * n, 25 * n)
 end
 function DEV_ACTIONS.Sunstones(profile)
 	Premium.AddSunstones(profile, 1000)

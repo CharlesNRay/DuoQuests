@@ -1,11 +1,12 @@
 --[[
-	Shops (ModuleScript): the two plaza NPC screens. The server only accepts these actions while
+	Shops (ModuleScript): the plaza NPC screens. The server only accepts these actions while
 	you stand near the NPC (World.SHOP_RANGE), and Main closes the panel when you walk away.
 
 	  Shops.Merchant(container, state, call, extra)   sell bagged gear, one piece or in bulk
 	  Shops.Blacksmith(container, state, call, extra) upgrade worn or bagged gear with gold
 	  Shops.PetStore(container, state, call, extra)   eggs, pet gear crates and pet food
 	  Shops.Trainer(container, state, call, extra)    level the skill slots with gold
+	  Shops.RuneCarver(container, state, call, extra) carve runes onto gear, buy rune pouches
 ]]
 local Short = require(game:GetService("ReplicatedStorage"):WaitForChild("Shared").Util.NumberFormat).Short
 local Kit = require(script.Parent.Kit)
@@ -149,7 +150,6 @@ end
 -- Blacksmith ---------------------------------------------------------------
 local SLOT_ORDER = Gear.WornSlots
 
-local lastPouch = nil -- what the last rune pouch gave, shown on the pouch row
 function Shops.Blacksmith(container, state, call)
 	local gear = state.Player.Gear
 	local scroll = list(container, 26)
@@ -179,24 +179,6 @@ function Shops.Blacksmith(container, state, call)
 		else
 			Kit.label({ Size = UDim2.fromOffset(112, 40), Position = UDim2.new(1, -118, 0.5, -20), Text = "Maxed", TextColor3 = C.Good, TextXAlignment = Enum.TextXAlignment.Center, Parent = r })
 		end
-	end
-
-	-- rune pouch: one random rune to carve onto gear (Bag > Gear > Carve rune)
-	do
-		local price = state.Player.RunePouch or 0
-		local r = row(scroll, 52)
-		Kit.label({ Size = UDim2.fromOffset(40, 52), Position = UDim2.fromOffset(8, 0), Text = "🔮", TextSize = 26, TextXAlignment = Enum.TextXAlignment.Center, Parent = r })
-		Kit.label({ Size = UDim2.new(1, -180, 1, 0), Position = UDim2.fromOffset(54, 0), RichText = true, TextSize = 12, Text = "<b>Rune pouch</b>  one random rune (80% Common, 18% Rare, 2% Epic)\n" .. (lastPouch or "Carve runes onto gear from Bag > Gear. Bosses and dungeons drop them too."), Parent = r })
-		local can = gold(state) >= price
-		local b = Kit.button({ Size = UDim2.fromOffset(112, 40), Position = UDim2.new(1, -118, 0.5, -20), Text = "Buy\n" .. Short(price) .. "g", BackgroundColor3 = if can then C.Accent else C.Panel, TextColor3 = if can then C.Bg else C.Dim, Parent = r }, function()
-			if can then
-				local ok, got = call("BuyRunePouch")
-				if ok and got then
-					lastPouch = "You got: " .. tostring(got.Label)
-				end
-			end
-		end)
-		b.Active = can
 	end
 
 	local any = false
@@ -320,6 +302,119 @@ function Shops.PetStore(container, state, call)
 		if item.Kind == "PetFood" then
 			offer(item.Glyph, item.Name, item.Description, item.Price, "Buy", function() call("BuyConsumable", item.Id, 1) end, true)
 		end
+	end
+end
+
+-- Rune Carver ----------------------------------------------------------------
+-- Left: your gear (worn first). Right: the chosen piece's rune and every rune you own; tap one to carve it.
+-- Replacing a higher-tier rune asks first. The rune pouch is sold here too.
+local RuneCfg = require(game:GetService("ReplicatedStorage"):WaitForChild("Shared").Config.Runes)
+local RuneRank = {}
+for index, tier in ipairs(RuneCfg.Tiers) do
+	RuneRank[tier] = index
+end
+local lastPouch = nil -- what the last rune pouch gave
+function Shops.RuneCarver(container, state, call, extra)
+	extra = extra or {}
+	local gear = state.Player.Gear
+	local runes = state.Player.Runes or {}
+	Kit.clear(container)
+	local function redraw()
+		Shops.RuneCarver(container, extra.State or state, call, extra)
+	end
+
+	-- top: the rune pouch
+	local price = state.Player.RunePouch or 0
+	local top = row(container, 44)
+	Kit.label({ Size = UDim2.new(1, -140, 1, 0), Position = UDim2.fromOffset(10, 0), RichText = true, TextSize = 12, Text = ("<b>Rune pouch</b>: one random rune (80%% Common, 18%% Rare, 2%% Epic)   Gold %s\n%s"):format(Short(gold(state)), lastPouch or "Bosses, dungeons and a few frontier wins drop runes too."), Parent = top })
+	local can = gold(state) >= price
+	local buy = Kit.button({ Size = UDim2.fromOffset(120, 34), Position = UDim2.new(1, -126, 0.5, -17), Text = "Buy " .. Short(price) .. "g", BackgroundColor3 = if can then C.Accent else C.Panel, TextColor3 = if can then C.Bg else C.Dim, Parent = top }, function()
+		if can then
+			local ok, got = call("BuyRunePouch")
+			if ok and got then
+				lastPouch = "You got: " .. tostring(got.Label)
+			end
+		end
+	end)
+	buy.Active = can
+
+	-- gear list (worn first)
+	local entries = {}
+	for _, slotName in ipairs(Gear.WornSlots) do
+		local item = gear.Equipped[slotName]
+		if item then
+			table.insert(entries, { Item = item, Worn = true })
+		end
+	end
+	for _, item in ipairs(gear.Inventory) do
+		table.insert(entries, { Item = item })
+	end
+	if #entries == 0 then
+		Kit.label({ Size = UDim2.new(1, 0, 0, 40), Position = UDim2.fromOffset(0, 54), Text = "\"Bring me gear and I will carve power into it.\"\nYou have no gear yet.", TextColor3 = C.Dim, Parent = container })
+		return
+	end
+	local chosen = entries[1]
+	for _, entry in ipairs(entries) do
+		if entry.Item.Id == extra.CarveSel then
+			chosen = entry
+		end
+	end
+	local left = Kit.new("ScrollingFrame", { Size = UDim2.new(0.5, -6, 1, -52), Position = UDim2.fromOffset(0, 52), BackgroundTransparency = 1, BorderSizePixel = 0, CanvasSize = UDim2.new(), AutomaticCanvasSize = Enum.AutomaticSize.Y, ScrollBarThickness = 4, Parent = container })
+	Kit.new("UIListLayout", { Padding = UDim.new(0, 4), Parent = left })
+	for _, entry in ipairs(entries) do
+		local item = entry.Item
+		local isSel = item == chosen.Item
+		local b = Kit.button({ Size = UDim2.new(1, -8, 0, 40), Text = "", BackgroundColor3 = if isSel then C.Panel else C.PanelLight, Parent = left }, function()
+			extra.CarveSel, extra.CarveConfirm = item.Id, nil
+			redraw()
+		end)
+		if isSel then
+			Kit.new("UIStroke", { Color = C.Accent, Thickness = 2, ApplyStrokeMode = Enum.ApplyStrokeMode.Border, Parent = b })
+		end
+		Icons.Item(b, item, { Size = UDim2.fromOffset(32, 32), Position = UDim2.fromOffset(4, 4) })
+		local runeText = if item.Rune then Kit.tint(((RuneCfg.Stats[item.Rune.Stat] or {}).Glyph or "") .. " " .. tostring(item.Rune.Label), Kit.rarityColor(item.Rune.Tier)) else Kit.tint("no rune", C.Dim)
+		Kit.label({ Size = UDim2.new(1, -44, 1, 0), Position = UDim2.fromOffset(40, 0), RichText = true, TextSize = 11, TextWrapped = false, TextTruncate = Enum.TextTruncate.AtEnd, Text = ("%s%s\n%s"):format(if entry.Worn then "[worn] " else "", nameOf(item), runeText), Parent = b })
+	end
+
+	-- right: carve onto the chosen piece
+	local item = chosen.Item
+	local right = Kit.frame({ Size = UDim2.new(0.5, -4, 1, -52), Position = UDim2.new(0.5, 4, 0, 52), BackgroundColor3 = C.Panel, Parent = container })
+	local confirmKey = extra.CarveConfirm
+	if confirmKey then
+		local newRow
+		for _, r in ipairs(runes) do
+			if r.Key == confirmKey then
+				newRow = r
+			end
+		end
+		Kit.label({ Size = UDim2.new(1, -16, 1, -50), Position = UDim2.fromOffset(8, 6), RichText = true, TextSize = 12, TextYAlignment = Enum.TextYAlignment.Top, Text = ("%s\n%s\n\nwill be replaced by\n%s\n\nThe old rune is lost."):format(Kit.tint("Replace a higher-tier rune?", C.Bad), Kit.tint(item.Rune and item.Rune.Label or "?", Kit.rarityColor(item.Rune and item.Rune.Tier or "Common")), Kit.tint(newRow and newRow.Label or "?", Kit.rarityColor(newRow and newRow.Tier or "Common"))), Parent = right })
+		Kit.button({ Size = UDim2.new(0.5, -12, 0, 30), Position = UDim2.new(0, 8, 1, -38), Text = "Replace", TextSize = 13, BackgroundColor3 = C.Bad, Parent = right }, function()
+			extra.CarveConfirm = nil
+			call("CarveRune", item.Id, confirmKey, true)
+		end)
+		Kit.button({ Size = UDim2.new(0.5, -12, 0, 30), Position = UDim2.new(0.5, 4, 1, -38), Text = "Cancel", TextSize = 13, BackgroundColor3 = C.PanelLight, Parent = right }, function()
+			extra.CarveConfirm = nil
+			redraw()
+		end)
+		return
+	end
+	Kit.label({ Size = UDim2.new(1, -16, 0, 32), Position = UDim2.fromOffset(8, 4), RichText = true, TextSize = 12, Text = ("<b>%s</b>\n%s"):format(nameOf(item), if item.Rune then ("Rune: " .. Kit.tint(tostring(item.Rune.Label), Kit.rarityColor(item.Rune.Tier))) else "No rune yet. One rune per piece; a new one replaces the old."), Parent = right })
+	local pick = Kit.new("ScrollingFrame", { Size = UDim2.new(1, -8, 1, -44), Position = UDim2.fromOffset(4, 40), BackgroundTransparency = 1, BorderSizePixel = 0, CanvasSize = UDim2.new(), AutomaticCanvasSize = Enum.AutomaticSize.Y, ScrollBarThickness = 3, Parent = right })
+	Kit.new("UIListLayout", { Padding = UDim.new(0, 3), Parent = pick })
+	if #runes == 0 then
+		Kit.label({ Size = UDim2.new(1, -6, 0, 40), Text = "You have no runes. Buy a pouch above, or beat bosses and dungeons.", TextSize = 11, TextColor3 = C.Dim, Parent = pick })
+	end
+	for _, r in ipairs(runes) do
+		local b = Kit.button({ Size = UDim2.new(1, -6, 0, 30), RichText = true, Text = ("%s %s  x%d   - carve"):format(r.Glyph or "", Kit.tint(r.Label, Kit.rarityColor(r.Tier)), r.Count), TextSize = 11, TextXAlignment = Enum.TextXAlignment.Left, BackgroundColor3 = C.PanelLight, Parent = pick }, function()
+			local oldRank = item.Rune and RuneRank[item.Rune.Tier] or 0
+			if oldRank > (RuneRank[r.Tier] or 0) then
+				extra.CarveConfirm = r.Key
+				redraw()
+			else
+				call("CarveRune", item.Id, r.Key, false)
+			end
+		end)
+		Kit.new("UIPadding", { PaddingLeft = UDim.new(0, 8), Parent = b })
 	end
 end
 

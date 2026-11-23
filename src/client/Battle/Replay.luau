@@ -571,6 +571,14 @@ function Replay:_event(e)
 				end
 			else
 				target:Fall()
+				if self.Heroes[e.Target] == target then
+					-- an ally fell: say who, loudly (outline + tag stay until they rise)
+					target:MarkDown(true)
+					floatText(scene, target:Pos() + Vector3.new(0, 3, 0), tostring(target.Name or "Ally") .. " fell!", Color3.fromRGB(255, 80, 70), 24)
+					if self.OnBanner then
+						self.OnBanner("💀 " .. tostring(target.Name or "An ally") .. " has fallen!", Color3.fromRGB(255, 90, 80))
+					end
+				end
 			end
 		end
 	elseif t == "Spawn" then

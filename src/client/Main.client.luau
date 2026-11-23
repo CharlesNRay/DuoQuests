@@ -24,6 +24,7 @@ Screens.Merchant = Shops.Merchant
 Screens.Blacksmith = Shops.Blacksmith
 Screens.Trainer = Shops.Trainer
 Screens.PetStore = Shops.PetStore
+Screens.RuneCarver = Shops.RuneCarver
 Screens.Hero = HeroScreen.Hero
 Screens.Map = MapScreen.Map
 Screens.Quests = require(script.Parent.UI.QuestScreen).Quests
@@ -162,9 +163,9 @@ end
 local PANEL_DEFAULT = Vector2.new(500, 286)
 local PANEL_SIZES = {
 	Map = Vector2.new(640, 298), Hero = Vector2.new(640, 298), Skills = Vector2.new(660, 344),
-	Merchant = Vector2.new(540, 292), Blacksmith = Vector2.new(540, 292), Trainer = Vector2.new(540, 330), PetStore = Vector2.new(560, 330), Wish = Vector2.new(640, 352), Store = Vector2.new(640, 336), Boss = Vector2.new(640, 310), Battle = Vector2.new(640, 330), Quests = Vector2.new(640, 330), Premium = Vector2.new(640, 330), Season = Vector2.new(640, 330), Cosmetics = Vector2.new(640, 330), Codes = Vector2.new(540, 300), Character = Vector2.new(640, 340), Guild = Vector2.new(720, 340), Dev = Vector2.new(640, 330), Party = Vector2.new(700, 330), Bag = Vector2.new(640, 330),
+	Merchant = Vector2.new(540, 292), Blacksmith = Vector2.new(540, 292), Trainer = Vector2.new(540, 330), PetStore = Vector2.new(560, 330), RuneCarver = Vector2.new(600, 330), Wish = Vector2.new(640, 352), Store = Vector2.new(640, 336), Boss = Vector2.new(640, 310), Battle = Vector2.new(640, 330), Quests = Vector2.new(640, 330), Premium = Vector2.new(640, 330), Season = Vector2.new(640, 330), Cosmetics = Vector2.new(640, 330), Codes = Vector2.new(540, 300), Character = Vector2.new(640, 340), Guild = Vector2.new(720, 340), Dev = Vector2.new(640, 330), Party = Vector2.new(700, 330), Bag = Vector2.new(640, 330),
 }
-local SHOP_NPC = { Merchant = "Merchant", Blacksmith = "Blacksmith", Trainer = "Trainer", PetStore = "PetStore", Wish = "Tree" }
+local SHOP_NPC = { Merchant = "Merchant", Blacksmith = "Blacksmith", Trainer = "Trainer", PetStore = "PetStore", RuneCarver = "RuneCarver", Wish = "Tree" }
 local panel = Kit.frame({ Name = "Panel", Size = UDim2.new(0, 500, 0, 286), Position = UDim2.new(0.5, -250, 0, 42), BackgroundColor3 = Kit.Colors.Bg, Visible = false, ZIndex = 5, Parent = root })
 Kit.new("UIStroke", { Color = Color3.fromRGB(12, 14, 24), Thickness = 2.5, Parent = panel })
 Kit.new("UIGradient", { Color = ColorSequence.new(Color3.fromRGB(255, 255, 255), Color3.fromRGB(196, 200, 220)), Rotation = 90, Parent = panel })
@@ -452,6 +453,7 @@ Hub.Build({
 	Blacksmith = function() shopOpen("Blacksmith", "Blacksmith - upgrade gear") end,
 	Trainer = function() shopOpen("Trainer", "Skill Trainer - level skill slots") end,
 	PetStore = function() shopOpen("PetStore", "Pet Store - eggs & pet gear") end,
+	RuneCarver = function() shopOpen("RuneCarver", "Rune Carver - carve runes onto gear") end,
 	Tree = function() open("Wish", "Wishing Tree", true) end,
 })
 hud:AddButton("Plaza", "travel", "⛲", "Plaza", function()

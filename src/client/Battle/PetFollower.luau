@@ -68,7 +68,7 @@ function PetFollower.new(getPetIds)
 				local moving = (pet.Pos - before).Magnitude / math.max(dt, 1e-3)
 				local bob = if moving > 1 then math.abs(math.sin(os.clock() * 11 + pet.Phase)) * 0.5 else math.sin(os.clock() * 2 + pet.Phase) * 0.05
 				local look = root.Position - pet.Pos
-				local face = if Vector3.new(look.X, 0, look.Z).Magnitude > 0.5 then CFrame.lookAt(pet.Pos, Vector3.new(root.Position.X, pet.Pos.Y, root.Position.Z)) * CFrame.Angles(0, math.pi, 0) else CFrame.new(pet.Pos) * (pet.Face or CFrame.new()).Rotation
+				local face = if Vector3.new(look.X, 0, look.Z).Magnitude > 0.5 then CFrame.lookAt(pet.Pos, Vector3.new(root.Position.X, pet.Pos.Y, root.Position.Z)) else CFrame.new(pet.Pos) * (pet.Face or CFrame.new()).Rotation
 				pet.Face = face
 				pet.Model:PivotTo(face.Rotation + pet.Pos + Vector3.new(0, bob, 0))
 			end

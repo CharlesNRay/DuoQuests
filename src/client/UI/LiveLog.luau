@@ -1,6 +1,6 @@
 --[[
 	LiveLog (ModuleScript): a small combat log that streams alongside a fight.
-	It pops open when a fight starts and the player can minimize it to a bar.
+	It shows when a fight starts and the player can minimize it to a bar (it stays minimized across fights).
 
 	  local log = LiveLog.new(root, buildLog)
 	  log:Play(fight, delay)   -- start streaming fight events, delay seconds from now
@@ -109,7 +109,7 @@ function LiveLog:Play(fight, delay)
 	self.Fight = fight
 	self.StartAt = os.clock() + (delay or 0)
 	self.Frame.Visible = true
-	self:SetOpen(true)
+	self:SetOpen(self.Open) -- keep it minimized if the player minimized it (it used to reopen every fight)
 end
 
 return LiveLog

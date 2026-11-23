@@ -734,6 +734,9 @@ function PartyService.GetHostedSummaries()
 					Name = companion.Name,
 					ClassId = companion.ClassId,
 					Level = companion.Level,
+					PetId = companion.PetId, -- without it the arena showed the default pet (a little orange "chick") until a fight
+					PetLevel = companion.PetLevel,
+					PetRank = companion.PetRank,
 					Online = false,
 				})
 			end

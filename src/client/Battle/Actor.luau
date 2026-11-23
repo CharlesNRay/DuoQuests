@@ -6,7 +6,7 @@
 	  Actor.new(scene, model, { Name, Facing = 1|-1, MaxHealth })
 	  actor:Place(x)            put the ground position at x (z = 0)
 	  actor:SetHealth(health)   updates the bar
-	  actor:Lunge(towardX) / Flinch() / Fall() / Rise() / Cheer() / FadeOut()
+	  actor:Lunge(towardX) / Flinch() / Fall() / Rise() / Cheer() / FadeOut() / MarkDown(on) (fallen hero outline + name tag)
 	  actor:SetModel(model)     swap the body (e.g. the real avatar) keeping state
 	  actor:SetAura(builder, key)  a cosmetic aura emitter that follows the body
 	  actor:SetGhost(on)        see-through look for an offline partner's ghost
@@ -915,7 +915,51 @@ function Actor:Fall()
 	end)
 end
 
+-- A fallen hero is easy to spot: a red outline on the body and a "💀 Name" tag above it until it rises.
+function Actor:MarkDown(on)
+	if self.DownMark then
+		self.DownMark:Destroy()
+		self.DownMark = nil
+	end
+	if self.DownTag then
+		self.DownTag:Destroy()
+		self.DownTag = nil
+	end
+	if not on or self.Destroyed then
+		return
+	end
+	local glow = Instance.new("Highlight")
+	glow.FillColor = Color3.fromRGB(200, 30, 30)
+	glow.FillTransparency = 0.55
+	glow.OutlineColor = Color3.fromRGB(255, 70, 70)
+	glow.DepthMode = Enum.HighlightDepthMode.Occluded
+	glow.Adornee = self.Model
+	glow.Parent = self.Model
+	self.DownMark = glow
+	local root = self.Model.PrimaryPart
+	if root then
+		local tag = Instance.new("BillboardGui")
+		tag.Size = UDim2.fromOffset(170, 26)
+		tag.StudsOffsetWorldSpace = Vector3.new(0, 4.5, 0)
+		tag.AlwaysOnTop = true
+		tag.MaxDistance = 90
+		tag.Adornee = root
+		local label = Instance.new("TextLabel")
+		label.Size = UDim2.fromScale(1, 1)
+		label.BackgroundTransparency = 1
+		label.Text = "💀 " .. tostring(self.Name or "Ally") .. " is down"
+		label.TextColor3 = Color3.fromRGB(255, 110, 100)
+		label.TextStrokeTransparency = 0.2
+		label.Font = Enum.Font.GothamBlack
+		label.TextSize = 15
+		label.Parent = tag
+		tag.Parent = root
+		self.DownTag = tag
+	end
+end
+
 function Actor:Rise()
+	self:MarkDown(false)
 	self.Alive = true
 	anim(0.4, function(a)
 		self.Offset = CFrame.new(0, -self.Height * 0.6 * (1 - a), 0) * CFrame.Angles(0, 0, math.rad(80) * (1 - a) * -self.Facing)
@@ -936,6 +980,7 @@ end
 
 function Actor:Destroy()
 	self.Destroyed = true
+	self:MarkDown(false)
 	self.Conn:Disconnect()
 	self.Model:Destroy()
 	self.Bar:Destroy()
