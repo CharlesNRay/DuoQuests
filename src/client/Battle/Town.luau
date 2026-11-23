@@ -264,7 +264,10 @@ local function grove()
 		pad.Name = "LilyPad"
 	end
 	local dock = part({ Name = "Dock", Size = Vector3.new(3.4, 0.4, 9), CFrame = pondCf * CFrame.new(0, 1.1, -10) * CFrame.Angles(0, math.rad(25), 0), Color = WOOD, Material = Enum.Material.WoodPlanks })
-	tag(dock, "FISHING POND", "Fishing - coming soon", Color3.fromRGB(150, 210, 255))
+	tag(dock, "FISHING POND", "Catch fish for pet snacks", Color3.fromRGB(150, 210, 255))
+	dock:SetAttribute("PlaceId", "Pond")
+	local bob = part({ Name = "Bobber", Shape = Enum.PartType.Ball, Size = Vector3.new(0.7, 0.7, 0.7), CFrame = pondCf * CFrame.new(3, 1.25, -5), Color = Color3.fromRGB(230, 60, 60), Material = Enum.Material.SmoothPlastic, CanCollide = false, Transparency = 1 })
+	bob:SetAttribute("Bobber", true)
 	part({ Name = "Rod", Size = Vector3.new(0.2, 0.2, 6), CFrame = dock.CFrame * CFrame.new(1, 1.6, 4) * CFrame.Angles(math.rad(30), 0, 0), Color = DARK_WOOD, Material = Enum.Material.Wood })
 	-- the pet park (left) behind a low fence, with a ball, a ramp and a doghouse
 	local parkCf = cf * CFrame.new(34, 0, 16)
@@ -319,7 +322,8 @@ local function training()
 		part({ Name = "DummyArms", Size = Vector3.new(3.6, 0.4, 0.4), CFrame = post * CFrame.new(0, 4, 0), Color = WOOD, Material = Enum.Material.Wood })
 		local head = part({ Name = "DummyHead", Shape = Enum.PartType.Ball, Size = Vector3.new(1.4, 1.4, 1.4), CFrame = post * CFrame.new(0, 5.4, 0), Color = Color3.fromRGB(214, 190, 120), Material = Enum.Material.Fabric })
 		if index == 0 then
-			tag(head, "TRAINING DUMMY", "Test your build - coming soon", Color3.fromRGB(255, 190, 120))
+			tag(head, "TRAINING DUMMY", "Test your party's damage", Color3.fromRGB(255, 190, 120))
+			head:SetAttribute("PlaceId", "Dummy")
 		end
 	end
 	-- the sparring ring
@@ -859,6 +863,33 @@ local function places()
 	dungeonGate()
 	expeditionCamp()
 	guildBoard()
+	-- the training dummy and the fishing dock (built with their districts) get their prompts here
+	for _, d in ipairs(folder:GetDescendants()) do
+		local id = d:GetAttribute("PlaceId")
+		if id == "Dummy" then
+			placePrompt(d, "Dummy", "Test your build", "Training Dummy")
+		elseif id == "Pond" then
+			placePrompt(d, "Pond", "Fish", "Fishing Pond")
+		end
+	end
+end
+
+-- the bobber on the pond while you fish: "wait" floats it, "bite" dunks it, nil hides it
+function Town.Bobber(mode)
+	local bob
+	for _, d in ipairs(folder:GetDescendants()) do
+		if d:GetAttribute("Bobber") then
+			bob = d
+			break
+		end
+	end
+	if not bob then
+		return
+	end
+	local home = bob:GetAttribute("Home") or bob.Position
+	bob:SetAttribute("Home", home)
+	bob.Transparency = if mode then 0 else 1
+	bob.Position = if mode == "bite" then home - Vector3.new(0, 0.55, 0) else home
 end
 
 function Town.Build(parentFolder, hubPulsers, hubKit)

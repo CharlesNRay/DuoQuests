@@ -89,6 +89,8 @@ World.TownSpots = {
 	Warden = { X = -12, Z = 272 }, -- the Beast Warden, just inside the Boss Field arch
 	Altar = { X = 0, Z = 296 }, -- the offering stone on the Boss Field
 	-- places that open a screen (not errands)
+	Dummy = { District = "Training", X = 0, Z = -22 }, -- the middle training dummy ("test your build")
+	Pond = { District = "Grove", X = -34, Z = 2 }, -- the fishing dock
 	DungeonGate = { X = -290, Z = 40 }, -- outside town, west of the Wishing Grove
 	ExpeditionCamp = { X = 100, Z = 262 }, -- outside the town wall, south-east
 	GuildBoard = { District = "Training", X = 6, Z = 24 }, -- beside the Guild Hall, the other side from Guildmaster Orin

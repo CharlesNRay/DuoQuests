@@ -46,6 +46,7 @@ local Hub = require(script.Parent.Battle.Hub)
 local Town = require(script.Parent.Battle.Town)
 local Sound = require(script.Parent.Sound)
 local Celebrate = require(script.Parent.UI.Celebrate)
+local FishingGame = require(script.Parent.UI.FishingGame)
 local StagesModule = require(game:GetService("ReplicatedStorage"):WaitForChild("Shared"):WaitForChild("Stages"))
 local BossArena = require(script.Parent.Battle.BossArena)
 local PetFollower = require(script.Parent.Battle.PetFollower)
@@ -167,7 +168,7 @@ end
 local PANEL_DEFAULT = Vector2.new(500, 286)
 local PANEL_SIZES = {
 	Map = Vector2.new(640, 298), Hero = Vector2.new(640, 298), Skills = Vector2.new(660, 344),
-	Merchant = Vector2.new(540, 292), Blacksmith = Vector2.new(540, 292), Trainer = Vector2.new(540, 330), PetStore = Vector2.new(560, 330), RuneCarver = Vector2.new(600, 330), Wish = Vector2.new(640, 352), Store = Vector2.new(640, 336), Boss = Vector2.new(640, 310), Battle = Vector2.new(640, 330), Quests = Vector2.new(640, 330), Premium = Vector2.new(640, 330), Season = Vector2.new(640, 330), Cosmetics = Vector2.new(640, 330), Codes = Vector2.new(540, 300), Character = Vector2.new(640, 340), Guild = Vector2.new(720, 340), Dev = Vector2.new(640, 330), Party = Vector2.new(700, 330), Bag = Vector2.new(640, 330), Errands = Vector2.new(620, 330), Settings = Vector2.new(620, 330), Talents = Vector2.new(660, 340),
+	Merchant = Vector2.new(540, 292), Blacksmith = Vector2.new(540, 292), Trainer = Vector2.new(540, 330), PetStore = Vector2.new(560, 330), RuneCarver = Vector2.new(600, 330), Wish = Vector2.new(640, 352), Store = Vector2.new(640, 336), Boss = Vector2.new(640, 310), Battle = Vector2.new(640, 330), Quests = Vector2.new(640, 330), Premium = Vector2.new(640, 330), Season = Vector2.new(640, 330), Cosmetics = Vector2.new(640, 330), Codes = Vector2.new(540, 300), Character = Vector2.new(640, 340), Guild = Vector2.new(720, 340), Dev = Vector2.new(640, 330), Party = Vector2.new(700, 330), Bag = Vector2.new(640, 330), Errands = Vector2.new(620, 330), Settings = Vector2.new(620, 330), Talents = Vector2.new(660, 340), Dummy = Vector2.new(600, 300),
 }
 local SHOP_NPC = { Merchant = "Merchant", Blacksmith = "Blacksmith", Trainer = "Trainer", PetStore = "PetStore", RuneCarver = "RuneCarver", Wish = "Tree" }
 local panel = Kit.frame({ Name = "Panel", Size = UDim2.new(0, 500, 0, 286), Position = UDim2.new(0.5, -250, 0, 42), BackgroundColor3 = Kit.Colors.Bg, Visible = false, ZIndex = 5, Parent = root })
@@ -500,6 +501,40 @@ Town.OnPlace = function(id)
 	elseif id == "GuildBoard" then
 		extra.Guild = nil
 		open("Guild", "Guild", true)
+	elseif id == "Dummy" then
+		extra.RunDummy()
+	elseif id == "Pond" then
+		FishingGame.Start(root, api, {
+			Bobber = Town.Bobber,
+			Sound = Sound.Play,
+			StillNear = function()
+				local character = Players.LocalPlayer.Character
+				local r = character and character:FindFirstChild("HumanoidRootPart")
+				return r ~= nil and World.NearSpot(r.Position.X, r.Position.Z, "Pond")
+			end,
+		})
+	end
+end
+-- the training dummy: your party hits it for 20 s on the server, the screen shows each hero's damage per second
+Screens.Dummy = require(script.Parent.UI.DummyScreen).Dummy
+local dummyRunning = false
+function extra.RunDummy()
+	if dummyRunning then
+		return
+	end
+	dummyRunning = true
+	extra.Dummy = nil
+	open("Dummy", "Training Dummy", true)
+	local ok, data = api:InvokeServer("TrainDummy")
+	dummyRunning = false
+	if ok and type(data) == "table" then
+		extra.Dummy = data
+		Sound.Play("Reward")
+	else
+		extra.Dummy = { Seconds = 0, Total = 0, Rows = {}, Best = 0 }
+	end
+	if current == "Dummy" then
+		redraw()
 	end
 end
 

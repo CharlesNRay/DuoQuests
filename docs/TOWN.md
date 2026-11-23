@@ -88,6 +88,14 @@ checks you stand within `World.SPOT_RANGE` of the spot). One errand at a time; t
 Givers show a yellow "!" (errand ready) or "?" (waiting for you); what you carry is held in front of the hero (client-only).
 A tracker card sits bottom-left. Reset with the Test cheats "Reset dailies".
 
+## Fishing and the Training Dummy (phases 3-4, built 2026-11-23, seen in Studio)
+- **Fishing pond** (Grove dock): cast, wait 2-6 s for the bobber to dunk, press REEL within ~1.4 s. Six catches (Minnow,
+  Golden Perch, Pond Crab, Puffer, Grove Squid, Old Boot); the first 12 a day pay pet food (or a Wishstone / Pet Feast for
+  the rare ones). Every catch goes in a fish log (`Season.Fishing.Log`, not shown on a screen yet).
+- **Training Dummy** (Training Grounds): your whole party hits an unkillable, unarmoured dummy for 20 s on the server;
+  the screen shows each hero's damage per second and your best. No rewards.
+- Still to build: pet park (play with your pet), hidden relics, sparring ring (owner has not said if wanted).
+
 ## Questions for you
 1. ANSWERED 2026-11-23: wishes (Wishstones / wish tickets). Was: is "small Wishstones/gold, plus cosmetics and titles" right, or should town play give **only** cosmetics
    and fun (no power at all)?

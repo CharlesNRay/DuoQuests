@@ -87,6 +87,8 @@ local Tutorial = require(Shared.Tutorial)
 local Activities = require(Shared.Activities)
 local Errands = require(Shared.Errands)
 local Talents = require(Shared.Talents)
+local Fishing = require(Shared.Fishing)
+local TrainingDummy = require(Shared.TrainingDummy)
 local Market = require(Shared.Market)
 local WeaponService = require(script.Parent.WeaponService)
 local CharacterConfig = require(Shared.Config.Character)
@@ -273,6 +275,8 @@ local function buildState(player)
 			Errands = Errands.Status(profile, os.time()), -- town errands (docs/TOWN.md phase 2)
 			Settings = profile.Permanent.Settings, -- sound sliders (client/Sound), nil = defaults
 			Talents = Talents.Status(profile), -- level-up points (Shared/Talents)
+			Fishing = Fishing.Status(profile, Daily.DayNumber(os.time())), -- the fishing pond (catches left today, fish log)
+			DummyBest = profile.Season.DummyBest or 0, -- best party DPS on the training dummy
 		},
 	}
 
@@ -1410,6 +1414,49 @@ function handlers.Errand(player, profile, spotId)
 		return false, "TooFar"
 	end
 	return Errands.Interact(profile, spotId, os.time(), math.random)
+end
+
+-- Town activities (docs/TOWN.md phases 3-4): the fishing pond and the training dummy. You must stand at them.
+local fishCasts = {} -- [userId] = the cast in the water (server clock)
+local dummyUsed = {} -- [userId] = os.clock() of the last dummy test
+
+local function nearSpot(player, spotId)
+	local character = player.Character
+	local root = character and character:FindFirstChild("HumanoidRootPart")
+	return root ~= nil and World.NearSpot(root.Position.X, root.Position.Z, spotId)
+end
+
+function handlers.FishCast(player)
+	if not nearSpot(player, "Pond") then
+		return false, "TooFar"
+	end
+	local cast, wait = Fishing.Cast(os.clock(), math.random)
+	fishCasts[player.UserId] = cast
+	return true, { Wait = wait }
+end
+
+function handlers.FishReel(player, profile)
+	local cast = fishCasts[player.UserId]
+	fishCasts[player.UserId] = nil
+	return Fishing.Reel(profile, cast, os.clock(), Daily.DayNumber(os.time()), math.random)
+end
+
+function handlers.TrainDummy(player, profile)
+	if not nearSpot(player, "Dummy") then
+		return false, "TooFar"
+	end
+	local last = dummyUsed[player.UserId]
+	if last and os.clock() - last < 8 then
+		return false, "Busy"
+	end
+	dummyUsed[player.UserId] = os.clock()
+	local members = { { Id = tostring(player.UserId), Name = Character.DisplayName(profile, player.Name), Profile = profile } }
+	for _, mate in ipairs(PartyService.GetTeamSnapshots(player)) do
+		table.insert(members, mate)
+	end
+	local result = TrainingDummy.Run(members, profile.Season.HighestStage or 1, math.random(1, 1000000))
+	result.Best = TrainingDummy.Record(profile, result.Total)
+	return true, result
 end
 
 -- Talents: level-up points (Shared/Talents). Spending changes the hero's stats, so the party's fights pick it up.

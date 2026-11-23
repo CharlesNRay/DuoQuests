@@ -148,6 +148,11 @@ Git Bash; they find a working Python themselves (`python3`/`python` there are St
   (Might, Vitality, Bulwark, Precision, Ferocity, Swiftness, Focus, Mending), free reset, `Season.Talents`. Mods ride in
   ExtraMods (StageRunner live path, `Party.MakeSnapshot` CollectionMods, hero sheet); IP +4 per point. Handlers
   `SpendTalent`, `ResetTalents`, `AutoTalents`. The sim bot auto-spends (`abl.sh` mode `notalent` turns it off).
+- **Fishing + Training Dummy 2026-11-23** (SEEN in Studio: cast/bite/too-late, catches pay via the remote, bobber, dummy
+  results with 4 heroes and a personal best): `Shared/Fishing` + `Config/Fishing` (12 paid catches a day, mostly pet
+  food; casts kept in server memory, os.clock timing with a grace window), handlers `FishCast`/`FishReel` at
+  `TownSpots.Pond`; `Shared/TrainingDummy` (20 s fight vs enemy `TrainingDummy`, no rewards, `Season.DummyBest`),
+  handler `TrainDummy` at `TownSpots.Dummy`. UI: `UI/FishingGame`, `UI/DummyScreen`. Not done: pet park, relics.
 
 ## Gotchas
 - Studio testing: the HUD 🧪 button opens the "Test cheats" panel (Studio only, `UI/DevScreen` -> `handlers.Dev(action, n)`, `DEV_ACTIONS` in ApiService):
