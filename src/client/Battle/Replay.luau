@@ -64,6 +64,7 @@ local function floatText(scene, pos, text, color, size)
 	local gui = Instance.new("BillboardGui")
 	gui.Size = UDim2.fromOffset(140, 36)
 	gui.AlwaysOnTop = true
+	gui.MaxDistance = 90 -- other lots' numbers must not float over the HUD from across the town
 	gui.Adornee = anchor
 	gui.Parent = anchor
 	local label = Instance.new("TextLabel")
@@ -94,6 +95,7 @@ local function critText(scene, pos, amountText)
 	local gui = Instance.new("BillboardGui")
 	gui.Size = UDim2.fromOffset(200, 64)
 	gui.AlwaysOnTop = true
+	gui.MaxDistance = 90
 	gui.Adornee = anchor
 	gui.Parent = anchor
 	local tag = Instance.new("TextLabel")

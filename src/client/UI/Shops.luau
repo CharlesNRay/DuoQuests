@@ -333,6 +333,7 @@ function Shops.RuneCarver(container, state, call, extra)
 			local ok, got = call("BuyRunePouch")
 			if ok and got then
 				lastPouch = "You got: " .. tostring(got.Label)
+				redraw() -- the call redrew before this line ran
 			end
 		end
 	end)

@@ -788,10 +788,10 @@ function Screens.Pets(container, state, call, extra)
 	for _, rarity in ipairs({ "Common", "Rare", "Epic", "Legendary" }) do
 		table.insert(parts, ("%s %d"):format(Kit.tint(rarity:sub(1, 1), Kit.rarityColor(rarity)), shards[rarity] or 0))
 	end
-	local bonus = if coll then ("  |  Collection +%.1f%%"):format(coll.Percent or 0) else ""
+	local bonus = if coll then ("  |  +%.1f%%"):format(coll.Percent or 0) else "" -- the collection bonus; "Collection" did not fit beside the buttons
 	local shardLabel = Kit.label({ Size = UDim2.new(1, -240, 1, 0), Position = UDim2.fromOffset(10, 0), RichText = true, TextSize = 12, TextWrapped = false, TextTruncate = Enum.TextTruncate.AtEnd, ClipsDescendants = true, Text = ("<b>Shards</b>  %s%s"):format(table.concat(parts, "   "), bonus), Parent = strip })
 	Kit.Hover(shardLabel, function()
-		return ("Spare copies of max-rank pets become shards.\n%d shards buy a pet of that rarity; %d condense into 1 of the next rarity."):format(info.PetCost, info.CondenseCost)
+		return ("Spare copies of max-rank pets become shards.\n%d shards buy a pet of that rarity; %d condense into 1 of the next rarity.%s"):format(info.PetCost, info.CondenseCost, if coll then ("\nCollection bonus: +%.1f%% from every pet you own."):format(coll.Percent or 0) else "")
 	end)
 	Kit.button({ Size = UDim2.fromOffset(84, 22), Position = UDim2.new(1, -226, 0, 4), Text = "Pet gear", TextSize = 12, BackgroundColor3 = C.PanelLight, Parent = strip }, function()
 		extra.PetsView = "Gear"

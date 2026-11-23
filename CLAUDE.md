@@ -122,6 +122,11 @@ Git Bash; they find a working Python themselves (`python3`/`python` there are St
   their text; signposts moved off the plaza trees and use ">>" (the triangle glyphs did not render); buildings ~1.5x bigger.
   `tools/sim/townview/render.py` draws the plaza + town top-down headless (shim.luau stands in for Roblox) for layout checks.
   Studio camera trick: command bar `workspace.CurrentCamera.CameraType=Enum.CameraType.Scriptable` then set its CFrame.
+  SEEN in Studio 2026-11-23 (batch from earlier that day): combat log stays minimized across stages; Wishes cheat row works;
+  Rune Carver screen (carve, pouch, replace-a-better-rune confirm); pet follower faces the way you walk; companions' pets show
+  on the lot (Chirpy). Fixed then: Pets shard strip no longer hides text under its buttons (collection % moved to its tooltip),
+  pouch result shows at once, battle numbers have MaxDistance 90 (other lots' crits floated over the HUD). NOT seen: the
+  fallen-ally outline/tag/banner (needs a hero to die).
 
 ## Gotchas
 - Studio testing: the HUD 🧪 button opens the "Test cheats" panel (Studio only, `UI/DevScreen` -> `handlers.Dev(action, n)`, `DEV_ACTIONS` in ApiService):
