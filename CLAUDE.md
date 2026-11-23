@@ -158,7 +158,8 @@ Git Bash; they find a working Python themselves (`python3`/`python` there are St
   10 relics `TownSpots.Relic1..10` (2 Wishstones each per season, all 10 = +10 and title "Relic Hunter",
   `Season.Relics`, handler `TakeRelic`). Not seen: the all-relics title moment; sparring ring not built (owner undecided).
 
-- **Owner feedback 2026-11-23 evening** (tests green, NOT seen in Studio: the owner was playing in Studio): carried
+- **Owner feedback 2026-11-23 evening** (SEEN in Studio after: wall ring + gates, Boss Field/camp/dungeon outside, keg
+  upright, new flower beds, Pip + board, fishing dial + "got away", star bursts; NOT seen: a dial catch by hand, Elder): carried
   items hang from an unrotated invisible handle (the platter and keg were sideways), keg stands upright; errands are a
   pool of 11 (`Config/Errands`), `Errands.Offered(day)` picks 5 a day (one per townsperson, same for everyone);
   new townsfolk Elder Thessaly (Grove, by the tree) and Pip the Courier (Gate), Greta gives errands too; new pick-up
@@ -169,6 +170,9 @@ Git Bash; they find a working Python themselves (`python3`/`python` there are St
   camp road), lamps stand beside houses not before their doors. Fishing is a skill check: a needle sweeps a dial, REEL in
   the gold zone (`Config/Fishing` Speed/ZoneWidth/Laps; the server holds the client's elapsed time to its clock).
   Claim/buy/upgrade feedback: `CLAIM_FX` in Main (sounds + `Celebrate.Burst` stars at the cursor).
+- **Sparring ring 2026-11-23** (SEEN in Studio: opponent list, a duel lost to Mira 1-1 on health): `Shared/Sparring`, 1v1
+  duel in two bouts with sides swapped (the sim is not symmetric), handlers `SparList`/`SparFight` at `TownSpots.Ring`,
+  opponents = players on the server + your party's companions; first win a day = 3 Wishstones; `UI/SparScreen`.
 
 ## Gotchas
 - Studio testing: the HUD 🧪 button opens the "Test cheats" panel (Studio only, `UI/DevScreen` -> `handlers.Dev(action, n)`, `DEV_ACTIONS` in ApiService):

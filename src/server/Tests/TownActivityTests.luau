@@ -136,5 +136,26 @@ return function(modulesOverride)
 		check("Playing with your pet works once a day", okP == true and select(2, TL.PetPlay(q, 5)) == "DoneToday" and TL.PetPlay(q, 6) == true)
 	end
 
+	-- sparring duels (Shared/Sparring)
+	if m.Sparring then
+		local strong, weak = PT.New(), PT.New()
+		strong.Season.Level = 40
+		weak.Season.Level = 3
+		weak.Season.ClassId = "Mage"
+		local duel = m.Sparring.Duel({ Id = "1", Name = "Strong", Profile = strong }, { Id = "2", Name = "Weak", Profile = weak }, 5)
+		check("A duel has two bouts, one from each side", #duel.Bouts == 2 and duel.Bouts[1].Seconds > 0 and duel.Bouts[2].Seconds > 0)
+		check("A level 40 hero beats a level 3 hero", duel.Won == true and duel.MyDamage > duel.TheirDamage)
+		local back = m.Sparring.Duel({ Id = "2", Name = "Weak", Profile = weak }, { Id = "1", Name = "Strong", Profile = strong }, 5)
+		check("...and the level 3 hero loses from either side", back.Won == false)
+		local day = 777
+		local stones = strong.Season.Currencies.Wishstones or 0
+		local lines = m.Sparring.Record(strong, true, day)
+		check("The first win of the day pays", #lines == 1 and (strong.Season.Currencies.Wishstones or 0) == stones + m.Sparring.DailyWinStones)
+		check("The second win that day does not", #m.Sparring.Record(strong, true, day) == 0)
+		m.Sparring.Record(strong, false, day)
+		local st = m.Sparring.Stats(strong)
+		check("Wins and losses are counted", st.Wins == 2 and st.Losses == 1)
+	end
+
 	print(("TownActivityTests done: %d passed, %d failed"):format(passed, failed))
 end

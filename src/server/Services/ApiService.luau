@@ -90,6 +90,7 @@ local Talents = require(Shared.Talents)
 local Fishing = require(Shared.Fishing)
 local TrainingDummy = require(Shared.TrainingDummy)
 local TownLeisure = require(Shared.TownLeisure)
+local Sparring = require(Shared.Sparring)
 local Market = require(Shared.Market)
 local WeaponService = require(script.Parent.WeaponService)
 local CharacterConfig = require(Shared.Config.Character)
@@ -280,6 +281,7 @@ local function buildState(player)
 			DummyBest = profile.Season.DummyBest or 0, -- best party DPS on the training dummy
 			Relics = TownLeisure.Relics(profile), -- hidden relics found this season
 			PetPlayed = TownLeisure.PetPlayed(profile, Daily.DayNumber(os.time())), -- the pet park today
+			Sparring = Sparring.Stats(profile), -- duels won and lost in the sparring ring
 		},
 	}
 
@@ -1463,6 +1465,67 @@ function handlers.TakeRelic(player, profile, id)
 		return false, "TooFar"
 	end
 	return TownLeisure.TakeRelic(profile, id)
+end
+
+-- Sparring ring: duel another hero on this server, or one of your party's companions (Shared/Sparring).
+local sparUsed = {}
+
+local function sparOpponents(player)
+	local list, seen = {}, {}
+	for _, other in ipairs(Players:GetPlayers()) do
+		local otherProfile = other ~= player and DataService.GetProfile(other)
+		if otherProfile and otherProfile.Season.ClassId then
+			seen[tostring(other.UserId)] = true
+			table.insert(list, { Key = "p:" .. other.UserId, Name = Character.DisplayName(otherProfile, other.Name), ClassId = otherProfile.Season.ClassId, Level = otherProfile.Season.Level, Kind = "Player" })
+		end
+	end
+	for _, mate in ipairs(PartyService.GetTeamSnapshots(player)) do
+		if not seen[mate.Id] and mate.Snapshot then
+			table.insert(list, { Key = "c:" .. mate.Id, Name = mate.Name, ClassId = mate.Snapshot.ClassId, Level = mate.Snapshot.Level, Kind = if tonumber(mate.Id) and tonumber(mate.Id) < 0 then "Companion" else "Partner" })
+		end
+	end
+	return list
+end
+
+function handlers.SparList(player)
+	return true, sparOpponents(player)
+end
+
+function handlers.SparFight(player, profile, key)
+	if type(key) ~= "string" then
+		return false, "BadArgs"
+	end
+	if not nearSpot(player, "Ring") then
+		return false, "TooFar"
+	end
+	local last = sparUsed[player.UserId]
+	if last and os.clock() - last < 5 then
+		return false, "Busy"
+	end
+	local them
+	if key:sub(1, 2) == "p:" then
+		local other = Players:GetPlayerByUserId(tonumber(key:sub(3)) or 0)
+		local otherProfile = other and other ~= player and DataService.GetProfile(other)
+		if otherProfile then
+			them = { Id = tostring(other.UserId), Name = Character.DisplayName(otherProfile, other.Name), Profile = otherProfile }
+		end
+	elseif key:sub(1, 2) == "c:" then
+		for _, mate in ipairs(PartyService.GetTeamSnapshots(player)) do
+			if mate.Id == key:sub(3) then
+				them = mate
+			end
+		end
+	end
+	if not them then
+		return false, "NoOpponent"
+	end
+	sparUsed[player.UserId] = os.clock()
+	local me = { Id = tostring(player.UserId), Name = Character.DisplayName(profile, player.Name), Profile = profile }
+	local duel = Sparring.Duel(me, them, math.random(1, 1000000))
+	duel.Lines = Sparring.Record(profile, duel.Won, Daily.DayNumber(os.time()))
+	duel.Opponent = them.Name
+	duel.Stats = Sparring.Stats(profile)
+	return true, duel
 end
 
 function handlers.TrainDummy(player, profile)

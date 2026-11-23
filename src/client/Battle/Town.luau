@@ -229,7 +229,7 @@ local function gate()
 	house(facing(cf, 27, 8), 22, 16, 13, Color3.fromRGB(230, 214, 180), Color3.fromRGB(140, 60, 44), "THE SLEEPY GRIFFIN")
 	-- (the tavern sign names it; Greta the barkeep stands at its door, see errands())
 	local bx, bz = -14, -28 -- World.TownSpots.Board: beside the road into the square, clear of the houses
-	local boardCf = facing(cf, bx, bz)
+	local boardCf = facing(cf, bx, bz, 0, -46) -- faces people walking in from the plaza
 	for _, side in ipairs({ -1, 1 }) do
 		part({ Name = "BoardPost", Size = Vector3.new(0.8, 8, 0.8), CFrame = boardCf * CFrame.new(side * 4.4, 4, 0.3), Color = WOOD, Material = Enum.Material.Wood })
 	end
@@ -342,7 +342,8 @@ local function training()
 		end
 	end
 	local ringMark = part({ Name = "RingSpot", Size = Vector3.new(1, 1, 1), CFrame = ringCf * CFrame.new(0, 3, 0), Transparency = 1, CanCollide = false })
-	tag(ringMark, "SPARRING RING", "Friendly duels - coming soon", Color3.fromRGB(255, 140, 120))
+	tag(ringMark, "SPARRING RING", "Duel another hero", Color3.fromRGB(255, 140, 120))
+	ringMark:SetAttribute("PlaceId", "Ring")
 	-- the guild hall, with banners
 	local hallCf = facing(cf, 24, 20)
 	house(hallCf, 24, 17, 15, Color3.fromRGB(210, 200, 190), Color3.fromRGB(90, 60, 130), "GUILD HALL")
@@ -1038,6 +1039,8 @@ local function places()
 			placePrompt(d, "Pond", "Fish", "Fishing Pond")
 		elseif id == "PetPark" then
 			placePrompt(d, "PetPark", "Play with your pet", "Pet Park")
+		elseif id == "Ring" then
+			placePrompt(d, "Ring", "Spar", "Sparring Ring")
 		end
 	end
 	-- hidden relics: small glowing crystals; found ones disappear (Town.SetRelics)

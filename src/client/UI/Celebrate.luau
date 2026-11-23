@@ -120,13 +120,13 @@ function Celebrate.Burst(color, count)
 		star.TextColor3 = if i % 2 == 0 then color else Color3.new(1, 1, 1)
 		star.TextStrokeTransparency = 0.5
 		star.Font = Enum.Font.GothamBlack
-		star.TextSize = 14 + (i % 4) * 4
-		star.Size = UDim2.fromOffset(30, 30)
+		star.TextSize = 22 + (i % 4) * 6
+		star.Size = UDim2.fromOffset(44, 44)
 		star.AnchorPoint = Vector2.new(0.5, 0.5)
 		star.Position = UDim2.fromOffset(at.X, at.Y)
 		star.Parent = burstGui
 		local a = (i / (count or 14)) * math.pi * 2 + math.random() * 0.4
-		local dist = 50 + math.random() * 60
+		local dist = 70 + math.random() * 90
 		local info = TweenInfo.new(0.6 + math.random() * 0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
 		TweenService:Create(star, info, { Position = UDim2.fromOffset(at.X + math.cos(a) * dist, at.Y + math.sin(a) * dist - 20), TextTransparency = 1, TextStrokeTransparency = 1, Rotation = math.random(-90, 90) }):Play()
 		Debris:AddItem(star, 1)

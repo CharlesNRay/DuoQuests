@@ -168,7 +168,7 @@ end
 local PANEL_DEFAULT = Vector2.new(500, 286)
 local PANEL_SIZES = {
 	Map = Vector2.new(640, 298), Hero = Vector2.new(640, 298), Skills = Vector2.new(660, 344),
-	Merchant = Vector2.new(540, 292), Blacksmith = Vector2.new(540, 292), Trainer = Vector2.new(540, 330), PetStore = Vector2.new(560, 330), RuneCarver = Vector2.new(600, 330), Wish = Vector2.new(640, 352), Store = Vector2.new(640, 336), Boss = Vector2.new(640, 310), Battle = Vector2.new(640, 330), Quests = Vector2.new(640, 330), Premium = Vector2.new(640, 330), Season = Vector2.new(640, 330), Cosmetics = Vector2.new(640, 330), Codes = Vector2.new(540, 300), Character = Vector2.new(640, 340), Guild = Vector2.new(720, 340), Dev = Vector2.new(640, 330), Party = Vector2.new(700, 330), Bag = Vector2.new(640, 330), Errands = Vector2.new(620, 330), Settings = Vector2.new(620, 330), Talents = Vector2.new(660, 340), Dummy = Vector2.new(600, 300),
+	Merchant = Vector2.new(540, 292), Blacksmith = Vector2.new(540, 292), Trainer = Vector2.new(540, 330), PetStore = Vector2.new(560, 330), RuneCarver = Vector2.new(600, 330), Wish = Vector2.new(640, 352), Store = Vector2.new(640, 336), Boss = Vector2.new(640, 310), Battle = Vector2.new(640, 330), Quests = Vector2.new(640, 330), Premium = Vector2.new(640, 330), Season = Vector2.new(640, 330), Cosmetics = Vector2.new(640, 330), Codes = Vector2.new(540, 300), Character = Vector2.new(640, 340), Guild = Vector2.new(720, 340), Dev = Vector2.new(640, 330), Party = Vector2.new(700, 330), Bag = Vector2.new(640, 330), Errands = Vector2.new(620, 330), Settings = Vector2.new(620, 330), Talents = Vector2.new(660, 340), Dummy = Vector2.new(600, 300), Spar = Vector2.new(620, 330),
 }
 local SHOP_NPC = { Merchant = "Merchant", Blacksmith = "Blacksmith", Trainer = "Trainer", PetStore = "PetStore", RuneCarver = "RuneCarver", Wish = "Tree" }
 local panel = Kit.frame({ Name = "Panel", Size = UDim2.new(0, 500, 0, 286), Position = UDim2.new(0.5, -250, 0, 42), BackgroundColor3 = Kit.Colors.Bg, Visible = false, ZIndex = 5, Parent = root })
@@ -533,6 +533,17 @@ Town.OnPlace = function(id)
 		open("Guild", "Guild", true)
 	elseif id == "Dummy" then
 		extra.RunDummy()
+	elseif id == "Ring" then
+		extra.SparResult = nil
+		extra.SparList = nil
+		open("Spar", "Sparring Ring", true)
+		task.spawn(function()
+			local ok, list = api:InvokeServer("SparList")
+			extra.SparList = if ok then list else {}
+			if current == "Spar" then
+				redraw()
+			end
+		end)
 	elseif id == "PetPark" then
 		task.spawn(function()
 			local ok, data = api:InvokeServer("PetPlay")
@@ -568,6 +579,35 @@ Town.OnPlace = function(id)
 				return r ~= nil and World.NearSpot(r.Position.X, r.Position.Z, "Pond")
 			end,
 		})
+	end
+end
+-- the sparring ring: pick an opponent, the server plays a two-bout duel, the screen shows how it went
+Screens.Spar = require(script.Parent.UI.SparScreen).Spar
+local sparRunning = false
+function extra.RunSpar(key)
+	if sparRunning then
+		return
+	end
+	sparRunning = true
+	extra.SparResult = { Pending = true }
+	redraw()
+	local ok, data = api:InvokeServer("SparFight", key)
+	sparRunning = false
+	if ok and type(data) == "table" then
+		extra.SparResult = data
+		Sound.Play(if data.Won then "Victory" else "Defeat")
+		if data.Won then
+			Celebrate.Burst(Color3.fromRGB(255, 140, 120), 22)
+		end
+		local fresh, newState = api:InvokeServer("GetState")
+		if fresh and newState then
+			state = newState
+		end
+	else
+		extra.SparResult = { Error = if data == "TooFar" then "Step up to the sparring ring first." elseif data == "Busy" then "Catch your breath a moment..." else "Your opponent is gone." }
+	end
+	if current == "Spar" then
+		redraw()
 	end
 end
 -- the training dummy: your party hits it for 20 s on the server, the screen shows each hero's damage per second

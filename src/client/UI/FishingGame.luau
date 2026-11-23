@@ -33,8 +33,10 @@ local function close(hooks)
 end
 
 function FishingGame.Start(root, api, hooks)
-	close(hooks)
-	local frame = Kit.frame({ Name = "FishingGame", Size = UDim2.fromOffset(330, 200), Position = UDim2.new(0.5, -390, 1, -310), BackgroundColor3 = C.Bg, ZIndex = 30, Parent = root })
+	if card then
+		return -- already fishing: the prompt can fire again while the card is up
+	end
+	local frame = Kit.frame({ Name = "FishingGame", Size = UDim2.fromOffset(330, 200), Position = UDim2.new(0.5, -165, 0, 70), BackgroundColor3 = C.Bg, ZIndex = 30, Parent = root })
 	card = frame
 	Kit.new("UIStroke", { Color = Color3.fromRGB(120, 190, 240), Thickness = 2, Parent = frame })
 	local title = Kit.label({ Size = UDim2.new(1, -DIAL - 30, 0, 26), Position = UDim2.fromOffset(12, 8), Text = "🎣 Fishing", TextSize = 18, Font = Enum.Font.GothamBold, TextColor3 = Color3.fromRGB(150, 210, 255), ZIndex = 31, Parent = frame })
@@ -129,7 +131,7 @@ function FishingGame.Start(root, api, hooks)
 		title.Text = "🎣 Fishing"
 		text.Text = "Casting..."
 		local ok, data = api:InvokeServer("FishCast")
-		if mine ~= token or not card then
+		if mine ~= token or card ~= frame then
 			return
 		end
 		if not ok then
@@ -144,7 +146,7 @@ function FishingGame.Start(root, api, hooks)
 		text.Text = "Waiting for a bite...\nWhen it bites, press REEL while the needle is in the gold."
 		setButton("REEL", false)
 		task.delay(data.Wait or 3, function()
-			if mine ~= token or state ~= "waiting" or not card then
+			if mine ~= token or state ~= "waiting" or card ~= frame then
 				return
 			end
 			state = "spinning"

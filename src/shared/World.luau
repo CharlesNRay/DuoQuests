@@ -111,6 +111,7 @@ World.TownSpots = {
 	Dummy = { District = "Training", X = 0, Z = -22 }, -- the middle training dummy ("test your build")
 	Pond = { District = "Grove", X = -34, Z = 2 }, -- the fishing dock
 	PetPark = { District = "Grove", X = 31, Z = 14 }, -- the ball in the pet park
+	Ring = { District = "Training", X = -22, Z = 10 }, -- the sparring ring
 	-- hidden relics (Shared/TownLeisure): tucked behind buildings, under trees, out on the fields
 	Relic1 = { District = "Grove", X = 6, Z = 44 }, -- behind the Wishing Tree
 	Relic2 = { District = "Grove", X = 41, Z = 23 }, -- by the doghouse in the pet park

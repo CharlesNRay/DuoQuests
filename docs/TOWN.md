@@ -98,7 +98,12 @@ A tracker card sits bottom-left. Reset with the Test cheats "Reset dailies".
   is at your level).
 - **Hidden relics** (built 2026-11-23, seen): 10 glowing crystals round town and just outside it; 2 Wishstones each once
   a season; all 10 add 10 Wishstones and the title "Relic Hunter". The Notice Board shows how many you have found.
-- Still to build: sparring ring (owner has not said if wanted); a fish log screen.
+- **Sparring ring** (built 2026-11-23, seen): duel another player's hero on the server or one of your companions; two
+  bouts (one from each side); first win a day pays 3 Wishstones; record kept.
+- **Town wall** (2026-11-23): one wall round the whole town, main gate south to the Boss Field, small gates to the
+  Dungeon Gate (west) and the Expedition Camp (south-east).
+- Errands are a daily rotation: 5 of 11 a day, from 7 townsfolk.
+- Still to build: a fish log screen.
 
 ## Questions for you
 1. ANSWERED 2026-11-23: wishes (Wishstones / wish tickets). Was: is "small Wishstones/gold, plus cosmetics and titles" right, or should town play give **only** cosmetics
