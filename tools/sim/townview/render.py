@@ -20,13 +20,18 @@ def src(rel):
     return open(os.path.join(ROOT, rel), encoding="utf-8").read()
 
 run = [src("tools/sim/townview/shim.luau")]
-for name, rel in [("World", "src/shared/World.luau"), ("Town", "src/client/Battle/Town.luau"), ("Hub", "src/client/Battle/Hub.luau")]:
+for name, rel in [("World", "src/shared/World.luau"), ("Errands", "src/shared/Config/Errands.luau"), ("Town", "src/client/Battle/Town.luau"), ("Hub", "src/client/Battle/Hub.luau")]:
     run.append('LOADERS["%s"] = function()\n%s\nend\n' % (name, src(rel)))
 run.append('''
 local Hub = require("Hub")
 local noop = function() end
-Hub.Build({ Map = noop, Ranks = noop, Season = noop, Daily = noop, Merchant = noop, Blacksmith = noop, Trainer = noop, PetStore = noop, RuneCarver = noop, Tree = noop })
+Hub.Build({ Map = noop, Ranks = noop, Season = noop, Daily = noop, Merchant = noop, Blacksmith = noop, Trainer = noop, PetStore = noop, RuneCarver = noop, Tree = noop, Store = noop })
 Hub.SetLots({})
+local World = require("World")
+for _, id in ipairs(World.DistrictOrder) do
+	local x, z = World.DistrictPoint(id)
+	print(("D	%s	%f	%f	%f"):format(id, x, z, World.Districts[id].Size))
+end
 DUMP()
 ''')
 path = os.path.join(OUT, "run.luau")
@@ -115,11 +120,15 @@ def draw(fname, xlim, zlim, labels=True, dpi=110):
     fig.savefig(os.path.join(OUT, fname), dpi=dpi, bbox_inches="tight")
     plt.close(fig)
 
-draw("town_all.png", (-230, 230), (-80, 270), labels=False, dpi=90)
+draw("town_all.png", (-330, 330), (-320, 400), labels=False, dpi=80)
 draw("town_plaza.png", (-90, 90), (-40, 120))
-draw("town_grove.png", (-215, -85), (-30, 110))
-draw("town_gate.png", (-70, 70), (120, 250))
-draw("town_training.png", (85, 215), (-30, 110))
+# one close-up per district, centred on its point (World.DistrictPoint), named after the district id
+import math
+for line in res.stdout.splitlines():
+    if line.startswith("D	"):
+        _, did, dx, dz, size = line.split("	")
+        dx, dz, size = float(dx), float(dz), float(size)
+        draw("town_%s.png" % did.lower(), (dx - size - 15, dx + size + 15), (dz - size - 15, dz + size + 15))
 
 # overlaps: solid parts whose footprints AND heights intersect, in different props (by name), ignoring floors
 def bbox(pt):

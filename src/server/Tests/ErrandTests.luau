@@ -76,11 +76,14 @@ return function(modulesOverride)
 	local f = World.BossField
 	check("The Warden and the offering stone are on the Boss Field", math.sqrt((wx - f.X) ^ 2 + (wz - f.Z) ^ 2) < f.Radius and math.sqrt((ax - f.X) ^ 2 + (az - f.Z) ^ 2) < f.Radius)
 	-- the frame math: a spot at local (0, 0) is the district point, local -Z is toward the plaza
-	World.TownSpots.__Probe = { District = "Gate", X = 0, Z = -10 }
+	World.TownSpots.__Probe = { District = "Housing", X = 0, Z = -10 }
 	local px, pz = World.TownSpot("__Probe")
-	local gx, gz = World.DistrictPoint("Gate")
+	local gx, gz = World.DistrictPoint("Housing")
 	World.TownSpots.__Probe = nil
-	check("Local -Z in a district points at the plaza", math.abs(px - gx) < 1e-6 and pz < gz)
+	local function toPlaza(x, z)
+		return math.sqrt((x - World.PLAZA.X) ^ 2 + (z - World.PLAZA.Z) ^ 2)
+	end
+	check("Local -Z in a district points at the plaza", math.abs(toPlaza(gx, gz) - toPlaza(px, pz) - 10) < 1e-6)
 	check("NearSpot is true at the spot and false 30 studs away", World.NearSpot(wx, wz, "Warden") and not World.NearSpot(wx + 30, wz, "Warden"))
 
 	-- the daily pool

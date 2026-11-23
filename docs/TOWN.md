@@ -105,6 +105,12 @@ A tracker card sits bottom-left. Reset with the Test cheats "Reset dailies".
 - Errands are a daily rotation: 5 of 11 a day, from 7 townsfolk.
 - Still to build: a fish log screen.
 
+## Relayout to the owner's blueprint (2026-11-23)
+The owner drew the town: a walled town with the plaza in the middle; Guild north, Housing north-west, Wishing Tree
+north-east, Pet Area west, Merchants east, Dungeon in the east wall, Giant Bosses outside the north-east, Combat Arena
+south-west, Player Homes (the battle lots) south-east, the main gate south. Built that way (World.luau has the numbers;
+`tools/sim/townview/render.py` draws the plan).
+
 ## Questions for you
 1. ANSWERED 2026-11-23: wishes (Wishstones / wish tickets). Was: is "small Wishstones/gold, plus cosmetics and titles" right, or should town play give **only** cosmetics
    and fun (no power at all)?

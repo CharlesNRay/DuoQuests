@@ -150,7 +150,7 @@ return function(modulesOverride)
 	end
 	check("Arena slots 1-24 are at distinct places", distinct)
 	check("Arena pads never overlap", clear)
-	check("Arena 1 is in front of the spawn", oz1 < select(3, World.SpawnPosition()) and ox1 ~= nil)
+	check("Arena 1 is off the plaza", ox1 ~= nil and math.sqrt((ox1 - World.PLAZA.X) ^ 2 + (oz1 - World.PLAZA.Z) ^ 2) > World.PLAZA.Radius + World.ARENA_WIDTH / 2)
 
 	-- town districts (docs/TOWN.md): clear of the plaza, the lots and each other, and a short walk from the fountain
 	local districtsOk, walkOk, lotsOk = true, true, true
@@ -204,7 +204,7 @@ return function(modulesOverride)
 	check("The Wishing Tree stands in the Wishing Grove", math.sqrt((tx - gx) ^ 2 + (tz - gz) ^ 2) < World.Districts.Grove.Size)
 	-- the Dungeon Gate and the Expedition Camp sit outside the town: beyond the ring, clear of districts, lots and the Boss Field
 	local outsideOk = true
-	for _, id in ipairs({ "DungeonGate", "ExpeditionCamp" }) do
+	for _, id in ipairs({ "ExpeditionCamp" }) do
 		local x, z = World.TownSpot(id)
 		local r = math.sqrt((x - World.PLAZA.X) ^ 2 + (z - World.PLAZA.Z) ^ 2)
 		if r < World.TOWN_RING + 30 or math.abs(x) > 330 then
@@ -226,7 +226,7 @@ return function(modulesOverride)
 			end
 		end
 	end
-	check("The Dungeon Gate and Expedition Camp stand outside town, clear of everything", outsideOk)
+	check("The Expedition Camp stands outside town, clear of everything", outsideOk)
 	-- the town wall rings everything that is the town, and the places outside it are outside it
 	local wall = World.TOWN_WALL
 	local function r(x, z)
@@ -246,12 +246,29 @@ return function(modulesOverride)
 	check("The town wall rings the plaza, every district and every lot", inside)
 	local dgx, dgz = World.TownSpot("DungeonGate")
 	local ecx, ecz = World.TownSpot("ExpeditionCamp")
-	check("The Boss Field, Dungeon Gate and Expedition Camp are outside the wall", r(f.X, f.Z) - f.Radius > wall.Radius + 4 and r(dgx, dgz) - 30 > wall.Radius and r(ecx, ecz) - 24 > wall.Radius)
-	local mainGate = false
+	check("The Giant Bosses field and the Expedition Camp are outside the wall", r(f.X, f.Z) - f.Radius > wall.Radius + 4 and r(ecx, ecz) - 24 > wall.Radius)
+	check("The Dungeon is built into the wall", math.abs(r(dgx, dgz) - wall.Radius) < 40)
+	local mainGate, bossGate, dungeonHill = false, false, false
+	local function angleOf(x, z)
+		return math.deg(math.atan2(x - World.PLAZA.X, -(z - World.PLAZA.Z))) % 360
+	end
+	local function near(a, b, tol)
+		return math.abs(((a - b + 180) % 360) - 180) <= tol
+	end
 	for _, g in ipairs(wall.Gates) do
 		mainGate = mainGate or (g.Main and g.Angle == 180)
+		bossGate = bossGate or (not g.Hill and near(g.Angle, angleOf(f.X, f.Z), 10))
+		dungeonHill = dungeonHill or (g.Hill and near(g.Angle, angleOf(dgx, dgz), 6))
 	end
-	check("The main gate is in the wall, facing the Boss Field", mainGate)
+	check("The main gate is south, a gate faces the Giant Bosses, the Dungeon hill stands in the wall", mainGate and bossGate and dungeonHill)
+	-- the shops stand in the Market
+	local marketOk = true
+	local mx, mz = World.DistrictPoint("Market")
+	for _, shop in ipairs({ "Merchant", "PetStore", "Trainer", "Blacksmith", "RuneCarver", "Store" }) do
+		local sx, sz = World.PlazaPoint(shop)
+		marketOk = marketOk and math.sqrt((sx - mx) ^ 2 + (sz - mz) ^ 2) < World.Districts.Market.Size
+	end
+	check("Every shop stands in the Market", marketOk)
 	local spacingOk = true
 	for a, sa in pairs(World.PlazaSpots) do
 		for b, sb in pairs(World.PlazaSpots) do

@@ -186,38 +186,88 @@ local function districtFrame(id)
 end
 
 -- roads ----------------------------------------------------------------------
+local function road(from, to, width, name)
+	local mid = (from + to) / 2
+	return part({ Name = name or "Road", Size = Vector3.new(width or 10, 0.32, (to - from).Magnitude), CFrame = CFrame.lookAt(mid + Vector3.new(0, 0.16, 0), to + Vector3.new(0, 0.16, 0)), Color = ROAD, Material = Enum.Material.Pebble, CanCollide = false })
+end
+
+local function polar(angle, radius)
+	local a = math.rad(angle)
+	return Vector3.new(World.PLAZA.X + math.sin(a) * radius, 0, World.PLAZA.Z - math.cos(a) * radius)
+end
+
 local function roads()
-	local centre = Vector3.new(World.PLAZA.X, 0, World.PLAZA.Z)
-	local R = World.TOWN_RING
-	-- the ring: from the Grove (west) through the Gate (south) to the Training Grounds (east); the lots are north
-	local from, to, steps = 90, 270, 30
-	for index = 0, steps - 1 do
-		local a1 = math.rad(from + (to - from) * index / steps)
-		local a2 = math.rad(from + (to - from) * (index + 1) / steps)
-		local p1 = centre + Vector3.new(math.sin(a1) * R, 0, -math.cos(a1) * R)
-		local p2 = centre + Vector3.new(math.sin(a2) * R, 0, -math.cos(a2) * R)
-		local mid = (p1 + p2) / 2
-		part({ Name = "RingRoad", Size = Vector3.new(9, 0.3, (p2 - p1).Magnitude + 1.5), CFrame = CFrame.lookAt(mid + Vector3.new(0, 0.15, 0), p2 + Vector3.new(0, 0.15, 0)), Color = ROAD, Material = Enum.Material.Pebble, CanCollide = false })
-	end
 	-- spokes from the plaza rim to each district's edge
 	for _, id in ipairs(World.DistrictOrder) do
 		local d = World.Districts[id]
-		local a = math.rad(d.Angle)
-		local dir = Vector3.new(math.sin(a), 0, -math.cos(a))
-		local r1, r2 = World.PLAZA.Radius - 1, d.Radius - d.Size + 2
-		local p1, p2 = centre + dir * r1, centre + dir * r2
-		local mid = (p1 + p2) / 2
-		part({ Name = "Spoke", Size = Vector3.new(10, 0.32, (p2 - p1).Magnitude), CFrame = CFrame.lookAt(mid + Vector3.new(0, 0.16, 0), p2 + Vector3.new(0, 0.16, 0)), Color = ROAD, Material = Enum.Material.Pebble, CanCollide = false })
+		road(polar(d.Angle, World.PLAZA.Radius - 1), polar(d.Angle, d.Radius - d.Size + 2), 10, "Spoke")
+	end
+	-- the high road south to the main gate
+	road(polar(180, World.PLAZA.Radius - 1), polar(180, World.TOWN_WALL.Radius + 6), 14, "HighRoad")
+	-- to the battle lots (player homes), south-east
+	road(polar(World.LOT_BLOCK.Angle, World.PLAZA.Radius - 1), polar(World.LOT_BLOCK.Angle, World.LOT_BLOCK.Radius - 40), 10, "LotRoad")
+	-- through the Wishing Grove to the Giant Bosses gate (north-east)
+	local grove = World.Districts.Grove
+	road(polar(grove.Angle, grove.Radius + grove.Size - 4), polar(38, World.TOWN_WALL.Radius + 6), 9, "BossRoad")
+end
+
+-- trees: one on each side of a district's way in, and rows filling the green between the districts and the wall
+local function clearOfEverything(p, margin)
+	local centre = Vector3.new(World.PLAZA.X, 0, World.PLAZA.Z)
+	if (p - centre).Magnitude < World.PLAZA.Radius + 8 then
+		return false
+	end
+	for _, id in ipairs(World.DistrictOrder) do
+		local x, z = World.DistrictPoint(id)
+		if (p - Vector3.new(x, 0, z)).Magnitude < World.Districts[id].Size + margin then
+			return false
+		end
+	end
+	for slot = 1, World.MAX_LOTS do
+		local ax, _, az = World.ArenaOrigin(slot)
+		if math.abs(p.X - ax) < World.ARENA_WIDTH / 2 + margin and math.abs(p.Z - az) < World.ARENA_DEPTH / 2 + margin then
+			return false
+		end
+	end
+	local dx, dz = World.TownSpot("DungeonGate")
+	if (p - Vector3.new(dx, 0, dz)).Magnitude < 36 + margin then
+		return false
+	end
+	-- not on a road: the angle of every spoke, the high road and the lot road
+	local a = math.deg(math.atan2(p.X - centre.X, -(p.Z - centre.Z))) % 360
+	local r = (p - centre).Magnitude
+	local roadAngles = { 180, World.LOT_BLOCK.Angle, 38 }
+	for _, id in ipairs(World.DistrictOrder) do
+		table.insert(roadAngles, World.Districts[id].Angle % 360)
+	end
+	for _, ra in ipairs(roadAngles) do
+		local diff = math.abs(((a - ra + 180) % 360) - 180)
+		if math.rad(diff) * r < 9 + margin then
+			return false
+		end
+	end
+	return r < World.TOWN_WALL.Radius - 10
+end
+
+local function greenery()
+	for _, ring in ipairs({ { R = 105, Step = 15 }, { R = 240, Step = 7 }, { R = 270, Step = 6 } }) do
+		for deg = 0, 359, ring.Step do
+			local p = polar(deg + (ring.R % 7), ring.R)
+			if clearOfEverything(p, 6) then
+				tree(p, 0.85 + ((deg // ring.Step) % 3) * 0.15)
+			end
+		end
 	end
 end
 
 -- districts ------------------------------------------------------------------
-local function gate()
-	local d = World.Districts.Gate
-	local cf = districtFrame("Gate")
+-- Old Town (north-west): the square with the well, the Sleepy Griffin, Old Mabel's cottage, the notice board, Pip
+local function housing()
+	local d = World.Districts.Housing
+	local cf = districtFrame("Housing")
 	disc(cf.Position, d.Size, 0.4, 0, STONE, Enum.Material.Cobblestone)
 	disc(cf.Position, d.Size - 3, 0.45, 0, Color3.fromRGB(184, 176, 160), Enum.Material.Cobblestone)
-	-- (the town gate stands in the town wall now, south of this square: see townWall)
+	arch(cf * CFrame.new(0, 0, -d.Size + 3), 14, "OLD TOWN", Color3.fromRGB(140, 90, 60))
 	-- the well in the middle
 	disc(cf.Position, 3.2, 2.6, 0.4, STONE_DARK, Enum.Material.Brick)
 	disc(cf.Position, 2.4, 0.2, 2.9, Color3.fromRGB(60, 110, 160), Enum.Material.Glass)
@@ -225,10 +275,9 @@ local function gate()
 		part({ Name = "WellPost", Size = Vector3.new(0.5, 5, 0.5), CFrame = cf * CFrame.new(side * 2.8, 5, 0), Color = WOOD, Material = Enum.Material.Wood })
 	end
 	part({ Name = "WellRoof", Size = Vector3.new(7, 0.5, 4), CFrame = cf * CFrame.new(0, 7.6, 0), Color = Color3.fromRGB(150, 70, 50), Material = Enum.Material.WoodPlanks })
-	-- the tavern (left as you come from the plaza) and the notice board (right)
+	-- the tavern (Greta stands at its door, see errands())
 	house(facing(cf, 27, 8), 22, 16, 13, Color3.fromRGB(230, 214, 180), Color3.fromRGB(140, 60, 44), "THE SLEEPY GRIFFIN")
-	-- (the tavern sign names it; Greta the barkeep stands at its door, see errands())
-	local bx, bz = -14, -28 -- World.TownSpots.Board: beside the road into the square, clear of the houses
+	local bx, bz = -14, -28 -- World.TownSpots.Board: beside the road in, clear of the houses
 	local boardCf = facing(cf, bx, bz, 0, -46) -- faces people walking in from the plaza
 	for _, side in ipairs({ -1, 1 }) do
 		part({ Name = "BoardPost", Size = Vector3.new(0.8, 8, 0.8), CFrame = boardCf * CFrame.new(side * 4.4, 4, 0.3), Color = WOOD, Material = Enum.Material.Wood })
@@ -239,10 +288,12 @@ local function gate()
 		part({ Name = "Note", Size = Vector3.new(1.6, 2, 0.1), CFrame = boardCf * CFrame.new(-3.6 + index * 1.5, 5.2 + (index % 2) * 0.9, -0.3) * CFrame.Angles(0, 0, math.rad((index % 3 - 1) * 6)), Color = notes[index % 3 + 1], Material = Enum.Material.SmoothPlastic, CanCollide = false })
 	end
 	tag(face, "NOTICE BOARD", "Town errands")
-	-- houses and lamps round the square
+	-- cottages round the square (Old Mabel's is the one at (-28, 24)), each facing the well
 	house(facing(cf, -28, 24), 16, 13, 11, Color3.fromRGB(220, 200, 170), Color3.fromRGB(90, 110, 150))
 	house(facing(cf, -32, -8), 14, 12, 10, Color3.fromRGB(235, 225, 200), Color3.fromRGB(120, 140, 80))
-	for _, off in ipairs({ { -12, -16 }, { 12, -16 }, { -38, 6 }, { 38, -2 } }) do -- beside the houses, not before their doors
+	house(facing(cf, 8, 38), 14, 12, 10, Color3.fromRGB(225, 210, 185), Color3.fromRGB(150, 100, 60))
+	house(facing(cf, 32, -24), 13, 11, 10, Color3.fromRGB(215, 195, 170), Color3.fromRGB(120, 70, 60))
+	for _, off in ipairs({ { -12, -16 }, { 12, -16 }, { -38, 6 }, { 40, 6 } }) do -- beside the houses, not before their doors
 		lamp((cf * CFrame.new(off[1], 0.4, off[2])).Position)
 	end
 	for _, off in ipairs({ { -20, 4 }, { 20, -6 } }) do
@@ -250,14 +301,35 @@ local function gate()
 	end
 end
 
+-- the Wishing Grove (north-east): the Wishing Tree (built by Hub at PlazaSpots.Tree), flowers, trees round the edge
 local function grove()
 	local d = World.Districts.Grove
 	local cf = districtFrame("Grove")
 	disc(cf.Position, d.Size, 0.35, 0, Color3.fromRGB(110, 178, 96), Enum.Material.Grass)
-	-- (the Wishing Tree itself is built by Hub at PlazaSpots.Tree, the middle of the Grove)
 	arch(cf * CFrame.new(0, 0, -d.Size + 3), 14, "WISHING GROVE", Color3.fromRGB(70, 150, 120))
-	-- the fishing pond (right as you come in) with a little dock
-	local pondCf = cf * CFrame.new(-34, 0, 14)
+	for index = 0, 13 do
+		local a = math.rad(index * (360 / 14) + 6)
+		local p = cf.Position + Vector3.new(math.sin(a) * (d.Size - 2), 0, math.cos(a) * (d.Size - 2))
+		-- no tree in the way in (the arch faces the plaza) or on the road out to the Giant Bosses
+		local inWay = (p - (cf * CFrame.new(0, 0, -d.Size)).Position).Magnitude < 18 or (p - (cf * CFrame.new(0, 0, d.Size)).Position).Magnitude < 16
+		if not inWay then
+			tree(p, 0.85 + (index % 3) * 0.15)
+		end
+	end
+	local colors = { Color3.fromRGB(255, 200, 80), Color3.fromRGB(200, 120, 255), Color3.fromRGB(255, 130, 160) }
+	for index, off in ipairs({ { -14, -30 }, { 14, -30 }, { -26, -12 }, { 26, -12 }, { -22, 26 } }) do
+		flowerBed((cf * CFrame.new(off[1], 0.2, off[2])).Position, colors[index % 3 + 1])
+	end
+end
+
+-- the Pet Area (west): the pet park behind a fence, the fishing pond with its dock, trees
+local function petArea()
+	local d = World.Districts.PetArea
+	local cf = districtFrame("PetArea")
+	disc(cf.Position, d.Size, 0.35, 0, Color3.fromRGB(120, 186, 100), Enum.Material.Grass)
+	arch(cf * CFrame.new(0, 0, -d.Size + 3), 14, "PET AREA", Color3.fromRGB(220, 120, 160))
+	-- the fishing pond (left as you come in) with a little dock
+	local pondCf = cf * CFrame.new(-18, 0, 8)
 	disc(pondCf.Position, 11.5, 0.6, 0.1, Color3.fromRGB(150, 140, 120), Enum.Material.Sand)
 	local water = disc(pondCf.Position, 10, 0.3, 0.55, Color3.fromRGB(70, 150, 200), Enum.Material.Glass)
 	water.Transparency = 0.2
@@ -265,15 +337,15 @@ local function grove()
 		local pad = disc((pondCf * CFrame.new(-4 + index * 2.6, 0, (index % 2) * 3 - 1)).Position, 0.9, 0.1, 0.9, Color3.fromRGB(80, 160, 80), Enum.Material.Grass)
 		pad.Name = "LilyPad"
 	end
-	local dock = part({ Name = "Dock", Size = Vector3.new(3.4, 0.4, 9), CFrame = pondCf * CFrame.new(0, 1.1, -10) * CFrame.Angles(0, math.rad(25), 0), Color = WOOD, Material = Enum.Material.WoodPlanks })
+	local dock = part({ Name = "Dock", Size = Vector3.new(3.4, 0.4, 9), CFrame = pondCf * CFrame.new(0, 1.1, -12) * CFrame.Angles(0, math.rad(15), 0), Color = WOOD, Material = Enum.Material.WoodPlanks })
 	tag(dock, "FISHING POND", "Catch fish for pet snacks", Color3.fromRGB(150, 210, 255))
 	dock:SetAttribute("PlaceId", "Pond")
-	local bob = part({ Name = "Bobber", Shape = Enum.PartType.Ball, Size = Vector3.new(0.7, 0.7, 0.7), CFrame = pondCf * CFrame.new(3, 1.25, -5), Color = Color3.fromRGB(230, 60, 60), Material = Enum.Material.SmoothPlastic, CanCollide = false, Transparency = 1 })
+	local bob = part({ Name = "Bobber", Shape = Enum.PartType.Ball, Size = Vector3.new(0.7, 0.7, 0.7), CFrame = pondCf * CFrame.new(2, 1.25, -5), Color = Color3.fromRGB(230, 60, 60), Material = Enum.Material.SmoothPlastic, CanCollide = false, Transparency = 1 })
 	bob:SetAttribute("Bobber", true)
 	part({ Name = "Rod", Size = Vector3.new(0.2, 0.2, 6), CFrame = dock.CFrame * CFrame.new(1, 1.6, 4) * CFrame.Angles(math.rad(30), 0, 0), Color = DARK_WOOD, Material = Enum.Material.Wood })
-	-- the pet park (left) behind a low fence, with a ball, a ramp and a doghouse
-	local parkCf = cf * CFrame.new(34, 0, 16)
-	local h = 10
+	-- the pet park (right) behind a low fence, with a ball, a ramp and a doghouse
+	local parkCf = cf * CFrame.new(16, 0, 4)
+	local h = 12
 	local corners = {}
 	for _, c in ipairs({ { -h, -h }, { h, -h }, { h, h }, { -h, h } }) do
 		table.insert(corners, (parkCf * CFrame.new(c[1], 0, c[2])).Position)
@@ -281,45 +353,51 @@ local function grove()
 	for index = 1, 4 do
 		local a, b = corners[index], corners[index % 4 + 1]
 		if index == 1 then
-			-- leave a gap in the side facing the plaza for the way in
-			fence(a, a:Lerp(b, 0.35), 2.4)
+			fence(a, a:Lerp(b, 0.35), 2.4) -- the gap in the side facing the plaza is the way in
 			fence(a:Lerp(b, 0.65), b, 2.4)
 		else
 			fence(a, b, 2.4)
 		end
 	end
-	disc(parkCf.Position, 9, 0.2, 0.35, Color3.fromRGB(130, 196, 110), Enum.Material.Grass)
+	disc(parkCf.Position, 11, 0.2, 0.35, Color3.fromRGB(130, 196, 110), Enum.Material.Grass)
 	local ball = part({ Name = "PetBall", Shape = Enum.PartType.Ball, Size = Vector3.new(1.4, 1.4, 1.4), CFrame = parkCf * CFrame.new(-3, 1.2, -2), Color = Color3.fromRGB(240, 80, 80), Material = Enum.Material.SmoothPlastic })
 	tag(ball, "PET PARK", "Play with your pet once a day", Color3.fromRGB(255, 170, 210))
 	ball:SetAttribute("PlaceId", "PetPark")
-	part({ Name = "Ramp", Size = Vector3.new(4, 2, 6), CFrame = parkCf * CFrame.new(4, 1.3, 3), Color = Color3.fromRGB(200, 160, 110), Material = Enum.Material.Wood }, "WedgePart")
-	local kennel = parkCf * CFrame.new(5, 0, -5)
+	part({ Name = "Ramp", Size = Vector3.new(4, 2, 6), CFrame = parkCf * CFrame.new(4, 1.3, 5), Color = Color3.fromRGB(200, 160, 110), Material = Enum.Material.Wood }, "WedgePart")
+	local kennel = parkCf * CFrame.new(6, 0, -6)
 	part({ Name = "Doghouse", Size = Vector3.new(3.4, 2.8, 3.4), CFrame = kennel * CFrame.new(0, 1.75, 0), Color = Color3.fromRGB(190, 120, 80), Material = Enum.Material.WoodPlanks })
 	part({ Name = "DoghouseRoof", Size = Vector3.new(4.2, 0.4, 4.2), CFrame = kennel * CFrame.new(0, 3.35, 0), Color = Color3.fromRGB(160, 60, 50), Material = Enum.Material.WoodPlanks })
 	part({ Name = "DoghouseDoor", Size = Vector3.new(1.4, 1.6, 0.1), CFrame = kennel * CFrame.new(0, 1.15, -1.72), Color = Color3.fromRGB(40, 30, 24) })
-	-- trees and flowers round the edge
-	for index = 0, 13 do
-		local a = math.rad(index * (360 / 14) + 6)
+	local sign2 = part({ Name = "PawSign", Size = Vector3.new(4, 3, 0.3), CFrame = cf * CFrame.new(-10, 4, -d.Size + 8), Color = Color3.fromRGB(240, 230, 210), Material = Enum.Material.WoodPlanks })
+	sign(sign2, Enum.NormalId.Front, "PAWS", Color3.fromRGB(70, 140, 90))
+	part({ Name = "PawSignPost", Size = Vector3.new(0.4, 3, 0.4), CFrame = cf * CFrame.new(-10, 1.5, -d.Size + 8), Color = DARK_WOOD, Material = Enum.Material.Wood })
+	for index = 0, 11 do
+		local a = math.rad(index * 30 + 10)
 		local p = cf.Position + Vector3.new(math.sin(a) * (d.Size - 2), 0, math.cos(a) * (d.Size - 2))
-		-- no tree in the way in (the arch faces the plaza)
 		if (p - (cf * CFrame.new(0, 0, -d.Size)).Position).Magnitude > 18 then
 			tree(p, 0.85 + (index % 3) * 0.15)
 		end
 	end
-	local colors = { Color3.fromRGB(255, 200, 80), Color3.fromRGB(200, 120, 255), Color3.fromRGB(255, 130, 160) }
-	for index, off in ipairs({ { -14, -30 }, { 14, -30 }, { -26, -12 }, { 26, -12 }, { 0, 34 } }) do
-		flowerBed((cf * CFrame.new(off[1], 0.2, off[2])).Position, colors[index % 3 + 1])
-	end
 end
 
+-- the Combat Arena (south-west): the sparring ring in the middle, training dummies, weapon racks, archery targets
 local function training()
 	local d = World.Districts.Training
 	local cf = districtFrame("Training")
 	disc(cf.Position, d.Size, 0.35, 0, Color3.fromRGB(196, 170, 120), Enum.Material.Sand)
-	arch(cf * CFrame.new(0, 0, -d.Size + 3), 14, "TRAINING GROUNDS", Color3.fromRGB(170, 80, 60))
+	arch(cf * CFrame.new(0, 0, -d.Size + 3), 14, "COMBAT ARENA", Color3.fromRGB(170, 80, 60))
+	-- a fence of banners round the arena, open towards the plaza
+	for index = 0, 17 do
+		local a = index * 20 + 10
+		if math.abs(((a - 180 + 180) % 360) - 180) > 22 then -- leave the way in (local -Z, toward the plaza)
+			local p = cf * CFrame.new(math.sin(math.rad(a)) * (d.Size - 4), 0, math.cos(math.rad(a)) * (d.Size - 4))
+			part({ Name = "ArenaPost", Size = Vector3.new(0.8, 6, 0.8), CFrame = p * CFrame.new(0, 3, 0), Color = DARK_WOOD, Material = Enum.Material.Wood })
+			part({ Name = "ArenaBanner", Size = Vector3.new(0.2, 3, 2), CFrame = p * CFrame.new(0, 4, 0) * CFrame.Angles(0, math.rad(a), 0), Color = if index % 2 == 0 then Color3.fromRGB(190, 50, 50) else Color3.fromRGB(230, 190, 70), Material = Enum.Material.Fabric })
+		end
+	end
 	-- a row of training dummies
 	for index = -2, 2 do
-		local post = cf * CFrame.new(index * 6, 0, -22)
+		local post = cf * CFrame.new(index * 6, 0, -24)
 		part({ Name = "DummyPost", Size = Vector3.new(0.5, 5.4, 0.5), CFrame = post * CFrame.new(0, 2.7, 0), Color = WOOD, Material = Enum.Material.Wood })
 		part({ Name = "DummyBody", Shape = Enum.PartType.Cylinder, Size = Vector3.new(2.4, 1.8, 1.8), CFrame = post * CFrame.new(0, 3.4, 0) * CFrame.Angles(0, 0, math.rad(90)), Color = Color3.fromRGB(214, 190, 120), Material = Enum.Material.Fabric })
 		part({ Name = "DummyArms", Size = Vector3.new(3.6, 0.4, 0.4), CFrame = post * CFrame.new(0, 4, 0), Color = WOOD, Material = Enum.Material.Wood })
@@ -329,29 +407,28 @@ local function training()
 			head:SetAttribute("PlaceId", "Dummy")
 		end
 	end
-	-- the sparring ring
-	local ringCf = cf * CFrame.new(-22, 0, 10)
-	part({ Name = "RingFloor", Size = Vector3.new(20, 1.2, 20), CFrame = ringCf * CFrame.new(0, 0.6, 0), Color = Color3.fromRGB(150, 110, 80), Material = Enum.Material.WoodPlanks })
-	part({ Name = "RingMat", Size = Vector3.new(17, 0.1, 17), CFrame = ringCf * CFrame.new(0, 1.25, 0), Color = Color3.fromRGB(70, 90, 150), Material = Enum.Material.Fabric })
-	for _, c in ipairs({ { -9.5, -9.5 }, { 9.5, -9.5 }, { 9.5, 9.5 }, { -9.5, 9.5 } }) do
+	-- the sparring ring in the middle
+	local ringCf = cf * CFrame.new(0, 0, 8)
+	local S = 24
+	part({ Name = "RingFloor", Size = Vector3.new(S, 1.2, S), CFrame = ringCf * CFrame.new(0, 0.6, 0), Color = Color3.fromRGB(150, 110, 80), Material = Enum.Material.WoodPlanks })
+	part({ Name = "RingMat", Size = Vector3.new(S - 3, 0.1, S - 3), CFrame = ringCf * CFrame.new(0, 1.25, 0), Color = Color3.fromRGB(70, 90, 150), Material = Enum.Material.Fabric })
+	local e = S / 2 - 0.5
+	for _, c in ipairs({ { -e, -e }, { e, -e }, { e, e }, { -e, e } }) do
 		part({ Name = "RingPost", Size = Vector3.new(0.8, 4.6, 0.8), CFrame = ringCf * CFrame.new(c[1], 2.3 + 1.2, c[2]), Color = Color3.fromRGB(200, 60, 60), Material = Enum.Material.SmoothPlastic })
 	end
 	for _, y in ipairs({ 3, 4.4 }) do
-		for _, e in ipairs({ { 0, -9.5, 19, 0.25 }, { 0, 9.5, 19, 0.25 }, { -9.5, 0, 0.25, 19 }, { 9.5, 0, 0.25, 19 } }) do
-			part({ Name = "Rope", Size = Vector3.new(e[3], 0.25, e[4]), CFrame = ringCf * CFrame.new(e[1], y, e[2]), Color = Color3.fromRGB(240, 230, 200), Material = Enum.Material.Fabric, CanCollide = false })
+		for _, r in ipairs({ { 0, -e, S - 1, 0.25 }, { 0, e, S - 1, 0.25 }, { -e, 0, 0.25, S - 1 }, { e, 0, 0.25, S - 1 } }) do
+			part({ Name = "Rope", Size = Vector3.new(r[3], 0.25, r[4]), CFrame = ringCf * CFrame.new(r[1], y, r[2]), Color = Color3.fromRGB(240, 230, 200), Material = Enum.Material.Fabric, CanCollide = false })
 		end
+	end
+	for _, side in ipairs({ -1, 1 }) do -- torches at the ring
+		local flame = part({ Name = "RingTorch", Shape = Enum.PartType.Ball, Size = Vector3.new(1.2, 1.5, 1.2), CFrame = ringCf * CFrame.new(side * (e + 3), 6.5, -e), Color = Color3.fromRGB(255, 150, 50), Material = Enum.Material.Neon, CanCollide = false })
+		part({ Name = "RingTorchPost", Size = Vector3.new(0.6, 6, 0.6), CFrame = ringCf * CFrame.new(side * (e + 3), 3, -e), Color = DARK_WOOD, Material = Enum.Material.Wood })
+		table.insert(pulsers, { Part = flame, Phase = side, Base = 0.05, Amount = 0.2 })
 	end
 	local ringMark = part({ Name = "RingSpot", Size = Vector3.new(1, 1, 1), CFrame = ringCf * CFrame.new(0, 3, 0), Transparency = 1, CanCollide = false })
 	tag(ringMark, "SPARRING RING", "Duel another hero", Color3.fromRGB(255, 140, 120))
 	ringMark:SetAttribute("PlaceId", "Ring")
-	-- the guild hall, with banners
-	local hallCf = facing(cf, 24, 20)
-	house(hallCf, 24, 17, 15, Color3.fromRGB(210, 200, 190), Color3.fromRGB(90, 60, 130), "GUILD HALL")
-	for _, side in ipairs({ -1, 1 }) do
-		local banner = part({ Name = "GuildBanner", Size = Vector3.new(2.4, 6, 0.2), CFrame = hallCf * CFrame.new(side * 10, 8, -8.75), Color = Color3.fromRGB(120, 70, 180), Material = Enum.Material.Fabric })
-		local star = part({ Name = "BannerStar", Size = Vector3.new(1.2, 1.2, 0.1), CFrame = banner.CFrame * CFrame.new(0, 1, -0.15) * CFrame.Angles(0, 0, math.rad(45)), Color = Color3.fromRGB(255, 220, 120), Material = Enum.Material.Neon, CanCollide = false })
-		table.insert(pulsers, { Part = star, Phase = side, Base = 0.2, Amount = 0.15 })
-	end
 	-- weapon racks and archery targets along the sides
 	for _, side in ipairs({ -1, 1 }) do
 		local rack = cf * CFrame.new(side * 34, 0, -8) * CFrame.Angles(0, math.rad(side * 90), 0)
@@ -359,35 +436,106 @@ local function training()
 		for index = -2, 2 do
 			part({ Name = "RackWeapon", Size = Vector3.new(0.25, 3.6, 0.6), CFrame = rack * CFrame.new(index * 1.1, 2.6, -0.4), Color = Color3.fromRGB(200, 204, 214), Material = Enum.Material.Metal })
 		end
-		local target = cf * CFrame.new(side * 12, 0, 36)
+		local target = cf * CFrame.new(side * 12, 0, 38)
 		part({ Name = "TargetStand", Size = Vector3.new(0.5, 4, 0.5), CFrame = target * CFrame.new(0, 2, 0.6), Color = WOOD, Material = Enum.Material.Wood })
 		for ring, c in ipairs({ Color3.fromRGB(240, 240, 240), Color3.fromRGB(220, 60, 60), Color3.fromRGB(240, 240, 240), Color3.fromRGB(220, 60, 60) }) do
 			part({ Name = "Target", Shape = Enum.PartType.Cylinder, Size = Vector3.new(0.2 + ring * 0.05, 4.2 - ring * 0.9, 4.2 - ring * 0.9), CFrame = target * CFrame.new(0, 4, 0) * CFrame.Angles(0, math.rad(90), 0), Color = c, Material = Enum.Material.SmoothPlastic })
 		end
 	end
-	for _, off in ipairs({ { -14, -36 }, { 14, -36 }, { -38, 24 }, { 38, -24 } }) do
+	for _, off in ipairs({ { -14, -40 }, { 14, -40 } }) do
 		lamp((cf * CFrame.new(off[1], 0.35, off[2])).Position)
 	end
 end
 
--- the Boss Field outside the Town Gate: trampled ground, a path from the gate, an arch and a few rocks
+-- the Guild (north): a small castle against the town wall, with towers and banners
+local function guild()
+	local d = World.Districts.Guild
+	local cf = districtFrame("Guild")
+	disc(cf.Position, d.Size, 0.4, 0, STONE, Enum.Material.Cobblestone)
+	disc(cf.Position, d.Size - 3, 0.45, 0, Color3.fromRGB(176, 170, 160), Enum.Material.Cobblestone)
+	local hall = cf * CFrame.new(0, 0, 22) -- the keep, its door facing the plaza
+	local W, D, H = 36, 22, 18
+	local WALL = Color3.fromRGB(150, 150, 165)
+	part({ Name = "Keep", Size = Vector3.new(W, H, D), CFrame = hall * CFrame.new(0, H / 2, 0), Color = WALL, Material = Enum.Material.Brick })
+	for i = -4, 4 do -- crenellations along the front
+		part({ Name = "KeepMerlon", Size = Vector3.new(2.4, 2, 2.4), CFrame = hall * CFrame.new(i * 4, H + 1, -D / 2 + 1.2), Color = WALL, Material = Enum.Material.Brick })
+	end
+	-- a blue roof and a central spire
+	part({ Name = "KeepRoof", Size = Vector3.new(W - 6, 1.2, D - 6), CFrame = hall * CFrame.new(0, H + 0.6, 2), Color = Color3.fromRGB(60, 80, 170), Material = Enum.Material.Slate })
+	part({ Name = "Spire", Size = Vector3.new(8, 14, 8), CFrame = hall * CFrame.new(0, H + 7, 4), Color = WALL, Material = Enum.Material.Brick })
+	part({ Name = "SpireRoof", Shape = Enum.PartType.Ball, Size = Vector3.new(10, 8, 10), CFrame = hall * CFrame.new(0, H + 15, 4), Color = Color3.fromRGB(60, 80, 170), Material = Enum.Material.Slate })
+	for _, side in ipairs({ -1, 1 }) do
+		local tower = hall * CFrame.new(side * (W / 2 + 3), 0, -2)
+		part({ Name = "KeepTower", Shape = Enum.PartType.Cylinder, Size = Vector3.new(H + 8, 10, 10), CFrame = tower * CFrame.new(0, (H + 8) / 2, 0) * CFrame.Angles(0, 0, math.rad(90)), Color = WALL, Material = Enum.Material.Brick })
+		part({ Name = "KeepTowerRoof", Shape = Enum.PartType.Ball, Size = Vector3.new(11, 7, 11), CFrame = tower * CFrame.new(0, H + 9, 0), Color = Color3.fromRGB(60, 80, 170), Material = Enum.Material.Slate })
+		local banner = part({ Name = "GuildBanner", Size = Vector3.new(3, 8, 0.2), CFrame = hall * CFrame.new(side * 9, H - 6, -D / 2 - 0.15), Color = Color3.fromRGB(50, 70, 170), Material = Enum.Material.Fabric })
+		local star = part({ Name = "BannerStar", Size = Vector3.new(1.4, 1.4, 0.1), CFrame = banner.CFrame * CFrame.new(0, 1.5, -0.15) * CFrame.Angles(0, 0, math.rad(45)), Color = Color3.fromRGB(255, 220, 120), Material = Enum.Material.Neon, CanCollide = false })
+		table.insert(pulsers, { Part = star, Phase = side, Base = 0.2, Amount = 0.15 })
+	end
+	part({ Name = "KeepDoor", Size = Vector3.new(6, 9, 0.4), CFrame = hall * CFrame.new(0, 4.5, -D / 2 - 0.2), Color = DARK_WOOD, Material = Enum.Material.Wood })
+	local signBoard = part({ Name = "KeepSign", Size = Vector3.new(14, 2.6, 0.3), CFrame = hall * CFrame.new(0, 11, -D / 2 - 0.3), Color = Color3.fromRGB(40, 50, 110), Material = Enum.Material.Wood })
+	sign(signBoard, Enum.NormalId.Front, "GUILD HALL", Color3.fromRGB(255, 220, 120))
+	-- a low fence round the courtyard, open at the front
+	for _, side in ipairs({ -1, 1 }) do
+		fence((cf * CFrame.new(side * 40, 0, -10)).Position, (cf * CFrame.new(side * 40, 0, 30)).Position, 2.6)
+		fence((cf * CFrame.new(side * 40, 0, -10)).Position, (cf * CFrame.new(side * 18, 0, -30)).Position, 2.6)
+	end
+	for _, off in ipairs({ { -10, -24 }, { 10, -24 } }) do
+		lamp((cf * CFrame.new(off[1], 0.4, off[2])).Position)
+	end
+end
+
+-- the Market (east): the shop stalls stand in an arc here (built by Hub at PlazaSpots); this is the ground and decor
+local function market()
+	local d = World.Districts.Market
+	local cf = districtFrame("Market")
+	disc(cf.Position, d.Size, 0.38, 0, Color3.fromRGB(176, 160, 136), Enum.Material.Cobblestone)
+	-- barrels, crates and bunting between and behind the stalls
+	for index = 1, 6 do
+		local p = cf * CFrame.new((index - 3.5) * 14, 0, 26)
+		part({ Name = "MarketBarrel", Shape = Enum.PartType.Cylinder, Size = Vector3.new(2.4, 2.2, 2.2), CFrame = p * CFrame.new(0, 1.2, 0) * CFrame.Angles(0, 0, math.rad(90)), Color = Color3.fromRGB(150, 100, 60), Material = Enum.Material.WoodPlanks })
+		part({ Name = "MarketCrate", Size = Vector3.new(2.2, 2.2, 2.2), CFrame = p * CFrame.new(3, 1.1, 1) * CFrame.Angles(0, math.rad(index * 17), 0), Color = Color3.fromRGB(170, 126, 80), Material = Enum.Material.WoodPlanks })
+	end
+	local colors = { Color3.fromRGB(220, 70, 70), Color3.fromRGB(240, 200, 70), Color3.fromRGB(70, 140, 220), Color3.fromRGB(90, 190, 110) }
+	for index = 0, 13 do
+		local x = (index - 6.5) * 6
+		part({ Name = "Bunting", Size = Vector3.new(1.6, 1.8, 0.1), CFrame = cf * CFrame.new(x, 11, 38) * CFrame.Angles(0, 0, math.rad(180)), Color = colors[index % 4 + 1], Material = Enum.Material.Fabric, CanCollide = false })
+	end
+	for _, side in ipairs({ -1, 1 }) do
+		part({ Name = "BuntingPole", Size = Vector3.new(0.6, 12, 0.6), CFrame = cf * CFrame.new(side * 42, 6, 38), Color = DARK_WOOD, Material = Enum.Material.Wood })
+	end
+	part({ Name = "BuntingLine", Size = Vector3.new(84, 0.1, 0.1), CFrame = cf * CFrame.new(0, 11.9, 38), Color = Color3.fromRGB(80, 60, 40), CanCollide = false })
+	for _, off in ipairs({ { -30, -30 }, { 30, -30 }, { -46, 10 }, { 46, 10 } }) do
+		lamp((cf * CFrame.new(off[1], 0.4, off[2])).Position)
+	end
+end
+
+-- the Giant Bosses (outside the north-east gate): a scorched field with rocks and a skull rock behind it
 -- (the bosses themselves are server models at World.BossSpots)
 local function bossField()
 	local f = World.BossField
 	local centre = Vector3.new(f.X, 0, f.Z)
-	disc(centre, f.Radius, 0.3, 0, Color3.fromRGB(150, 130, 96), Enum.Material.Ground)
-	local gx, gz = World.DistrictPoint("Gate")
-	local from = Vector3.new(gx, 0, gz + World.Districts.Gate.Size - 2)
-	local to = Vector3.new(f.X, 0, f.Z - f.Radius + 4)
-	part({ Name = "FieldPath", Size = Vector3.new(10, 0.32, (to - from).Magnitude), CFrame = CFrame.lookAt((from + to) / 2 + Vector3.new(0, 0.16, 0), to + Vector3.new(0, 0.16, 0)), Color = ROAD, Material = Enum.Material.Pebble, CanCollide = false })
-	arch(CFrame.lookAt(to, centre) * CFrame.new(0, 0, 3), 14, "BOSS FIELD", Color3.fromRGB(150, 50, 50))
-	for index = 1, 9 do
-		local a = math.rad(index * 40 + 15)
-		local r = f.Radius - 6 - (index % 3) * 4
+	disc(centre, f.Radius, 0.3, 0, Color3.fromRGB(130, 110, 90), Enum.Material.Ground)
+	local gate = polar(38, World.TOWN_WALL.Radius + 6)
+	local toTown = (Vector3.new(World.PLAZA.X, 0, World.PLAZA.Z) - centre).Unit
+	local edge = centre + toTown * (f.Radius - 4)
+	road(gate, edge, 10, "FieldPath")
+	arch(CFrame.lookAt(edge, centre) * CFrame.new(0, 0, 3), 16, "GIANT BOSSES", Color3.fromRGB(150, 50, 50))
+	for index = 1, 10 do
+		local a = math.rad(index * 36 + 15)
+		local r = f.Radius - 5 - (index % 3) * 4
 		local p = centre + Vector3.new(math.sin(a) * r, 0, math.cos(a) * r)
-		if p.Z > f.Z - f.Radius + 14 or math.abs(p.X - f.X) > 16 then
-			part({ Name = "Rock", Size = Vector3.new(4 + index % 3 * 2, 3 + index % 2 * 2, 4 + index % 2 * 2), CFrame = CFrame.new(p + Vector3.new(0, 1.2, 0)) * CFrame.Angles(math.rad(index * 7), math.rad(index * 31), 0), Color = Color3.fromRGB(110, 104, 98), Material = Enum.Material.Slate })
+		if (p - edge).Magnitude > 16 then
+			part({ Name = "Rock", Shape = Enum.PartType.Ball, Size = Vector3.new(5, 4, 5) * (1 + index % 3 * 0.4), CFrame = CFrame.new(p + Vector3.new(0, 1, 0)), Color = Color3.fromRGB(110, 104, 98), Material = Enum.Material.Slate })
 		end
+	end
+	-- the skull rock looming behind the field (away from town)
+	local back = centre - toTown * (f.Radius + 12)
+	local skullCf = CFrame.lookAt(back, centre)
+	part({ Name = "SkullRock", Shape = Enum.PartType.Ball, Size = Vector3.new(40, 34, 30), CFrame = skullCf * CFrame.new(0, 12, 0), Color = Color3.fromRGB(90, 86, 94), Material = Enum.Material.Slate })
+	for _, side in ipairs({ -1, 1 }) do
+		local eye = part({ Name = "SkullEye", Shape = Enum.PartType.Ball, Size = Vector3.new(6, 5, 2), CFrame = skullCf * CFrame.new(side * 7, 18, -14), Color = Color3.fromRGB(255, 60, 40), Material = Enum.Material.Neon, CanCollide = false })
+		table.insert(pulsers, { Part = eye, Phase = side, Base = 0.05, Amount = 0.25 })
 	end
 end
 
@@ -433,6 +581,9 @@ local function townWall()
 	end
 	-- the gates: two towers and a named lintel; the main gate is bigger and has banners
 	for _, g in ipairs(w.Gates) do
+		if g.Hill then
+			continue -- the Dungeon's hill stands in the wall here (dungeonGate)
+		end
 		local cf = CFrame.lookAt(point(g.Angle), centre) -- front (-Z) faces into town
 		local big = g.Main == true
 		local tw = if big then 8 else 6
@@ -452,28 +603,6 @@ local function townWall()
 		sign(lintel, Enum.NormalId.Back, g.Name)
 		-- the road through the gate
 		part({ Name = "GateRoad", Size = Vector3.new(g.Width - 4, 0.34, tw + 10), CFrame = cf * CFrame.new(0, 0.17, 0), Color = ROAD, Material = Enum.Material.Pebble, CanCollide = false })
-	end
-end
-
--- houses and trees along the ring between the districts, so the walk feels like a town
-local function ringside()
-	local centre = Vector3.new(World.PLAZA.X, 0, World.PLAZA.Z)
-	local R = World.TOWN_RING
-	local walls = { Color3.fromRGB(230, 214, 180), Color3.fromRGB(220, 200, 170), Color3.fromRGB(235, 225, 200), Color3.fromRGB(210, 190, 160) }
-	local roofs = { Color3.fromRGB(140, 60, 44), Color3.fromRGB(90, 110, 150), Color3.fromRGB(120, 140, 80), Color3.fromRGB(150, 100, 60) }
-	local index = 0
-	-- clear of the districts and of the road out to the Expedition Camp (angle ~150: 146 and 158 stood on it)
-	for _, angle in ipairs({ 116, 128, 136, 202, 214, 232, 244 }) do
-		index += 1
-		local a = math.rad(angle)
-		local dir = Vector3.new(math.sin(a), 0, -math.cos(a))
-		-- outside the ring: a house facing the road; inside: trees
-		local at = centre + dir * (R + 18)
-		house(CFrame.lookAt(at, centre + dir * R), 16, 13, 11, walls[index % 4 + 1], roofs[index % 4 + 1])
-		tree(centre + dir * (R - 14), 0.9 + (index % 3) * 0.12)
-		-- the lamp stands beside the house, by the road, never in front of its door
-		local la = math.rad(angle + 6)
-		lamp(centre + Vector3.new(math.sin(la), 0, -math.cos(la)) * (R + 7))
 	end
 end
 
@@ -932,10 +1061,11 @@ end
 -- the Dungeon Gate: a rocky hill with a glowing portal, west of the Wishing Grove, at the end of a path out of town
 local function dungeonGate()
 	local at = spotPos("DungeonGate")
-	local gx, gz = World.DistrictPoint("Grove")
-	local grove = Vector3.new(gx, 0, gz)
-	local toTown = (grove - at).Unit
-	path(grove - toTown * (World.Districts.Grove.Size - 3), at + toTown * 10, 9)
+	local toTown = (Vector3.new(World.PLAZA.X, 0, World.PLAZA.Z) - at).Unit
+	-- a path from the Market to the cave mouth (it stays north of the battle lots)
+	local mx, mz = World.DistrictPoint("Market")
+	local market = Vector3.new(mx, 0, mz)
+	path(market + (at - market).Unit * (World.Districts.Market.Size - 4), at + toTown * 12, 9)
 	local cf = CFrame.lookAt(at, at + toTown) -- front (-Z) faces the town
 	disc(at, 30, 0.3, 0, Color3.fromRGB(96, 88, 82), Enum.Material.Ground)
 	-- the hill: a few big rocks behind and around the mouth
@@ -974,11 +1104,10 @@ end
 -- the Expedition Camp: tents, a map table and a loaded cart outside the town wall, on a path off the ring road
 local function expeditionCamp()
 	local at = spotPos("ExpeditionCamp")
-	local centre = Vector3.new(World.PLAZA.X, 0, World.PLAZA.Z)
-	local dir = (at - centre).Unit
-	local ringPoint = centre + dir * (World.TOWN_RING + 4)
-	path(ringPoint, at - dir * 12, 8)
-	local cf = CFrame.lookAt(at, ringPoint) -- front faces the road in
+	-- outside the main gate: a path from the gate road to the camp
+	local gate = Vector3.new(World.PLAZA.X, 0, World.PLAZA.Z + World.TOWN_WALL.Radius + 14)
+	path(gate, at + (gate - at).Unit * 12, 8)
+	local cf = CFrame.lookAt(at, gate) -- front faces the road in
 	disc(at, 24, 0.3, 0, Color3.fromRGB(160, 140, 100), Enum.Material.Ground)
 	-- tents: a wedge roof over each side
 	for _, t in ipairs({ { -12, 8, Color3.fromRGB(200, 120, 70) }, { 12, 8, Color3.fromRGB(80, 130, 170) }, { 0, 15, Color3.fromRGB(150, 170, 90) } }) do
@@ -1097,12 +1226,15 @@ function Town.Build(parentFolder, hubPulsers, hubKit)
 	pulsers = hubPulsers or {}
 	kit = hubKit
 	roads()
-	gate()
+	housing()
 	grove()
+	petArea()
 	training()
-	ringside()
+	guild()
+	market()
 	bossField()
 	townWall()
+	greenery()
 	if kit then
 		errands()
 	end

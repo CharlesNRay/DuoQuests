@@ -174,6 +174,14 @@ Git Bash; they find a working Python themselves (`python3`/`python` there are St
   duel in two bouts with sides swapped (the sim is not symmetric), handlers `SparList`/`SparFight` at `TownSpots.Ring`,
   opponents = players on the server + your party's companions; first win a day = 3 Wishstones; `UI/SparScreen`.
 
+- **Town relayout to the owner's blueprint 2026-11-23** (SEEN in Studio: overview, guild castle, market arc): walled town
+  radius 290 round the plaza; districts Guild (N, castle), Housing "Old Town" (NW, was the Gate square), Grove (NE,
+  Wishing Tree), PetArea (W, pet park + pond), Market (E, the six shop stalls in an arc, `PlazaSpots` r150),
+  Training "Combat Arena" (SW, sparring ring in the middle). Battle lots = 2 x 2 block SE (`World.LOT_BLOCK`,
+  `LOT_COLUMNS`). Dungeon built into the east wall (wall gate `Hill`), Giant Bosses field outside the NE gate
+  (`BossField` 237,-263), main gate S, Expedition Camp outside it. `townview/render.py` draws it all (now with a
+  close-up per district). Sparring duels replay in the boss arena (opponent as a hero, `Replay` entry.Hero).
+
 ## Gotchas
 - Studio testing: the HUD 🧪 button opens the "Test cheats" panel (Studio only, `UI/DevScreen` -> `handlers.Dev(action, n)`, `DEV_ACTIONS` in ApiService):
   +1/5/10 levels, +5/10/25 stages (cleared like real wins, party moves there), +50M/500M gold, Sunstones, test items, Epic gear for your stage, all pets at max level,

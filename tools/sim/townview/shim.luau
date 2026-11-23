@@ -171,6 +171,8 @@ function Inst.IsA(t, class)
 	return c == class
 end
 function Inst.Destroy(t) t.Parent = nil rawget(t, "__d").Destroyed = true end
+function Inst.SetAttribute(t, k, v) local d = rawget(t, "__d") d.Attrs = d.Attrs or {} d.Attrs[k] = v end
+function Inst.GetAttribute(t, k) local a = rawget(t, "__d").Attrs return a and a[k] end
 function Inst.ClearAllChildren(t) for _, c in ipairs(t:GetChildren()) do c:Destroy() end end
 function Inst.GetPivot(t)
 	local d = rawget(t, "__d")

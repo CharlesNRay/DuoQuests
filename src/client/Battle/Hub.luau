@@ -493,13 +493,11 @@ function Hub.Build(handlers)
 	fountain(centre)
 
 	-- lamps and trees around the edge, benches in the inner ring
-	for index = 0, 11 do
-		local a = math.rad(index * 30 + 15)
+	-- between the spokes (roads leave the plaza every 45 degrees): lamps on the rim, trees just outside it
+	for index = 0, 7 do
+		local a = math.rad(index * 45 + 22.5)
 		lamp(centre + Vector3.new(math.sin(a) * (R - 3), 0.4, -math.cos(a) * (R - 3)))
-	end
-	for index = 0, 9 do
-		local a = math.rad(index * 36 + 8)
-		tree(centre + Vector3.new(math.sin(a) * (R + 7), 0, -math.cos(a) * (R + 7)), 0.9 + (index % 3) * 0.15)
+		tree(centre + Vector3.new(math.sin(a) * (R + 8), 0, -math.cos(a) * (R + 8)), 0.9 + (index % 3) * 0.15)
 	end
 	for _, angle in ipairs({ 0, 72, 144, 216, 288 }) do
 		local a = math.rad(angle + 36)
@@ -576,21 +574,22 @@ function Hub.Build(handlers)
 		walkers[index] = { Model = model, Pos = start, Target = start, Wait = math.random() * 3, Speed = 4 + math.random() * 2, Phase = math.random() * 6 }
 	end
 
-	-- roads between the lot columns, running north from the plaza, plus a cross road per row
+	-- the battle lots ("player homes"): a 2 x 2 block south-east of the plaza on a packed-earth yard with paths
+	-- between the lots (the road from the plaza is built by Town)
 	lotFolder = Instance.new("Folder")
 	lotFolder.Name = "Lots"
 	lotFolder.Parent = folder
-	local lastRow = (World.MAX_LOTS - 1) // World.PER_ROW
-	local roadEnd = World.FIRST_ROW_Z - lastRow * World.SPACING_Z - 20
-	local roadStart = World.PLAZA.Z - R + 2
-	for col = 0, World.PER_ROW do
-		local x = (col - World.PER_ROW / 2) * World.SPACING_X
-		part(folder, { Name = "Road", Size = Vector3.new(10, 0.3, roadStart - roadEnd), Position = Vector3.new(x, 0.15, (roadStart + roadEnd) / 2), Color = Color3.fromRGB(150, 138, 116), Material = Enum.Material.Pebble, CanCollide = false })
-	end
-	for row = 0, lastRow do
-		local z = World.FIRST_ROW_Z - row * World.SPACING_Z + World.SPACING_Z / 2
-		part(folder, { Name = "CrossRoad", Size = Vector3.new(World.PER_ROW * World.SPACING_X, 0.3, 8), Position = Vector3.new(0, 0.16, z), Color = Color3.fromRGB(150, 138, 116), Material = Enum.Material.Pebble, CanCollide = false })
-	end
+	local x1, _, z1 = World.ArenaOrigin(1)
+	local x4, _, z4 = World.ArenaOrigin(math.min(4, World.MAX_LOTS))
+	local cx, cz = (x1 + x4) / 2, (z1 + z4) / 2
+	local yardW = math.abs(x4 - x1) + World.ARENA_WIDTH + 16
+	local yardD = math.abs(z4 - z1) + World.ARENA_DEPTH + 16
+	part(folder, { Name = "LotYard", Size = Vector3.new(yardW, 0.26, yardD), Position = Vector3.new(cx, 0.13, cz), Color = Color3.fromRGB(150, 160, 110), Material = Enum.Material.Ground, CanCollide = false })
+	part(folder, { Name = "LotPath", Size = Vector3.new(8, 0.3, yardD), Position = Vector3.new(cx, 0.15, cz), Color = Color3.fromRGB(150, 138, 116), Material = Enum.Material.Pebble, CanCollide = false })
+	part(folder, { Name = "LotPath", Size = Vector3.new(yardW, 0.3, 8), Position = Vector3.new(cx, 0.16, cz), Color = Color3.fromRGB(150, 138, 116), Material = Enum.Material.Pebble, CanCollide = false })
+	local homes = part(folder, { Name = "HomesSign", Size = Vector3.new(14, 3, 0.4), CFrame = CFrame.lookAt(Vector3.new(cx - yardW / 2 + 2, 6, cz - yardD / 2 + 2), centre + Vector3.new(0, 6, 0)), Color = Color3.fromRGB(80, 60, 40), Material = Enum.Material.Wood })
+	sign(homes, Enum.NormalId.Front, "PLAYER HOMES", Color3.fromRGB(255, 230, 170))
+	part(folder, { Name = "HomesSignPost", Size = Vector3.new(0.6, 6, 0.6), Position = Vector3.new(cx - yardW / 2 + 2, 3, cz - yardD / 2 + 2), Color = WOOD, Material = Enum.Material.Wood })
 end
 
 function Hub.SetDailyReady(ready)
