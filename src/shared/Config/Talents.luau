@@ -23,7 +23,7 @@ return {
 	-- auto-spend order per role (Config/Classes Role); one rank at a time round the list
 	Builds = {
 		Tank = { "Vitality", "Bulwark", "Might", "Focus", "Vitality", "Bulwark", "Swiftness" },
-		Healer = { "Mending", "Focus", "Vitality", "Might", "Mending", "Bulwark" },
+		Healer = { "Might", "Mending", "Focus", "Might", "Vitality", "Swiftness" }, -- 2026-11-23: Mending-first left Cleric behind its no-talent runs
 		Damage = { "Might", "Precision", "Ferocity", "Swiftness", "Might", "Focus", "Vitality" },
 	},
 	PowerPerRank = 4, -- item power (IP) per point spent, for the IP total

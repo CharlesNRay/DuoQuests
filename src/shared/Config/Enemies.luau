@@ -11,6 +11,16 @@
 local Economy = require(script.Parent.Economy)
 
 local Enemies = {
+	-- the Training Grounds dummy (Shared/TrainingDummy): cannot be killed, does not fight back, no armour
+	TrainingDummy = {
+		Id = "TrainingDummy",
+		DisplayName = "Training Dummy",
+		Look = { Shape = "Biped", Color = { 214, 190, 120 }, Size = 5 },
+		IsBoss = true, EventOnly = true,
+		DamageType = "Physical",
+		BaseStats = { MaxHealth = 1e15, Attack = 0, Defense = 0, AttackSpeed = 0.01, CritChance = 0 },
+	},
+
 	Slime = {
 		Id = "Slime",
 		DisplayName = "Slime",

@@ -292,3 +292,17 @@ damage dealt) on top of all its tankiness. The Warrior is the squad's tank on ei
 moved the squad: no damage penalty +4, Blood Frenzy kits 55-57 (6 seeds, noise ±4). What helped is sustain.
 Changes: Berserker DamageDealt -0.15 -> 0, new Lifesteal +0.25 (15% gave 55 at 12 seeds); Guardian DamageDealt +0.142 -> 0.
 12 seeds, stage at L40: Berserker ~50 -> 59.8 (40-92), Guardian 64.8 -> 62.2 (47-94), ~8.8 h. Gap ~10 -> ~2.
+
+## Talents (2026-11-23)
+Level-up talent points (`Config/Talents`, 1 per level, 39 at L40, 8 talents x 10 ranks, the bot auto-spends by role).
+`abl.sh ... 40 full <Class> companion`, 2 seeds x 2 paths each (12 runs per side):
+
+| | no talents | talents |
+|---|---|---|
+| all | stage 60.8 at L40, 8.4 h | stage 67.6, 8.3 h |
+| Warrior | 55.8 | 73.2 |
+| Mage | 62.5 | 68.0 |
+| Cleric | 64.2 | 61.5 -> 68.0 after the healer build led with Might (Mending first did not push stages) |
+
+About +7 stages at L40, inside the 40-90 target; L40 time unchanged (~8 h). Warrior gains most (Vitality/Bulwark keep the
+tank up, which carries the party). `abl.sh` mode `notalent` turns talents off for comparison.
