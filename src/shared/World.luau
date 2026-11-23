@@ -12,6 +12,7 @@
 	  World.SpawnPosition()      -> x, y, z where players arrive (on the plaza)
 	  World.PLAZA, World.PlazaSpots, World.PlazaPoint(name), World.NearShop(x, z, name)
 	  World.ARENA_WIDTH / ARENA_DEPTH   size of one arena pad in studs
+	  World.Districts, World.DistrictPoint(id), World.TOWN_RING   the town districts around the plaza
 ]]
 
 local World = {}
@@ -50,8 +51,24 @@ World.PlazaSpots = {
 	Rankings = { Angle = 100, Radius = 55 },
 	Season = { Angle = 126, Radius = 55 }, -- the season rewards board, next to the leaderboards
 	Daily = { Angle = 150, Radius = 52 },
-	Tree = { Angle = -150, Radius = 100 }, -- out on the grass beyond the paving (plaza radius 70, rim 71.5)
+	Tree = { Angle = -90, Radius = 150 }, -- the heart of the Wishing Grove district (west); was out on the grass at -150 / 100
 }
+
+-- Town districts around the plaza (2026-11-23, docs/TOWN.md). A ring road (radius TOWN_RING) runs from the Grove (west)
+-- through the Gate (south) to the Training Grounds (east); the north side is the lots. Size = radius of the district's ground.
+World.TOWN_RING = 150
+World.Districts = {
+	Grove = { Name = "Wishing Grove", Angle = -90, Radius = 150, Size = 56 }, -- Wishing Tree, fishing pond, pet park
+	Gate = { Name = "Town Gate", Angle = 180, Radius = 150, Size = 46 }, -- notice board, tavern, the town walls
+	Training = { Name = "Training Grounds", Angle = 90, Radius = 150, Size = 52 }, -- training dummies, sparring ring, guild hall
+}
+World.DistrictOrder = { "Grove", "Gate", "Training" }
+
+function World.DistrictPoint(id)
+	local d = World.Districts[id]
+	local a = math.rad(d.Angle)
+	return World.PLAZA.X + math.sin(a) * d.Radius, World.PLAZA.Z - math.cos(a) * d.Radius
+end
 
 function World.PlazaPoint(name)
 	local spot = World.PlazaSpots[name]

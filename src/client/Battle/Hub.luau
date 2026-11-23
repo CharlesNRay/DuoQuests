@@ -12,6 +12,7 @@
 	  Every stall shows what it sells (crates and coins, eggs and a cage, a training dummy, a forge, rune stones)
 	  Map board, Rankings board, Daily gift chest
 	  Roads running north between the player lots, and a marker on every lot nobody has taken
+	  The town districts around it (Battle/Town.luau): Wishing Grove (Wishing Tree), Town Gate, Training Grounds
 
 	  Hub.Build(handlers)       handlers = { Map, Ranks, Season, Daily, Merchant, Blacksmith, Trainer, PetStore, RuneCarver, Tree } (all functions)
 	  Hub.SetDailyReady(bool)
@@ -25,6 +26,7 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local World = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("World"))
+local Town = require(script.Parent.Town)
 
 local Hub = {}
 
@@ -521,6 +523,7 @@ function Hub.Build(handlers)
 	fire.Parent = coals
 
 	wishingTree(pointOf("Tree"), centre, handlers.Tree)
+	Town.Build(folder, pulsers) -- the districts round the plaza (Wishing Grove, Town Gate, Training Grounds) and the roads to them
 
 	-- boards and the daily chest
 	board(pointOf("Map"), centre, "WORLD MAP", Color3.fromRGB(40, 90, 150), "Open map", handlers.Map)

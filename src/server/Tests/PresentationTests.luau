@@ -152,5 +152,41 @@ return function(modulesOverride)
 	check("Arena pads never overlap", clear)
 	check("Arena 1 is in front of the spawn", oz1 < select(3, World.SpawnPosition()) and ox1 ~= nil)
 
+	-- town districts (docs/TOWN.md): clear of the plaza, the lots and each other, and a short walk from the fountain
+	local districtsOk, walkOk, lotsOk = true, true, true
+	local ids = World.DistrictOrder
+	for i, id in ipairs(ids) do
+		local d = World.Districts[id]
+		local x, z = World.DistrictPoint(id)
+		local fromCentre = math.sqrt((x - World.PLAZA.X) ^ 2 + (z - World.PLAZA.Z) ^ 2)
+		if fromCentre - d.Size < World.PLAZA.Radius + 10 then
+			districtsOk = false
+		end
+		if fromCentre / 16 > 15 then -- 16 studs/s walk: at most ~15 s from the fountain
+			walkOk = false
+		end
+		for j = i + 1, #ids do
+			local o = World.Districts[ids[j]]
+			local ox, oz = World.DistrictPoint(ids[j])
+			if math.sqrt((x - ox) ^ 2 + (z - oz) ^ 2) < d.Size + o.Size + 10 then
+				districtsOk = false
+			end
+		end
+		for slot = 1, World.MAX_LOTS do
+			local ax, _, az = World.ArenaOrigin(slot)
+			local nx = math.clamp(x, ax - World.ARENA_WIDTH / 2, ax + World.ARENA_WIDTH / 2)
+			local nz = math.clamp(z, az - World.ARENA_DEPTH / 2, az + World.ARENA_DEPTH / 2)
+			if math.sqrt((x - nx) ^ 2 + (z - nz) ^ 2) < d.Size + 10 then
+				lotsOk = false
+			end
+		end
+	end
+	check("Town districts are clear of the plaza and of each other", districtsOk)
+	check("Every district is at most ~15 s walk from the fountain", walkOk)
+	check("Town districts are clear of the battle lots", lotsOk)
+	local tx, tz = World.PlazaPoint("Tree")
+	local gx, gz = World.DistrictPoint("Grove")
+	check("The Wishing Tree stands in the Wishing Grove", math.sqrt((tx - gx) ^ 2 + (tz - gz) ^ 2) < World.Districts.Grove.Size)
+
 	print(("PresentationTests done: %d passed, %d failed"):format(passed, failed))
 end

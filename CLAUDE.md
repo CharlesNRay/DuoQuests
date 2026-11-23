@@ -111,6 +111,12 @@ Git Bash; they find a working Python themselves (`python3`/`python` there are St
   ring (`World.PlazaSpots`); lots 12 -> 8 (`MAX_LOTS`), spacing 84x76 -> 100x92. One lot per PARTY (WorldService.claimSlot):
   4 partied players share one lot, so Max Players 8 (Roblox game settings) never needs more than 8 lots.
 
+- **Town phase 1 2026-11-23** (tests green, NOT seen in Studio): docs/TOWN.md. `World.Districts` (Grove west, Gate south, Training
+  east, 150 studs from the fountain), ring road (W-S-E; north is the lots), spokes, signposts, arches; `client/Battle/Town.luau`
+  builds them (pond, pet park, tavern, notice board, gate + walls, dummies, sparring ring, guild hall, houses along the ring,
+  "coming soon" tags). Wishing Tree moved into the Grove (`PlazaSpots.Tree` -90 / 150). Floor 720x720. Phases 2-5 not started;
+  the owner has not answered the 4 questions in docs/TOWN.md yet.
+
 ## Gotchas
 - Studio testing: the HUD 🧪 button opens the "Test cheats" panel (Studio only, `UI/DevScreen` -> `handlers.Dev(action, n)`, `DEV_ACTIONS` in ApiService):
   +1/5/10 levels, +5/10/25 stages (cleared like real wins, party moves there), +50M/500M gold, Sunstones, test items, Epic gear for your stage, all pets at max level,

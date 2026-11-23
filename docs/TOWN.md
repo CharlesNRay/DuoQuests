@@ -64,6 +64,9 @@ about 110-150 studs from the fountain.
 - **No new emoji newer than Unicode 12** (newer ones don't render).
 
 ## Build order (each phase: tests green, pushed, then you check it in Studio)
+Status: phase 1 built 2026-11-23 (`client/Battle/Town.luau`, `World.Districts`), NOT seen in Studio. Districts sit 150 studs
+from the fountain (~9 s walk). The spawn stays on the plaza so shops are close; district names are on arches and signposts
+(not on the Map screen: that map is the stage map). Activity spots carry "coming soon" tags.
 1. **Layout:** ring road, the three districts as scenery, signposts, district names on the map, Wishing Tree moved into
    the Grove. No new gameplay yet: you check that it feels the right size.
 2. **Notice board and tavern errands:** the cheapest real gameplay, and it gets players walking.
