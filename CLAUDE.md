@@ -94,6 +94,11 @@ Git Bash; they find a working Python themselves (`python3`/`python` there are St
 - **Stage 40 boss wall 2026-11-22** (tests green): Dire Wolf Attack 10.5, AttackSpeed 0.85, Howl 22 s cd / 5 s. Time stuck there 1.34 h -> 0.47 h,
   stage spread at L40 39-88 -> 40-68 (BALANCE.md "Stage 40 boss wall").
 
+- **Combo finishers fixed 2026-11-22** (tests green, NOT seen in Studio): the Templar "Judgment" (now `Verdict`) and the boss
+  "CrushingBlow" (now `BossCrush`) had overwritten the Cleric/Warrior finishers (duplicate keys in Config/Abilities; `SkillIdTests`
+  guards it). Ready finishers jump the slot order at 2+ layers (`Simulation.FINISHER_MIN_LAYERS`). Ranger/Templar/Priest damage
+  penalties eased. The bot keeps Heal+Blessing / Taunt. Open: Judgment is a weak 4th Cleric skill; Warrior squads lowest (BALANCE.md).
+
 ## Gotchas
 - Studio testing: the HUD 🧪 button opens the "Test cheats" panel (Studio only, `UI/DevScreen` -> `handlers.Dev(action, n)`, `DEV_ACTIONS` in ApiService):
   +1/5/10 levels, +5/10/25 stages (cleared like real wins, party moves there), +50M/500M gold, Sunstones, test items, Epic gear for your stage, all pets at max level,

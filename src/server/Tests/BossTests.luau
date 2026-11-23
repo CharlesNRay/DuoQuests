@@ -82,16 +82,16 @@ return function(modulesOverride)
 	local sim = fightBoss("GoblinWarlord", 40)
 	local casts = {}
 	for _, e in ipairs(eventsOf(sim, "Cast")) do
-		if e.Ability == "CrushingBlow" then
+		if e.Ability == "BossCrush" then
 			table.insert(casts, e.T)
 		end
 	end
 	check("Crushing Blow lands at 8s then every 11s", #casts >= 3 and math.abs(casts[1] - 8) < 0.15 and math.abs(casts[2] - casts[1] - 11) < 0.15)
 	local warns = eventsOf(sim, "Telegraph")
-	check("Each blow is telegraphed 1.5s early", #warns >= 3 and math.abs(warns[1].T - 6.5) < 0.25 and warns[1].Ability == "CrushingBlow")
+	check("Each blow is telegraphed 1.5s early", #warns >= 3 and math.abs(warns[1].T - 6.5) < 0.25 and warns[1].Ability == "BossCrush")
 	local heavy = 0
 	for _, e in ipairs(eventsOf(sim, "Damage")) do
-		if e.Tag == "CrushingBlow" then
+		if e.Tag == "BossCrush" then
 			heavy = e.Amount
 			break
 		end

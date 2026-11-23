@@ -627,9 +627,10 @@ return {
 		},
 	},
 
-	Judgment = {
-		Id = "Judgment",
-		DisplayName = "Judgment",
+	-- was also keyed "Judgment" until 2026-11-22, which silently replaced the Cleric combo finisher above
+	Verdict = {
+		Id = "Verdict",
+		DisplayName = "Verdict",
 		Description = "Holy damage on a single enemy.",
 		Class = "Cleric",
 		Subclass = "Templar",
@@ -675,8 +676,9 @@ return {
 		Effects = { { Type = "Summon", EnemyId = "Slimelet", Count = 2 } },
 	},
 
-	CrushingBlow = {
-		Id = "CrushingBlow",
+	-- enemy/boss version; was also keyed "CrushingBlow" until 2026-11-22, which silently replaced the Warrior combo finisher
+	BossCrush = {
+		Id = "BossCrush",
 		DisplayName = "Crushing Blow",
 		Description = "A huge hit on one target.",
 		Enemy = true,

@@ -37,7 +37,7 @@ return {
 		DefenseMult = 1.5,
 		AttackSpeed = 0.9,
 		Abilities = { -- a telegraphed single-target blow, a party-wide stomp, and a berserk phase after a minute
-			{ Id = "CrushingBlow", Level = 1, Timer = 6 },
+			{ Id = "BossCrush", Level = 1, Timer = 6 },
 			{ Id = "BossStomp", Level = 1, Timer = 14 },
 			{ Id = "Berserk", Level = 1, Timer = 60 },
 		},
@@ -64,7 +64,7 @@ return {
 		DefenseMult = 1.8,
 		AttackSpeed = 0.8,
 		Abilities = {
-			{ Id = "CrushingBlow", Level = 1, Timer = 5 },
+			{ Id = "BossCrush", Level = 1, Timer = 5 },
 			{ Id = "BossStomp", Level = 1, Timer = 12 },
 			{ Id = "Berserk", Level = 1, Timer = 45 },
 		},

@@ -81,7 +81,7 @@ local Enemies = {
 		DamageType = "Physical",
 		BaseStats = { MaxHealth = 650, Attack = 12, Defense = 10, AttackSpeed = 0.8, CritChance = 0.05 },
 		-- Crushing Blow lands at 8s, 19s, 30s... : time a shield before it, or a heal after it.
-		Abilities = { { Id = "CrushingBlow", Level = 1, Timer = 8 }, { Id = "Stagger", Level = 1, Timer = 14 }, { Id = "Enrage", Level = 1 } },
+		Abilities = { { Id = "BossCrush", Level = 1, Timer = 8 }, { Id = "Stagger", Level = 1, Timer = 14 }, { Id = "Enrage", Level = 1 } },
 	},
 
 	SporeMother = {

@@ -69,7 +69,7 @@ return {
 				{ Stat = "HealingDealt", Mode = "Mul", Value = 0.3 },
 				{ Stat = "MaxHealth", Mode = "Mul", Value = -0.188 },
 				{ Stat = "Defense", Mode = "Mul", Value = 0.12 },
-				{ Stat = "Attack", Mode = "Mul", Value = 0.2 }, { Stat = "DamageDealt", Mode = "Mul", Value = -0.180 }, { Stat = "Haste", Mode = "Add", Value = 0.08 } },
+				{ Stat = "Attack", Mode = "Mul", Value = 0.2 }, { Stat = "DamageDealt", Mode = "Mul", Value = -0.120 }, { Stat = "Haste", Mode = "Add", Value = 0.08 } },
 			Skills = { "Sanctuary", "Renewal", "HolyAegis" },
 		},
 		Templar = {
@@ -81,11 +81,11 @@ return {
 			Description = "A holy warrior. Big attack and holy damage; smites enemies and blesses the party.",
 			Mods = {
 				{ Stat = "Attack", Mode = "Mul", Value = 0.28 },
-				{ Stat = "DamageDealt", Mode = "Mul", Value = -0.450 },
+				{ Stat = "DamageDealt", Mode = "Mul", Value = -0.300 },
 				{ Stat = "CritChance", Mode = "Add", Value = 0.04 },
 				{ Stat = "MaxHealth", Mode = "Mul", Value = -0.200 },
 			},
-			Skills = { "HolyWrath", "Judgment", "DivineSmite" },
+			Skills = { "HolyWrath", "Verdict", "DivineSmite" },
 		},
 		Pyromancer = {
 			Id = "Pyromancer",
@@ -126,7 +126,7 @@ return {
 				{ Stat = "Attack", Mode = "Mul", Value = 0.25 },
 				{ Stat = "CritChance", Mode = "Add", Value = 0.1 },
 				{ Stat = "CritMultiplier", Mode = "Add", Value = 0.3 },
-				{ Stat = "DamageDealt", Mode = "Mul", Value = -0.600 }, { Stat = "MaxHealth", Mode = "Mul", Value = -0.300 } },
+				{ Stat = "DamageDealt", Mode = "Mul", Value = -0.500 }, { Stat = "MaxHealth", Mode = "Mul", Value = -0.300 } },
 			Skills = { "DeadEye", "Headshot", "Barrage" },
 		},
 		Beastmaster = {
@@ -141,7 +141,7 @@ return {
 				{ Stat = "Defense", Mode = "Mul", Value = 0.2 },
 				{ Stat = "Attack", Mode = "Mul", Value = 0.15 },
 				{ Stat = "PetDamage", Mode = "Mul", Value = 1.2 }, -- the pet is the main damage dealer
-				{ Stat = "DamageDealt", Mode = "Mul", Value = -0.600 },
+				{ Stat = "DamageDealt", Mode = "Mul", Value = -0.500 },
 			},
 			PetBoost = { Stats = 0.75, SkillLevels = 4 },
 			Skills = { "PackHowl", "Stampede", "NaturesBond" },

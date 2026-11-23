@@ -254,3 +254,23 @@ Roster (6 classes x 2 paths x 3 seeds, companion, full), before -> after:
 | hours to L40 | 9.5 | 9.3 |
 Still slow at it: Rangers (4 of the 7 runs with 50+ losses). Boss 20 (Goblin Warlord, also Stagger) averages ~25 losses: the
 intended "doing nothing walls at stage 20" check. Class means now: Mage 62, Summoner 57, Warrior 57, Cleric 50, Rogue 50, Ranger 48.
+
+## Ranger/Cleric buff, two hidden combo finishers, finisher priority (2026-11-22)
+Bugs found while buffing:
+- **Duplicate ability keys.** The Templar's "Judgment" and the bosses' "CrushingBlow" reused the keys of the Cleric and
+  Warrior combo finishers in Config/Abilities, so the later entries silently replaced them: neither class has ever had its
+  finisher (Judged/Sundered layers were never used up). Renamed to `Verdict` (Templar) and `BossCrush` (enemy, still shown
+  as "Crushing Blow"). `SkillIdTests` now checks every combo mark has a finisher and no class pool holds an enemy skill.
+  Side effect: a Warrior's Common skills are now just its 4 starters (Meadow skill wishes give copies).
+- **Finishers almost never fired.** One cast per ~1.6 s (cast time + AfterCastDelay) in slot order, and a fast builder in an
+  earlier slot (Smite, cd 1.5-3) was ready every cycle. `Simulation.FINISHER_MIN_LAYERS` (2): a ready finisher now goes first
+  once an enemy carries that many layers of its mark.
+Balance changes: Sharpshooter and Beastmaster DamageDealt -0.60 -> -0.50; Templar -0.45 -> -0.30; Priest -0.18 -> -0.12.
+Bot changes (balance90): keeps Heal + Blessing (Cleric) and Taunt (Warrior) before the combo; logs `LOADOUT` lines.
+Why Clerics lagged: in every other squad the companion Cleric wears Blessing (+25% party attack); a player Cleric who equips
+by level drops it. Forced kits, 6 seeds: Heal/Blessing/RadiantBurst/Smite -> stage 62 at L40 (8.6 h); Heal/RadiantBurst/
+Smite/Judgment -> 46 (10.6 h). A Judgment that also blessed the party did not help (its level trails the starter Blessing).
+Roster at L40 (3 seeds; Cleric 6 seeds), before -> after: Cleric 50.5 -> 53.2, Ranger 47.5 -> 56.0, Rogue 49.8 -> 56.7,
+Mage 62.2 -> 66.3, Summoner 57.2 -> 60.5, Warrior 56.7 -> 51.5 (now wears Taunt + Crushing Blow); hours to L40 ~9.1.
+Open: Judgment is still a weaker 4th skill than Smite or Radiant Burst for a Blessing Cleric; real players may also drop
+Blessing (a UI hint, or making Blessing harder to drop, would help); Warrior is now the lowest damage-side squad.

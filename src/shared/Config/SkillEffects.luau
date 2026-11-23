@@ -114,6 +114,7 @@ return {
 		GroupHeal = A({ Heal = "Bloom", Color = { 130, 240, 160 }, Color2 = { 255, 190, 220 } }),
 		GuardianAngel = A({ Buff = "Glyph", Color = { 255, 245, 190 }, Glyph = "👼" }),
 		Judgment = A({ Hit = "Beam", Color = { 255, 245, 200 }, Color2 = { 255, 215, 100 } }),
+		Verdict = A({ Hit = "Beam", Color = { 255, 230, 170 }, Color2 = { 240, 190, 90 } }),
 		Resurrection = A({ Revive = "Rise", Color = { 255, 240, 150 } }),
 		Sanctuary = A({ Heal = "Spiral", Shield = "Dome", Color = { 190, 255, 200 }, Color2 = { 255, 245, 180 } }),
 		Renewal = A({ Heal = "Spiral", Color = { 140, 235, 120 }, Color2 = { 220, 255, 190 } }),
@@ -198,6 +199,7 @@ return {
 		AncestralWrath = A({ Area = "Nova", Color = { 150, 235, 215 }, Color2 = { 240, 255, 250 } }),
 		-- monsters
 		CrushingBlow = A({ Hit = "Smash", Color = { 200, 150, 110 }, Color2 = { 255, 220, 160 } }),
+		BossCrush = A({ Hit = "Smash", Color = { 200, 150, 110 }, Color2 = { 255, 220, 160 } }),
 		SlimeSplit = A({ Area = "Nova", Color = { 120, 220, 130 }, Color2 = { 220, 255, 200 } }),
 		Enrage = A({ Buff = "Pulse", Color = { 255, 70, 60 } }),
 		Berserk = A({ Buff = "Pulse", Color = { 255, 40, 40 } }),

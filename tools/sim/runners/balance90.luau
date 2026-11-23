@@ -128,6 +128,15 @@ local function equipBest(profile, classId)
 	end
 	table.sort(owned, function(a, b) if a.Level ~= b.Level then return a.Level > b.Level end return a.Order > b.Order end)
 	local best = {}
+	-- like a player who knows their role: the healer keeps Heal and the tank keeps Taunt (2026-11-22: with working
+	-- finishers the combo-first pick pushed them out, and Cleric/Warrior teams fell behind)
+	-- and a Cleric keeps Blessing (the party's +25% attack: a Cleric squad without it was ~16 stages behind at L40)
+	local owns = profile.Season.OwnedAbilities
+	local keepList = ({ Cleric = { "Heal", "Blessing" }, Warrior = { "Taunt" } })[classId] or {}
+	for _, id in ipairs(keepList) do
+		if owns[id] then table.insert(best, id) end
+	end
+	local keep = keepList[1]
 	-- combos (2026-11-19): like a player who reads the skill text, wear an owned finisher with its owned builders first
 	-- (builders in the first slots so the layers go on before the finisher fires), then fill the rest by level
 	if COMBOS then
@@ -138,7 +147,7 @@ local function equipBest(profile, classId)
 			if consume then
 				local builders, score = {}, f.Level
 				for _, b in ipairs(owned) do
-					if b.Id ~= f.Id and #builders < m.Skills.SLOTS - 1 then
+					if b.Id ~= f.Id and not table.find(best, b.Id) and #builders < m.Skills.SLOTS - 1 - #best then
 						for _, e in ipairs(m.Abilities[b.Id].Effects) do
 							if e.Type == "ApplyStatus" and e.Status == consume then table.insert(builders, b.Id) score += b.Level break end
 						end
@@ -150,7 +159,7 @@ local function equipBest(profile, classId)
 				end
 			end
 		end
-		for _, id in ipairs(bestCombo or {}) do table.insert(best, id) end
+		for _, id in ipairs(bestCombo or {}) do if not table.find(best, id) then table.insert(best, id) end end
 	end
 	for i = 1, #owned do
 		if #best >= m.Skills.SLOTS then break end
@@ -392,6 +401,7 @@ local function run(classId, pathId, seedBase, goalLevel)
 	end
 	table.sort(worn)
 	print(("RUNES	%s	%s	worn %d: %s"):format(classId, pathId, #worn, table.concat(worn, " ")))
+	print(("LOADOUT	%s	%s	%s"):format(classId, pathId, table.concat(profile.Season.Loadouts[classId] or {}, " ")))
 	return { Stuck = stuck, Class = classId, Path = pathId .. (if PARTNER == "solo" then "" else "+" .. PARTNER .. (PARTNER_PATH and ("." .. PARTNER_PATH) or "")), Hours = clock / 3600, Level = profile.Season.Level, Frontier = profile.Season.HighestStage, Fights = fights,
 		Durs = durs, LvAtStage = lvAtStage, Stones30 = stonesAt30, First = first, LevelAt = levelAt, Pet = pet, GearScore = gearScore, RarePets = rarePets }
 end

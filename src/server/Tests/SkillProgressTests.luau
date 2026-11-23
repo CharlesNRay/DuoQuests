@@ -36,11 +36,19 @@ return function(modulesOverride)
 
 	local profile = ProfileTemplate.New()
 	local season = profile.Season
-	local common, rare
-	for _, id in ipairs(m.Skills.AllSkills("Warrior")) do
-		local base = SP.BaseTier(id)
-		if base == "Common" and not common and not season.OwnedAbilities[id] then common = id end
-		if base == "Rare" and not rare then rare = id end
+	local common, rare, testClass
+	-- the first class with a Common skill it does not start with (the Warrior has none since 2026-11-22)
+	for _, classId in ipairs({ "Warrior", "Cleric", "Mage", "Ranger", "Rogue", "Summoner" }) do
+		local c, r = nil, nil
+		for _, id in ipairs(m.Skills.AllSkills(classId)) do
+			local base = SP.BaseTier(id)
+			if base == "Common" and not c and not season.OwnedAbilities[id] then c = id end
+			if base == "Rare" and not r then r = id end
+		end
+		if c and r then
+			common, rare, testClass = c, r, classId
+			break
+		end
 	end
 	check("The class has a Common skill to test with", common ~= nil and rare ~= nil)
 

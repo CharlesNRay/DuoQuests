@@ -110,7 +110,7 @@ local SKILL_LOOK = {
 	LastStand = { rgb(190, 90, 50), "💪" }, RallyingCry = { rgb(200, 150, 50), "🚩" }, Smite = { rgb(230, 200, 90), "⚡" },
 	Heal = { rgb(60, 170, 100), "➕" }, Blessing = { rgb(220, 190, 120), "🙏" }, RadiantBurst = { rgb(240, 210, 110), "☀" },
 	DivineShield = { rgb(110, 170, 230), "🔰" }, GroupHeal = { rgb(90, 190, 130), "💞" }, GuardianAngel = { rgb(200, 210, 240), "👼" },
-	Judgment = { rgb(220, 180, 70), "⚖" }, Resurrection = { rgb(170, 230, 190), "🕊" }, Fireball = { rgb(220, 90, 40), "🔥" },
+	Judgment = { rgb(220, 180, 70), "⚖" }, Verdict = { rgb(235, 200, 110), "⚔" }, Resurrection = { rgb(170, 230, 190), "🕊" }, Fireball = { rgb(220, 90, 40), "🔥" },
 	Blizzard = { rgb(100, 180, 230), "❄" }, LightningBolt = { rgb(230, 220, 70), "🌩" }, ArcaneSurge = { rgb(150, 90, 210), "🔮" },
 	BloodFrenzy = { rgb(170, 30, 50), "🩸" }, Cleave = { rgb(190, 90, 80), "🪓" }, ExecutionerStrike = { rgb(110, 40, 60), "☠" },
 	Bulwark = { rgb(90, 110, 150), "🏰" }, Retribution = { rgb(210, 120, 60), "🔁" }, UnbreakableVow = { rgb(180, 170, 130), "💍" },

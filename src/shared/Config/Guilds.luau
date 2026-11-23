@@ -100,9 +100,9 @@ return {
 		MinMembers = 5, -- health is never less than this many members' worth
 		DefeatPoints = 150,
 		Bosses = {
-			{ Id = "RaidTitan", Abilities = { { Id = "CrushingBlow", Level = 1, Timer = 6 }, { Id = "BossStomp", Level = 1, Timer = 13 }, { Id = "Berserk", Level = 1, Timer = 30 } }, Name = "Stone Titan", DefId = "RaidTitan", FightSeconds = 40, AttackMult = 1.1, DefenseMult = 1.2, AttackSpeed = 0.8, Blurb = "Ancient guardian of the old vault." },
+			{ Id = "RaidTitan", Abilities = { { Id = "BossCrush", Level = 1, Timer = 6 }, { Id = "BossStomp", Level = 1, Timer = 13 }, { Id = "Berserk", Level = 1, Timer = 30 } }, Name = "Stone Titan", DefId = "RaidTitan", FightSeconds = 40, AttackMult = 1.1, DefenseMult = 1.2, AttackSpeed = 0.8, Blurb = "Ancient guardian of the old vault." },
 			{ Id = "RaidWyrm", Abilities = { { Id = "PoisonSpit", Level = 1, Timer = 5 }, { Id = "BossStomp", Level = 1, Timer = 12 }, { Id = "Berserk", Level = 1, Timer = 30 } }, Name = "Tide Wyrm", DefId = "RaidWyrm", FightSeconds = 40, AttackMult = 1.0, DefenseMult = 1.0, AttackSpeed = 1.0, Blurb = "Coils out of the deep every storm season." },
-			{ Id = "RaidLich", Abilities = { { Id = "EmberBolt", Level = 1, Timer = 5 }, { Id = "CrushingBlow", Level = 1, Timer = 8 }, { Id = "Berserk", Level = 1, Timer = 30 } }, Name = "Hollow Lich", DefId = "RaidLich", FightSeconds = 40, AttackMult = 1.2, DefenseMult = 0.9, AttackSpeed = 0.9, Blurb = "Counts the days until the guild falls." },
+			{ Id = "RaidLich", Abilities = { { Id = "EmberBolt", Level = 1, Timer = 5 }, { Id = "BossCrush", Level = 1, Timer = 8 }, { Id = "Berserk", Level = 1, Timer = 30 } }, Name = "Hollow Lich", DefId = "RaidLich", FightSeconds = 40, AttackMult = 1.2, DefenseMult = 0.9, AttackSpeed = 0.9, Blurb = "Counts the days until the guild falls." },
 			{ Id = "RaidPhoenix", Abilities = { { Id = "EmberBolt", Level = 1, Timer = 4 }, { Id = "BossStomp", Level = 1, Timer = 11 }, { Id = "Berserk", Level = 1, Timer = 30 } }, Name = "Ashen Phoenix", DefId = "RaidPhoenix", FightSeconds = 40, AttackMult = 1.1, DefenseMult = 0.8, AttackSpeed = 1.2, Blurb = "Burns, falls, and rises again." },
 		},
 		-- rewards by damage share of the whole guild's average (share x members): Reward tiers, best first

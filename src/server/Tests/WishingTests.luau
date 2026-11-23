@@ -103,7 +103,7 @@ return function(modulesOverride)
 	for _, r in ipairs(sdata.Results) do
 		if r.New then newRows += 1 end
 	end
-	check("A skill ten-pull gives ten results; new rows match the skills gained", sok == true and #sdata.Results == 10 and owned1 == owned0 + newRows and newRows >= 1)
+	check("A skill ten-pull gives ten results; new rows match the skills gained", sok == true and #sdata.Results == 10 and owned1 == owned0 + newRows) -- Meadow gives Commons; a fresh Warrior may already own them all (copies)
 	check("Skill wishes spend the same Wishstones per wish", sp.Season.Currencies.Wishstones == 500 - 3 * #sdata.Results)
 	check("Skill wishes pay with SkillWish tickets, not pet tickets", Wishing.Config.TicketIds.Skill == "SkillWish" and Wishing.Config.TicketIds.Pet == "PetWish")
 	-- a fresh player can already wish at the top tier

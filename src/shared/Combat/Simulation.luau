@@ -1070,10 +1070,48 @@ function Simulation:_tryUltimate()
 	return false
 end
 
--- Casts the first ready ability whose conditions are met (one per tick).
+-- A combo finisher jumps the slot order once an enemy carries this many layers of its mark (2026-11-22: a fast
+-- builder in an earlier slot was ready every cycle, so a finisher placed after it almost never fired).
+Simulation.FINISHER_MIN_LAYERS = 2
+
+local function finisherMark(def)
+	for _, effect in ipairs(def.Effects or {}) do
+		if effect.Consume then
+			return effect.Consume.Status
+		end
+	end
+	return nil
+end
+
+function Simulation:_mostLayers(caster, statusId)
+	local best = 0
+	local foes = if caster.Team == "Party" then self.Enemies else self.Party
+	for _, foe in ipairs(foes) do
+		if foe.Alive and foe.Health > 0 then
+			for _, status in ipairs(foe.Statuses) do
+				if status.Id == statusId then
+					best = math.max(best, status.Stacks or 1)
+				end
+			end
+		end
+	end
+	return best
+end
+
+-- Casts the first ready ability whose conditions are met (one per tick); a ready combo finisher goes first
+-- when its mark is stacked (FINISHER_MIN_LAYERS).
 function Simulation:_tryCast(caster)
 	if caster.Casting ~= nil or (caster.CastLock or 0) > EPSILON or self:HasFlag(caster, "Stunned") then
 		return false
+	end
+	for _, slot in ipairs(caster.Abilities) do
+		if slot.Timer <= EPSILON then
+			local def = self.AbilityDefs[slot.Id]
+			local mark = def and finisherMark(def)
+			if mark and self:_mostLayers(caster, mark) >= Simulation.FINISHER_MIN_LAYERS and self:_conditionsMet(caster, def) and self:Cast(caster, slot) then
+				return true
+			end
+		end
 	end
 	for _, slot in ipairs(caster.Abilities) do
 		if slot.Timer <= EPSILON then
