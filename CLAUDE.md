@@ -116,6 +116,12 @@ Git Bash; they find a working Python themselves (`python3`/`python` there are St
   builds them (pond, pet park, tavern, notice board, gate + walls, dummies, sparring ring, guild hall, houses along the ring,
   "coming soon" tags). Wishing Tree moved into the Grove (`PlazaSpots.Tree` -90 / 150). Floor 720x720. Phases 2-5 not started;
   the owner has not answered the 4 questions in docs/TOWN.md yet.
+  Owner said it "looks awful"; fixed and SEEN in Studio 2026-11-23: the world boss and season Colossus were fixed server
+  models standing in the new town (Colossus in the Town Gate) -> `World.BossField` / `BossSpots` south of the gate (BossService
+  reads them); tavern/notice board/houses/guild hall now face their square (`facing()` in Town.luau); arches no longer hide
+  their text; signposts moved off the plaza trees and use ">>" (the triangle glyphs did not render); buildings ~1.5x bigger.
+  `tools/sim/townview/render.py` draws the plaza + town top-down headless (shim.luau stands in for Roblox) for layout checks.
+  Studio camera trick: command bar `workspace.CurrentCamera.CameraType=Enum.CameraType.Scriptable` then set its CFrame.
 
 ## Gotchas
 - Studio testing: the HUD 🧪 button opens the "Test cheats" panel (Studio only, `UI/DevScreen` -> `handlers.Dev(action, n)`, `DEV_ACTIONS` in ApiService):

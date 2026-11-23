@@ -24,6 +24,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Bosses = require(Shared.Bosses)
+local World = require(Shared.World)
 local Quests = require(Shared.Quests)
 local Cfg = require(Shared.Config.Bosses)
 local SeasonConfig = require(Shared.Config.Seasons)
@@ -133,7 +134,7 @@ local function buildColossus()
 	local h = SEASON.Look.Height
 	local model = Instance.new("Model")
 	model.Name = "SeasonBoss"
-	local origin = Vector3.new(0, 0, 190)
+	local origin = Vector3.new(World.BossSpots.Season.X, 0, World.BossSpots.Season.Z) -- the Boss Field outside the Town Gate
 	local altar = glowPart(model, "Altar", Vector3.new(34, 3, 34), origin + Vector3.new(0, 1.5, 0), Color3.fromRGB(110, 110, 118))
 	local body = glowPart(model, "Body", Vector3.new(h * 0.45, h * 0.45, h * 0.3), origin + Vector3.new(0, 3 + h * 0.35, 0), color)
 	model.PrimaryPart = body
@@ -386,7 +387,7 @@ end
 function BossService.Init(pushRemote, profileGetter)
 	push, getProfile = pushRemote, profileGetter
 	worldModel = buildWorldBoss()
-	worldModel:PivotTo(CFrame.new(105, WORLD.Look.Height * 0.55, 150))
+	worldModel:PivotTo(CFrame.new(World.BossSpots.World.X, WORLD.Look.Height * 0.55, World.BossSpots.World.Z)) -- the Boss Field
 	worldModel.Parent = nil
 	colossusModel = buildColossus()
 

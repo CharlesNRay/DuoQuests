@@ -184,6 +184,21 @@ return function(modulesOverride)
 	check("Town districts are clear of the plaza and of each other", districtsOk)
 	check("Every district is at most ~15 s walk from the fountain", walkOk)
 	check("Town districts are clear of the battle lots", lotsOk)
+	-- the Boss Field (world boss + season Colossus) sits outside the town, clear of every district and the ring road
+	local f = World.BossField
+	local fieldOk = math.sqrt((f.X - World.PLAZA.X) ^ 2 + (f.Z - World.PLAZA.Z) ^ 2) - f.Radius > World.TOWN_RING + 10
+	for _, id in ipairs(ids) do
+		local x, z = World.DistrictPoint(id)
+		if math.sqrt((x - f.X) ^ 2 + (z - f.Z) ^ 2) < World.Districts[id].Size + f.Radius + 5 then
+			fieldOk = false
+		end
+	end
+	for _, spot in pairs(World.BossSpots) do
+		if math.sqrt((spot.X - f.X) ^ 2 + (spot.Z - f.Z) ^ 2) > f.Radius then
+			fieldOk = false
+		end
+	end
+	check("The Boss Field is outside the town and holds both bosses", fieldOk)
 	local tx, tz = World.PlazaPoint("Tree")
 	local gx, gz = World.DistrictPoint("Grove")
 	check("The Wishing Tree stands in the Wishing Grove", math.sqrt((tx - gx) ^ 2 + (tz - gz) ^ 2) < World.Districts.Grove.Size)

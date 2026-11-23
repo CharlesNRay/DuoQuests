@@ -88,8 +88,8 @@ function WorldService.BuildHub()
 	local floor = Instance.new("Part")
 	floor.Name = "Ground"
 	floor.Anchored = true
-	floor.Size = Vector3.new(720, 2, 720) -- covers the lots (north) and the town districts (west, south, east)
-	floor.Position = Vector3.new(0, -1, -40)
+	floor.Size = Vector3.new(720, 2, 840) -- covers the lots (north), the town districts and the Boss Field (south)
+	floor.Position = Vector3.new(0, -1, 20)
 	floor.Color = Color3.fromRGB(96, 160, 84)
 	floor.Material = Enum.Material.Grass
 	floor.TopSurface = Enum.SurfaceType.Smooth

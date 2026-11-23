@@ -13,6 +13,7 @@
 	  World.PLAZA, World.PlazaSpots, World.PlazaPoint(name), World.NearShop(x, z, name)
 	  World.ARENA_WIDTH / ARENA_DEPTH   size of one arena pad in studs
 	  World.Districts, World.DistrictPoint(id), World.TOWN_RING   the town districts around the plaza
+	  World.BossField, World.BossSpots                            where the world boss and the season Colossus stand
 ]]
 
 local World = {}
@@ -63,6 +64,14 @@ World.Districts = {
 	Training = { Name = "Training Grounds", Angle = 90, Radius = 150, Size = 52 }, -- training dummies, sparring ring, guild hall
 }
 World.DistrictOrder = { "Grove", "Gate", "Training" }
+
+-- The Boss Field: open ground outside the Town Gate (south) where the world boss and the season Colossus stand.
+-- (Until 2026-11-23 they stood at (105, 150) and (0, 190): on the ring road and in the middle of the new Town Gate.)
+World.BossField = { X = 0, Z = 320, Radius = 60 } -- its north edge (z 260) stays clear of the town wall (z ~232)
+World.BossSpots = {
+	World = { X = -40, Z = 312 }, -- the roaming world boss (26 studs tall)
+	Season = { X = 38, Z = 335 }, -- the season Colossus on its altar (90 studs tall, altar 34 wide)
+}
 
 function World.DistrictPoint(id)
 	local d = World.Districts[id]

@@ -117,12 +117,12 @@ local function house(cf, w, d, h, wall, roof, name)
 		-- each wedge slopes down toward its side: wedge's slope faces -Z/+Y by default, so turn it to face the sides
 		part({ Name = "Roof", Size = Vector3.new(d + 1.2, rise, w / 2 + 0.6), CFrame = cf * CFrame.new(side * (w / 4 + 0.3), h + rise / 2, 0) * CFrame.Angles(0, math.rad(side * -90), 0), Color = roof, Material = Enum.Material.WoodPlanks }, "WedgePart")
 	end
-	part({ Name = "Door", Size = Vector3.new(2.6, 4.6, 0.3), CFrame = cf * CFrame.new(0, 2.3, -d / 2 - 0.1), Color = DARK_WOOD, Material = Enum.Material.Wood })
+	part({ Name = "Door", Size = Vector3.new(3.4, 6.4, 0.3), CFrame = cf * CFrame.new(0, 3.2, -d / 2 - 0.1), Color = DARK_WOOD, Material = Enum.Material.Wood })
 	for _, x in ipairs({ -w / 4 - 0.6, w / 4 + 0.6 }) do
-		part({ Name = "Window", Size = Vector3.new(2, 2, 0.3), CFrame = cf * CFrame.new(x, h * 0.6, -d / 2 - 0.1), Color = Color3.fromRGB(255, 220, 140), Material = Enum.Material.Neon, Transparency = 0.35, CanCollide = false })
+		part({ Name = "Window", Size = Vector3.new(2.6, 2.6, 0.3), CFrame = cf * CFrame.new(x, h * 0.55, -d / 2 - 0.1), Color = Color3.fromRGB(255, 220, 140), Material = Enum.Material.Neon, Transparency = 0.35, CanCollide = false })
 	end
 	if name then
-		local board = part({ Name = "HouseSign", Size = Vector3.new(math.min(w - 2, 12), 1.8, 0.3), CFrame = cf * CFrame.new(0, h - 1.2, -d / 2 - 0.25), Color = DARK_WOOD, Material = Enum.Material.Wood })
+		local board = part({ Name = "HouseSign", Size = Vector3.new(math.min(w - 4, 14), 2.2, 0.3), CFrame = cf * CFrame.new(0, h - 1.6, -d / 2 - 0.25), Color = DARK_WOOD, Material = Enum.Material.Wood })
 		sign(board, Enum.NormalId.Front, name)
 	end
 end
@@ -130,27 +130,28 @@ end
 -- an entrance arch with the district's name on both sides
 local function arch(cf, width, text, color)
 	for _, side in ipairs({ -1, 1 }) do
-		part({ Name = "ArchPost", Size = Vector3.new(1.6, 12, 1.6), CFrame = cf * CFrame.new(side * width / 2, 6, 0), Color = WOOD, Material = Enum.Material.Wood })
-		part({ Name = "ArchCap", Size = Vector3.new(2.2, 0.8, 2.2), CFrame = cf * CFrame.new(side * width / 2, 12.4, 0), Color = color, Material = Enum.Material.SmoothPlastic })
+		part({ Name = "ArchPost", Size = Vector3.new(1.4, 14, 1.4), CFrame = cf * CFrame.new(side * (width / 2 + 2), 7, 0), Color = WOOD, Material = Enum.Material.Wood })
+		part({ Name = "ArchCap", Size = Vector3.new(2, 0.8, 2), CFrame = cf * CFrame.new(side * (width / 2 + 2), 14.4, 0), Color = color, Material = Enum.Material.SmoothPlastic })
 	end
-	local beam = part({ Name = "ArchBeam", Size = Vector3.new(width + 3, 3, 0.8), CFrame = cf * CFrame.new(0, 11, 0), Color = color, Material = Enum.Material.SmoothPlastic })
+	-- the name board hangs between the posts, thicker than them so they never poke through the text
+	local beam = part({ Name = "ArchBeam", Size = Vector3.new(width + 2.6, 3.4, 1.8), CFrame = cf * CFrame.new(0, 12, 0), Color = color, Material = Enum.Material.SmoothPlastic })
 	sign(beam, Enum.NormalId.Front, text)
 	sign(beam, Enum.NormalId.Back, text)
 end
 
 -- a signpost with one arrow board per destination, each pointing at it
 local function signpost(position, dests)
-	part({ Name = "SignPost", Size = Vector3.new(0.7, 9, 0.7), Position = position + Vector3.new(0, 4.5, 0), Color = WOOD, Material = Enum.Material.Wood })
+	part({ Name = "SignPost", Size = Vector3.new(0.7, 10, 0.7), Position = position + Vector3.new(0, 5, 0), Color = WOOD, Material = Enum.Material.Wood })
 	for index, dest in ipairs(dests) do
-		local y = 8.2 - (index - 1) * 1.6
+		local y = 9.2 - (index - 1) * 1.7
 		local at = position + Vector3.new(0, y, 0)
 		local toward = Vector3.new(dest.Point.X, y, dest.Point.Z)
 		if (toward - at).Magnitude > 1 then
 			-- local +X points at the destination
 			local cf = CFrame.lookAt(at, toward) * CFrame.Angles(0, math.rad(90), 0) * CFrame.new(3.4, 0, 0)
 			local board = part({ Name = "Arrow", Size = Vector3.new(6.4, 1.3, 0.25), CFrame = cf, Color = Color3.fromRGB(200, 170, 110), Material = Enum.Material.Wood })
-			sign(board, Enum.NormalId.Front, dest.Name .. " ▶", Color3.fromRGB(60, 40, 20))
-			sign(board, Enum.NormalId.Back, "◀ " .. dest.Name, Color3.fromRGB(60, 40, 20))
+			sign(board, Enum.NormalId.Front, dest.Name .. "  >>", Color3.fromRGB(60, 40, 20)) -- the triangle glyphs did not render
+			sign(board, Enum.NormalId.Back, "<<  " .. dest.Name, Color3.fromRGB(60, 40, 20))
 		end
 	end
 end
@@ -174,6 +175,11 @@ local function flowerBed(position, color)
 		local a = index * math.pi / 3
 		part({ Name = "Flower", Shape = Enum.PartType.Ball, Size = Vector3.new(0.9, 0.9, 0.9), Position = position + Vector3.new(math.cos(a) * 1.5, 1.1, math.sin(a) * 1.5), Color = color, Material = Enum.Material.SmoothPlastic, CanCollide = false })
 	end
+end
+
+-- a frame at (x, z) in district frame `cf`, with its front (-Z) toward the district point (tx, tz)
+local function facing(cf, x, z, tx, tz)
+	return cf * CFrame.lookAt(Vector3.new(x, 0, z), Vector3.new(tx or 0, 0, tz or 0))
 end
 
 local function districtFrame(id)
@@ -218,6 +224,7 @@ local function signposts()
 	local _, _, oz = World.ArenaOrigin(1)
 	table.insert(dests, { Name = "Battle Lots", Point = Vector3.new(0, 0, oz) })
 	table.insert(dests, { Name = "Plaza", Point = centre })
+	table.insert(dests, { Name = "Boss Field", Point = Vector3.new(World.BossField.X, 0, World.BossField.Z) })
 	local function nearOthers(selfName)
 		local list = {}
 		for _, d in ipairs(dests) do
@@ -227,11 +234,10 @@ local function signposts()
 		end
 		return list
 	end
+	-- beside each spoke, on the side away from the plaza edge trees (those stand 8-10 degrees clockwise of every spoke)
 	for _, angle in ipairs({ -90, 90, 180, 0 }) do
-		local a = math.rad(angle)
-		local dir = Vector3.new(math.sin(a), 0, -math.cos(a))
-		local side = Vector3.new(-dir.Z, 0, dir.X)
-		signpost(centre + dir * (World.PLAZA.Radius + 9) + side * 8, nearOthers("Plaza"))
+		local a = math.rad(angle - 9)
+		signpost(centre + Vector3.new(math.sin(a), 0, -math.cos(a)) * (World.PLAZA.Radius + 10), nearOthers("Plaza"))
 	end
 	for _, angle in ipairs({ 135, 225 }) do
 		local a = math.rad(angle)
@@ -268,10 +274,10 @@ local function gate()
 	end
 	part({ Name = "WellRoof", Size = Vector3.new(7, 0.5, 4), CFrame = cf * CFrame.new(0, 7.6, 0), Color = Color3.fromRGB(150, 70, 50), Material = Enum.Material.WoodPlanks })
 	-- the tavern (left as you come from the plaza) and the notice board (right)
-	house(cf * CFrame.new(22, 0, 8) * CFrame.Angles(0, math.rad(-70), 0), 18, 13, 10, Color3.fromRGB(230, 214, 180), Color3.fromRGB(140, 60, 44), "THE SLEEPY GRIFFIN")
-	local tavernMark = part({ Name = "TavernSpot", Size = Vector3.new(1, 1, 1), CFrame = cf * CFrame.new(14, 0.5, 5), Transparency = 1, CanCollide = false })
+	house(facing(cf, 27, 8), 22, 16, 13, Color3.fromRGB(230, 214, 180), Color3.fromRGB(140, 60, 44), "THE SLEEPY GRIFFIN")
+	local tavernMark = part({ Name = "TavernSpot", Size = Vector3.new(1, 1, 1), CFrame = cf * CFrame.new(17, 0.5, 5), Transparency = 1, CanCollide = false })
 	tag(tavernMark, "TAVERN", "Townsfolk errands - coming soon")
-	local boardCf = cf * CFrame.new(-18, 0, 2) * CFrame.Angles(0, math.rad(60), 0)
+	local boardCf = facing(cf, -18, 2)
 	for _, side in ipairs({ -1, 1 }) do
 		part({ Name = "BoardPost", Size = Vector3.new(0.8, 8, 0.8), CFrame = boardCf * CFrame.new(side * 4.4, 4, 0.3), Color = WOOD, Material = Enum.Material.Wood })
 	end
@@ -282,8 +288,8 @@ local function gate()
 	end
 	tag(face, "NOTICE BOARD", "Town bounties - coming soon")
 	-- houses and lamps round the square
-	house(cf * CFrame.new(-30, 0, 22) * CFrame.Angles(0, math.rad(40), 0), 12, 10, 8, Color3.fromRGB(220, 200, 170), Color3.fromRGB(90, 110, 150))
-	house(cf * CFrame.new(32, 0, 24) * CFrame.Angles(0, math.rad(-40), 0), 12, 10, 8, Color3.fromRGB(235, 225, 200), Color3.fromRGB(120, 140, 80))
+	house(facing(cf, -28, 24), 16, 13, 11, Color3.fromRGB(220, 200, 170), Color3.fromRGB(90, 110, 150))
+	house(facing(cf, -32, -8), 14, 12, 10, Color3.fromRGB(235, 225, 200), Color3.fromRGB(120, 140, 80))
 	for _, off in ipairs({ { -12, -16 }, { 12, -16 }, { -24, 12 }, { 24, 12 } }) do
 		lamp((cf * CFrame.new(off[1], 0.4, off[2])).Position)
 	end
@@ -381,10 +387,10 @@ local function training()
 	local ringMark = part({ Name = "RingSpot", Size = Vector3.new(1, 1, 1), CFrame = ringCf * CFrame.new(0, 3, 0), Transparency = 1, CanCollide = false })
 	tag(ringMark, "SPARRING RING", "Friendly duels - coming soon", Color3.fromRGB(255, 140, 120))
 	-- the guild hall, with banners
-	local hallCf = cf * CFrame.new(24, 0, 16) * CFrame.Angles(0, math.rad(-35), 0)
-	house(hallCf, 20, 14, 12, Color3.fromRGB(210, 200, 190), Color3.fromRGB(90, 60, 130), "GUILD HALL")
+	local hallCf = facing(cf, 24, 20)
+	house(hallCf, 24, 17, 15, Color3.fromRGB(210, 200, 190), Color3.fromRGB(90, 60, 130), "GUILD HALL")
 	for _, side in ipairs({ -1, 1 }) do
-		local banner = part({ Name = "GuildBanner", Size = Vector3.new(2.4, 6, 0.2), CFrame = hallCf * CFrame.new(side * 7, 7, -7.3), Color = Color3.fromRGB(120, 70, 180), Material = Enum.Material.Fabric })
+		local banner = part({ Name = "GuildBanner", Size = Vector3.new(2.4, 6, 0.2), CFrame = hallCf * CFrame.new(side * 10, 8, -8.75), Color = Color3.fromRGB(120, 70, 180), Material = Enum.Material.Fabric })
 		local star = part({ Name = "BannerStar", Size = Vector3.new(1.2, 1.2, 0.1), CFrame = banner.CFrame * CFrame.new(0, 1, -0.15) * CFrame.Angles(0, 0, math.rad(45)), Color = Color3.fromRGB(255, 220, 120), Material = Enum.Material.Neon, CanCollide = false })
 		table.insert(pulsers, { Part = star, Phase = side, Base = 0.2, Amount = 0.15 })
 	end
@@ -406,6 +412,27 @@ local function training()
 	end
 end
 
+-- the Boss Field outside the Town Gate: trampled ground, a path from the gate, an arch and a few rocks
+-- (the bosses themselves are server models at World.BossSpots)
+local function bossField()
+	local f = World.BossField
+	local centre = Vector3.new(f.X, 0, f.Z)
+	disc(centre, f.Radius, 0.3, 0, Color3.fromRGB(150, 130, 96), Enum.Material.Ground)
+	local gx, gz = World.DistrictPoint("Gate")
+	local from = Vector3.new(gx, 0, gz + World.Districts.Gate.Size - 2)
+	local to = Vector3.new(f.X, 0, f.Z - f.Radius + 4)
+	part({ Name = "FieldPath", Size = Vector3.new(10, 0.32, (to - from).Magnitude), CFrame = CFrame.lookAt((from + to) / 2 + Vector3.new(0, 0.16, 0), to + Vector3.new(0, 0.16, 0)), Color = ROAD, Material = Enum.Material.Pebble, CanCollide = false })
+	arch(CFrame.lookAt(to, centre) * CFrame.new(0, 0, 3), 14, "BOSS FIELD", Color3.fromRGB(150, 50, 50))
+	for index = 1, 9 do
+		local a = math.rad(index * 40 + 15)
+		local r = f.Radius - 6 - (index % 3) * 4
+		local p = centre + Vector3.new(math.sin(a) * r, 0, math.cos(a) * r)
+		if p.Z > f.Z - f.Radius + 14 or math.abs(p.X - f.X) > 16 then
+			part({ Name = "Rock", Size = Vector3.new(4 + index % 3 * 2, 3 + index % 2 * 2, 4 + index % 2 * 2), CFrame = CFrame.new(p + Vector3.new(0, 1.2, 0)) * CFrame.Angles(math.rad(index * 7), math.rad(index * 31), 0), Color = Color3.fromRGB(110, 104, 98), Material = Enum.Material.Slate })
+		end
+	end
+end
+
 -- houses and trees along the ring between the districts, so the walk feels like a town
 local function ringside()
 	local centre = Vector3.new(World.PLAZA.X, 0, World.PLAZA.Z)
@@ -418,8 +445,8 @@ local function ringside()
 		local a = math.rad(angle)
 		local dir = Vector3.new(math.sin(a), 0, -math.cos(a))
 		-- outside the ring: a house facing the road; inside: trees
-		local at = centre + dir * (R + 16)
-		house(CFrame.lookAt(at, centre + dir * R), 11, 9, 8, walls[index % 4 + 1], roofs[index % 4 + 1])
+		local at = centre + dir * (R + 18)
+		house(CFrame.lookAt(at, centre + dir * R), 16, 13, 11, walls[index % 4 + 1], roofs[index % 4 + 1])
 		tree(centre + dir * (R - 14), 0.9 + (index % 3) * 0.12)
 		lamp(centre + dir * (R + 6))
 	end
@@ -435,6 +462,7 @@ function Town.Build(parentFolder, hubPulsers)
 	grove()
 	training()
 	ringside()
+	bossField()
 	signposts()
 	return folder
 end
