@@ -284,3 +284,11 @@ gave +1.4 and was dropped. The bot now keeps Taunt + Iron Skin (like Heal + Bles
 The 2026-11-22 "Berserker penalties halved" commit only changed this file: Config/Subclasses still had -0.313 damage and
 -0.24 health. Now -0.15 / -0.12. Real bot, 6 seeds: Warrior 58.2 and 53.8 in two runs (Guardian 65/58, Berserker 51/49);
 was 51.5. Path means swing ~±4 at 6 seeds. Berserker stays ~10 stages behind Guardian in every kit: still open.
+
+## Berserker: lifesteal instead of a damage penalty; Guardian loses its damage bonus (2026-11-23)
+Both Warrior paths wear the same skills in the sim (Taunt, Iron Skin + two starters; path skills start low), so only the
+path mods differ, and the Guardian's (+15% attack, +14.2% damage dealt) out-damaged the Berserker's (+25% attack, -15%
+damage dealt) on top of all its tankiness. The Warrior is the squad's tank on either path, so Berserker damage barely
+moved the squad: no damage penalty +4, Blood Frenzy kits 55-57 (6 seeds, noise ±4). What helped is sustain.
+Changes: Berserker DamageDealt -0.15 -> 0, new Lifesteal +0.25 (15% gave 55 at 12 seeds); Guardian DamageDealt +0.142 -> 0.
+12 seeds, stage at L40: Berserker ~50 -> 59.8 (40-92), Guardian 64.8 -> 62.2 (47-94), ~8.8 h. Gap ~10 -> ~2.

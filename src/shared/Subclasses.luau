@@ -143,7 +143,7 @@ function Subclasses.Choose(profile, classId, subclassId)
 	return true
 end
 
-local STAT_LABELS = { Attack = "Attack", MaxHealth = "Health", Defense = "Defense", AttackSpeed = "Attack speed", CritChance = "Crit", DamageDealt = "Damage", HealingDealt = "Healing", DamageTaken = "Damage taken", CritMultiplier = "Crit damage" }
+local STAT_LABELS = { Attack = "Attack", MaxHealth = "Health", Defense = "Defense", AttackSpeed = "Attack speed", CritChance = "Crit", DamageDealt = "Damage", HealingDealt = "Healing", DamageTaken = "Damage taken", CritMultiplier = "Crit damage", Lifesteal = "Lifesteal" }
 
 function Subclasses.Describe(subclassId)
 	local def = Config.Defs[subclassId]

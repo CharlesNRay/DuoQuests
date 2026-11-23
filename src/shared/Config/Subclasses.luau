@@ -34,13 +34,15 @@ return {
 			Class = "Warrior",
 			Parent = "Warrior",
 			UnlockLevel = 30,
-			Description = "All-out offense. Huge attack, attack speed and crits; a frenzy that makes the Warrior a damage dealer.",
+			Description = "All-out offense. Huge attack, attack speed and crits, and every blow heals: a tank that outlasts by hitting hard.",
 			Mods = {
 				{ Stat = "Attack", Mode = "Mul", Value = 0.25 },
-				{ Stat = "DamageDealt", Mode = "Mul", Value = -0.15 }, -- was -0.313 (halved 2026-11-22; the first commit only changed the docs)
+				-- no DamageDealt penalty since 2026-11-23 (was -0.313, then -0.15): Guardian out-damaged it
 				{ Stat = "AttackSpeed", Mode = "Mul", Value = 0.08 },
 				{ Stat = "CritChance", Mode = "Add", Value = 0.05 },
 				{ Stat = "MaxHealth", Mode = "Mul", Value = -0.12 }, -- was -0.240
+				-- the squad's tank either way: its damage heals it (2026-11-23; with the Guardian trim, Berserker ~50 -> ~60 vs Guardian ~62 at L40)
+				{ Stat = "Lifesteal", Mode = "Add", Value = 0.25 },
 			},
 			Skills = { "BloodFrenzy", "Cleave", "ExecutionerStrike" },
 		},
@@ -55,7 +57,7 @@ return {
 				{ Stat = "MaxHealth", Mode = "Mul", Value = 0.093 },
 				{ Stat = "Defense", Mode = "Mul", Value = 0.3 },
 				{ Stat = "DamageTaken", Mode = "Mul", Value = -0.1 },
-				{ Stat = "Attack", Mode = "Mul", Value = 0.15 }, { Stat = "DamageDealt", Mode = "Mul", Value = 0.142 } },
+				{ Stat = "Attack", Mode = "Mul", Value = 0.15 } }, -- DamageDealt +0.142 removed 2026-11-23 (it out-damaged the Berserker)
 			Skills = { "Bulwark", "Retribution", "UnbreakableVow" },
 		},
 		Priest = {
