@@ -798,8 +798,8 @@ return {
 	},
 	Howl = {
 		Id = "Howl", DisplayName = "Howl", Description = "Whips the pack into a frenzy.", Enemy = true, Anim = "Cast",
-		Rarity = "Common", Cooldown = 16,
-		Effects = { { Type = "ApplyStatus", Target = "AllAllies", Status = "Enraged", Duration = 6 } },
+		Rarity = "Common", Cooldown = 22, -- was 16 and 6 s (Enraged ~37% of the time made the Dire Wolf the stage 40 wall)
+		Effects = { { Type = "ApplyStatus", Target = "AllAllies", Status = "Enraged", Duration = 5 } },
 	},
 	WebShot = {
 		Id = "WebShot", DisplayName = "Web Shot", Description = "Sticky web that slows one hero's attacks.", Enemy = true, Anim = "Shoot",

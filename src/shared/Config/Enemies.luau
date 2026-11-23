@@ -272,7 +272,7 @@ local Enemies = {
 		Id = "DireWolf", DisplayName = "Dire Wolf",
 		Look = { Shape = "Beast", Color = { 70, 70, 85 }, Size = 9 },
 		IsBoss = true, DamageType = "Physical",
-		BaseStats = { MaxHealth = 640, Attack = 12, Defense = 9, AttackSpeed = 1.0, CritChance = 0.03 },
+		BaseStats = { MaxHealth = 640, Attack = 10.5, Defense = 9, AttackSpeed = 0.85, CritChance = 0.03 }, -- Attack was 12, AttackSpeed 1.0: the stage 40 wall (BALANCE.md)
 		Abilities = { { Id = "FeralPounce", Level = 1, Timer = 6 }, { Id = "Stagger", Level = 1, Timer = 11 }, { Id = "Howl", Level = 1, Timer = 14 }, { Id = "Enrage", Level = 1 } },
 	},
 	Broodmother = {

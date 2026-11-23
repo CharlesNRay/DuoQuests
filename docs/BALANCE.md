@@ -238,3 +238,19 @@ seeds were fast (L40 in 6.4-7.6h vs 8.3-10.3h before runes); run SEEDS=3+ before
   drives the stage. The spread comes from boss walls: a run that has not beaten the stage 40 boss when it reaches L40
   sits at 40 (all six 40-ish runs), one that broke it climbs to 55-88. Class still matters: Mage 66, Summoner 58,
   Warrior 52, Ranger 51, Cleric 47, Rogue 45 (3 seeds each, 2 paths).
+
+## Stage 40 boss wall: Dire Wolf trimmed (2026-11-22)
+Losses per boss over 84 runs (before): 10: 1, 20: 21, 30: 2, **40: 65** (8 runs never beat it by L40), 50: 9, 60: 0.
+The stage curve itself is smooth there (x1.05 per stage); the wall was the Dire Wolf: the fastest base attack of any
+boss (1.0/s) plus Howl putting Enraged (x1.5 attack, x1.25 speed) on it ~37% of the time even at full health.
+Changes: Dire Wolf Attack 12 -> 10.5, AttackSpeed 1.0 -> 0.85; Howl cooldown 16 -> 22 s, 5 s instead of 6 (Snow Wolf
+uses Howl too). Feral Pounce is shared with Wolf/Boar/Magma Hound, so it was left alone.
+Roster (6 classes x 2 paths x 3 seeds, companion, full), before -> after:
+| | before | after |
+|---|---|---|
+| time stuck at the stage 40 boss | avg 1.34 h, 18/35 runs over 1 h | avg 0.47 h, 5/36 over 1 h |
+| boss 40 beaten first try | 8 | 18 |
+| stage at L40 | 53 (sd 11.5, 39-88) | 54 (sd 7.3, 40-68) |
+| hours to L40 | 9.5 | 9.3 |
+Still slow at it: Rangers (4 of the 7 runs with 50+ losses). Boss 20 (Goblin Warlord, also Stagger) averages ~25 losses: the
+intended "doing nothing walls at stage 20" check. Class means now: Mage 62, Summoner 57, Warrior 57, Cleric 50, Rogue 50, Ranger 48.

@@ -91,6 +91,8 @@ Git Bash; they find a working Python themselves (`python3`/`python` there are St
 - **Gear bad-luck protection 2026-11-22** (tests green, NOT seen in Studio): `Config/Gear.Pity`, `Gear.PityDrop`/`Gear.IsUpgrade`,
   `Season.GearDry` counter in `Progression.ApplyClear`; catch-up only (par item when the weakest piece is below 85% of par after 10 dry wins).
   It did not narrow the roster spread: that comes from the stage 40 boss wall (BALANCE.md "Gear bad-luck protection").
+- **Stage 40 boss wall 2026-11-22** (tests green): Dire Wolf Attack 10.5, AttackSpeed 0.85, Howl 22 s cd / 5 s. Time stuck there 1.34 h -> 0.47 h,
+  stage spread at L40 39-88 -> 40-68 (BALANCE.md "Stage 40 boss wall").
 
 ## Gotchas
 - Studio testing: the HUD 🧪 button opens the "Test cheats" panel (Studio only, `UI/DevScreen` -> `handlers.Dev(action, n)`, `DEV_ACTIONS` in ApiService):
