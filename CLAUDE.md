@@ -189,6 +189,13 @@ Git Bash; they find a working Python themselves (`python3`/`python` there are St
   boss clear would have failed. Now string keys; schema v4 migration converts old data. Playtest setup and tester
   checklist: docs/PLAYTEST.md (publish, Studio API access, Max Players 4 = the 4 lots, rejoin check).
 
+- **Playtest log 2026-11-23** (tests green, NOT seen in Studio): HUD 📝 Feedback (`UI/FeedbackScreen`, handler `SendFeedback`,
+  topics Bug/Confusing/Idea/Fun, 1 per 20 s, 15/day); server errors (`ScriptContext.Error` + ApiService handler failures via
+  `xpcall` traceback), client errors (`ReportError`, 6/min, each message once per visit) and one Session line per visit;
+  `Shared/PlaytestLog` rules, `Services/PlaytestService` buffers and writes DataStore `DuoQuestPlaytest` keys `Feedback|Errors|Sessions:<day>`
+  every 60 s + on close. Reader: Feedback > "Read log" tab (`PlaytestRead`, `state.Player.CanReadLog`: Studio or the place's creator).
+  8 lots were considered: they do not fit inside the town wall (slot 6 would sit outside), so Max Players stays 4.
+
 ## Gotchas
 - Studio testing: the HUD 🧪 button opens the "Test cheats" panel (Studio only, `UI/DevScreen` -> `handlers.Dev(action, n)`, `DEV_ACTIONS` in ApiService):
   +1/5/10 levels, +5/10/25 stages (cleared like real wins, party moves there), +50M/500M gold, Sunstones, test items, Epic gear for your stage, all pets at max level,

@@ -168,7 +168,7 @@ end
 local PANEL_DEFAULT = Vector2.new(500, 286)
 local PANEL_SIZES = {
 	Map = Vector2.new(640, 298), Hero = Vector2.new(640, 298), Skills = Vector2.new(660, 344),
-	Merchant = Vector2.new(540, 292), Blacksmith = Vector2.new(540, 292), Trainer = Vector2.new(540, 330), PetStore = Vector2.new(560, 330), RuneCarver = Vector2.new(600, 330), Wish = Vector2.new(640, 352), Store = Vector2.new(640, 336), Boss = Vector2.new(640, 310), Battle = Vector2.new(640, 330), Quests = Vector2.new(640, 330), Premium = Vector2.new(640, 330), Season = Vector2.new(640, 330), Cosmetics = Vector2.new(640, 330), Codes = Vector2.new(540, 300), Character = Vector2.new(640, 340), Guild = Vector2.new(720, 340), Dev = Vector2.new(640, 330), Party = Vector2.new(700, 330), Bag = Vector2.new(640, 330), Errands = Vector2.new(620, 330), Settings = Vector2.new(620, 330), Talents = Vector2.new(660, 340), Dummy = Vector2.new(600, 300), Spar = Vector2.new(620, 330),
+	Merchant = Vector2.new(540, 292), Blacksmith = Vector2.new(540, 292), Trainer = Vector2.new(540, 330), PetStore = Vector2.new(560, 330), RuneCarver = Vector2.new(600, 330), Wish = Vector2.new(640, 352), Store = Vector2.new(640, 336), Boss = Vector2.new(640, 310), Battle = Vector2.new(640, 330), Quests = Vector2.new(640, 330), Premium = Vector2.new(640, 330), Season = Vector2.new(640, 330), Cosmetics = Vector2.new(640, 330), Codes = Vector2.new(540, 300), Character = Vector2.new(640, 340), Guild = Vector2.new(720, 340), Dev = Vector2.new(640, 330), Party = Vector2.new(700, 330), Bag = Vector2.new(640, 330), Errands = Vector2.new(620, 330), Settings = Vector2.new(620, 330), Feedback = Vector2.new(640, 340), Talents = Vector2.new(660, 340), Dummy = Vector2.new(600, 300), Spar = Vector2.new(620, 330),
 }
 local SHOP_NPC = { Merchant = "Merchant", Blacksmith = "Blacksmith", Trainer = "Trainer", PetStore = "PetStore", RuneCarver = "RuneCarver", Wish = "Tree" }
 local panel = Kit.frame({ Name = "Panel", Size = UDim2.new(0, 500, 0, 286), Position = UDim2.new(0.5, -250, 0, 42), BackgroundColor3 = Kit.Colors.Bg, Visible = false, ZIndex = 5, Parent = root })
@@ -307,7 +307,7 @@ local function redraw()
 	end
 end
 
-local QUIET_ACTIONS = { ChooseClass = true, MakeCharacter = true, PlayCharacter = true, CreateCharacter = true, RenameCharacter = true, UpdateCharacter = true }
+local QUIET_ACTIONS = { SendFeedback = true, PlaytestRead = true, ChooseClass = true, MakeCharacter = true, PlayCharacter = true, CreateCharacter = true, RenameCharacter = true, UpdateCharacter = true }
 -- feedback for claiming, buying and upgrading (2026-11-23, owner: "a sound effect or special effect when claiming things")
 local CLAIM_FX = {
 	ClaimDaily = "claim", ClaimQuest = "claim", ClaimWeeklyQuest = "claim", ClaimPass = "claim", ClaimStage = "claim",
@@ -720,6 +720,45 @@ end)
 hud:AddButton("Quests", "mini", "📜", "Quests & Season Pass", function() open("Quests", "Quests & Season Pass") end)
 hud:AddButton("Settings", "mini", "⚙️", "Settings (sound)", function() open("Settings", "Settings") end)
 Screens.Settings = require(script.Parent.UI.SettingsScreen).Settings
+-- playtest feedback (and, for the owner, the playtest log): UI/FeedbackScreen, server Services/PlaytestService
+hud:AddButton("Feedback", "mini", "📝", "Send feedback", function() open("Feedback", "Feedback") end)
+Screens.Feedback = require(script.Parent.UI.FeedbackScreen).Feedback
+extra.Where = function()
+	if BattleCamera.IsBattleView() then
+		return "battle view"
+	end
+	local root = Players.LocalPlayer.Character and Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+	if not root then
+		return nil
+	end
+	local p = root.Position
+	-- the nearest district (World.Districts) or the plaza
+	local best, bestD = "plaza", math.sqrt((p.X - World.PLAZA.X) ^ 2 + (p.Z - World.PLAZA.Z) ^ 2) - World.PLAZA.Radius
+	for _, id in ipairs(World.DistrictOrder) do
+		local x, z = World.DistrictPoint(id)
+		local d = math.sqrt((p.X - x) ^ 2 + (p.Z - z) ^ 2) - World.Districts[id].Size
+		if d < bestD then
+			best, bestD = World.Districts[id].Name or id, d
+		end
+	end
+	return ("%s (%d, %d)"):format(best, math.floor(p.X), math.floor(p.Z))
+end
+-- script errors on this client go to the playtest log (each message once, at most 10 per visit)
+do
+	local sent, count = {}, 0
+	game:GetService("ScriptContext").Error:Connect(function(message, trace, source)
+		local key = tostring(message)
+		if sent[key] or count >= 10 then
+			return
+		end
+		sent[key] = true
+		count += 1
+		local where = if typeof(source) == "Instance" then source:GetFullName() else nil
+		task.spawn(pcall, function()
+			api:InvokeServer("ReportError", key .. " | " .. tostring(trace or ""), where)
+		end)
+	end)
+end
 extra.SaveSettings = function(values)
 	task.spawn(function()
 		api:InvokeServer("SaveSettings", values)

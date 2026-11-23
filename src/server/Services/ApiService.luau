@@ -73,6 +73,7 @@ local Subclasses = require(Shared.Subclasses)
 local Abilities = require(Shared.Config.Abilities)
 
 local DataService = require(script.Parent.DataService)
+local PlaytestService = require(script.Parent.PlaytestService)
 local PartyService = require(script.Parent.PartyService)
 local WorldService = require(script.Parent.WorldService)
 local LeaderboardService = require(script.Parent.LeaderboardService)
@@ -276,6 +277,7 @@ local function buildState(player)
 			Character = characterOf(profile),
 			Errands = Errands.Status(profile, os.time()), -- town errands (docs/TOWN.md phase 2)
 			Settings = profile.Permanent.Settings, -- sound sliders (client/Sound), nil = defaults
+			CanReadLog = PlaytestService.CanRead(player), -- the Feedback screen shows the playtest log (Studio / the place's creator)
 			Talents = Talents.Status(profile), -- level-up points (Shared/Talents)
 			Fishing = Fishing.Status(profile, Daily.DayNumber(os.time())), -- the fishing pond (catches left today, fish log)
 			DummyBest = profile.Season.DummyBest or 0, -- best party DPS on the training dummy
@@ -967,6 +969,20 @@ function DEV_ACTIONS.Premium(profile)
 	return if owned then "Premium pass on" else "Premium pass off"
 end
 
+-- the playtest log (Services/PlaytestService): tester feedback, client errors, and the owner's reader
+function handlers.SendFeedback(player, profile, topic, text, where)
+	return PlaytestService.Feedback(player, profile, topic, text, where)
+end
+function handlers.ReportError(player, profile, text, where)
+	return PlaytestService.ClientError(player, profile, text, where)
+end
+function handlers.PlaytestRead(player, _, days)
+	if not PlaytestService.CanRead(player) then
+		return false, "Forbidden"
+	end
+	return true, PlaytestService.Read(days)
+end
+
 function handlers.Dev(player, profile, action, n)
 	if not game:GetService("RunService"):IsStudio() then
 		return false, "Forbidden"
@@ -1633,7 +1649,7 @@ function ApiService.Init()
 	api.OnServerInvoke = function(player, action, ...)
 		local now = os.clock()
 		-- cheap read-only calls are not throttled, so a refresh right after an action is never refused
-		local readOnly = action == "GetState" or action == "BossState" or action == "GuildState" or action == "GuildSearch" or action == "GetWorld"
+		local readOnly = action == "GetState" or action == "BossState" or action == "GuildState" or action == "GuildSearch" or action == "GetWorld" or action == "ReportError" -- ReportError has its own limit
 		if not readOnly then
 			if lastCall[player.UserId] and now - lastCall[player.UserId] < MIN_INTERVAL then
 				return false, "TooFast"
@@ -1652,9 +1668,10 @@ function ApiService.Init()
 		if not profile then
 			return false, "NoProfile"
 		end
-		local ok, result, extra = pcall(handler, player, profile, ...)
+		local ok, result, extra = xpcall(handler, debug.traceback, player, profile, ...)
 		if not ok then
 			warn("[ApiService] " .. tostring(action) .. " failed: " .. tostring(result))
+			PlaytestService.ServerError(tostring(result), "handler " .. tostring(action))
 			return false, "ServerError"
 		end
 		return result, extra

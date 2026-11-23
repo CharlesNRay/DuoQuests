@@ -18,7 +18,9 @@ local LeaderboardService = require(Services.LeaderboardService)
 local WorldService = require(Services.WorldService)
 local PremiumService = require(Services.PremiumService)
 local SeasonResultsService = require(Services.SeasonResultsService)
+local PlaytestService = require(Services.PlaytestService)
 
+PlaytestService.Init() -- first, so errors while the rest starts are recorded
 DataService.Init()
 PartyService.Init()
 ApiService.Init()
@@ -44,12 +46,14 @@ local function onPlayerAdded(player)
 		)
 	)
 
+	PlaytestService.Joined(player, profile)
 	GuildService.OnPlayerReady(player, profile) -- the party and avatar start when they press Play
 end
 
 Players.PlayerAdded:Connect(onPlayerAdded)
 Players.PlayerRemoving:Connect(function(player)
 	PartyService.OnPlayerLeaving(player) -- while the profile is still loaded
+	PlaytestService.Left(player, DataService.GetProfile(player))
 	GuildService.OnPlayerLeaving(player, DataService.GetProfile(player))
 	DataService.ReleaseProfile(player)
 end)

@@ -34,7 +34,18 @@ Play for 20-30 minutes, then write down anything odd. The things to try:
 - [ ] Join or make a guild at the Guild Board; try guild chat.
 - [ ] Spend talent points after levelling; try the Settings (sound) screen.
 - [ ] **Leave and rejoin**: is everything still there? (This is the most important one.)
-- Report: what broke, what was confusing, what was fun, how long until you got bored.
+- Report: what broke, what was confusing, what was fun, how long until you got bored. Easiest: the 📝 **Feedback**
+  button on the HUD (pick Bug / Confusing / Idea / Fun, write a line, Send). It records where you were and your level.
+
+## The playtest log (owner)
+Everything testers send and everything that goes wrong is kept for you, from every server, in the DataStore
+`DuoQuestPlaytest` (one list per day, UTC): open 📝 **Feedback > Read log** in Studio (needs API access on) or in the
+live game (only the place's creator, or rank 254+ in the owning group, sees that tab).
+- **Feedback**: topic, who (level, class, stage), where they stood (district + position, or "battle view"), the note.
+- **Errors**: server script errors, handlers that threw (with a stack trace, "handler Wish" etc.) and players' client
+  script errors. The same error is one line with a count (x50), so the worst ones stand out.
+- **Sessions**: one line per visit: minutes played, level and stage at join -> leave. Short visits = where people quit.
+Rows are written every 60 s and when a server closes; feedback is written at once. "Today" / "Last 3 days" toggles.
 
 ## What to watch in the server output (owner)
 - `[DataService] Profile <id> cannot be saved as is: ...` means a save is failing: send me the line.

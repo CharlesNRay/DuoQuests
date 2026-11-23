@@ -1,7 +1,7 @@
 # Duo Quest Roadmap
 
 > Living document. Updated whenever we finish or reprioritise something.
-> **Last updated:** 2026-11-22
+> **Last updated:** 2026-11-23
 
 **Jump to:** [Now](#now) · [Next up](#next-up) · [Later](#later) · [Done](#done) · [Open questions](#open-questions) · [Known gaps](#known-gaps)
 
@@ -44,6 +44,8 @@ Newest first.
 - ✅ Talents: 1 point per level, 8 stat talents, auto-spend, free reset. Seen in Studio.
 - ✅ Rune Carver NPC, stalls that show their trade, combat log stays minimized, pet faces forward, companions' pets. Seen in Studio.
 - ✅ Town phases 3-5: fishing pond, Training Dummy, pet park, hidden relics (docs/TOWN.md). Seen in Studio. Sparring ring, town wall, daily errand rotation, fishing skill check, claim effects. Seen in Studio.
+- ✅ Town rebuilt to the owner's blueprint (walled, six districts, lots SE, dungeon in the wall). Seen in Studio.
+- ✅ Playtest readiness: DataStore-safety checker (fixed a save-breaking key bug), docs/PLAYTEST.md, and a playtest log (📝 Feedback button, server/client errors, visit lengths; owner reads it in-game). Tests green, not seen in Studio.
 
 ### 2026-11-17 to 2026-11-22 (four-hero parties, combat rework, balance)
 - 🔨 Parties of up to 4: every fight has 4 heroes, companions fill empty seats (classes the party lacks), party ultimate from any pair of classes, boss/raid/dungeon fights take the whole team. ✅ Seen: 3 companions on HUD and Party tabs, ghost skill edits, Hero and Skills tabs per teammate.
