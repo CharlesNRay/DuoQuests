@@ -26,6 +26,7 @@ local Stages = require(script.Parent.Stages)
 local Passives = require(script.Parent.Passives)
 local Pets = require(script.Parent.Pets)
 local PetGear = require(script.Parent.PetGear)
+local Runes = require(script.Parent.Runes)
 local Tutorial = require(script.Parent.Tutorial)
 local PetsConfig = require(script.Parent.Config.Pets)
 local Gear = require(script.Parent.Gear)
@@ -154,6 +155,14 @@ function Progression.ApplyClear(profile, stage, rand)
 		Quests.Record(profile, "Gear", 1)
 	end
 
+	-- runes: every frontier boss drops one, other frontier wins sometimes (Config/Runes Drop)
+	local runeStat, runeTier = Runes.RollDrop(stage, isFrontier, Stages.IsBoss(stage), rand or math.random)
+	local runeDrop = nil
+	if runeStat then
+		Runes.Grant(profile, runeStat, runeTier, 1)
+		runeDrop = Runes.Label({ Stat = runeStat, Tier = runeTier })
+	end
+
 	local consumableId = Consumables.RollDrop(Stages.IsBoss(stage), rand or math.random)
 	if consumableId then
 		Consumables.Grant(profile, consumableId, 1)
@@ -194,6 +203,7 @@ function Progression.ApplyClear(profile, stage, rand)
 		ItemSoldFor = itemSoldFor,
 		Consumable = consumableId,
 		PetGearDrop = petGearDrop,
+		Rune = runeDrop,
 		TutorialReward = tutorialReward,
 		PetLevelsGained = petLevelsGained,
 		LevelsGained = levelsGained,

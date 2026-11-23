@@ -5,6 +5,7 @@ local m = {
 	Gear = require("./Gear"), Pets = require("./Pets"), PetConfig = require("./Config/Pets"), SubclassConfig = require("./Config/Subclasses"),
 	Party = require("./Party"), Abilities = require("./Config/Abilities"),
 	PetGear = require("./PetGear"), PetGearConfig = require("./Config/PetGear"), Consumables = require("./Consumables"),
+	Runes = require("./Runes"), RunesConfig = require("./Config/Runes"),
 	Activities = require("./Activities"), Bosses = require("./Bosses"), BossCfg = require("./Config/Bosses"), TableUtil = require("./Util/TableUtil"),
 }
 local ARGS = require("./cfg")
@@ -163,6 +164,19 @@ local function equipGear(profile)
 	for i = #eq.Inventory, 1, -1 do m.Gear.Sell(profile, eq.Inventory[i].Id) end
 end
 
+-- runes (2026-11-22): carve the best runes onto worn pieces that have none or a lower tier
+local function runeCare(profile)
+	for _, item in pairs(profile.Season.Equipment.Equipped) do
+		local list = m.Runes.List(profile)
+		local best = list[1]
+		if not best then return end
+		local have = item.Rune and m.Runes.TierRank(item.Rune.Tier) or 0
+		if m.Runes.TierRank(best.Tier) > have then
+			m.Runes.Carve(profile, item.Id, best.Key, false)
+		end
+	end
+end
+
 -- run fn with every upgrade switched on (the partner hero always plays "full", whatever MODE tests on the main hero)
 local function asFull(fn)
 	local g, s, p, o = doGear, doSkill, doPet, doGold
@@ -191,6 +205,14 @@ local function goldSpend(profile, classId, now)
 				if spent + price > petBudget or not m.PetGear.BuyCrate(profile, "PetCrate", rand) then break end
 				spent += price
 			end
+		end
+		budget = cur.Gold
+	end
+	-- rune pouches at the Blacksmith: up to a tenth of the gold
+	if doGear then
+		local runeBudget, spent = budget * 0.1, 0
+		while spent + m.RunesConfig.Pouch.Gold <= runeBudget and m.Runes.BuyPouch(profile, rand) do
+			spent += m.RunesConfig.Pouch.Gold
 		end
 		budget = cur.Gold
 	end
@@ -283,6 +305,7 @@ local function run(classId, pathId, seedBase, goalLevel)
 		end
 		if doGear then equipGear(profile) end
 		if doGold then goldSpend(profile, classId, clock) end
+		if doGear then runeCare(profile) end
 		spendTickets(profile)
 		spend(profile, classId)
 		petCare(profile)
@@ -295,6 +318,7 @@ local function run(classId, pathId, seedBase, goalLevel)
 				end
 				equipGear(partnerProfile)
 				goldSpend(partnerProfile, partnerClass, clock)
+				runeCare(partnerProfile)
 				spendTickets(partnerProfile)
 				spend(partnerProfile, partnerClass)
 				petCare(partnerProfile)
@@ -362,6 +386,12 @@ local function run(classId, pathId, seedBase, goalLevel)
 		if r == "Legendary" or r == "Epic" then table.insert(rarePets, petId) end
 	end
 	table.sort(rarePets)
+	local worn = {}
+	for _, item in pairs(profile.Season.Equipment.Equipped) do
+		if item.Rune then table.insert(worn, item.Rune.Stat .. "/" .. item.Rune.Tier:sub(1, 1)) end
+	end
+	table.sort(worn)
+	print(("RUNES	%s	%s	worn %d: %s"):format(classId, pathId, #worn, table.concat(worn, " ")))
 	return { Stuck = stuck, Class = classId, Path = pathId .. (if PARTNER == "solo" then "" else "+" .. PARTNER .. (PARTNER_PATH and ("." .. PARTNER_PATH) or "")), Hours = clock / 3600, Level = profile.Season.Level, Frontier = profile.Season.HighestStage, Fights = fights,
 		Durs = durs, LvAtStage = lvAtStage, Stones30 = stonesAt30, First = first, LevelAt = levelAt, Pet = pet, GearScore = gearScore, RarePets = rarePets }
 end

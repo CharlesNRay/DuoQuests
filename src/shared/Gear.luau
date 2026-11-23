@@ -42,6 +42,7 @@ local Config = require(script.Parent.Config.Gear)
 local NumberFormat = require(script.Parent.Util.NumberFormat)
 local StageConfig = require(script.Parent.Config.Stages)
 local Zones = require(script.Parent.Zones)
+local Runes = require(script.Parent.Runes)
 
 local Gear = {}
 
@@ -260,6 +261,10 @@ function Gear.Mods(equipped)
 			local stat, value = Gear.StatOf(item)
 			if stat then
 				table.insert(mods, { Stat = stat, Mode = "Add", Value = value })
+			end
+			local runeMod = Runes.Mod(item.Rune)
+			if runeMod then
+				table.insert(mods, runeMod)
 			end
 		end
 	end
@@ -562,6 +567,7 @@ local function row(item, classId)
 		Id = item.Id, Slot = item.Slot, Rarity = item.Rarity, Name = Gear.Name(item, classId), Power = item.Power, Stat = stat, Value = value,
 		ItemPower = Gear.ItemPower(item), StatText = Gear.FormatStat(stat, value), SellValue = Gear.SellValue(item), SetId = item.SetId, SetName = setName,
 		Roll = item.Roll or 1, Upgrade = item.Upgrade or 0, MaxUpgrade = Config.Upgrade.MaxLevel, UpgradeCost = cost, NextValue = nextValue,
+		Rune = if item.Rune then { Stat = item.Rune.Stat, Tier = item.Rune.Tier, Label = Runes.Label(item.Rune) } else nil,
 	}
 end
 

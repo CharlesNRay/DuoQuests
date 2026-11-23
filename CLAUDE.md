@@ -79,6 +79,14 @@ Git Bash; they find a working Python themselves (`python3`/`python` there are St
   (✦ ➶ ✂ ⚒ ⚖ 🕯 ☀ ⚔ ★) not seen in Studio.
   Combo pips show the layer count from 1 and a finisher pops "COMBO xN!" over the enemy (not seen in Studio).
 
+- **Runes 2026-11-22** (tests green, NOT seen in Studio): `Config/Runes` + `Shared/Runes`. One rune per gear piece (`item.Rune = { Stat, Tier }`),
+  a new one replaces the old; replacing a HIGHER tier returns `ConfirmOverride` until resent with confirm (Bag shows a Replace/Cancel card).
+  11 stats (Attack, Health, Defense, Damage dealt, Damage taken, Crit chance, Crit damage, Crit resist (new sim stat: lowers the
+  chance to BE crit), Haste/cooldowns, Attack speed, Healing), 4 tiers. Uncarved runes live in `Season.Runes["Stat:Tier"]`.
+  Sources: every frontier boss, 3% of frontier wins, a full dungeon clear, Blacksmith rune pouch (25K gold). Handlers `CarveRune`, `BuyRunePouch`.
+  Bag > Gear now lists worn pieces first (W) with Unequip + "Carve rune". Rune glyph on gear cards, rune line in item tooltips.
+  Crits now pop: big orange "CRIT!" number, red body flash, burst + slashes (`Replay.critText/critBurst`); not seen in Studio.
+
 ## Gotchas
 - Studio testing: the HUD 🧪 button opens the "Test cheats" panel (Studio only, `UI/DevScreen` -> `handlers.Dev(action, n)`, `DEV_ACTIONS` in ApiService):
   +1/5/10 levels, +5/10/25 stages (cleared like real wins, party moves there), +50M/500M gold, Sunstones, test items, Epic gear for your stage, all pets at max level,

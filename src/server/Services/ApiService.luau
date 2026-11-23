@@ -57,6 +57,8 @@ local Power = require(Shared.Power)
 local Gear = require(Shared.Gear)
 local Consumables = require(Shared.Consumables)
 local Gifts = require(Shared.Gifts)
+local Runes = require(Shared.Runes)
+local RunesConfig = require(Shared.Config.Runes)
 local Wishing = require(Shared.Wishing)
 local BossService = require(script.Parent.BossService)
 local GuildService = require(script.Parent.GuildService)
@@ -211,6 +213,8 @@ local function buildState(player)
 			Wishstones = season.Currencies.Wishstones or 0,
 			SkillPicks = season.Currencies.SkillPicks,
 			Frontier = season.HighestStage,
+			Runes = Runes.List(profile),
+			RunePouch = RunesConfig.Pouch.Gold,
 			Loadout = table.clone(season.Loadouts[classId]),
 			SlotLevels = SkillProgress.SlotLevelsFor(season, season.Loadouts[classId], classId),
 			PetGear = PetGear.View(profile, os.time()),
@@ -766,6 +770,25 @@ function handlers.LevelSlot(player, profile, slotIndex)
 		afterBuildChange(player)
 	end
 	return ok, reason
+end
+
+-- Runes: carve one onto a gear piece (anywhere, from the Bag); buy a random one at the Blacksmith.
+function handlers.CarveRune(player, profile, itemId, key, confirm)
+	if type(itemId) ~= "string" or type(key) ~= "string" then
+		return false, "BadArgs"
+	end
+	local ok, data = Runes.Carve(profile, itemId, key, confirm == true)
+	if ok then
+		afterBuildChange(player)
+	end
+	return ok, data
+end
+
+function handlers.BuyRunePouch(player, profile)
+	if not nearShop(player, "Blacksmith") then
+		return false, "TooFar"
+	end
+	return Runes.BuyPouch(profile)
 end
 
 function handlers.UpgradeGear(player, profile, itemId)
@@ -1462,7 +1485,7 @@ function ApiService.Init()
 					Wait = waitSeconds,
 					Roster = outcome.Roster,
 					Events = events,
-					Reward = reward and { Gold = reward.Gold, XP = reward.XP, Shards = reward.Shards, Wishstones = reward.Wishstones, Item = reward.Item and Gear.Name(reward.Item, member.Profile and member.Profile.Season.ClassId) or nil, Pets = reward.PetsGained, Tutorial = tutorialText } or nil,
+					Reward = reward and { Gold = reward.Gold, XP = reward.XP, Shards = reward.Shards, Wishstones = reward.Wishstones, Item = reward.Item and Gear.Name(reward.Item, member.Profile and member.Profile.Season.ClassId) or nil, Pets = reward.PetsGained, Tutorial = tutorialText, Rune = reward.Rune } or nil,
 				})
 			end
 		end

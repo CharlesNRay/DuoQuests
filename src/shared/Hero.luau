@@ -58,7 +58,10 @@ function Hero.Sheet(info)
 	end
 	extra("Damage dealt", "DamageDealt", s.DamageDealt, true)
 	extra("Healing", "HealingDealt", s.HealingDealt, true)
-	extra("Damage taken", "DamageTaken", s.DamageTaken, false)
+	extra("Damage taken", "DamageTaken", s.DamageTaken, (s.DamageTaken or 1) < 1) -- less damage taken is good
+	if (s.CritResist or 0) > 0.0005 then
+		table.insert(stats, { Label = "Crit resist", Key = "CritResist", Value = "+" .. pct(s.CritResist), Good = true })
+	end
 
 	local rows = {}
 	for slotName, item in pairs(info.Gear or {}) do

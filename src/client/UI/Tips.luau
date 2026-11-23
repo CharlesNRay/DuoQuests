@@ -106,6 +106,9 @@ function Tips.Item(item, gear)
 	local rarity = if item.SetId then "Set" else item.Rarity
 	local lines = { ("<b>%s</b>"):format(Kit.tint(item.Name, Kit.rarityColor(rarity))), dim(("%s  -  %s  -  from stage %d"):format(item.Slot, if item.SetId then "Set piece" else item.Rarity, item.Power)), Kit.tint(("IP %s"):format(Short(item.ItemPower or 0)), C.Accent) .. dim(("   Roll %d%%"):format(math.floor((item.Roll or 1) * 100 + 0.5))) }
 	table.insert(lines, item.StatText or Gear.FormatStat(item.Stat, item.Value))
+	if item.Rune then
+		table.insert(lines, Kit.tint("Rune: " .. item.Rune.Label, Kit.rarityColor(item.Rune.Tier)))
+	end
 	if cmp.Verdict == "Worn" then
 		table.insert(lines, dim("Currently worn"))
 	else

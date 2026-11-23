@@ -511,6 +511,9 @@ function Hud.new(root)
 			if info.Reward.Item then
 				text ..= "  +" .. info.Reward.Item
 			end
+			if info.Reward.Rune then
+				text ..= "  +Rune " .. info.Reward.Rune
+			end
 			if info.Reward.Pets and #info.Reward.Pets > 0 then
 				text ..= "  NEW PET!"
 			end

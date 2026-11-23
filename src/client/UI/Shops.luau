@@ -149,6 +149,7 @@ end
 -- Blacksmith ---------------------------------------------------------------
 local SLOT_ORDER = Gear.WornSlots
 
+local lastPouch = nil -- what the last rune pouch gave, shown on the pouch row
 function Shops.Blacksmith(container, state, call)
 	local gear = state.Player.Gear
 	local scroll = list(container, 26)
@@ -178,6 +179,24 @@ function Shops.Blacksmith(container, state, call)
 		else
 			Kit.label({ Size = UDim2.fromOffset(112, 40), Position = UDim2.new(1, -118, 0.5, -20), Text = "Maxed", TextColor3 = C.Good, TextXAlignment = Enum.TextXAlignment.Center, Parent = r })
 		end
+	end
+
+	-- rune pouch: one random rune to carve onto gear (Bag > Gear > Carve rune)
+	do
+		local price = state.Player.RunePouch or 0
+		local r = row(scroll, 52)
+		Kit.label({ Size = UDim2.fromOffset(40, 52), Position = UDim2.fromOffset(8, 0), Text = "🔮", TextSize = 26, TextXAlignment = Enum.TextXAlignment.Center, Parent = r })
+		Kit.label({ Size = UDim2.new(1, -180, 1, 0), Position = UDim2.fromOffset(54, 0), RichText = true, TextSize = 12, Text = "<b>Rune pouch</b>  one random rune (80% Common, 18% Rare, 2% Epic)\n" .. (lastPouch or "Carve runes onto gear from Bag > Gear. Bosses and dungeons drop them too."), Parent = r })
+		local can = gold(state) >= price
+		local b = Kit.button({ Size = UDim2.fromOffset(112, 40), Position = UDim2.new(1, -118, 0.5, -20), Text = "Buy\n" .. Short(price) .. "g", BackgroundColor3 = if can then C.Accent else C.Panel, TextColor3 = if can then C.Bg else C.Dim, Parent = r }, function()
+			if can then
+				local ok, got = call("BuyRunePouch")
+				if ok and got then
+					lastPouch = "You got: " .. tostring(got.Label)
+				end
+			end
+		end)
+		b.Active = can
 	end
 
 	local any = false

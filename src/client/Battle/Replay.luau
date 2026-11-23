@@ -80,6 +80,85 @@ local function floatText(scene, pos, text, color, size)
 	Debris:AddItem(anchor, 1)
 end
 
+-- A critical hit: a big number that pops in (overshoot, then settles) with a small "CRIT!" tag over it,
+-- a red-white burst and two crossing slash streaks at the target.
+local CRIT_COLOR = Color3.fromRGB(255, 170, 40)
+local CRIT_STROKE = Color3.fromRGB(150, 0, 0)
+local function critText(scene, pos, amountText)
+	local anchor = Instance.new("Part")
+	anchor.Anchored, anchor.CanCollide, anchor.CanQuery, anchor.CanTouch = true, false, false, false
+	anchor.Transparency = 1
+	anchor.Size = Vector3.new(0.2, 0.2, 0.2)
+	anchor.Position = pos
+	anchor.Parent = scene.Folder
+	local gui = Instance.new("BillboardGui")
+	gui.Size = UDim2.fromOffset(200, 64)
+	gui.AlwaysOnTop = true
+	gui.Adornee = anchor
+	gui.Parent = anchor
+	local tag = Instance.new("TextLabel")
+	tag.Size = UDim2.new(1, 0, 0, 18)
+	tag.BackgroundTransparency = 1
+	tag.Text = "CRIT!"
+	tag.TextColor3 = Color3.fromRGB(255, 80, 60)
+	tag.TextStrokeColor3 = Color3.new(0, 0, 0)
+	tag.TextStrokeTransparency = 0.2
+	tag.Font = Enum.Font.GothamBlack
+	tag.TextSize = 16
+	tag.Parent = gui
+	local label = Instance.new("TextLabel")
+	label.Size = UDim2.new(1, 0, 1, -16)
+	label.Position = UDim2.fromOffset(0, 16)
+	label.BackgroundTransparency = 1
+	label.Text = amountText
+	label.TextColor3 = CRIT_COLOR
+	label.TextStrokeColor3 = CRIT_STROKE
+	label.TextStrokeTransparency = 0
+	label.Font = Enum.Font.GothamBlack
+	label.TextSize = 18
+	label.Parent = gui
+	-- pop: small -> big -> settle, then float up and fade
+	TweenService:Create(label, TweenInfo.new(0.12, Enum.EasingStyle.Back, Enum.EasingDirection.Out), { TextSize = 44 }):Play()
+	task.delay(0.12, function()
+		if label.Parent then
+			TweenService:Create(label, TweenInfo.new(0.18), { TextSize = 36 }):Play()
+		end
+	end)
+	task.delay(0.45, function()
+		if label.Parent then
+			TweenService:Create(anchor, TweenInfo.new(0.8, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { Position = pos + Vector3.new(0, 3, 0) }):Play()
+			TweenService:Create(label, TweenInfo.new(0.8), { TextTransparency = 1, TextStrokeTransparency = 1 }):Play()
+			TweenService:Create(tag, TweenInfo.new(0.8), { TextTransparency = 1, TextStrokeTransparency = 1 }):Play()
+		end
+	end)
+	Debris:AddItem(anchor, 1.4)
+end
+
+local function critBurst(scene, pos)
+	local orb = Instance.new("Part")
+	orb.Shape = Enum.PartType.Ball
+	orb.Anchored, orb.CanCollide, orb.CanQuery, orb.CanTouch = true, false, false, false
+	orb.Material = Enum.Material.Neon
+	orb.Color = Color3.fromRGB(255, 60, 40)
+	orb.Transparency = 0.15
+	orb.Size = Vector3.new(0.6, 0.6, 0.6)
+	orb.Position = pos
+	orb.Parent = scene.Folder
+	TweenService:Create(orb, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { Size = Vector3.new(5, 5, 5), Transparency = 1, Color = Color3.fromRGB(255, 230, 200) }):Play()
+	Debris:AddItem(orb, 0.35)
+	for _, angle in ipairs({ 45, -45 }) do
+		local slash = Instance.new("Part")
+		slash.Anchored, slash.CanCollide, slash.CanQuery, slash.CanTouch = true, false, false, false
+		slash.Material = Enum.Material.Neon
+		slash.Color = Color3.fromRGB(255, 245, 235)
+		slash.Size = Vector3.new(0.25, 4.5, 0.25)
+		slash.CFrame = CFrame.new(pos) * CFrame.Angles(0, 0, math.rad(angle))
+		slash.Parent = scene.Folder
+		TweenService:Create(slash, TweenInfo.new(0.25), { Size = Vector3.new(0.05, 6, 0.05), Transparency = 1, Color = Color3.fromRGB(255, 50, 30) }):Play()
+		Debris:AddItem(slash, 0.3)
+	end
+end
+
 local function flash(scene, pos, color, size)
 	local orb = Instance.new("Part")
 	orb.Shape = Enum.PartType.Ball
@@ -398,8 +477,14 @@ function Replay:_event(e)
 		target:Flinch()
 		target:Absorb(e.Absorbed)
 		target:SetHealth(e.TargetHealth or target.Health)
-		local text = NumberFormat.Short(e.Amount or 0) .. (if e.Crit then "!" else "")
-		floatText(scene, target:Pos() + Vector3.new(0, 1.5, 0), text, if e.Crit then Color3.fromRGB(255, 210, 60) else Color3.new(1, 1, 1), if e.Crit then 28 else 22)
+		if e.Crit then
+			-- crits stand out: the body flashes red, a burst and slashes at the hit, a big popping number
+			target:Tint(Color3.fromRGB(255, 40, 30), 0.7, 0.35)
+			critBurst(scene, target:Pos())
+			critText(scene, target:Pos() + Vector3.new(0, 2, 0), NumberFormat.Short(e.Amount or 0))
+		else
+			floatText(scene, target:Pos() + Vector3.new(0, 1.5, 0), NumberFormat.Short(e.Amount or 0), Color3.new(1, 1, 1), 22)
+		end
 	elseif t == "Heal" then
 		local target = actorFor(self, e.Target)
 		if target then

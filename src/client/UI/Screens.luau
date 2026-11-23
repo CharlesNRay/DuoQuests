@@ -11,6 +11,11 @@ local NumberFormat = require(Shared.Util.NumberFormat)
 local PassiveCfg = require(Shared.Config.Passives)
 local UltCfg = require(Shared.Config.Ultimates)
 local ClassCfg = require(Shared.Config.Classes)
+local RuneCfg = require(Shared.Config.Runes)
+local RuneRank = {}
+for index, tier in ipairs(RuneCfg.Tiers) do
+	RuneRank[tier] = index
+end
 local AbilityStats = require(Shared.Combat.AbilityStats)
 local Passives = require(Shared.Passives)
 local Skills = require(Shared.Skills)
@@ -349,55 +354,140 @@ function Screens.Bag(container, state, call, extra)
 	end
 	-- header: count, Equip best
 	local count = Kit.label({ Size = UDim2.new(1, -404, 0, 30), Position = UDim2.fromOffset(184, 0), TextWrapped = false, TextScaled = false, Text = ("Bag %d/%d"):format(#gear.Inventory, gear.Cap), TextColor3 = C.Dim, TextSize = 12, TextXAlignment = Enum.TextXAlignment.Center, Parent = container })
-	Kit.Hover(count, function() return "Strongest first. ▲ = better than what you wear. Sell spare gear at the Merchant." end)
+	Kit.Hover(count, function() return "Worn pieces first (W), then the bag, strongest first. ▲ = better than what you wear. Sell spare gear at the Merchant." end)
 	Kit.button({ Name = "EquipBest", Size = UDim2.fromOffset(110, 30), Position = UDim2.new(1, -110, 0, 0), Text = "Equip best", BackgroundColor3 = C.Good, TextColor3 = C.Bg, Parent = container }, function()
 		call("EquipBestGear")
 	end)
-	if #gear.Inventory == 0 then
+	-- worn pieces first, then the bag
+	local entries = {}
+	for _, slotName in ipairs(WORN_ORDER) do
+		local item = gear.Equipped[slotName]
+		if item then
+			table.insert(entries, { Item = item, Worn = slotName })
+		end
+	end
+	for _, item in ipairs(gear.Inventory) do
+		table.insert(entries, { Item = item })
+	end
+	if #entries == 0 then
 		Kit.label({ Size = UDim2.new(1, 0, 0, 30), Position = UDim2.fromOffset(0, 40), Text = "Empty. Win fights to find gear.", TextColor3 = C.Dim, Parent = container })
 		return
 	end
-	local selected = nil
-	for _, item in ipairs(gear.Inventory) do
-		if item.Id == extra.BagSel then
-			selected = item
+	local chosen = nil
+	for _, entry in ipairs(entries) do
+		if entry.Item.Id == extra.BagSel then
+			chosen = entry
 		end
 	end
-	selected = selected or gear.Inventory[1]
+	chosen = chosen or entries[1]
+	if extra.BagRunePick ~= chosen.Item.Id then
+		extra.BagRunePick, extra.BagRuneConfirm = nil, nil
+	end
 
 	-- card grid on the left
 	local grid = Kit.new("ScrollingFrame", { Size = UDim2.new(0.56, -8, 1, -38), Position = UDim2.fromOffset(0, 36), BackgroundTransparency = 1, BorderSizePixel = 0, CanvasSize = UDim2.new(), AutomaticCanvasSize = Enum.AutomaticSize.Y, ScrollBarThickness = 4, Parent = container })
 	Kit.new("UIGridLayout", { CellSize = UDim2.fromOffset(62, 74), CellPadding = UDim2.fromOffset(6, 6), SortOrder = Enum.SortOrder.LayoutOrder, Parent = grid })
 	Kit.new("UIPadding", { PaddingTop = UDim.new(0, 3), PaddingLeft = UDim.new(0, 3), Parent = grid })
-	for index, item in ipairs(gear.Inventory) do
-		local cmp = Tips.Compare(item, gear)
-		local isSel = item.Id == selected.Id
+	for index, entry in ipairs(entries) do
+		local item = entry.Item
+		local cmp = if entry.Worn then { Verdict = "Worn" } else Tips.Compare(item, gear)
+		local isSel = item.Id == chosen.Item.Id
 		local color = Kit.rarityColor(if item.SetId then "Set" else item.Rarity)
-		local card = Kit.button({ LayoutOrder = index, Text = "", BackgroundColor3 = if isSel then C.Panel else C.PanelLight, Parent = grid }, function()
+		local card = Kit.button({ LayoutOrder = index, Text = "", BackgroundColor3 = if isSel then C.Panel elseif entry.Worn then Color3.fromRGB(40, 46, 70) else C.PanelLight, Parent = grid }, function()
 			extra.BagSel = item.Id
 			Screens.Bag(container, state, call, extra)
 		end)
 		Kit.new("UIStroke", { Color = if isSel then C.Accent else color, Thickness = if isSel then 3 else 1.5, ApplyStrokeMode = Enum.ApplyStrokeMode.Border, Parent = card })
 		Icons.Item(card, item, { Size = UDim2.fromOffset(40, 40), Position = UDim2.new(0.5, -20, 0, 6) })
 		Kit.label({ Size = UDim2.new(1, -4, 0, 14), Position = UDim2.fromOffset(2, 52), Text = Short(item.ItemPower or 0) .. (if (item.Upgrade or 0) > 0 then (" +" .. item.Upgrade) else ""), TextSize = 11, Font = Enum.Font.GothamBold, TextXAlignment = Enum.TextXAlignment.Center, TextColor3 = color, Parent = card })
-		if cmp.Verdict == "Up" then
+		if entry.Worn then
+			Kit.label({ Size = UDim2.fromOffset(16, 14), Position = UDim2.fromOffset(3, 2), Text = "W", TextSize = 10, Font = Enum.Font.GothamBold, TextColor3 = C.Accent, ZIndex = 3, Parent = card })
+		elseif cmp.Verdict == "Up" then
 			Kit.label({ Size = UDim2.fromOffset(16, 14), Position = UDim2.fromOffset(3, 2), Text = "▲", TextSize = 12, TextColor3 = C.Good, ZIndex = 3, Parent = card })
 		elseif cmp.Verdict == "Down" then
 			Kit.label({ Size = UDim2.fromOffset(16, 14), Position = UDim2.fromOffset(3, 2), Text = "▼", TextSize = 11, TextColor3 = C.Bad, ZIndex = 3, Parent = card })
 		end
+		if item.Rune then
+			local glyph = (RuneCfg.Stats[item.Rune.Stat] or {}).Glyph or "?"
+			Kit.label({ Size = UDim2.fromOffset(18, 16), Position = UDim2.new(1, -20, 0, 2), Text = glyph, TextSize = 11, TextXAlignment = Enum.TextXAlignment.Center, ZIndex = 3, Parent = card })
+		end
 	end
 
-	-- detail pane on the right: the full tooltip text plus Equip
+	-- detail pane on the right
 	local detail = Kit.frame({ Size = UDim2.new(0.44, -4, 1, -38), Position = UDim2.new(0.56, 0, 0, 36), BackgroundColor3 = C.Panel, Parent = container })
-	local item = selected
+	local item = chosen.Item
 	Icons.Item(detail, item, { Size = UDim2.fromOffset(48, 48), Position = UDim2.fromOffset(10, 10) })
+	local runes = state.Player.Runes or {}
+	local function redraw()
+		Screens.Bag(container, extra.State or state, call, extra)
+	end
 	local info = Kit.new("ScrollingFrame", { Size = UDim2.new(1, -76, 1, -54), Position = UDim2.fromOffset(66, 8), BackgroundTransparency = 1, BorderSizePixel = 0, CanvasSize = UDim2.new(), AutomaticCanvasSize = Enum.AutomaticSize.Y, ScrollBarThickness = 3, Parent = detail })
-	Kit.label({ Size = UDim2.new(1, -6, 0, 0), AutomaticSize = Enum.AutomaticSize.Y, RichText = true, Text = Tips.Item(item, gear), TextSize = 12, TextYAlignment = Enum.TextYAlignment.Top, Parent = info })
-	local cmp = Tips.Compare(item, gear)
-	local better = cmp.Verdict == "Up"
-	Kit.button({ Size = UDim2.new(1, -20, 0, 30), Position = UDim2.new(0, 10, 1, -38), Text = if better then "Equip  ▲" else "Equip", TextSize = 13, BackgroundColor3 = if better then C.Accent else C.PanelLight, TextColor3 = if better then Color3.fromRGB(30, 24, 10) else C.Text, Parent = detail }, function()
-		extra.BagSel = nil
-		call("EquipGear", item.Id)
+	Kit.new("UIListLayout", { Padding = UDim.new(0, 4), SortOrder = Enum.SortOrder.LayoutOrder, Parent = info })
+
+	if extra.BagRunePick == item.Id then
+		-- rune picker: every rune you own; a rune on this piece of a higher tier asks first
+		local confirmKey = extra.BagRuneConfirm
+		if confirmKey then
+			local newRow
+			for _, r in ipairs(runes) do
+				if r.Key == confirmKey then
+					newRow = r
+				end
+			end
+			Kit.label({ Size = UDim2.new(1, -6, 0, 0), AutomaticSize = Enum.AutomaticSize.Y, LayoutOrder = 1, RichText = true, TextSize = 12, TextYAlignment = Enum.TextYAlignment.Top, Text = ("%s\n%s\n\nwill be replaced by\n%s\n\nThe old rune is lost."):format(Kit.tint("Replace a higher-tier rune?", C.Bad), Kit.tint(item.Rune and item.Rune.Label or "?", Kit.rarityColor(item.Rune and item.Rune.Tier or "Common")), Kit.tint(newRow and newRow.Label or "?", Kit.rarityColor(newRow and newRow.Tier or "Common"))), Parent = info })
+			Kit.button({ Size = UDim2.new(0.5, -14, 0, 30), Position = UDim2.new(0, 10, 1, -38), Text = "Replace", TextSize = 13, BackgroundColor3 = C.Bad, Parent = detail }, function()
+				extra.BagRuneConfirm, extra.BagRunePick = nil, nil
+				call("CarveRune", item.Id, confirmKey, true)
+			end)
+			Kit.button({ Size = UDim2.new(0.5, -14, 0, 30), Position = UDim2.new(0.5, 4, 1, -38), Text = "Cancel", TextSize = 13, BackgroundColor3 = C.PanelLight, Parent = detail }, function()
+				extra.BagRuneConfirm = nil
+				redraw()
+			end)
+			return
+		end
+		Kit.label({ Size = UDim2.new(1, -6, 0, 16), LayoutOrder = 0, Text = if item.Rune then ("Now: " .. item.Rune.Label) else "No rune on this piece yet.", TextSize = 11, TextColor3 = C.Dim, TextWrapped = true, Parent = info })
+		if #runes == 0 then
+			Kit.label({ Size = UDim2.new(1, -6, 0, 40), LayoutOrder = 1, Text = "You have no runes. Bosses and dungeons drop them; the Blacksmith sells rune pouches.", TextSize = 11, TextColor3 = C.Dim, Parent = info })
+		end
+		for index, r in ipairs(runes) do
+			local b = Kit.button({ Size = UDim2.new(1, -6, 0, 30), LayoutOrder = index + 1, RichText = true, Text = ("%s %s  x%d"):format(r.Glyph or "", Kit.tint(r.Label, Kit.rarityColor(r.Tier)), r.Count), TextSize = 11, TextXAlignment = Enum.TextXAlignment.Left, BackgroundColor3 = C.PanelLight, Parent = info }, function()
+				local oldRank = item.Rune and RuneRank[item.Rune.Tier] or 0
+				if oldRank > (RuneRank[r.Tier] or 0) then
+					extra.BagRuneConfirm = r.Key
+					redraw()
+				else
+					extra.BagRunePick = nil
+					call("CarveRune", item.Id, r.Key, false)
+				end
+			end)
+			Kit.new("UIPadding", { PaddingLeft = UDim.new(0, 8), Parent = b })
+		end
+		Kit.button({ Size = UDim2.new(1, -20, 0, 30), Position = UDim2.new(0, 10, 1, -38), Text = "Back", TextSize = 13, BackgroundColor3 = C.PanelLight, Parent = detail }, function()
+			extra.BagRunePick = nil
+			redraw()
+		end)
+		return
+	end
+
+	Kit.label({ Size = UDim2.new(1, -6, 0, 0), AutomaticSize = Enum.AutomaticSize.Y, LayoutOrder = 1, RichText = true, Text = Tips.Item(item, gear), TextSize = 12, TextYAlignment = Enum.TextYAlignment.Top, Parent = info })
+	-- bottom row: Equip / Unequip and Carve rune
+	if chosen.Worn then
+		Kit.button({ Size = UDim2.new(0.5, -14, 0, 30), Position = UDim2.new(0, 10, 1, -38), Text = "Unequip", TextSize = 13, BackgroundColor3 = C.PanelLight, Parent = detail }, function()
+			call("UnequipGear", chosen.Worn)
+		end)
+	else
+		local better = Tips.Compare(item, gear).Verdict == "Up"
+		Kit.button({ Size = UDim2.new(0.5, -14, 0, 30), Position = UDim2.new(0, 10, 1, -38), Text = if better then "Equip  ▲" else "Equip", TextSize = 13, BackgroundColor3 = if better then C.Accent else C.PanelLight, TextColor3 = if better then Color3.fromRGB(30, 24, 10) else C.Text, Parent = detail }, function()
+			call("EquipGear", item.Id)
+		end)
+	end
+	local owned = 0
+	for _, r in ipairs(runes) do
+		owned += r.Count
+	end
+	Kit.button({ Size = UDim2.new(0.5, -14, 0, 30), Position = UDim2.new(0.5, 4, 1, -38), Text = ("🔮 Carve rune (%d)"):format(owned), TextSize = 12, BackgroundColor3 = if owned > 0 then Color3.fromRGB(120, 80, 200) else C.PanelLight, TextColor3 = if owned > 0 then C.Text else C.Dim, Parent = detail }, function()
+		extra.BagRunePick = item.Id
+		redraw()
 	end)
 end
 

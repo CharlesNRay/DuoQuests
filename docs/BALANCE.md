@@ -212,3 +212,12 @@ below target). Cause: the Warrior is still the party's tank, and the Berserker m
 on top of its attack bonus, so the front line fell and the extra attack did not make up for it.
 Change: Berserker DamageDealt -0.313 -> -0.15, MaxHealth -0.240 -> -0.12.
 Result (3 seeds): fr 42-61 (median 57) at L40 in 8.3-10.3h, L30 in 4.6-5.5h: mid-pack.
+
+## Runes (2026-11-22)
+Per-piece values are small (Config/Runes) because 8 worn pieces stack. The bot buys rune pouches with up to 10% of its gold
+and carves its best rune onto worn pieces with none or a lower tier (`runeCare`; prints a `RUNES` line).
+Roster with runes (companion, full, 2 paths x 2 seeds, frontier at L40): Mage 51-68, Cleric 42-61, Ranger 40-55, Rogue 40-57,
+Summoner 55-62, Warrior Berserker 40-49 / Guardian 56-79 - inside the noise of the run without runes, all in the 40-90 target.
+At L40 the bot wears only 1-3 runes: they are lost whenever a piece is replaced (gear changes often while levelling) and drops
+are a boss per 10 stages + 3% of frontier wins + dungeons + pouches. Runes are a mild boost now; the dials if they should matter
+more: drop rate, pouch price, or letting a rune move to the piece that replaces it.

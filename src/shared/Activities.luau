@@ -27,6 +27,8 @@ local Stages = require(script.Parent.Stages)
 local Bosses = require(script.Parent.Bosses)
 local Quests = require(script.Parent.Quests)
 local Progression = require(script.Parent.Progression)
+local Runes = require(script.Parent.Runes)
+local RunesConfig = require(script.Parent.Config.Runes)
 
 local Activities = {}
 
@@ -200,6 +202,11 @@ function Activities.RunDungeon(profile, members, id, seed, now, record)
 	if cleared > 0 then
 		lines = Bosses.GrantRewards(profile, chestFor(dungeon.Stage, cleared, full), dungeon.Stage)
 		Quests.Record(profile, "Strike", 1, now)
+	end
+	if full then -- a full clear also drops one rune, rolled as if the stage were further on
+		local runeStat, runeTier = Runes.Roll(dungeon.Stage + RunesConfig.DungeonStageBonus, math.random)
+		Runes.Grant(profile, runeStat, runeTier, 1)
+		table.insert(lines, "Rune: " .. Runes.Label({ Stat = runeStat, Tier = runeTier }))
 	end
 	local daily = false
 	if full and not row(profile).Daily[dungeon.Id] then

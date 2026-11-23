@@ -769,7 +769,7 @@ function Simulation:DealDamage(source, target, amount, info)
 
 	-- One roll per damage instance keeps the random sequence predictable.
 	local roll = self.Rng()
-	if roll < self:GetStat(source, "CritChance") then
+	if roll < self:GetStat(source, "CritChance") - self:GetStat(target, "CritResist") then -- CritResist (runes) lowers the chance to be crit
 		ctx.IsCrit = true
 		ctx.Amount *= self:GetStat(source, "CritMultiplier")
 	end
