@@ -384,6 +384,17 @@ local function findInBag(equipment, itemId)
 	return nil
 end
 
+-- A rune moves with the slot: the piece that replaces a worn one takes its rune, unless the new piece already has
+-- an equal or better rune (then the old piece keeps its own).
+local function moveRune(from, to)
+	if from and to and from ~= to and from.Rune then
+		if not to.Rune or Runes.TierRank(to.Rune.Tier) < Runes.TierRank(from.Rune.Tier) then
+			to.Rune, from.Rune = from.Rune, nil
+		end
+	end
+end
+Gear.MoveRune = moveRune
+
 function Gear.Equip(profile, itemId, wornSlot)
 	local equipment = bag(profile)
 	local index, item = findInBag(equipment, itemId)
@@ -421,6 +432,7 @@ function Gear.Equip(profile, itemId, wornSlot)
 	table.remove(equipment.Inventory, index)
 	equipment.Equipped[target] = item
 	if previous then
+		moveRune(previous, item)
 		table.insert(equipment.Inventory, previous)
 	end
 	return true
@@ -512,6 +524,11 @@ function Gear.EquipBest(profile)
 	for _, slotName in ipairs(Config.SlotOrder) do
 		if newEquipped[slotName] ~= oldSlot[slotName] then
 			changed += 1
+			-- the piece taken off hands its rune to the one that took its place
+			local old = oldSlot[slotName]
+			if old and not used[old.Id] then
+				moveRune(old, newEquipped[slotName])
+			end
 		end
 	end
 	equipment.Equipped = newEquipped

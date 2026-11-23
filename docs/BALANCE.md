@@ -221,3 +221,8 @@ Summoner 55-62, Warrior Berserker 40-49 / Guardian 56-79 - inside the noise of t
 At L40 the bot wears only 1-3 runes: they are lost whenever a piece is replaced (gear changes often while levelling) and drops
 are a boss per 10 stages + 3% of frontier wins + dungeons + pouches. Runes are a mild boost now; the dials if they should matter
 more: drop rate, pouch price, or letting a rune move to the piece that replaces it.
+Rune moves with the slot (2026-11-22): equipping a replacement (Equip or Equip best) moves the old piece's rune onto the new
+one unless the new piece already has an equal or better rune. Now the bot wears 3-8 runes at L40 (was 1-3). Roster
+(companion, full, 2 paths x 2 seeds, frontier at L40 / hours): Mage 51-67, Cleric 42-61, Ranger 50-81, Rogue 42-61,
+Summoner 45-68, Warrior Berserker 65-66 (6.4-7.6h) / Guardian 48-63. All inside the 40-90 target. Watch Berserker: both
+seeds were fast (L40 in 6.4-7.6h vs 8.3-10.3h before runes); run SEEDS=3+ before trimming it.

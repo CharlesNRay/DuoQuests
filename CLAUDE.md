@@ -81,6 +81,7 @@ Git Bash; they find a working Python themselves (`python3`/`python` there are St
 
 - **Runes 2026-11-22** (tests green, NOT seen in Studio): `Config/Runes` + `Shared/Runes`. One rune per gear piece (`item.Rune = { Stat, Tier }`),
   a new one replaces the old; replacing a HIGHER tier returns `ConfirmOverride` until resent with confirm (Bag shows a Replace/Cancel card).
+  Equipping a replacement moves the old piece's rune onto it (`Gear.MoveRune`), unless the new piece has an equal or better rune.
   11 stats (Attack, Health, Defense, Damage dealt, Damage taken, Crit chance, Crit damage, Crit resist (new sim stat: lowers the
   chance to BE crit), Haste/cooldowns, Attack speed, Healing), 4 tiers. Uncarved runes live in `Season.Runes["Stat:Tier"]`.
   Sources: every frontier boss, 3% of frontier wins, a full dungeon clear, Blacksmith rune pouch (25K gold). Handlers `CarveRune`, `BuyRunePouch`.

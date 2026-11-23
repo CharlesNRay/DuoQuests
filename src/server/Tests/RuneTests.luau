@@ -64,6 +64,23 @@ return function(modulesOverride)
 	local row = Gear.Row(item)
 	check("The item row carries the rune label", row.Rune ~= nil and row.Rune.Tier == "Epic" and type(row.Rune.Label) == "string")
 
+	-- the rune moves to the piece that replaces a worn one
+	local r = m.ProfileTemplate.New()
+	local oldRing = Gear.Grant(r, 10, { Slot = "Helmet", Rarity = "Common", Roll = 1 })
+	Gear.Equip(r, oldRing.Id)
+	Runes.Grant(r, "Attack", "Rare", 1)
+	Runes.Carve(r, oldRing.Id, "Attack:Rare", false)
+	local newRing = Gear.Grant(r, 40, { Slot = "Helmet", Rarity = "Epic", Roll = 1 })
+	Gear.Equip(r, newRing.Id)
+	check("Equipping a replacement moves the rune onto it", newRing.Rune and newRing.Rune.Stat == "Attack" and oldRing.Rune == nil)
+	local better = Gear.Grant(r, 60, { Slot = "Helmet", Rarity = "Epic", Roll = 1 })
+	better.Rune = { Stat = "Defense", Tier = "Legendary" }
+	Gear.EquipBest(r)
+	check("Equip best keeps the new piece's better rune", r.Season.Equipment.Equipped.Helmet == better and better.Rune.Tier == "Legendary" and newRing.Rune and newRing.Rune.Stat == "Attack")
+	local plain = Gear.Grant(r, 90, { Slot = "Helmet", Rarity = "Epic", Roll = 1 })
+	Gear.EquipBest(r)
+	check("Equip best moves the rune to a plain upgrade", r.Season.Equipment.Equipped.Helmet == plain and plain.Rune and plain.Rune.Tier == "Legendary" and better.Rune == nil)
+
 	-- drops
 	local seq = { 0.0, 0.5, 0.5 }
 	local i = 0
