@@ -88,6 +88,10 @@ Git Bash; they find a working Python themselves (`python3`/`python` there are St
   Bag > Gear now lists worn pieces first (W) with Unequip + "Carve rune". Rune glyph on gear cards, rune line in item tooltips.
   Crits now pop: big orange "CRIT!" number, red body flash, burst + slashes (`Replay.critText/critBurst`); not seen in Studio.
 
+- **Gear bad-luck protection 2026-11-22** (tests green, NOT seen in Studio): `Config/Gear.Pity`, `Gear.PityDrop`/`Gear.IsUpgrade`,
+  `Season.GearDry` counter in `Progression.ApplyClear`; catch-up only (par item when the weakest piece is below 85% of par after 10 dry wins).
+  It did not narrow the roster spread: that comes from the stage 40 boss wall (BALANCE.md "Gear bad-luck protection").
+
 ## Gotchas
 - Studio testing: the HUD 🧪 button opens the "Test cheats" panel (Studio only, `UI/DevScreen` -> `handlers.Dev(action, n)`, `DEV_ACTIONS` in ApiService):
   +1/5/10 levels, +5/10/25 stages (cleared like real wins, party moves there), +50M/500M gold, Sunstones, test items, Epic gear for your stage, all pets at max level,

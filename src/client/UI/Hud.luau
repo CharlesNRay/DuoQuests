@@ -510,6 +510,9 @@ function Hud.new(root)
 			end
 			if info.Reward.Item then
 				text ..= "  +" .. info.Reward.Item
+				if info.Reward.Lucky then
+					text ..= " (lucky find)"
+				end
 			end
 			if info.Reward.Rune then
 				text ..= "  +Rune " .. info.Reward.Rune

@@ -361,12 +361,46 @@ function Gear.RollDrop(stage, isFrontier, itemRarityBonus, rand)
 	return { Slot = slotFor(), Rarity = rarity, Roll = Config.Roll.Min + rand() * (Config.Roll.Max - Config.Roll.Min) }
 end
 
+-- Would this item beat what is worn where it would go (or fill an empty slot)?
+function Gear.IsUpgrade(equipped, item)
+	local replaced = Gear.Replaced(equipped, item.Slot)
+	if replaced == nil then
+		return true
+	end
+	return select(2, Gear.StatOf(item)) > select(2, Gear.StatOf(replaced))
+end
+
+-- Bad-luck protection (Config.Pity): a "par" item (this stage, its most common rarity, roll 1) for the
+-- weakest worn slot, or nil when every slot is already at BelowPar of par or better (catch-up only).
+function Gear.PityDrop(equipped, stage)
+	local weights = Gear.RarityWeights(stage)
+	local rarity, best = Config.Drop.Order[1], -1
+	for _, id in ipairs(Config.Drop.Order) do
+		if (weights[id] or 0) > best then
+			rarity, best = id, weights[id] or 0
+		end
+	end
+	local slot, lowest = nil, Config.Pity.BelowPar
+	for _, itemType in ipairs(Config.Types) do
+		local par = select(2, Gear.StatOf({ Slot = itemType, Rarity = rarity, Power = stage, Roll = 1 }))
+		local worn = Gear.Replaced(equipped, itemType)
+		local ratio = if worn then select(2, Gear.StatOf(worn)) / math.max(par, 1e-9) else 0
+		if ratio < lowest then
+			slot, lowest = itemType, ratio
+		end
+	end
+	if slot == nil then
+		return nil
+	end
+	return { Slot = slot, Rarity = rarity, Roll = 1, Keep = true }
+end
+
 -- Put a drop into the bag (or sell it if the bag is full).
 function Gear.Grant(profile, stage, drop)
 	local equipment = bag(profile)
 	equipment.NextId = (equipment.NextId or 0) + 1
 	local item = { Id = "g" .. equipment.NextId, Slot = drop.Slot, Rarity = drop.Rarity, Power = stage, SetId = drop.SetId, Roll = drop.Roll }
-	if #equipment.Inventory >= Gear.Cap(profile) then
+	if #equipment.Inventory >= Gear.Cap(profile) and not drop.Keep then -- a lucky find is never auto-sold
 		local gold = Gear.SellValue(item)
 		profile.Season.Currencies.Gold += gold
 		return item, gold

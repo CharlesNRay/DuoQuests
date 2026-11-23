@@ -226,3 +226,15 @@ one unless the new piece already has an equal or better rune. Now the bot wears 
 (companion, full, 2 paths x 2 seeds, frontier at L40 / hours): Mage 51-67, Cleric 42-61, Ranger 50-81, Rogue 42-61,
 Summoner 45-68, Warrior Berserker 65-66 (6.4-7.6h) / Guardian 48-63. All inside the 40-90 target. Watch Berserker: both
 seeds were fast (L40 in 6.4-7.6h vs 8.3-10.3h before runes); run SEEDS=3+ before trimming it.
+
+## Gear bad-luck protection and what really spreads the roster (2026-11-22)
+- `Config/Gear.Pity` (catch-up only): after 10 won fights (replays count) with no gear upgrade, if the weakest worn
+  piece is below 85% of a "par" item (best cleared stage, that stage's most common rarity, roll 1), the next win drops
+  that par item for that slot ("lucky find" in the fight toast; never auto-sold). Gear at par never triggers it.
+- A first version always gave an upgrade (and stepped rarity up to beat strong gear): every class got far stronger
+  (mean stage at L40 55 -> 81, L40 in ~6h instead of ~9h, one run reached stage 180). Dropped.
+- The catch-up version leaves the roster where it was (3 seeds: mean stage 53, range 39-88, L40 in 9.5h).
+- Lesson: gear score and stage line up (corr 0.85) because items drop at the stage you reach, not because gear luck
+  drives the stage. The spread comes from boss walls: a run that has not beaten the stage 40 boss when it reaches L40
+  sits at 40 (all six 40-ish runs), one that broke it climbs to 55-88. Class still matters: Mage 66, Summoner 58,
+  Warrior 52, Ranger 51, Cleric 47, Rogue 45 (3 seeds each, 2 paths).

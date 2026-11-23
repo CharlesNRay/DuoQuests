@@ -156,6 +156,11 @@ local Gear = {
 		-- each 0.1 of the ItemRarity passive bonus moves this much weight from Common
 		BonusShift = 60,
 	},
+	-- bad-luck protection (catch-up only): after this many won fights (replays count) with no gear upgrade,
+	-- if your weakest worn piece is below BelowPar of a "par" item (your best cleared stage, that stage's most
+	-- common rarity, average roll), the next win drops that par item for that slot. Gear at par or better
+	-- never triggers it, so lucky players gain nothing. Any natural upgrade resets the count.
+	Pity = { After = 10, BelowPar = 0.85 },
 }
 
 -- flat health / attack / defense on items is NumberScale times bigger, like the heroes it is worn by (Config/Economy)

@@ -30,6 +30,7 @@ local Runes = require(script.Parent.Runes)
 local Tutorial = require(script.Parent.Tutorial)
 local PetsConfig = require(script.Parent.Config.Pets)
 local Gear = require(script.Parent.Gear)
+local GearConfig = require(script.Parent.Config.Gear)
 local Consumables = require(script.Parent.Consumables)
 local Quests = require(script.Parent.Quests)
 local Passes = require(script.Parent.Passes)
@@ -146,9 +147,25 @@ function Progression.ApplyClear(profile, stage, rand)
 
 	local petsGained = Pets.GrantForClear(profile, stage)
 	local dropped = Gear.RollDrop(stage, isFrontier, bonuses.ItemRarity, rand or math.random)
+	local equipped = (season.Equipment and season.Equipment.Equipped) or {}
+	local dropStage, pity = stage, false
+	if dropped and Gear.IsUpgrade(equipped, { Slot = dropped.Slot, Rarity = dropped.Rarity, Power = stage, Roll = dropped.Roll }) then
+		season.GearDry = 0
+	else
+		-- bad-luck protection (Config/Gear Pity): a long dry spell with gear below par brings a par item
+		season.GearDry = (season.GearDry or 0) + 1
+		if season.GearDry >= GearConfig.Pity.After then
+			local best = math.max(stage, season.HighestStage - 1)
+			local lucky = Gear.PityDrop(equipped, best)
+			if lucky then
+				dropped, dropStage, pity = lucky, best, true
+			end
+			season.GearDry = 0
+		end
+	end
 	local item, itemSoldFor
 	if dropped then
-		item, itemSoldFor = Gear.Grant(profile, stage, dropped)
+		item, itemSoldFor = Gear.Grant(profile, dropStage, dropped)
 	end
 
 	if item or itemSoldFor then
@@ -201,6 +218,7 @@ function Progression.ApplyClear(profile, stage, rand)
 		PetsGained = petsGained,
 		Item = item,
 		ItemSoldFor = itemSoldFor,
+		LuckyFind = pity or nil,
 		Consumable = consumableId,
 		PetGearDrop = petGearDrop,
 		Rune = runeDrop,
