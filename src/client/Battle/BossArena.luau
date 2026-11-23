@@ -18,6 +18,7 @@ local FightStats = require(Shared.FightStats)
 local Scene = require(script.Parent.Scene)
 local Replay = require(script.Parent.Replay)
 local Kit = require(script.Parent.Parent.UI.Kit)
+local Sound = require(script.Parent.Parent.Sound)
 
 local BossArena = {}
 
@@ -88,6 +89,7 @@ local function showResults(info, onClose)
 	local extra = info.Extra
 	local won = if extra then extra.Cleared >= extra.Floors else info.Won == true
 	local headline = if won then "VICTORY" elseif extra and extra.Cleared > 0 then "WAVES CLEARED" else "DEFEATED"
+	Sound.Play(if won then "Victory" else "Defeat")
 	local summary = if extra then ("Waves  %d / %d     Time  %ds"):format(extra.Cleared, extra.Floors, math.floor(info.Duration or 0)) else ("Damage dealt  %s     Time  %ds"):format(commas(info.Damage or 0), math.floor(info.Duration or 0))
 	local prize = if extra and #(extra.Lines or {}) > 0 then "Rewards: " .. table.concat(extra.Lines, ", ") else nil
 	local prizeHeight = if prize then 16 * math.ceil(#prize / 46) + 6 else 0

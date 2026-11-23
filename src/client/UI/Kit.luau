@@ -112,7 +112,12 @@ function Kit.button(props, onClick)
 	Kit.new("UIGradient", { Color = ColorSequence.new(Color3.new(1, 1, 1), Color3.fromRGB(190, 192, 205)), Rotation = 90, Parent = b })
 	Kit.new("UIStroke", { Color = Color3.fromRGB(14, 16, 26), Thickness = 1.5, Transparency = 0.25, ApplyStrokeMode = Enum.ApplyStrokeMode.Border, Parent = b })
 	if onClick then
-		b.Activated:Connect(onClick)
+		b.Activated:Connect(function(...)
+			if Kit.OnClick then
+				Kit.OnClick() -- Main plays the click sound
+			end
+			onClick(...)
+		end)
 	end
 	return b
 end

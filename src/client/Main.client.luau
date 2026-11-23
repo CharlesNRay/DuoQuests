@@ -44,6 +44,9 @@ local Zones = require(Shared.Zones)
 local Arenas = require(script.Parent.Battle.Arenas)
 local Hub = require(script.Parent.Battle.Hub)
 local Town = require(script.Parent.Battle.Town)
+local Sound = require(script.Parent.Sound)
+local Celebrate = require(script.Parent.UI.Celebrate)
+local StagesModule = require(game:GetService("ReplicatedStorage"):WaitForChild("Shared"):WaitForChild("Stages"))
 local BossArena = require(script.Parent.Battle.BossArena)
 local PetFollower = require(script.Parent.Battle.PetFollower)
 local BattleCamera = require(script.Parent.Battle.BattleCamera)
@@ -164,7 +167,7 @@ end
 local PANEL_DEFAULT = Vector2.new(500, 286)
 local PANEL_SIZES = {
 	Map = Vector2.new(640, 298), Hero = Vector2.new(640, 298), Skills = Vector2.new(660, 344),
-	Merchant = Vector2.new(540, 292), Blacksmith = Vector2.new(540, 292), Trainer = Vector2.new(540, 330), PetStore = Vector2.new(560, 330), RuneCarver = Vector2.new(600, 330), Wish = Vector2.new(640, 352), Store = Vector2.new(640, 336), Boss = Vector2.new(640, 310), Battle = Vector2.new(640, 330), Quests = Vector2.new(640, 330), Premium = Vector2.new(640, 330), Season = Vector2.new(640, 330), Cosmetics = Vector2.new(640, 330), Codes = Vector2.new(540, 300), Character = Vector2.new(640, 340), Guild = Vector2.new(720, 340), Dev = Vector2.new(640, 330), Party = Vector2.new(700, 330), Bag = Vector2.new(640, 330), Errands = Vector2.new(620, 330),
+	Merchant = Vector2.new(540, 292), Blacksmith = Vector2.new(540, 292), Trainer = Vector2.new(540, 330), PetStore = Vector2.new(560, 330), RuneCarver = Vector2.new(600, 330), Wish = Vector2.new(640, 352), Store = Vector2.new(640, 336), Boss = Vector2.new(640, 310), Battle = Vector2.new(640, 330), Quests = Vector2.new(640, 330), Premium = Vector2.new(640, 330), Season = Vector2.new(640, 330), Cosmetics = Vector2.new(640, 330), Codes = Vector2.new(540, 300), Character = Vector2.new(640, 340), Guild = Vector2.new(720, 340), Dev = Vector2.new(640, 330), Party = Vector2.new(700, 330), Bag = Vector2.new(640, 330), Errands = Vector2.new(620, 330), Settings = Vector2.new(620, 330),
 }
 local SHOP_NPC = { Merchant = "Merchant", Blacksmith = "Blacksmith", Trainer = "Trainer", PetStore = "PetStore", RuneCarver = "RuneCarver", Wish = "Tree" }
 local panel = Kit.frame({ Name = "Panel", Size = UDim2.new(0, 500, 0, 286), Position = UDim2.new(0.5, -250, 0, 42), BackgroundColor3 = Kit.Colors.Bg, Visible = false, ZIndex = 5, Parent = root })
@@ -240,6 +243,19 @@ local function redraw()
 	end
 	Hub.SetDailyReady(state.Player.Daily ~= nil and state.Player.Daily.CanClaim == true)
 	Town.SetErrands(state.Player.Errands)
+	-- sound settings come from the account once; after that the Settings screen owns them
+	if not extra.SoundApplied then
+		extra.SoundApplied = true
+		Sound.Apply(state.Player.Settings)
+	end
+	-- level up: a big card, sparkles and a fanfare, wherever the player is
+	local level = state.Player.Level
+	if extra.LastLevel and level and level > extra.LastLevel then
+		Sound.Play("LevelUp")
+		Celebrate.Sparkle()
+		Celebrate.Show(root, ("LEVEL %d!"):format(level), if level - extra.LastLevel > 1 then ("+%d levels - you grow stronger"):format(level - extra.LastLevel) else "You grow stronger", Color3.fromRGB(255, 214, 90))
+	end
+	extra.LastLevel = level
 	if extra.RenderErrandTracker then
 		extra.RenderErrandTracker(state.Player.Errands)
 	end
@@ -346,6 +362,9 @@ function open(name, label, keep)
 	local size = PANEL_SIZES[name] or PANEL_DEFAULT
 	panel.Size = UDim2.fromOffset(size.X, size.Y)
 	placePanel()
+	if not panel.Visible then
+		Sound.Play("Open")
+	end
 	panel.Visible = true
 	redraw()
 end
@@ -505,11 +524,15 @@ do
 		if ok and type(data) == "table" then
 			if data.Kind == "Started" then
 				Town.Say(spotId, data.Line)
+				Sound.Play("Pop")
 			elseif data.Kind == "Done" then
 				Town.Say(spotId, "Thank you! Here: " .. table.concat(data.Reward or {}, ", "))
-				hud:ShowBanner("📜 " .. tostring(data.Text), Color3.fromRGB(255, 214, 90))
+				Sound.Play("Errand")
+				Celebrate.Sparkle(Color3.fromRGB(150, 220, 255))
+				Celebrate.Show(root, "ERRAND DONE!", table.concat(data.Reward or {}, "  +  "), Color3.fromRGB(150, 220, 255))
 			else
 				Town.Say(spotId, "Here you go!")
+				Sound.Play("Pop")
 			end
 			local fresh, newState = api:InvokeServer("GetState")
 			if fresh and newState then
@@ -546,6 +569,16 @@ hud:AddButton("Store", "mini", "🛍️", "Store", function()
 	open("Store", "Store")
 end)
 hud:AddButton("Quests", "mini", "📜", "Quests & Season Pass", function() open("Quests", "Quests & Season Pass") end)
+hud:AddButton("Settings", "mini", "⚙️", "Settings (sound)", function() open("Settings", "Settings") end)
+Screens.Settings = require(script.Parent.UI.SettingsScreen).Settings
+extra.SaveSettings = function(values)
+	task.spawn(function()
+		api:InvokeServer("SaveSettings", values)
+	end)
+end
+Kit.OnClick = function()
+	Sound.Play("Click")
+end
 -- the fight log lives in the battle view (its bar has a Log button)
 hud.OnLog = function() open("Log", "Last Fight") end
 
@@ -587,6 +620,7 @@ push.OnClientEvent:Connect(function(kind, info)
 			open("Boss", "Bosses", true)
 		end
 	elseif kind == "BossFight" then
+		extra.BossMusic = info.Kind or "WorldBoss"
 		task.spawn(function()
 			current, lastDrawn = nil, nil
 			panel.Visible = false
@@ -619,6 +653,9 @@ push.OnClientEvent:Connect(function(kind, info)
 		fighting = true
 		arenas:Play(info.Slot, info, function()
 			fighting = false
+			if info.Won then
+				Sound.Play(if info.Stage and StagesModule.IsBoss(info.Stage) then "BossClear" else "StageClear")
+			end
 			if info.Reward and info.Reward.Tutorial then
 				hud:Notify(info.Reward.Tutorial)
 			end
@@ -635,6 +672,8 @@ end)
 -- animate the plaza, and shut a shop when you walk away from its NPC (the server refuses it anyway)
 RunService.Heartbeat:Connect(function(dt)
 	Hub.Update(dt)
+	-- music follows what you are looking at: a boss arena (its own theme), your battle, or the town
+	Sound.Music(if BossArena.IsActive() then (extra.BossMusic or "WorldBoss") elseif BattleCamera.IsBattleView() then "Stage" else "Town")
 	local shop = current and SHOP_NPC[current]
 	if shop then
 		local character = Players.LocalPlayer.Character

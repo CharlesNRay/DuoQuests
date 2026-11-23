@@ -264,6 +264,7 @@ local function buildState(player)
 			Cosmetics = cosmeticsOf(profile),
 			Character = characterOf(profile),
 			Errands = Errands.Status(profile, os.time()), -- town errands (docs/TOWN.md phase 2)
+			Settings = profile.Permanent.Settings, -- sound sliders (client/Sound), nil = defaults
 		},
 	}
 
@@ -466,7 +467,7 @@ function handlers.GuildBuy(player, profile, upgradeId) return guildCall(player, 
 function handlers.GuildClaimMission(player, profile, kind, index) return GuildService.ClaimMission(player, profile, kind, index) end
 function handlers.GuildRaid(player, profile)
 	return GuildService.RaidChallenge(player, profile, PartyService.GetTeamSnapshots(player), function(fight, label, damage)
-		playBossFight(player, fight, label, damage)
+		playBossFight(player, fight, label, damage, nil, "GuildRaid")
 	end)
 end
 function handlers.GuildRaidClaim(player, profile, which) return GuildService.RaidClaim(player, profile, which) end
@@ -482,7 +483,7 @@ local REPLAYED = { Damage = true, Heal = true, Cast = true, Death = true, Revive
 local pushRemote
 
 -- A boss challenge is a real fight in YOUR arena: the party's normal fights pause, you (and anyone near) watch it.
-function playBossFight(player, fight, label, damage, extraInfo)
+function playBossFight(player, fight, label, damage, extraInfo, kind)
 	local partyState = PartyService.GetState(player)
 	local slot = partyState and WorldService.SlotOf(partyState.PartyId)
 	if not slot then
@@ -495,7 +496,7 @@ function playBossFight(player, fight, label, damage, extraInfo)
 		end
 	end
 	PartyService.HoldFights(player, fight.Duration + 14)
-	local payload = { Slot = slot, PartyId = partyState.PartyId, Stage = partyState.Stage, Won = fight.Won, Duration = fight.Duration, Roster = fight.Roster, Events = events, Label = label, Damage = damage, Extra = extraInfo }
+	local payload = { Slot = slot, PartyId = partyState.PartyId, Stage = partyState.Stage, Won = fight.Won, Duration = fight.Duration, Roster = fight.Roster, Events = events, Label = label, Damage = damage, Extra = extraInfo, Kind = kind } -- Kind picks the music
 	-- the fight is played in a private boss arena on the challenger's screen, so nobody else watches it
 	pushRemote:FireClient(player, "BossFight", payload)
 end
@@ -509,7 +510,7 @@ function handlers.BossChallenge(player, profile, which)
 		local fight = data.Fight
 		data.Fight = nil
 		if fight then
-			playBossFight(player, fight, data.Label, data.Damage)
+			playBossFight(player, fight, data.Label, data.Damage, nil, if which == "World" then "WorldBoss" else "SeasonBoss")
 		end
 		afterBuildChange(player)
 	end
@@ -541,7 +542,7 @@ function handlers.DungeonRun(player, profile, id)
 		local fight = result.Fight
 		result.Fight = nil
 		if fight then
-			playBossFight(player, fight, result.Name, 0, { Floors = result.Floors, Cleared = result.Cleared, Lines = result.Lines })
+			playBossFight(player, fight, result.Name, 0, { Floors = result.Floors, Cleared = result.Cleared, Lines = result.Lines }, "Dungeon")
 		end
 		afterBuildChange(player)
 	end
@@ -1401,6 +1402,22 @@ function handlers.Errand(player, profile, spotId)
 		return false, "TooFar"
 	end
 	return Errands.Interact(profile, spotId, os.time(), math.random)
+end
+
+-- Sound settings: { Master, Music, Effects, Interface, SavedMaster } each 0..1, kept with the account.
+function handlers.SaveSettings(_, profile, values)
+	if type(values) ~= "table" then
+		return false, "BadArgs"
+	end
+	local clean = {}
+	for _, key in ipairs({ "Master", "Music", "Effects", "Interface", "SavedMaster" }) do
+		local v = tonumber(values[key])
+		if v then
+			clean[key] = math.clamp(math.floor(v * 100 + 0.5) / 100, 0, 1)
+		end
+	end
+	profile.Permanent.Settings = clean
+	return true
 end
 
 function handlers.ErrandAbandon(_, profile)

@@ -28,6 +28,7 @@ local StatusLook = require(script.Parent.StatusLook)
 local CosmeticsVisuals = require(script.Parent.CosmeticsVisuals)
 local SkillEffects = require(script.Parent.SkillEffects)
 local Models = require(script.Parent.Models)
+local Sound = require(script.Parent.Parent.Sound)
 
 local Replay = {}
 Replay.__index = Replay
@@ -476,6 +477,9 @@ function Replay:_event(e)
 		else
 			bolt(scene, source:Pos(), target:Pos(), c)
 		end
+		-- sound at the target: crits thump, fire roars, other spells whoosh, weapons clang
+		local element = e.Element or "Physical"
+		Sound.PlayAt(if e.Crit then "Crit" elseif element == "Fire" then "Fire" elseif element ~= "Physical" then "Magic" elseif e.Tag == "BasicAttack" then "Hit" else "Swing", target:Pos())
 		target:Flinch()
 		target:Absorb(e.Absorbed)
 		target:SetHealth(e.TargetHealth or target.Health)
@@ -492,6 +496,7 @@ function Replay:_event(e)
 		if target then
 			target:SetHealth(e.TargetHealth or target.Health)
 			target:HealFx()
+			Sound.PlayAt("Heal", target:Pos())
 			floatText(scene, target:Pos() + Vector3.new(0, 1.5, 0), "+" .. NumberFormat.Short(e.Amount or 0), Color3.fromRGB(110, 235, 140), 22)
 			safely(SkillEffects.Heal, scene, e.Tag, target:Pos())
 		end
@@ -554,12 +559,15 @@ function Replay:_event(e)
 			self.OnBanner(def.DisplayName, Color3.fromRGB(190, 110, 255))
 		end
 		safely(SkillEffects.Ultimate, scene, e.Ability, { AllyPositions = positionsOf(self.Heroes), EnemyPositions = positionsOf(self.Enemies) })
+		local anyHero = next(self.Heroes) and self.Heroes[next(self.Heroes)]
+		Sound.PlayAt("Ultimate", if anyHero then anyHero:Pos() else nil)
 	elseif t == "Death" then
 		local target = actorFor(self, e.Target)
 		if target then
 			target:SetHealth(0)
 			if self.Enemies[e.Target] or self.Minions[e.Target] then
 				CosmeticsVisuals.KillEffect(scene.Folder, target:Pos())
+				Sound.PlayAt("EnemyDown", target:Pos())
 				target:FadeOut()
 				if self.Minions[e.Target] == target then
 					-- a summon leaves the field for good (fading leaves its eyes and decals behind otherwise)
@@ -576,6 +584,7 @@ function Replay:_event(e)
 				if self.Heroes[e.Target] == target then
 					-- an ally fell: say who, loudly (outline + tag stay until they rise)
 					target:MarkDown(true)
+					Sound.PlayAt("AllyDown", target:Pos())
 					floatText(scene, target:Pos() + Vector3.new(0, 3, 0), tostring(target.Name or "Ally") .. " fell!", Color3.fromRGB(255, 80, 70), 24)
 					if self.OnBanner then
 						self.OnBanner("💀 " .. tostring(target.Name or "An ally") .. " has fallen!", Color3.fromRGB(255, 90, 80))
@@ -616,6 +625,10 @@ function Replay:_event(e)
 		self:_layout()
 		if self.OnBanner then
 			self.OnBanner(if e.Wave == e.Of then "The boss appears!" else ("Wave %d / %d"):format(e.Wave, e.Of), Color3.fromRGB(255, 170, 70))
+		end
+		if e.Wave == e.Of then
+			local _, boss = next(self.Enemies)
+			Sound.PlayAt("BossRoar", if boss then boss:Pos() else nil)
 		end
 	elseif t == "Telegraph" then
 		-- a big hit is coming: warn the player so they can see why a shield matters

@@ -136,6 +136,13 @@ Git Bash; they find a working Python themselves (`python3`/`python` there are St
 - **Town places 2026-11-23** (SEEN in Studio): Dungeon Gate (portal in a rocky hill west of the Grove, `TownSpots.DungeonGate`,
   opens Battle > Dungeons), Expedition Camp (tents + map table outside the wall SE, opens Battle > Expeditions), Guild Board
   beside the Guild Hall (opens Guild), Store stall on the plaza (`PlazaSpots.Store`). HUD buttons still open them too.
+- **Sound 2026-11-23** (SEEN in Studio: all 32 ids load, town/stage/dungeon music switch, sliders change SoundGroup volume,
+  level-up card, combat sounds created): `Config/Audio` (APMOfficial music, ProSoundEffects/Roblox SFX; ids from the Creator
+  Store search API `toolbox-service/v2/assets:search?searchCategoryType=Audio`), `client/Sound.luau` (SoundGroups DQ_Music /
+  DQ_Effects / DQ_Interface, 3D combat sounds at the fighter, music cross-fade by context: boss arena `info.Kind`
+  WorldBoss/SeasonBoss/GuildRaid/Dungeon, battle view = Stage, else Town). Settings screen (HUD gear button, handler
+  `SaveSettings`, `Permanent.Settings`). `UI/Celebrate` = big level-up / errand card + sparkles. NOT heard (no audio check
+  possible from here): loudness balance between tracks and effects; world/season/guild boss music not seen switching.
 
 ## Gotchas
 - Studio testing: the HUD 🧪 button opens the "Test cheats" panel (Studio only, `UI/DevScreen` -> `handlers.Dev(action, n)`, `DEV_ACTIONS` in ApiService):
