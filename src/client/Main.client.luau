@@ -167,7 +167,7 @@ end
 local PANEL_DEFAULT = Vector2.new(500, 286)
 local PANEL_SIZES = {
 	Map = Vector2.new(640, 298), Hero = Vector2.new(640, 298), Skills = Vector2.new(660, 344),
-	Merchant = Vector2.new(540, 292), Blacksmith = Vector2.new(540, 292), Trainer = Vector2.new(540, 330), PetStore = Vector2.new(560, 330), RuneCarver = Vector2.new(600, 330), Wish = Vector2.new(640, 352), Store = Vector2.new(640, 336), Boss = Vector2.new(640, 310), Battle = Vector2.new(640, 330), Quests = Vector2.new(640, 330), Premium = Vector2.new(640, 330), Season = Vector2.new(640, 330), Cosmetics = Vector2.new(640, 330), Codes = Vector2.new(540, 300), Character = Vector2.new(640, 340), Guild = Vector2.new(720, 340), Dev = Vector2.new(640, 330), Party = Vector2.new(700, 330), Bag = Vector2.new(640, 330), Errands = Vector2.new(620, 330), Settings = Vector2.new(620, 330),
+	Merchant = Vector2.new(540, 292), Blacksmith = Vector2.new(540, 292), Trainer = Vector2.new(540, 330), PetStore = Vector2.new(560, 330), RuneCarver = Vector2.new(600, 330), Wish = Vector2.new(640, 352), Store = Vector2.new(640, 336), Boss = Vector2.new(640, 310), Battle = Vector2.new(640, 330), Quests = Vector2.new(640, 330), Premium = Vector2.new(640, 330), Season = Vector2.new(640, 330), Cosmetics = Vector2.new(640, 330), Codes = Vector2.new(540, 300), Character = Vector2.new(640, 340), Guild = Vector2.new(720, 340), Dev = Vector2.new(640, 330), Party = Vector2.new(700, 330), Bag = Vector2.new(640, 330), Errands = Vector2.new(620, 330), Settings = Vector2.new(620, 330), Talents = Vector2.new(660, 340),
 }
 local SHOP_NPC = { Merchant = "Merchant", Blacksmith = "Blacksmith", Trainer = "Trainer", PetStore = "PetStore", RuneCarver = "RuneCarver", Wish = "Tree" }
 local panel = Kit.frame({ Name = "Panel", Size = UDim2.new(0, 500, 0, 286), Position = UDim2.new(0.5, -250, 0, 42), BackgroundColor3 = Kit.Colors.Bg, Visible = false, ZIndex = 5, Parent = root })
@@ -253,9 +253,12 @@ local function redraw()
 	if extra.LastLevel and level and level > extra.LastLevel then
 		Sound.Play("LevelUp")
 		Celebrate.Sparkle()
-		Celebrate.Show(root, ("LEVEL %d!"):format(level), if level - extra.LastLevel > 1 then ("+%d levels - you grow stronger"):format(level - extra.LastLevel) else "You grow stronger", Color3.fromRGB(255, 214, 90))
+		local gained = level - extra.LastLevel
+		Celebrate.Show(root, ("LEVEL %d!"):format(level), ("+%d talent point%s to spend - open ✨ Talents"):format(gained, if gained == 1 then "" else "s"), Color3.fromRGB(255, 214, 90))
 	end
 	extra.LastLevel = level
+	local talents = state.Player.Talents
+	hud:SetBadge("Talents", talents ~= nil and talents.Free > 0)
 	if extra.RenderErrandTracker then
 		extra.RenderErrandTracker(state.Player.Errands)
 	end
@@ -455,6 +458,8 @@ hud:AddButton("Hero", "dock", "🧙", "Hero", function() open("Hero", "Hero") en
 hud:AddButton("Skills", "dock", "⚔️", "Skills", function() open("Skills", "Skills") end)
 hud:AddButton("Pets", "dock", "🐱", "Pets", function() open("Pets", "Pets") end)
 hud:AddButton("Party", "dock", "👥", "Party", function() open("Party", "Party") end)
+hud:AddButton("Talents", "dock", "✨", "Talents", function() open("Talents", "Talents") end)
+Screens.Talents = require(script.Parent.UI.TalentScreen).Talents
 
 -- Studio only: one test panel with every cheat (levels, stages, gold, items, pets, dailies, world boss, premium).
 if RunService:IsStudio() then

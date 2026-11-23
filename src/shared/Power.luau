@@ -18,6 +18,8 @@ local Pets = require(script.Parent.Pets)
 local PetConfig = require(script.Parent.Config.Pets)
 local SkillProgress = require(script.Parent.SkillProgress)
 local Subclasses = require(script.Parent.Subclasses)
+local Talents = require(script.Parent.Talents)
+local TalentConfig = require(script.Parent.Config.Talents)
 
 local Power = {}
 
@@ -53,7 +55,8 @@ function Power.Hero(profile)
 	local season = profile.Season
 	local classId = season.ClassId
 	local paragon = season.Paragon and season.Paragon.Level or 0
-	local out = { Level = season.Level * LEVEL_IP + paragon * 8, Gear = 0, Skills = 0, Passives = 0, Pet = 0, Collection = 0, Subclass = 0, Titles = 0, Guild = 0 }
+	local out = { Level = season.Level * LEVEL_IP + paragon * 8, Gear = 0, Skills = 0, Passives = 0, Pet = 0, Collection = 0, Subclass = 0, Titles = 0, Guild = 0, Talents = 0 }
+	out.Talents = select(2, Talents.Points(profile)) * TalentConfig.PowerPerRank
 
 	local equipment = season.Equipment and season.Equipment.Equipped or {}
 	for _, item in pairs(equipment) do

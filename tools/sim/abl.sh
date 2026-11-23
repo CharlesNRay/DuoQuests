@@ -1,7 +1,7 @@
 #!/bin/bash
 # Balance simulation: an auto-player for one class or path, fights played out headless.
 # usage: abl.sh <tag> <goalLevel> <mode> <ClassOrPath> [partner] [partnerPath]      results in .build/res_<tag>.txt
-#   modes:   full | nogear | noskill | nopet | nogold | lazy (lazy = upgrades nothing; only levels grow)
+#   modes:   full | nogear | noskill | nopet | nogold | notalent | lazy (lazy = upgrades nothing; only levels grow)
 #   partner: solo (default) | companion (the starter ghost a lone player gets) | <Class> (a second auto-played hero, always "full")
 #   env:     SEEDS=n runs n seeds per path (default 1; single runs are noisy, use 3+ to compare builds)
 #            NOSYNC=1 skips copying src (sync once yourself first when starting many jobs at the same time)

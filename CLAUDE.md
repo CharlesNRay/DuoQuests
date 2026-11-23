@@ -143,6 +143,11 @@ Git Bash; they find a working Python themselves (`python3`/`python` there are St
   WorldBoss/SeasonBoss/GuildRaid/Dungeon, battle view = Stage, else Town). Settings screen (HUD gear button, handler
   `SaveSettings`, `Permanent.Settings`). `UI/Celebrate` = big level-up / errand card + sparkles. NOT heard (no audio check
   possible from here): loudness balance between tracks and effects; world/season/guild boss music not seen switching.
+- **Talents 2026-11-23** (SEEN in Studio: level-up card names the points, red dot on the Talents dock button, +1/+5,
+  Auto-spend by role, Reset): `Config/Talents` + `Shared/Talents`, 1 point per level (39 at L40), 8 talents x 10 ranks
+  (Might, Vitality, Bulwark, Precision, Ferocity, Swiftness, Focus, Mending), free reset, `Season.Talents`. Mods ride in
+  ExtraMods (StageRunner live path, `Party.MakeSnapshot` CollectionMods, hero sheet); IP +4 per point. Handlers
+  `SpendTalent`, `ResetTalents`, `AutoTalents`. The sim bot auto-spends (`abl.sh` mode `notalent` turns it off).
 
 ## Gotchas
 - Studio testing: the HUD 🧪 button opens the "Test cheats" panel (Studio only, `UI/DevScreen` -> `handlers.Dev(action, n)`, `DEV_ACTIONS` in ApiService):

@@ -86,6 +86,7 @@ local Characters = require(Shared.Characters)
 local Tutorial = require(Shared.Tutorial)
 local Activities = require(Shared.Activities)
 local Errands = require(Shared.Errands)
+local Talents = require(Shared.Talents)
 local Market = require(Shared.Market)
 local WeaponService = require(script.Parent.WeaponService)
 local CharacterConfig = require(Shared.Config.Character)
@@ -161,7 +162,13 @@ local function heroSheetOf(profile)
 		PetId = petId,
 		PetLevel = petLevel,
 		PetRank = petRank,
-		ExtraMods = Pets.Collection(profile).Mods,
+		ExtraMods = (function()
+			local mods = table.clone(Pets.Collection(profile).Mods)
+			for _, mod in ipairs(Talents.Mods(profile)) do
+				table.insert(mods, mod)
+			end
+			return mods
+		end)(),
 	})
 end
 
@@ -265,6 +272,7 @@ local function buildState(player)
 			Character = characterOf(profile),
 			Errands = Errands.Status(profile, os.time()), -- town errands (docs/TOWN.md phase 2)
 			Settings = profile.Permanent.Settings, -- sound sliders (client/Sound), nil = defaults
+			Talents = Talents.Status(profile), -- level-up points (Shared/Talents)
 		},
 	}
 
@@ -1402,6 +1410,32 @@ function handlers.Errand(player, profile, spotId)
 		return false, "TooFar"
 	end
 	return Errands.Interact(profile, spotId, os.time(), math.random)
+end
+
+-- Talents: level-up points (Shared/Talents). Spending changes the hero's stats, so the party's fights pick it up.
+function handlers.SpendTalent(player, profile, id, n)
+	if type(id) ~= "string" then
+		return false, "BadArgs"
+	end
+	local ok, err = Talents.Spend(profile, id, if type(n) == "number" then math.clamp(n, 1, 10) else 1)
+	if ok then
+		afterBuildChange(player)
+	end
+	return ok, err
+end
+
+function handlers.ResetTalents(player, profile)
+	Talents.Reset(profile)
+	afterBuildChange(player)
+	return true
+end
+
+function handlers.AutoTalents(player, profile)
+	local n = Talents.AutoSpend(profile)
+	if n > 0 then
+		afterBuildChange(player)
+	end
+	return true, n
 end
 
 -- Sound settings: { Master, Music, Effects, Interface, SavedMaster } each 0..1, kept with the account.

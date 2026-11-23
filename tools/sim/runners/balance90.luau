@@ -7,6 +7,7 @@ local m = {
 	PetGear = require("./PetGear"), PetGearConfig = require("./Config/PetGear"), Consumables = require("./Consumables"),
 	Runes = require("./Runes"), RunesConfig = require("./Config/Runes"),
 	Activities = require("./Activities"), Bosses = require("./Bosses"), BossCfg = require("./Config/Bosses"), TableUtil = require("./Util/TableUtil"),
+	Talents = require("./Talents"),
 }
 local ARGS = require("./cfg")
 local MODE = ARGS[4] or "full"
@@ -23,6 +24,7 @@ local doGear = not (MODE == "lazy" or MODE == "nogear")
 local doSkill = not (MODE == "lazy" or MODE == "noskill")
 local doPet = not (MODE == "lazy" or MODE == "nopet")
 local doGold = not (MODE == "lazy" or MODE == "nogold")
+local doTalent = not (MODE == "lazy" or MODE == "notalent") -- level-up talent points (2026-11-23)
 local lcg = 12345
 local function rand() lcg = (lcg * 1103515245 + 12345) % 2147483648 return lcg / 2147483648 end
 
@@ -317,6 +319,7 @@ local function run(classId, pathId, seedBase, goalLevel)
 		if doGear then runeCare(profile) end
 		spendTickets(profile)
 		spend(profile, classId)
+		if doTalent then m.Talents.AutoSpend(profile) end
 		petCare(profile)
 		if doSkill then equipBest(profile, classId) end
 		if partnerProfile then
@@ -330,6 +333,7 @@ local function run(classId, pathId, seedBase, goalLevel)
 				runeCare(partnerProfile)
 				spendTickets(partnerProfile)
 				spend(partnerProfile, partnerClass)
+				m.Talents.AutoSpend(partnerProfile)
 				petCare(partnerProfile)
 				equipBest(partnerProfile, partnerClass)
 			end)

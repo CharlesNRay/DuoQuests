@@ -51,6 +51,7 @@ local Pets = require(script.Parent.Pets)
 local Consumables = require(script.Parent.Consumables)
 local Gear = require(script.Parent.Gear)
 local SkillProgress = require(script.Parent.SkillProgress)
+local Talents = require(script.Parent.Talents)
 
 local StageRunner = {}
 
@@ -72,6 +73,9 @@ function StageRunner.NewParty(members)
 				table.insert(extraMods, mod)
 			end
 			for _, mod in ipairs(Pets.SecondMods(member.Profile)) do -- VIP second pet slot: its stat bonuses (it does not fight)
+				table.insert(extraMods, mod)
+			end
+			for _, mod in ipairs(Talents.Mods(member.Profile)) do -- level-up talent points
 				table.insert(extraMods, mod)
 			end
 		else

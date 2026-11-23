@@ -55,6 +55,7 @@ local Pets = require(script.Parent.Pets)
 local Power = require(script.Parent.Power)
 local ProfileTemplate = require(script.Parent.ProfileTemplate)
 local Subclasses = require(script.Parent.Subclasses)
+local Talents = require(script.Parent.Talents)
 local TableUtil = require(script.Parent.Util.TableUtil)
 local FIRST_BOSS_STAGE = require(script.Parent.Config.Stages).BossEvery -- stage 10: no farm hold up to it (see Party.OnlineTick)
 local Ultimates = require(script.Parent.Ultimates)
@@ -239,6 +240,9 @@ function Party.MakeSnapshot(profile, userId, name, previous, now)
 		CollectionMods = (function() -- the pet-collection bonus plus the VIP second pet's stats, so a ghost keeps both
 			local mods = table.clone(Pets.Collection(profile).Mods)
 			for _, mod in ipairs(Pets.SecondMods(profile)) do
+				table.insert(mods, mod)
+			end
+			for _, mod in ipairs(Talents.Mods(profile)) do -- level-up talents travel with the ghost too
 				table.insert(mods, mod)
 			end
 			return mods
