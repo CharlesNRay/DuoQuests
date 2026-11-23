@@ -44,7 +44,7 @@ local Passives = require(script.Parent.Passives)
 
 local ProfileTemplate = {}
 
-ProfileTemplate.CURRENT_VERSION = 3
+ProfileTemplate.CURRENT_VERSION = 4 -- v4 (2026-11-23): StageRewardsClaimed keys are strings
 
 -- A fresh seasonal section. Also used by the season reset later.
 function ProfileTemplate.NewSeasonData(seasonId)
@@ -79,7 +79,7 @@ function ProfileTemplate.NewSeasonData(seasonId)
 		Subclasses = {}, -- [classId] = chosen subclass id (see Subclasses)
 
 		HighestStage = 1, -- the frontier: furthest stage unlocked, never lowered
-		StageRewardsClaimed = {}, -- [stage] = true, one-time milestone ledger
+		StageRewardsClaimed = {}, -- [tostring(stage)] = true, one-time milestone ledger (string keys: DataStore-safe)
 	}
 end
 

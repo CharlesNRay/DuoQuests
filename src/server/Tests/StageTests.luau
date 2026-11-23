@@ -83,7 +83,7 @@ return function(modulesOverride)
 	local boss = ProfileTemplate.New()
 	boss.Season.HighestStage = 10
 	local bossClear = Progression.ApplyClear(boss, 10)
-	check("First boss clear grants a free skill pick", bossClear.SkillPicks == 1 and boss.Season.Currencies.SkillPicks == 1 and boss.Season.StageRewardsClaimed[10] == true)
+	check("First boss clear grants a free skill pick", bossClear.SkillPicks == 1 and boss.Season.Currencies.SkillPicks == 1 and boss.Season.StageRewardsClaimed["10"] == true)
 	Progression.ApplyClear(boss, 10)
 	check("Repeating a boss never pays the pick again", boss.Season.Currencies.SkillPicks == 1)
 	local nonBoss = ProfileTemplate.New()

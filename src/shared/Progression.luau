@@ -130,8 +130,9 @@ function Progression.ApplyClear(profile, stage, rand)
 	local levelsGained = Progression.AddXP(season, rewards.XP)
 
 	local skillPicks = 0
-	if Stages.IsBoss(stage) and not season.StageRewardsClaimed[stage] then
-		season.StageRewardsClaimed[stage] = true
+	-- string keys: a DataStore cannot hold a table keyed by stage numbers with gaps (10, 20, ...)
+	if Stages.IsBoss(stage) and not season.StageRewardsClaimed[tostring(stage)] then
+		season.StageRewardsClaimed[tostring(stage)] = true
 		skillPicks = Economy.MilestoneSkillPicks
 		season.Currencies.SkillPicks += skillPicks
 	end

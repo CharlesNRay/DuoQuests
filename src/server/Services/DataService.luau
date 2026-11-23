@@ -35,6 +35,7 @@ local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Gear = require(Shared.Gear)
 local ProfileTemplate = require(Shared.ProfileTemplate)
 local TableUtil = require(Shared.Util.TableUtil)
+local DataSafety = require(Shared.Util.DataSafety)
 
 local DATASTORE_NAME = "PlayerData_v1"
 local AUTOSAVE_INTERVAL = 120 -- seconds between autosaves (also refreshes the lock)
@@ -76,6 +77,16 @@ local Migrations = {
 		data.Season.PassiveLoadouts = data.Season.PassiveLoadouts or {}
 		data.Season.PassiveSlotLevels = data.Season.PassiveSlotLevels or {}
 		ProfileTemplate.GrantStarterAbilities(data)
+	end,
+
+	-- v3 -> v4: the boss milestone ledger was keyed by stage numbers (10, 20, ...), which a DataStore cannot hold.
+	[4] = function(data)
+		local old = data.Season.StageRewardsClaimed or {}
+		local fixed = {}
+		for stage, value in pairs(old) do
+			fixed[tostring(stage)] = value
+		end
+		data.Season.StageRewardsClaimed = fixed
 	end,
 }
 
@@ -139,6 +150,18 @@ local function saveSession(userId, session, release)
 		return false
 	end
 	session.Saving = true
+
+	-- a value the DataStore cannot hold makes every save fail: say exactly where, once per problem
+	local problems = DataSafety.Problems(session.Data, 5)
+	if #problems > 0 then
+		session.Reported = session.Reported or {}
+		for _, problem in ipairs(problems) do
+			if not session.Reported[problem] then
+				session.Reported[problem] = true
+				warn(("[DataService] Profile %d cannot be saved as is: %s"):format(userId, problem))
+			end
+		end
+	end
 
 	local lostLock = false
 	local ok = updateWithRetry(session.Key, function(old)

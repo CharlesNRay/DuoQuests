@@ -7,7 +7,7 @@ local m = {
 	PetGear = require("./PetGear"), PetGearConfig = require("./Config/PetGear"), Consumables = require("./Consumables"),
 	Runes = require("./Runes"), RunesConfig = require("./Config/Runes"),
 	Activities = require("./Activities"), Bosses = require("./Bosses"), BossCfg = require("./Config/Bosses"), TableUtil = require("./Util/TableUtil"),
-	Talents = require("./Talents"),
+	Talents = require("./Talents"), DataSafety = require("./Util/DataSafety"),
 }
 local ARGS = require("./cfg")
 local MODE = ARGS[4] or "full"
@@ -406,6 +406,9 @@ local function run(classId, pathId, seedBase, goalLevel)
 	table.sort(worn)
 	print(("RUNES	%s	%s	worn %d: %s"):format(classId, pathId, #worn, table.concat(worn, " ")))
 	print(("LOADOUT	%s	%s	%s"):format(classId, pathId, table.concat(profile.Season.Loadouts[classId] or {}, " ")))
+	-- can this played profile be saved to a DataStore? (Util/DataSafety; a bad table fails every live save)
+	local problems = m.DataSafety.Problems(profile, 5)
+	print(("SAVECHECK	%s	%s	%s	size %d"):format(classId, pathId, if #problems == 0 then "ok" else table.concat(problems, " | "), m.DataSafety.Size(profile)))
 	return { Stuck = stuck, Class = classId, Path = pathId .. (if PARTNER == "solo" then "" else "+" .. PARTNER .. (PARTNER_PATH and ("." .. PARTNER_PATH) or "")), Hours = clock / 3600, Level = profile.Season.Level, Frontier = profile.Season.HighestStage, Fights = fights,
 		Durs = durs, LvAtStage = lvAtStage, Stones30 = stonesAt30, First = first, LevelAt = levelAt, Pet = pet, GearScore = gearScore, RarePets = rarePets }
 end

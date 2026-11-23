@@ -182,6 +182,13 @@ Git Bash; they find a working Python themselves (`python3`/`python` there are St
   (`BossField` 237,-263), main gate S, Expedition Camp outside it. `townview/render.py` draws it all (now with a
   close-up per district). Sparring duels replay in the boss arena (opponent as a hero, `Replay` entry.Hero).
 
+- **Save + multiplayer readiness 2026-11-23** (tests green; nothing seen live yet): `Util/DataSafety` checks a value is
+  DataStore-safe (no mixed/gappy tables, no NaN, size); DataService warns once per problem before each save;
+  `SaveSafetyTests` (played profile, busy guild, party with ghost + companions) and the bot prints `SAVECHECK` lines.
+  FOUND AND FIXED: `Season.StageRewardsClaimed` was keyed by stage numbers (10, 20...): every live save after the first
+  boss clear would have failed. Now string keys; schema v4 migration converts old data. Playtest setup and tester
+  checklist: docs/PLAYTEST.md (publish, Studio API access, Max Players 4 = the 4 lots, rejoin check).
+
 ## Gotchas
 - Studio testing: the HUD 🧪 button opens the "Test cheats" panel (Studio only, `UI/DevScreen` -> `handlers.Dev(action, n)`, `DEV_ACTIONS` in ApiService):
   +1/5/10 levels, +5/10/25 stages (cleared like real wins, party moves there), +50M/500M gold, Sunstones, test items, Epic gear for your stage, all pets at max level,
