@@ -43,6 +43,7 @@ local World = require(Shared.World)
 local Zones = require(Shared.Zones)
 local Arenas = require(script.Parent.Battle.Arenas)
 local Hub = require(script.Parent.Battle.Hub)
+local Town = require(script.Parent.Battle.Town)
 local BossArena = require(script.Parent.Battle.BossArena)
 local PetFollower = require(script.Parent.Battle.PetFollower)
 local BattleCamera = require(script.Parent.Battle.BattleCamera)
@@ -163,7 +164,7 @@ end
 local PANEL_DEFAULT = Vector2.new(500, 286)
 local PANEL_SIZES = {
 	Map = Vector2.new(640, 298), Hero = Vector2.new(640, 298), Skills = Vector2.new(660, 344),
-	Merchant = Vector2.new(540, 292), Blacksmith = Vector2.new(540, 292), Trainer = Vector2.new(540, 330), PetStore = Vector2.new(560, 330), RuneCarver = Vector2.new(600, 330), Wish = Vector2.new(640, 352), Store = Vector2.new(640, 336), Boss = Vector2.new(640, 310), Battle = Vector2.new(640, 330), Quests = Vector2.new(640, 330), Premium = Vector2.new(640, 330), Season = Vector2.new(640, 330), Cosmetics = Vector2.new(640, 330), Codes = Vector2.new(540, 300), Character = Vector2.new(640, 340), Guild = Vector2.new(720, 340), Dev = Vector2.new(640, 330), Party = Vector2.new(700, 330), Bag = Vector2.new(640, 330),
+	Merchant = Vector2.new(540, 292), Blacksmith = Vector2.new(540, 292), Trainer = Vector2.new(540, 330), PetStore = Vector2.new(560, 330), RuneCarver = Vector2.new(600, 330), Wish = Vector2.new(640, 352), Store = Vector2.new(640, 336), Boss = Vector2.new(640, 310), Battle = Vector2.new(640, 330), Quests = Vector2.new(640, 330), Premium = Vector2.new(640, 330), Season = Vector2.new(640, 330), Cosmetics = Vector2.new(640, 330), Codes = Vector2.new(540, 300), Character = Vector2.new(640, 340), Guild = Vector2.new(720, 340), Dev = Vector2.new(640, 330), Party = Vector2.new(700, 330), Bag = Vector2.new(640, 330), Errands = Vector2.new(620, 330),
 }
 local SHOP_NPC = { Merchant = "Merchant", Blacksmith = "Blacksmith", Trainer = "Trainer", PetStore = "PetStore", RuneCarver = "RuneCarver", Wish = "Tree" }
 local panel = Kit.frame({ Name = "Panel", Size = UDim2.new(0, 500, 0, 286), Position = UDim2.new(0.5, -250, 0, 42), BackgroundColor3 = Kit.Colors.Bg, Visible = false, ZIndex = 5, Parent = root })
@@ -238,6 +239,10 @@ local function redraw()
 		menu:Render(state)
 	end
 	Hub.SetDailyReady(state.Player.Daily ~= nil and state.Player.Daily.CanClaim == true)
+	Town.SetErrands(state.Player.Errands)
+	if extra.RenderErrandTracker then
+		extra.RenderErrandTracker(state.Player.Errands)
+	end
 	syncWorld()
 	if current then
 		if (current == "Boss" or current == "Battle") and extra.Boss == nil then
@@ -456,6 +461,53 @@ Hub.Build({
 	RuneCarver = function() shopOpen("RuneCarver", "Rune Carver - carve runes onto gear") end,
 	Tree = function() open("Wish", "Wishing Tree", true) end,
 })
+
+-- Town errands (docs/TOWN.md phase 2): prompts at the townsfolk and pick-up spots, the Notice Board opens the list,
+-- and a small tracker shows the errand in hand.
+do
+	local tracker = Kit.frame({ Name = "ErrandTracker", Size = UDim2.fromOffset(280, 66), Position = UDim2.new(0, 8, 1, -180), BackgroundColor3 = Kit.Colors.Bg, BackgroundTransparency = 0.12, Visible = false, Parent = root })
+	Kit.new("UIStroke", { Color = Color3.fromRGB(255, 196, 70), Thickness = 1.5, Parent = tracker })
+	local head = Kit.label({ Size = UDim2.new(1, -16, 0, 20), Position = UDim2.fromOffset(8, 4), Text = "", TextSize = 14, Font = Enum.Font.GothamBold, TextColor3 = Kit.Colors.Accent, Parent = tracker })
+	local body = Kit.label({ Size = UDim2.new(1, -16, 0, 38), Position = UDim2.fromOffset(8, 24), Text = "", TextSize = 12, TextWrapped = true, TextYAlignment = Enum.TextYAlignment.Top, Parent = tracker })
+	extra.RenderErrandTracker = function(info)
+		local active = info and info.Active
+		tracker.Visible = active ~= nil
+		if active then
+			head.Text = ("📜 %s  (%d/%d)"):format(active.Name, active.Step, active.Steps)
+			body.Text = active.Text
+		end
+	end
+	local busy = false
+	local REFUSALS = { Busy = "Finish the errand you have first!", DoneToday = "Thanks again! Come back tomorrow." }
+	Town.OnErrand = function(spotId)
+		if busy then
+			return
+		end
+		busy = true
+		local ok, data = api:InvokeServer("Errand", spotId)
+		if ok and type(data) == "table" then
+			if data.Kind == "Started" then
+				Town.Say(spotId, data.Line)
+			elseif data.Kind == "Done" then
+				Town.Say(spotId, "Thank you! Here: " .. table.concat(data.Reward or {}, ", "))
+				hud:ShowBanner("📜 " .. tostring(data.Text), Color3.fromRGB(255, 214, 90))
+			else
+				Town.Say(spotId, "Here you go!")
+			end
+			local fresh, newState = api:InvokeServer("GetState")
+			if fresh and newState then
+				state = newState
+				redraw()
+			end
+		elseif REFUSALS[data] then
+			Town.Say(spotId, REFUSALS[data])
+		end
+		busy = false
+	end
+	Town.OnBoard = function()
+		open("Errands", "Notice Board - town errands", true)
+	end
+end
 hud:AddButton("Plaza", "travel", "⛲", "Plaza", function()
 	if BattleCamera.IsBattleView() then
 		stopWatching()

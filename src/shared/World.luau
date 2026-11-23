@@ -14,6 +14,7 @@
 	  World.ARENA_WIDTH / ARENA_DEPTH   size of one arena pad in studs
 	  World.Districts, World.DistrictPoint(id), World.TOWN_RING   the town districts around the plaza
 	  World.BossField, World.BossSpots                            where the world boss and the season Colossus stand
+	  World.TownSpots, World.TownSpot(id), World.NearSpot(x, z, id)   errand NPCs and pick-up spots in the town
 ]]
 
 local World = {}
@@ -37,7 +38,8 @@ end
 -- Player lots (arenas) are in rows north of it. Everything is placed from here so the
 -- server (shop distance checks) and the clients (building it) agree.
 World.PLAZA = { X = 0, Z = 40, Radius = 70 }
-World.MAX_LOTS = 8 -- was 12; one lot per party, so a full server (set Max Players to 8) never needs more
+World.MAX_LOTS = 4 -- lots built and shown as "open" (2026-11-23: was 8, the back row went). One lot per party;
+-- a 5th party on the server still gets a lot (slot 5+ lands in the next row back), it just is not shown until then.
 World.SHOP_RANGE = 30 -- studs from a shop within which buying/selling/upgrading is allowed
 
 -- Props on the plaza ring. Angle 0 = north (towards the lots), going clockwise; Radius from the centre.
@@ -73,10 +75,51 @@ World.BossSpots = {
 	Season = { X = 38, Z = 335 }, -- the season Colossus on its altar (90 studs tall, altar 34 wide)
 }
 
+-- Town errand spots (docs/TOWN.md phase 2, Shared/Errands): where the errand NPCs stand and the things you pick up.
+-- District = the spot is (X, Z) in that district's frame (-Z points at the plaza, +X to the right as you face the plaza
+-- from the district); no District = world X, Z. Cat1..CatN are where a lost cat can hide.
+World.TownSpots = {
+	Mabel = { District = "Gate", X = -18, Z = 17 }, -- Old Mabel, by her cottage
+	Tavern = { District = "Gate", X = 15, Z = 4 }, -- the barkeep at the Sleepy Griffin
+	Board = { District = "Gate", X = -18, Z = 2 }, -- the notice board (opens the errand list)
+	Sergeant = { District = "Training", X = 18, Z = -20 }, -- at the end of the row of training dummies
+	Guildmaster = { District = "Training", X = 14, Z = 11 }, -- at the guild hall door
+	Hay = { District = "Grove", X = 19, Z = 20 }, -- hay pile beside the pet park
+	Warden = { X = -12, Z = 272 }, -- the Beast Warden, just inside the Boss Field arch
+	Altar = { X = 0, Z = 296 }, -- the offering stone on the Boss Field
+	Cat1 = { District = "Grove", X = -22, Z = 30 }, -- past the fishing pond
+	Cat2 = { District = "Training", X = -36, Z = 22 }, -- behind the sparring ring
+	Cat3 = { District = "Gate", X = 0, Z = -6 }, -- by the well
+	Cat4 = { X = 90, Z = 147 }, -- under a tree on the ring road, south-east
+	Cat5 = { District = "Grove", X = 38, Z = 20 }, -- inside the pet park
+}
+World.SPOT_RANGE = 16 -- studs; the prompts are 14 wide
+
 function World.DistrictPoint(id)
 	local d = World.Districts[id]
 	local a = math.rad(d.Angle)
 	return World.PLAZA.X + math.sin(a) * d.Radius, World.PLAZA.Z - math.cos(a) * d.Radius
+end
+
+function World.TownSpot(id)
+	local spot = World.TownSpots[id]
+	if not spot then
+		return nil
+	end
+	if not spot.District then
+		return spot.X, spot.Z
+	end
+	-- same frame as CFrame.lookAt(district point, plaza centre): forward f, right = (-f.z, f.x), local +Z = -f
+	local px, pz = World.DistrictPoint(spot.District)
+	local fx, fz = World.PLAZA.X - px, World.PLAZA.Z - pz
+	local len = math.sqrt(fx * fx + fz * fz)
+	fx, fz = fx / len, fz / len
+	return px - fz * spot.X - fx * spot.Z, pz + fx * spot.X - fz * spot.Z
+end
+
+function World.NearSpot(x, z, id)
+	local sx, sz = World.TownSpot(id)
+	return sx ~= nil and (x - sx) ^ 2 + (z - sz) ^ 2 <= World.SPOT_RANGE ^ 2
 end
 
 function World.PlazaPoint(name)

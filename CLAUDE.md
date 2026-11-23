@@ -128,6 +128,12 @@ Git Bash; they find a working Python themselves (`python3`/`python` there are St
   pouch result shows at once, battle numbers have MaxDistance 90 (other lots' crits floated over the HUD). NOT seen: the
   fallen-ally outline/tag/banner (needs a hero to die).
 
+- **Town errands 2026-11-23** (tests green, SEEN in Studio: all four errands, cat carry, offering, straw, Notice Board,
+  tracker): docs/TOWN.md "Town errands". Signposts removed, lots 8 -> 4 (`World.MAX_LOTS`; a 5th party still gets slot 5 in
+  the next row back, it is just not drawn as "open"). Owner asked next (2026-11-23): dungeon location outside town, spots in
+  town for guild / expeditions / store, sound + music (per content type, level-up, stage clear) with sound settings, a clear
+  level-up notice and level-up points to spend.
+
 ## Gotchas
 - Studio testing: the HUD 🧪 button opens the "Test cheats" panel (Studio only, `UI/DevScreen` -> `handlers.Dev(action, n)`, `DEV_ACTIONS` in ApiService):
   +1/5/10 levels, +5/10/25 stages (cleared like real wins, party moves there), +50M/500M gold, Sunstones, test items, Epic gear for your stage, all pets at max level,

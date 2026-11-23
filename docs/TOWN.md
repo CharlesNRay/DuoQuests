@@ -64,7 +64,8 @@ about 110-150 studs from the fountain.
 - **No new emoji newer than Unicode 12** (newer ones don't render).
 
 ## Build order (each phase: tests green, pushed, then you check it in Studio)
-Status: phase 1 built 2026-11-23 (`client/Battle/Town.luau`, `World.Districts`), NOT seen in Studio. Districts sit 150 studs
+Status 2026-11-23: phase 1 SEEN in Studio; signposts removed (owner: not needed). Phase 2 (errands) built and SEEN in Studio,
+see "Town errands" below. Phase 1 note: Districts sit 150 studs
 from the fountain (~9 s walk). The spawn stays on the plaza so shops are close; district names are on arches and signposts
 (not on the Map screen: that map is the stage map). Activity spots carry "coming soon" tags.
 1. **Layout:** ring road, the three districts as scenery, signposts, district names on the map, Wishing Tree moved into
@@ -74,8 +75,21 @@ from the fountain (~9 s walk). The spawn stays on the plaza so shops are close; 
 4. **Training dummy** (and the sparring ring if you want it).
 5. **Hidden relics and their collection log.**
 
+## Town errands (phase 2, built 2026-11-23)
+Owner's answer: rewards are wishes (Wishstones and wish tickets); simple tasks like finding the town cat or feeding the bosses.
+Four errands, each once a day (`Config/Errands`, `Shared/Errands`, `World.TownSpots`, handler `Errand(spotId)`, server
+checks you stand within `World.SPOT_RANGE` of the spot). One errand at a time; the Notice Board lists them and can drop one.
+| Errand | From | Steps | Reward |
+|---|---|---|---|
+| The Lost Cat | Old Mabel (Gate) | find Whiskers at 1 of 5 hiding spots (rolled when you take it, hint in the tracker), bring her back | 5 Wishstones |
+| Feed the Beasts | Warden Hale (Boss Field) | roast boar from Greta at the tavern, lay it on the offering stone | 3 Wishstones + Skill Wish |
+| A Thirsty Guild | Guildmaster Orin (Training) | keg from Greta, carry it to Orin | 3 Wishstones + Pet Wish |
+| Stuffing for the Dummies | Sergeant Brask (Training) | straw from the hay pile by the pet park, back to Brask | 4 Wishstones |
+Givers show a yellow "!" (errand ready) or "?" (waiting for you); what you carry is held in front of the hero (client-only).
+A tracker card sits bottom-left. Reset with the Test cheats "Reset dailies".
+
 ## Questions for you
-1. Rewards: is "small Wishstones/gold, plus cosmetics and titles" right, or should town play give **only** cosmetics
+1. ANSWERED 2026-11-23: wishes (Wishstones / wish tickets). Was: is "small Wishstones/gold, plus cosmetics and titles" right, or should town play give **only** cosmetics
    and fun (no power at all)?
 2. Fishing and the pet park: keep both, or just one?
 3. Sparring ring between players: wanted, or skip it?

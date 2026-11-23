@@ -523,7 +523,7 @@ function Hub.Build(handlers)
 	fire.Parent = coals
 
 	wishingTree(pointOf("Tree"), centre, handlers.Tree)
-	Town.Build(folder, pulsers) -- the districts round the plaza (Wishing Grove, Town Gate, Training Grounds) and the roads to them
+	Town.Build(folder, pulsers, { villager = villager, nameTag = nameTag, TORSO_HEIGHT = TORSO_HEIGHT }) -- the districts round the plaza (Wishing Grove, Town Gate, Training Grounds) and the roads to them
 
 	-- boards and the daily chest
 	board(pointOf("Map"), centre, "WORLD MAP", Color3.fromRGB(40, 90, 150), "Open map", handlers.Map)

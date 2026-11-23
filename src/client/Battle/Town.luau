@@ -1,8 +1,9 @@
 --[[
 	Town (ModuleScript): the town districts around the plaza (docs/TOWN.md, phase 1: layout and scenery only).
 
-	  Town.Build(folder, pulsers)   builds the ring road, the spokes from the plaza, signposts and the three districts
-	                                (pulsers: Hub's list of glowing parts that breathe, for the few glowing props)
+	  Town.Build(folder, pulsers, kit)   builds the ring road, the spokes from the plaza, the three districts and the
+	                                     errand NPCs (pulsers: Hub's glowing parts that breathe; kit: Hub's villager helpers)
+	  Town.SetErrands(status), Town.Say(spotId, text), Town.OnErrand(spotId), Town.OnBoard()   town errands (phase 2)
 
 	Districts (positions in shared/World.luau, World.Districts):
 	  Wishing Grove (west)       the Wishing Tree (built by Hub at PlazaSpots.Tree), a fishing pond, a pet park
@@ -139,23 +140,6 @@ local function arch(cf, width, text, color)
 	sign(beam, Enum.NormalId.Back, text)
 end
 
--- a signpost with one arrow board per destination, each pointing at it
-local function signpost(position, dests)
-	part({ Name = "SignPost", Size = Vector3.new(0.7, 10, 0.7), Position = position + Vector3.new(0, 5, 0), Color = WOOD, Material = Enum.Material.Wood })
-	for index, dest in ipairs(dests) do
-		local y = 9.2 - (index - 1) * 1.7
-		local at = position + Vector3.new(0, y, 0)
-		local toward = Vector3.new(dest.Point.X, y, dest.Point.Z)
-		if (toward - at).Magnitude > 1 then
-			-- local +X points at the destination
-			local cf = CFrame.lookAt(at, toward) * CFrame.Angles(0, math.rad(90), 0) * CFrame.new(3.4, 0, 0)
-			local board = part({ Name = "Arrow", Size = Vector3.new(6.4, 1.3, 0.25), CFrame = cf, Color = Color3.fromRGB(200, 170, 110), Material = Enum.Material.Wood })
-			sign(board, Enum.NormalId.Front, dest.Name .. "  >>", Color3.fromRGB(60, 40, 20)) -- the triangle glyphs did not render
-			sign(board, Enum.NormalId.Back, "<<  " .. dest.Name, Color3.fromRGB(60, 40, 20))
-		end
-	end
-end
-
 local function fence(a, b, height, color)
 	local mid = (a + b) / 2
 	local length = (b - a).Magnitude
@@ -213,39 +197,6 @@ local function roads()
 	end
 end
 
--- signposts where each spoke leaves the plaza, and halfway round the ring
-local function signposts()
-	local centre = Vector3.new(World.PLAZA.X, 0, World.PLAZA.Z)
-	local dests = {}
-	for _, id in ipairs(World.DistrictOrder) do
-		local x, z = World.DistrictPoint(id)
-		table.insert(dests, { Name = World.Districts[id].Name, Point = Vector3.new(x, 0, z) })
-	end
-	local _, _, oz = World.ArenaOrigin(1)
-	table.insert(dests, { Name = "Battle Lots", Point = Vector3.new(0, 0, oz) })
-	table.insert(dests, { Name = "Plaza", Point = centre })
-	table.insert(dests, { Name = "Boss Field", Point = Vector3.new(World.BossField.X, 0, World.BossField.Z) })
-	local function nearOthers(selfName)
-		local list = {}
-		for _, d in ipairs(dests) do
-			if d.Name ~= selfName then
-				table.insert(list, d)
-			end
-		end
-		return list
-	end
-	-- beside each spoke, on the side away from the plaza edge trees (those stand 8-10 degrees clockwise of every spoke)
-	for _, angle in ipairs({ -90, 90, 180, 0 }) do
-		local a = math.rad(angle - 9)
-		signpost(centre + Vector3.new(math.sin(a), 0, -math.cos(a)) * (World.PLAZA.Radius + 10), nearOthers("Plaza"))
-	end
-	for _, angle in ipairs({ 135, 225 }) do
-		local a = math.rad(angle)
-		local dir = Vector3.new(math.sin(a), 0, -math.cos(a))
-		signpost(centre + dir * (World.TOWN_RING + 9), dests)
-	end
-end
-
 -- districts ------------------------------------------------------------------
 local function gate()
 	local d = World.Districts.Gate
@@ -275,8 +226,7 @@ local function gate()
 	part({ Name = "WellRoof", Size = Vector3.new(7, 0.5, 4), CFrame = cf * CFrame.new(0, 7.6, 0), Color = Color3.fromRGB(150, 70, 50), Material = Enum.Material.WoodPlanks })
 	-- the tavern (left as you come from the plaza) and the notice board (right)
 	house(facing(cf, 27, 8), 22, 16, 13, Color3.fromRGB(230, 214, 180), Color3.fromRGB(140, 60, 44), "THE SLEEPY GRIFFIN")
-	local tavernMark = part({ Name = "TavernSpot", Size = Vector3.new(1, 1, 1), CFrame = cf * CFrame.new(17, 0.5, 5), Transparency = 1, CanCollide = false })
-	tag(tavernMark, "TAVERN", "Townsfolk errands - coming soon")
+	-- (the tavern sign names it; Greta the barkeep stands at its door, see errands())
 	local boardCf = facing(cf, -18, 2)
 	for _, side in ipairs({ -1, 1 }) do
 		part({ Name = "BoardPost", Size = Vector3.new(0.8, 8, 0.8), CFrame = boardCf * CFrame.new(side * 4.4, 4, 0.3), Color = WOOD, Material = Enum.Material.Wood })
@@ -286,7 +236,7 @@ local function gate()
 	for index = 1, 5 do
 		part({ Name = "Note", Size = Vector3.new(1.6, 2, 0.1), CFrame = boardCf * CFrame.new(-3.6 + index * 1.5, 5.2 + (index % 2) * 0.9, -0.3) * CFrame.Angles(0, 0, math.rad((index % 3 - 1) * 6)), Color = notes[index % 3 + 1], Material = Enum.Material.SmoothPlastic, CanCollide = false })
 	end
-	tag(face, "NOTICE BOARD", "Town bounties - coming soon")
+	tag(face, "NOTICE BOARD", "Town errands")
 	-- houses and lamps round the square
 	house(facing(cf, -28, 24), 16, 13, 11, Color3.fromRGB(220, 200, 170), Color3.fromRGB(90, 110, 150))
 	house(facing(cf, -32, -8), 14, 12, 10, Color3.fromRGB(235, 225, 200), Color3.fromRGB(120, 140, 80))
@@ -440,7 +390,7 @@ local function ringside()
 	local walls = { Color3.fromRGB(230, 214, 180), Color3.fromRGB(220, 200, 170), Color3.fromRGB(235, 225, 200), Color3.fromRGB(210, 190, 160) }
 	local roofs = { Color3.fromRGB(140, 60, 44), Color3.fromRGB(90, 110, 150), Color3.fromRGB(120, 140, 80), Color3.fromRGB(150, 100, 60) }
 	local index = 0
-	for _, angle in ipairs({ 116, 128, 146, 158, 202, 214, 232, 244 }) do -- clear of the districts and the signposts at 135 / 225
+	for _, angle in ipairs({ 116, 128, 146, 158, 202, 214, 232, 244 }) do -- clear of the districts
 		index += 1
 		local a = math.rad(angle)
 		local dir = Vector3.new(math.sin(a), 0, -math.cos(a))
@@ -452,18 +402,339 @@ local function ringside()
 	end
 end
 
-function Town.Build(parentFolder, hubPulsers)
+-- Town errands (docs/TOWN.md phase 2, Shared/Errands) --------------------------------------------------------
+-- NPCs and pick-up spots at World.TownSpots, each with a prompt. Town.OnErrand(spotId) / Town.OnBoard() are set by
+-- Main; Town.SetErrands(status) shows who has an errand (!) or waits for you (?), the cat, and what you carry;
+-- Town.Say(spotId, text) puts a speech bubble over a spot for a few seconds.
+local Players = game:GetService("Players")
+local ErrandConfig = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Config"):WaitForChild("Errands"))
+
+Town.OnErrand = nil
+Town.OnBoard = nil
+local spots = {} -- [spotId] = { Anchor = part, Prompt = ProximityPrompt, Marker = TextLabel, Kind = "Giver"|"Pickup"|"Cat"|"Board" }
+local cat = nil
+local kit = nil -- Hub's villager / nameTag helpers
+
+local function spotPos(id)
+	local x, z = World.TownSpot(id)
+	return Vector3.new(x, 0, z)
+end
+
+-- a frame at the spot, facing its district's centre (or the Boss Field arch for the field spots)
+local function spotFrame(id)
+	local spot = World.TownSpots[id]
+	local at = spotPos(id)
+	local tx, tz
+	if spot.District then
+		tx, tz = World.DistrictPoint(spot.District)
+	else
+		tx, tz = World.BossField.X, World.BossField.Z - World.BossField.Radius
+	end
+	if (Vector3.new(tx, 0, tz) - at).Magnitude < 1 then
+		tx, tz = World.PLAZA.X, World.PLAZA.Z
+	end
+	return CFrame.lookAt(at, Vector3.new(tx, 0, tz))
+end
+
+local function marker(on, height)
+	local gui = Instance.new("BillboardGui")
+	gui.Size = UDim2.fromOffset(40, 50)
+	gui.StudsOffset = Vector3.new(0, height, 0)
+	gui.AlwaysOnTop = true
+	gui.MaxDistance = 160
+	gui.Adornee = on
+	gui.Parent = on
+	local t = Instance.new("TextLabel")
+	t.Size = UDim2.fromScale(1, 1)
+	t.BackgroundTransparency = 1
+	t.Text = "!"
+	t.TextColor3 = Color3.fromRGB(255, 214, 60)
+	t.TextStrokeTransparency = 0
+	t.TextStrokeColor3 = Color3.fromRGB(60, 40, 0)
+	t.Font = Enum.Font.GothamBlack
+	t.TextScaled = true
+	t.Visible = false
+	t.Parent = gui
+	return t
+end
+
+local function errandPrompt(on, id, action, object)
+	local pr = Instance.new("ProximityPrompt")
+	pr.ActionText = action
+	pr.ObjectText = object
+	pr.HoldDuration = 0
+	pr.MaxActivationDistance = 12
+	pr.RequiresLineOfSight = false
+	pr.Parent = on
+	pr.Triggered:Connect(function()
+		if id == "Board" then
+			if Town.OnBoard then
+				Town.OnBoard()
+			end
+		elseif Town.OnErrand then
+			Town.OnErrand(id)
+		end
+	end)
+	return pr
+end
+
+local function npc(id, name, subtitle, look, accent)
+	local cf = spotFrame(id)
+	local model, root = kit.villager(name, look)
+	model.Parent = folder
+	model:PivotTo(cf * CFrame.new(0, kit.TORSO_HEIGHT, 0))
+	kit.nameTag(root, name:upper(), subtitle, accent, 4.6)
+	spots[id] = { Anchor = root, Prompt = errandPrompt(root, id, "Talk", name), Marker = marker(root, 7.6), Kind = "Giver" }
+	return cf
+end
+
+local function pickup(id, anchor, action, object)
+	spots[id] = { Anchor = anchor, Prompt = errandPrompt(anchor, id, action, object), Marker = marker(anchor, 5), Kind = "Pickup" }
+	spots[id].Prompt.Enabled = false
+end
+
+-- small carried / placed props --------------------------------------------------------------------------------
+local function catModel(parent)
+	local model = Instance.new("Model")
+	model.Name = "Whiskers"
+	local fur, dark = Color3.fromRGB(236, 150, 70), Color3.fromRGB(190, 104, 44)
+	local function p(props)
+		props.Parent = model
+		props.CanCollide = false
+		props.Material = props.Material or Enum.Material.SmoothPlastic
+		return part(props)
+	end
+	local body = p({ Name = "Body", Size = Vector3.new(1.1, 1, 2), CFrame = CFrame.new(0, 0.7, 0), Color = fur })
+	p({ Name = "Head", Shape = Enum.PartType.Ball, Size = Vector3.new(1.1, 1.1, 1.1), CFrame = CFrame.new(0, 1.35, -1.05), Color = fur })
+	for _, s in ipairs({ -1, 1 }) do
+		p({ Name = "Ear", Size = Vector3.new(0.3, 0.4, 0.2), CFrame = CFrame.new(s * 0.3, 1.95, -1.05) * CFrame.Angles(0, 0, math.rad(s * -15)), Color = dark })
+		p({ Name = "Eye", Size = Vector3.new(0.14, 0.18, 0.05), CFrame = CFrame.new(s * 0.22, 1.42, -1.58), Color = Color3.fromRGB(40, 120, 40), Material = Enum.Material.Neon })
+		for _, z in ipairs({ -0.7, 0.7 }) do
+			p({ Name = "Leg", Size = Vector3.new(0.3, 0.5, 0.3), CFrame = CFrame.new(s * 0.35, 0.25, z), Color = fur })
+		end
+	end
+	p({ Name = "Tail", Size = Vector3.new(0.22, 0.22, 1.4), CFrame = CFrame.new(0, 1.3, 1.3) * CFrame.Angles(math.rad(-50), 0, 0), Color = dark })
+	p({ Name = "Stripe", Size = Vector3.new(1.12, 0.2, 0.3), CFrame = CFrame.new(0, 1.12, 0.3), Color = dark })
+	model.PrimaryPart = body
+	model.Parent = parent
+	return model, body
+end
+
+local CARRY_LOOKS = {
+	Boar = function(model)
+		local base = part({ Name = "Platter", Shape = Enum.PartType.Cylinder, Size = Vector3.new(0.2, 2.6, 2.6), CFrame = CFrame.Angles(0, 0, math.rad(90)), Color = Color3.fromRGB(200, 200, 210), Material = Enum.Material.Metal, Parent = model, CanCollide = false })
+		part({ Name = "Roast", Shape = Enum.PartType.Ball, Size = Vector3.new(1.8, 1.2, 2.2), CFrame = CFrame.new(0, 0.6, 0), Color = Color3.fromRGB(150, 80, 40), Parent = model, CanCollide = false })
+		part({ Name = "Apple", Shape = Enum.PartType.Ball, Size = Vector3.new(0.5, 0.5, 0.5), CFrame = CFrame.new(0, 0.9, -1.1), Color = Color3.fromRGB(220, 40, 40), Parent = model, CanCollide = false })
+		return base
+	end,
+	Keg = function(model)
+		local keg = part({ Name = "Keg", Shape = Enum.PartType.Cylinder, Size = Vector3.new(2, 1.6, 1.6), CFrame = CFrame.Angles(0, math.rad(90), 0), Color = Color3.fromRGB(150, 100, 60), Material = Enum.Material.WoodPlanks, Parent = model, CanCollide = false })
+		for _, x in ipairs({ -0.6, 0.6 }) do
+			part({ Name = "Hoop", Shape = Enum.PartType.Cylinder, Size = Vector3.new(0.15, 1.7, 1.7), CFrame = CFrame.new(0, 0, x) * CFrame.Angles(0, math.rad(90), 0), Color = Color3.fromRGB(70, 70, 80), Material = Enum.Material.Metal, Parent = model, CanCollide = false })
+		end
+		return keg
+	end,
+	Straw = function(model)
+		local bale = part({ Name = "Straw", Size = Vector3.new(2, 1.2, 1.4), Color = Color3.fromRGB(226, 196, 100), Material = Enum.Material.Grass, Parent = model, CanCollide = false })
+		part({ Name = "Twine", Size = Vector3.new(0.15, 1.25, 1.45), CFrame = CFrame.new(-0.5, 0, 0), Color = Color3.fromRGB(120, 80, 40), Parent = model, CanCollide = false })
+		part({ Name = "Twine", Size = Vector3.new(0.15, 1.25, 1.45), CFrame = CFrame.new(0.5, 0, 0), Color = Color3.fromRGB(120, 80, 40), Parent = model, CanCollide = false })
+		return bale
+	end,
+	Cat = function(model)
+		local m, body = catModel(model)
+		m:PivotTo(CFrame.new(0, -0.7, 0) * CFrame.Angles(0, math.rad(90), 0)) -- lying across your arms
+		return body
+	end,
+}
+
+-- hold `kind` in front of the local player's chest (nil = nothing); welded, so it walks with you
+local function setCarry(kind)
+	local character = Players.LocalPlayer.Character
+	local root = character and character:FindFirstChild("HumanoidRootPart")
+	if not root then
+		return
+	end
+	local old = character:FindFirstChild("ErrandCarry")
+	if old and old:GetAttribute("Kind") == kind then
+		return
+	end
+	if old then
+		old:Destroy()
+	end
+	if not kind or not CARRY_LOOKS[kind] then
+		return
+	end
+	local model = Instance.new("Model")
+	model.Name = "ErrandCarry"
+	model:SetAttribute("Kind", kind)
+	local main = CARRY_LOOKS[kind](model)
+	for _, d in ipairs(model:GetDescendants()) do
+		if d:IsA("BasePart") then
+			d.Anchored = false
+			d.Massless = true
+			d.CanCollide = false
+			d.CanQuery = false
+			if d ~= main then
+				local w = Instance.new("WeldConstraint")
+				w.Part0, w.Part1 = main, d
+				w.Parent = d
+			end
+		end
+	end
+	model.PrimaryPart = main
+	model:PivotTo(root.CFrame * CFrame.new(0, 0.4, -1.7))
+	local weld = Instance.new("WeldConstraint")
+	weld.Part0, weld.Part1 = root, main
+	weld.Parent = main
+	model.Parent = character
+end
+
+function Town.Say(id, text)
+	local spot = spots[id]
+	if not spot or not text then
+		return
+	end
+	local old = spot.Anchor:FindFirstChild("SpeechBubble")
+	if old then
+		old:Destroy()
+	end
+	local gui = Instance.new("BillboardGui")
+	gui.Name = "SpeechBubble"
+	gui.Size = UDim2.fromOffset(260, 70)
+	gui.StudsOffset = Vector3.new(0, if spot.Kind == "Giver" then 10 else 7, 0)
+	gui.MaxDistance = 80
+	gui.Adornee = spot.Anchor
+	gui.Parent = spot.Anchor
+	local box = Instance.new("TextLabel")
+	box.Size = UDim2.fromScale(1, 1)
+	box.BackgroundColor3 = Color3.fromRGB(255, 252, 240)
+	box.BackgroundTransparency = 0.05
+	box.TextColor3 = Color3.fromRGB(40, 32, 24)
+	box.Font = Enum.Font.GothamMedium
+	box.TextSize = 14
+	box.TextWrapped = true
+	box.Text = text
+	box.Parent = gui
+	local corner = Instance.new("UICorner")
+	corner.CornerRadius = UDim.new(0, 10)
+	corner.Parent = box
+	local pad = Instance.new("UIPadding")
+	pad.PaddingLeft, pad.PaddingRight = UDim.new(0, 8), UDim.new(0, 8)
+	pad.Parent = box
+	task.delay(7, function()
+		if gui.Parent then
+			gui:Destroy()
+		end
+	end)
+end
+
+function Town.SetErrands(status)
+	if not status then
+		return
+	end
+	local active = status.Active
+	local stateOf = {}
+	for _, e in ipairs(status.List or {}) do
+		stateOf[e.Giver] = e.State
+	end
+	for id, spot in pairs(spots) do
+		if spot.Kind == "Giver" then
+			local turnIn = active ~= nil and active.Spot == id
+			local ready = active == nil and stateOf[id] == "Ready"
+			spot.Marker.Visible = turnIn or ready
+			spot.Marker.Text = if turnIn then "?" else "!"
+			spot.Prompt.ActionText = if turnIn then active.Prompt else "Talk"
+		elseif spot.Kind == "Pickup" or spot.Kind == "Cat" then
+			local need = active ~= nil and active.Spot == id
+			spot.Prompt.Enabled = need
+			spot.Marker.Visible = need
+			spot.Marker.Text = "?"
+			if need then
+				spot.Prompt.ActionText = active.Prompt
+			end
+		end
+	end
+	-- the cat sits at today's hiding place only while you are looking for it
+	if cat then
+		local hide = active ~= nil and active.Spot ~= nil and active.Spot:sub(1, 3) == "Cat" and spots[active.Spot] ~= nil
+		cat.Model.Parent = if hide then folder else nil
+		if hide then
+			cat.Model:PivotTo(CFrame.new(spots[active.Spot].Anchor.Position - Vector3.new(0, 0.6, 0)) * CFrame.Angles(0, math.rad(40), 0))
+		end
+	end
+	setCarry(active and active.Carry)
+end
+
+local function errands()
+	-- townsfolk with errands
+	npc("Mabel", "Old Mabel", "Townsfolk", { Shirt = Color3.fromRGB(150, 110, 170), Pants = Color3.fromRGB(90, 70, 100), Hair = Color3.fromRGB(220, 220, 225), Skin = Color3.fromRGB(236, 200, 170), Apron = Color3.fromRGB(240, 236, 220) }, Color3.fromRGB(190, 140, 220))
+	npc("Warden", "Warden Hale", "Keeper of the Boss Field", { Shirt = Color3.fromRGB(90, 60, 50), Pants = Color3.fromRGB(50, 44, 40), Hair = Color3.fromRGB(60, 40, 30), Hood = Color3.fromRGB(70, 50, 40), Held = "Staff", Glow = Color3.fromRGB(255, 120, 60) }, Color3.fromRGB(200, 90, 70))
+	npc("Guildmaster", "Guildmaster Orin", "Guild Hall", { Shirt = Color3.fromRGB(90, 60, 130), Pants = Color3.fromRGB(50, 40, 70), Hair = Color3.fromRGB(110, 110, 120), Robe = Color3.fromRGB(100, 70, 150), Trim = Color3.fromRGB(255, 220, 120), Held = "Scroll" }, Color3.fromRGB(150, 110, 220))
+	npc("Sergeant", "Sergeant Brask", "Drill sergeant", { Shirt = Color3.fromRGB(150, 50, 44), Pants = Color3.fromRGB(60, 56, 50), Hair = Color3.fromRGB(40, 30, 24), Hat = Color3.fromRGB(110, 90, 60), Held = "Hammer" }, Color3.fromRGB(220, 110, 80))
+	-- the barkeep at the tavern hands out the boar and the keg (only while an errand needs them)
+	local barCf = spotFrame("Tavern")
+	local barModel, barRoot = kit.villager("Greta", { Shirt = Color3.fromRGB(180, 80, 60), Pants = Color3.fromRGB(70, 50, 40), Hair = Color3.fromRGB(170, 90, 40), Apron = Color3.fromRGB(245, 240, 225) })
+	barModel.Parent = folder
+	barModel:PivotTo(barCf * CFrame.new(0, kit.TORSO_HEIGHT, 0))
+	kit.nameTag(barRoot, "GRETA", "Barkeep, the Sleepy Griffin", Color3.fromRGB(230, 140, 90), 4.6)
+	pickup("Tavern", barRoot, "Collect", "Greta")
+	spots.Tavern.Marker.Parent.StudsOffset = Vector3.new(0, 7.6, 0)
+	for index, y in ipairs({ 1.3, 3.5 }) do
+		part({ Name = "Barrel", Shape = Enum.PartType.Cylinder, Size = Vector3.new(2.2, 2.2, 2.2), CFrame = barCf * CFrame.new(3.4, y, 0.6) * CFrame.Angles(0, 0, math.rad(90)), Color = if index == 1 then Color3.fromRGB(150, 100, 60) else Color3.fromRGB(140, 92, 54), Material = Enum.Material.WoodPlanks })
+	end
+	-- the hay pile beside the pet park
+	local hayCf = spotFrame("Hay")
+	local hay = part({ Name = "HayPile", Shape = Enum.PartType.Ball, Size = Vector3.new(6, 6, 6), CFrame = hayCf * CFrame.new(0, 0.8, 0), Color = Color3.fromRGB(226, 196, 100), Material = Enum.Material.Grass })
+	part({ Name = "HayBale", Size = Vector3.new(3, 1.8, 2), CFrame = hayCf * CFrame.new(3.8, 0.9, 1.4) * CFrame.Angles(0, math.rad(20), 0), Color = Color3.fromRGB(214, 184, 90), Material = Enum.Material.Grass })
+	part({ Name = "Pitchfork", Size = Vector3.new(0.2, 5, 0.2), CFrame = hayCf * CFrame.new(-2.8, 2.4, 0.4) * CFrame.Angles(0, 0, math.rad(18)), Color = WOOD, Material = Enum.Material.Wood })
+	pickup("Hay", hay, "Grab straw", "Hay pile")
+	-- the offering stone on the Boss Field
+	local altarCf = spotFrame("Altar")
+	local altar = part({ Name = "OfferingStone", Size = Vector3.new(7, 2.4, 4.4), CFrame = altarCf * CFrame.new(0, 1.2, 0), Color = Color3.fromRGB(96, 88, 84), Material = Enum.Material.Slate })
+	for _, side in ipairs({ -1, 1 }) do
+		part({ Name = "Brazier", Size = Vector3.new(1, 3.4, 1), CFrame = altarCf * CFrame.new(side * 5, 1.7, 0), Color = Color3.fromRGB(60, 56, 54), Material = Enum.Material.Metal })
+		local fire = part({ Name = "Fire", Shape = Enum.PartType.Ball, Size = Vector3.new(1.2, 1.4, 1.2), CFrame = altarCf * CFrame.new(side * 5, 3.9, 0), Color = Color3.fromRGB(255, 130, 40), Material = Enum.Material.Neon, CanCollide = false })
+		table.insert(pulsers, { Part = fire, Phase = side * 2, Base = 0.1, Amount = 0.25 })
+	end
+	tag(altar, "OFFERING STONE", "Feed the beasts", Color3.fromRGB(255, 150, 90))
+	pickup("Altar", altar, "Make the offering", "Offering stone")
+	spots.Altar.Marker.Parent.StudsOffset = Vector3.new(0, 8, 0)
+	-- the cat's hiding places: an invisible anchor at each, the cat itself moves to today's
+	for n = 1, #ErrandConfig.CatHints do
+		local id = "Cat" .. n
+		local anchor = part({ Name = id, Size = Vector3.new(1, 1, 1), CFrame = CFrame.new(spotPos(id) + Vector3.new(0, 0.6, 0)), Transparency = 1, CanCollide = false })
+		spots[id] = { Anchor = anchor, Prompt = errandPrompt(anchor, id, "Pick up Whiskers", "Whiskers"), Marker = marker(anchor, 3.4), Kind = "Cat" }
+		spots[id].Prompt.Enabled = false
+	end
+	local model = catModel(nil)
+	for _, d in ipairs(model:GetDescendants()) do
+		if d:IsA("BasePart") then
+			d.Anchored = true
+		end
+	end
+	cat = { Model = model }
+	-- the notice board opens the errand list
+	local boardFace = folder:FindFirstChild("NoticeBoard")
+	if boardFace then
+		spots.Board = { Anchor = boardFace, Prompt = errandPrompt(boardFace, "Board", "Read errands", "Notice Board"), Marker = marker(boardFace, 5), Kind = "Board" }
+	end
+end
+
+function Town.Build(parentFolder, hubPulsers, hubKit)
 	folder = Instance.new("Folder")
 	folder.Name = "Town"
 	folder.Parent = parentFolder
 	pulsers = hubPulsers or {}
+	kit = hubKit
 	roads()
 	gate()
 	grove()
 	training()
 	ringside()
 	bossField()
-	signposts()
+	if kit then
+		errands()
+	end
 	return folder
 end
 

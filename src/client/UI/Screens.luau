@@ -603,6 +603,38 @@ function Screens.Daily(container, state, call)
 	end
 end
 
+-- Errands (the Notice Board at the Town Gate) ------------------------------------
+-- state.Player.Errands = Shared/Errands.Status: today's town errands, who gives each, the reward and where it stands.
+function Screens.Errands(container, state, call)
+	local info = state.Player.Errands
+	local scroll = list(container)
+	if not info then
+		Kit.label({ Size = UDim2.new(1, 0, 0, 30), Text = "Loading...", TextColor3 = C.Dim, Parent = scroll })
+		return
+	end
+	local head = row(scroll, 52)
+	Kit.label({ Size = UDim2.new(1, -150, 0, 24), Position = UDim2.fromOffset(10, 4), Text = ("Town errands today: %d / %d done"):format(info.DoneCount, info.Total), TextSize = 17, Font = Enum.Font.GothamBold, TextColor3 = C.Accent, Parent = head })
+	Kit.label({ Size = UDim2.new(1, -150, 0, 20), Position = UDim2.fromOffset(10, 28), Text = "Talk to townsfolk with a yellow ! to start one. New errands every day.", TextSize = 12, TextColor3 = C.Dim, TextWrapped = true, Parent = head })
+	if info.Active then
+		Kit.button({ Size = UDim2.fromOffset(130, 34), Position = UDim2.new(1, -140, 0.5, -17), Text = "Drop errand", BackgroundColor3 = C.Panel, Parent = head }, function()
+			call("ErrandAbandon")
+		end)
+	end
+	for _, e in ipairs(info.List) do
+		local r = row(scroll, 64)
+		local done, active = e.State == "Done", e.State == "Active"
+		Kit.new("UIStroke", { Color = if active then C.Accent elseif done then C.Good else Color3.fromRGB(70, 76, 104), Thickness = if active then 2 else 1, Parent = r })
+		Kit.label({ Size = UDim2.new(1, -200, 0, 22), Position = UDim2.fromOffset(10, 4), Text = e.Name .. "  -  " .. e.GiverName, TextSize = 15, Font = Enum.Font.GothamBold, TextColor3 = if done then C.Dim else C.Text, Parent = r })
+		local sub = e.Blurb
+		if active and info.Active then
+			sub = ("Step %d/%d: %s"):format(info.Active.Step, info.Active.Steps, info.Active.Text)
+		end
+		Kit.label({ Size = UDim2.new(1, -200, 0, 34), Position = UDim2.fromOffset(10, 26), Text = sub, TextSize = 12, TextWrapped = true, TextYAlignment = Enum.TextYAlignment.Top, TextColor3 = if active then C.Accent else C.Dim, Parent = r })
+		Kit.label({ Size = UDim2.fromOffset(180, 36), Position = UDim2.new(1, -190, 0, 4), Text = "🌠 " .. table.concat(e.Reward, "\n"), TextSize = 12, TextYAlignment = Enum.TextYAlignment.Top, TextXAlignment = Enum.TextXAlignment.Right, Parent = r })
+		Kit.label({ Size = UDim2.fromOffset(180, 18), Position = UDim2.new(1, -190, 1, -22), Text = if done then "Done today" elseif active then "In progress" else "Ready", TextSize = 12, Font = Enum.Font.GothamBold, TextXAlignment = Enum.TextXAlignment.Right, TextColor3 = if done then C.Good elseif active then C.Accent else C.Text, Parent = r })
+	end
+end
+
 -- Ranks --------------------------------------------------------------------
 -- extra.Board = reply of GetLeaderboard, extra.BoardCategory = "Stage"|"Level"|"Class_<class>",
 -- extra.ShowBoard(categoryId) switches tabs.

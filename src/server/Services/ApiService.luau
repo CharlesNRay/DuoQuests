@@ -85,6 +85,7 @@ local Character = require(Shared.Character)
 local Characters = require(Shared.Characters)
 local Tutorial = require(Shared.Tutorial)
 local Activities = require(Shared.Activities)
+local Errands = require(Shared.Errands)
 local Market = require(Shared.Market)
 local WeaponService = require(script.Parent.WeaponService)
 local CharacterConfig = require(Shared.Config.Character)
@@ -262,6 +263,7 @@ local function buildState(player)
 			SunstonePacks = Premium.Packs(profile),
 			Cosmetics = cosmeticsOf(profile),
 			Character = characterOf(profile),
+			Errands = Errands.Status(profile, os.time()), -- town errands (docs/TOWN.md phase 2)
 		},
 	}
 
@@ -920,7 +922,10 @@ function DEV_ACTIONS.Daily(profile)
 		end
 	end
 	profile.Season.Gifts = nil
-	return "Dungeon keys, daily bonuses and gift limits reset; expedition ready"
+	if profile.Season.Errands then
+		profile.Season.Errands.Day = -1 -- town errands come back on the next read
+	end
+	return "Dungeon keys, daily bonuses, town errands and gift limits reset; expedition ready"
 end
 function DEV_ACTIONS.WorldBoss()
 	local ok, reason = BossService.DevStartWorld()
@@ -1383,6 +1388,23 @@ function handlers.JoinByCode(player, _, code)
 		return false, "BadArgs"
 	end
 	return PartyService.JoinByCode(player, code)
+end
+
+-- Town errands: press the prompt at an errand spot (an NPC, the tavern, the hay pile, the cat ...). The player must be there.
+function handlers.Errand(player, profile, spotId)
+	if type(spotId) ~= "string" or not World.TownSpots[spotId] then
+		return false, "BadArgs"
+	end
+	local character = player.Character
+	local root = character and character:FindFirstChild("HumanoidRootPart")
+	if not root or not World.NearSpot(root.Position.X, root.Position.Z, spotId) then
+		return false, "TooFar"
+	end
+	return Errands.Interact(profile, spotId, os.time(), math.random)
+end
+
+function handlers.ErrandAbandon(_, profile)
+	return Errands.Abandon(profile, os.time())
 end
 
 function handlers.Leave(player)
