@@ -97,7 +97,8 @@ Git Bash; they find a working Python themselves (`python3`/`python` there are St
 - **Combo finishers fixed 2026-11-22** (tests green, NOT seen in Studio): the Templar "Judgment" (now `Verdict`) and the boss
   "CrushingBlow" (now `BossCrush`) had overwritten the Cleric/Warrior finishers (duplicate keys in Config/Abilities; `SkillIdTests`
   guards it). Ready finishers jump the slot order at 2+ layers (`Simulation.FINISHER_MIN_LAYERS`). Ranger/Templar/Priest damage
-  penalties eased. The bot keeps Heal+Blessing / Taunt. Open: Judgment is a weak 4th Cleric skill; Warrior squads lowest (BALANCE.md).
+  penalties eased. The bot keeps Heal+Blessing / Taunt+IronSkin. Berserker -0.15 dmg / -0.12 health (2026-11-23; the 11-22 halving
+  had only reached the docs). Open: Judgment is a weak 4th Cleric skill; Berserker ~10 stages behind Guardian (BALANCE.md).
 
 ## Gotchas
 - Studio testing: the HUD 🧪 button opens the "Test cheats" panel (Studio only, `UI/DevScreen` -> `handlers.Dev(action, n)`, `DEV_ACTIONS` in ApiService):

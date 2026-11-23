@@ -132,7 +132,7 @@ local function equipBest(profile, classId)
 	-- finishers the combo-first pick pushed them out, and Cleric/Warrior teams fell behind)
 	-- and a Cleric keeps Blessing (the party's +25% attack: a Cleric squad without it was ~16 stages behind at L40)
 	local owns = profile.Season.OwnedAbilities
-	local keepList = ({ Cleric = { "Heal", "Blessing" }, Warrior = { "Taunt" } })[classId] or {}
+	local keepList = ({ Cleric = { "Heal", "Blessing" }, Warrior = { "Taunt", "IronSkin" } })[classId] or {} -- Warrior without Iron Skin: ~6 stages behind at L40
 	for _, id in ipairs(keepList) do
 		if owns[id] then table.insert(best, id) end
 	end

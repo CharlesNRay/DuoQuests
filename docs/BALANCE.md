@@ -274,3 +274,13 @@ Roster at L40 (3 seeds; Cleric 6 seeds), before -> after: Cleric 50.5 -> 53.2, R
 Mage 62.2 -> 66.3, Summoner 57.2 -> 60.5, Warrior 56.7 -> 51.5 (now wears Taunt + Crushing Blow); hours to L40 ~9.1.
 Open: Judgment is still a weaker 4th skill than Smite or Radiant Burst for a Blessing Cleric; real players may also drop
 Blessing (a UI hint, or making Blessing harder to drop, would help); Warrior is now the lowest damage-side squad.
+
+## Warrior: keep Iron Skin; Berserker halving actually applied (2026-11-23)
+Forced Warrior kits (6 seeds x 2 paths, companion, full, stage at L40): Taunt/ShieldBash/Whirlwind/CrushingBlow 50.8;
+no Taunt (ShieldBash/Whirlwind/CrushingBlow/IronSkin) 50.2; starter kit Taunt/IronSkin/ShieldBash/Whirlwind 56.7;
+Taunt/IronSkin/ShieldBash/CrushingBlow 55.8. Iron Skin (a starter, so high level) is what the squad needs; the restored
+Crushing Blow is fine as the 4th skill but not instead of Iron Skin. A self shield on Crushing Blow (20% max health) only
+gave +1.4 and was dropped. The bot now keeps Taunt + Iron Skin (like Heal + Blessing for Clerics).
+The 2026-11-22 "Berserker penalties halved" commit only changed this file: Config/Subclasses still had -0.313 damage and
+-0.24 health. Now -0.15 / -0.12. Real bot, 6 seeds: Warrior 58.2 and 53.8 in two runs (Guardian 65/58, Berserker 51/49);
+was 51.5. Path means swing ~±4 at 6 seeds. Berserker stays ~10 stages behind Guardian in every kit: still open.

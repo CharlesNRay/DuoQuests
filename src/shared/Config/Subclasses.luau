@@ -37,10 +37,10 @@ return {
 			Description = "All-out offense. Huge attack, attack speed and crits; a frenzy that makes the Warrior a damage dealer.",
 			Mods = {
 				{ Stat = "Attack", Mode = "Mul", Value = 0.25 },
-				{ Stat = "DamageDealt", Mode = "Mul", Value = -0.313 },
+				{ Stat = "DamageDealt", Mode = "Mul", Value = -0.15 }, -- was -0.313 (halved 2026-11-22; the first commit only changed the docs)
 				{ Stat = "AttackSpeed", Mode = "Mul", Value = 0.08 },
 				{ Stat = "CritChance", Mode = "Add", Value = 0.05 },
-				{ Stat = "MaxHealth", Mode = "Mul", Value = -0.240 },
+				{ Stat = "MaxHealth", Mode = "Mul", Value = -0.12 }, -- was -0.240
 			},
 			Skills = { "BloodFrenzy", "Cleave", "ExecutionerStrike" },
 		},
