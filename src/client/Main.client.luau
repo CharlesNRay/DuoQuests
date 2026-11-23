@@ -244,6 +244,7 @@ local function redraw()
 	end
 	Hub.SetDailyReady(state.Player.Daily ~= nil and state.Player.Daily.CanClaim == true)
 	Town.SetErrands(state.Player.Errands)
+	Town.SetRelics(state.Player.Relics and state.Player.Relics.Found)
 	-- sound settings come from the account once; after that the Settings screen owns them
 	if not extra.SoundApplied then
 		extra.SoundApplied = true
@@ -503,6 +504,31 @@ Town.OnPlace = function(id)
 		open("Guild", "Guild", true)
 	elseif id == "Dummy" then
 		extra.RunDummy()
+	elseif id == "PetPark" then
+		task.spawn(function()
+			local ok, data = api:InvokeServer("PetPlay")
+			if ok and type(data) == "table" then
+				Town.Say("PetPark", "Your pet had a great time! " .. table.concat(data.Lines or {}, ", "))
+				Sound.Play("Reward")
+				Celebrate.Sparkle(Color3.fromRGB(255, 170, 210))
+			else
+				Town.Say("PetPark", if data == "DoneToday" then "Your pet is tired out. Come back tomorrow!" elseif data == "NoPet" then "Bring a pet to play! (Pets screen)" else "Come closer to play.")
+			end
+		end)
+	elseif tostring(id):sub(1, 5) == "Relic" then
+		task.spawn(function()
+			local ok, data = api:InvokeServer("TakeRelic", id)
+			if ok and type(data) == "table" then
+				Sound.Play(if data.All then "LevelUp" else "Reward")
+				Celebrate.Sparkle(Color3.fromRGB(120, 230, 255))
+				Celebrate.Show(root, if data.All then "ALL RELICS FOUND!" else ("RELIC %d / %d"):format(data.Found, data.Total), table.concat(data.Lines or {}, "  "), Color3.fromRGB(120, 230, 255))
+				local fresh, newState = api:InvokeServer("GetState")
+				if fresh and newState then
+					state = newState
+					redraw()
+				end
+			end
+		end)
 	elseif id == "Pond" then
 		FishingGame.Start(root, api, {
 			Bobber = Town.Bobber,

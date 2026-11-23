@@ -43,7 +43,7 @@ Newest first.
 - ✅ Sound: music per content (town, stages, dungeon, world boss, season boss, guild raid), combat and interface effects, level-up fanfare and card, Settings screen with volume sliders. Seen in Studio (not heard: loudness).
 - ✅ Talents: 1 point per level, 8 stat talents, auto-spend, free reset. Seen in Studio.
 - ✅ Rune Carver NPC, stalls that show their trade, combat log stays minimized, pet faces forward, companions' pets. Seen in Studio.
-- ⬜ Town phases 3-5 (fishing pond, pet park, training dummy, hidden relics): see docs/TOWN.md.
+- ✅ Town phases 3-5: fishing pond, Training Dummy, pet park, hidden relics (docs/TOWN.md). Seen in Studio. ⬜ Sparring ring (owner to decide).
 
 ### 2026-11-17 to 2026-11-22 (four-hero parties, combat rework, balance)
 - 🔨 Parties of up to 4: every fight has 4 heroes, companions fill empty seats (classes the party lacks), party ultimate from any pair of classes, boss/raid/dungeon fights take the whole team. ✅ Seen: 3 companions on HUD and Party tabs, ghost skill edits, Hero and Skills tabs per teammate.

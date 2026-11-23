@@ -633,6 +633,16 @@ function Screens.Errands(container, state, call)
 		Kit.label({ Size = UDim2.fromOffset(180, 36), Position = UDim2.new(1, -190, 0, 4), Text = "🌠 " .. table.concat(e.Reward, "\n"), TextSize = 12, TextYAlignment = Enum.TextYAlignment.Top, TextXAlignment = Enum.TextXAlignment.Right, Parent = r })
 		Kit.label({ Size = UDim2.fromOffset(180, 18), Position = UDim2.new(1, -190, 1, -22), Text = if done then "Done today" elseif active then "In progress" else "Ready", TextSize = 12, Font = Enum.Font.GothamBold, TextXAlignment = Enum.TextXAlignment.Right, TextColor3 = if done then C.Good elseif active then C.Accent else C.Text, Parent = r })
 	end
+	-- the other things to do round town
+	local relics = state.Player.Relics
+	local fishing = state.Player.Fishing
+	local more = row(scroll, 64)
+	Kit.label({ Size = UDim2.new(1, -20, 0, 20), Position = UDim2.fromOffset(10, 4), Text = "More to do in town", TextSize = 15, Font = Enum.Font.GothamBold, Parent = more })
+	Kit.label({
+		Size = UDim2.new(1, -20, 0, 36), Position = UDim2.fromOffset(10, 24), TextSize = 12, TextWrapped = true, TextYAlignment = Enum.TextYAlignment.Top, TextColor3 = C.Dim, Parent = more,
+		Text = ("💎 Relics found: %d / %d (glowing crystals hidden round town)   🎣 Paid catches left today: %d   🐾 Pet park: %s"):format(
+			relics and relics.Count or 0, relics and relics.Total or 10, fishing and fishing.Left or 0, if state.Player.PetPlayed then "played today" else "ready"),
+	})
 end
 
 -- Ranks --------------------------------------------------------------------

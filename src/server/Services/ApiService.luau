@@ -89,6 +89,7 @@ local Errands = require(Shared.Errands)
 local Talents = require(Shared.Talents)
 local Fishing = require(Shared.Fishing)
 local TrainingDummy = require(Shared.TrainingDummy)
+local TownLeisure = require(Shared.TownLeisure)
 local Market = require(Shared.Market)
 local WeaponService = require(script.Parent.WeaponService)
 local CharacterConfig = require(Shared.Config.Character)
@@ -277,6 +278,8 @@ local function buildState(player)
 			Talents = Talents.Status(profile), -- level-up points (Shared/Talents)
 			Fishing = Fishing.Status(profile, Daily.DayNumber(os.time())), -- the fishing pond (catches left today, fish log)
 			DummyBest = profile.Season.DummyBest or 0, -- best party DPS on the training dummy
+			Relics = TownLeisure.Relics(profile), -- hidden relics found this season
+			PetPlayed = TownLeisure.PetPlayed(profile, Daily.DayNumber(os.time())), -- the pet park today
 		},
 	}
 
@@ -1439,6 +1442,27 @@ function handlers.FishReel(player, profile)
 	local cast = fishCasts[player.UserId]
 	fishCasts[player.UserId] = nil
 	return Fishing.Reel(profile, cast, os.clock(), Daily.DayNumber(os.time()), math.random)
+end
+
+function handlers.PetPlay(player, profile)
+	if not nearSpot(player, "PetPark") then
+		return false, "TooFar"
+	end
+	local ok, info = TownLeisure.PetPlay(profile, Daily.DayNumber(os.time()))
+	if ok then
+		afterBuildChange(player)
+	end
+	return ok, info
+end
+
+function handlers.TakeRelic(player, profile, id)
+	if type(id) ~= "string" or not World.TownSpots[id] then
+		return false, "BadArgs"
+	end
+	if not nearSpot(player, id) then
+		return false, "TooFar"
+	end
+	return TownLeisure.TakeRelic(profile, id)
 end
 
 function handlers.TrainDummy(player, profile)

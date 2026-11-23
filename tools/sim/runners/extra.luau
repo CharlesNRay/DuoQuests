@@ -103,5 +103,5 @@ m.Errands = require("./Errands") m.ErrandConfig = require("./Config/Errands") m.
 require("./ErrandTests")(m)
 m.Talents = require("./Talents") m.TalentConfig = require("./Config/Talents") m.Power = m.Power or require("./Power") m.Party = m.Party or require("./Party")
 require("./TalentTests")(m)
-m.Fishing = require("./Fishing") m.FishingConfig = require("./Config/Fishing") m.TrainingDummy = require("./TrainingDummy")
+m.Fishing = require("./Fishing") m.FishingConfig = require("./Config/Fishing") m.TrainingDummy = require("./TrainingDummy") m.TownLeisure = require("./TownLeisure") m.World = m.World or require("./World") m.Pets = m.Pets or require("./Pets") m.PetConfig = m.PetConfig or require("./Config/Pets")
 require("./TownActivityTests")(m)

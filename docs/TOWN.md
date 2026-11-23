@@ -94,7 +94,11 @@ A tracker card sits bottom-left. Reset with the Test cheats "Reset dailies".
   the rare ones). Every catch goes in a fish log (`Season.Fishing.Log`, not shown on a screen yet).
 - **Training Dummy** (Training Grounds): your whole party hits an unkillable, unarmoured dummy for 20 s on the server;
   the screen shows each hero's damage per second and your best. No rewards.
-- Still to build: pet park (play with your pet), hidden relics, sparring ring (owner has not said if wanted).
+- **Pet park** (Grove, built 2026-11-23, seen): play with your active pet once a day: +4000 pet XP (shard progress if it
+  is at your level).
+- **Hidden relics** (built 2026-11-23, seen): 10 glowing crystals round town and just outside it; 2 Wishstones each once
+  a season; all 10 add 10 Wishstones and the title "Relic Hunter". The Notice Board shows how many you have found.
+- Still to build: sparring ring (owner has not said if wanted); a fish log screen.
 
 ## Questions for you
 1. ANSWERED 2026-11-23: wishes (Wishstones / wish tickets). Was: is "small Wishstones/gold, plus cosmetics and titles" right, or should town play give **only** cosmetics

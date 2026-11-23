@@ -288,7 +288,8 @@ local function grove()
 	end
 	disc(parkCf.Position, 9, 0.2, 0.35, Color3.fromRGB(130, 196, 110), Enum.Material.Grass)
 	local ball = part({ Name = "PetBall", Shape = Enum.PartType.Ball, Size = Vector3.new(1.4, 1.4, 1.4), CFrame = parkCf * CFrame.new(-3, 1.2, -2), Color = Color3.fromRGB(240, 80, 80), Material = Enum.Material.SmoothPlastic })
-	tag(ball, "PET PARK", "Play with your pet - coming soon", Color3.fromRGB(255, 170, 210))
+	tag(ball, "PET PARK", "Play with your pet once a day", Color3.fromRGB(255, 170, 210))
+	ball:SetAttribute("PlaceId", "PetPark")
 	part({ Name = "Ramp", Size = Vector3.new(4, 2, 6), CFrame = parkCf * CFrame.new(4, 1.3, 3), Color = Color3.fromRGB(200, 160, 110), Material = Enum.Material.Wood }, "WedgePart")
 	local kennel = parkCf * CFrame.new(5, 0, -5)
 	part({ Name = "Doghouse", Size = Vector3.new(3.4, 2.8, 3.4), CFrame = kennel * CFrame.new(0, 1.75, 0), Color = Color3.fromRGB(190, 120, 80), Material = Enum.Material.WoodPlanks })
@@ -870,6 +871,35 @@ local function places()
 			placePrompt(d, "Dummy", "Test your build", "Training Dummy")
 		elseif id == "Pond" then
 			placePrompt(d, "Pond", "Fish", "Fishing Pond")
+		elseif id == "PetPark" then
+			placePrompt(d, "PetPark", "Play with your pet", "Pet Park")
+		end
+	end
+	-- hidden relics: small glowing crystals; found ones disappear (Town.SetRelics)
+	local n = 1
+	while World.TownSpots["Relic" .. n] do
+		local id = "Relic" .. n
+		local at = spotPos(id)
+		local crystal = part({ Name = id, Size = Vector3.new(0.9, 1.8, 0.9), CFrame = CFrame.new(at + Vector3.new(0, 1.3, 0)) * CFrame.Angles(math.rad(12), math.rad(n * 37), math.rad(8)), Color = Color3.fromRGB(120, 230, 255), Material = Enum.Material.Neon, CanCollide = false, Transparency = 0.1 })
+		table.insert(pulsers, { Part = crystal, Phase = n, Base = 0.1, Amount = 0.3 })
+		local light = Instance.new("PointLight")
+		light.Range = 8
+		light.Brightness = 1.5
+		light.Color = Color3.fromRGB(120, 230, 255)
+		light.Parent = crystal
+		local pr = placePrompt(crystal, id, "Pick up", "Glowing relic")
+		pr.MaxActivationDistance = 10
+		n += 1
+	end
+end
+
+-- hide the relics this player has already found (found = { [relicId] = true })
+function Town.SetRelics(found)
+	for id, spot in pairs(spots) do
+		if id:sub(1, 5) == "Relic" then
+			-- taken ones leave the world (the glow pulse would keep a see-through one visible)
+			local taken = found and found[id] == true
+			spot.Anchor.Parent = if taken then nil else folder
 		end
 	end
 end

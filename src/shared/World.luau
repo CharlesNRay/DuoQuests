@@ -91,6 +91,18 @@ World.TownSpots = {
 	-- places that open a screen (not errands)
 	Dummy = { District = "Training", X = 0, Z = -22 }, -- the middle training dummy ("test your build")
 	Pond = { District = "Grove", X = -34, Z = 2 }, -- the fishing dock
+	PetPark = { District = "Grove", X = 31, Z = 14 }, -- the ball in the pet park
+	-- hidden relics (Shared/TownLeisure): tucked behind buildings, under trees, out on the fields
+	Relic1 = { District = "Grove", X = 6, Z = 44 }, -- behind the Wishing Tree
+	Relic2 = { District = "Grove", X = 41, Z = 23 }, -- by the doghouse in the pet park
+	Relic3 = { District = "Gate", X = 37, Z = 17 }, -- behind the Sleepy Griffin
+	Relic4 = { District = "Gate", X = -14, Z = 36 }, -- by the town wall behind Old Mabel's garden
+	Relic5 = { District = "Training", X = -34, Z = -2 }, -- under the sparring ring corner
+	Relic6 = { District = "Training", X = 34, Z = 32 }, -- behind the Guild Hall
+	Relic7 = { X = -56, Z = 282 }, -- among the rocks of the Boss Field
+	Relic8 = { X = -280, Z = 64 }, -- by the Dungeon Gate hill
+	Relic9 = { X = 120, Z = 272 }, -- at the Expedition Camp
+	Relic10 = { X = -99, Z = 139 }, -- under a tree on the road between the Grove and the Gate
 	DungeonGate = { X = -290, Z = 40 }, -- outside town, west of the Wishing Grove
 	ExpeditionCamp = { X = 100, Z = 262 }, -- outside the town wall, south-east
 	GuildBoard = { District = "Training", X = 6, Z = 24 }, -- beside the Guild Hall, the other side from Guildmaster Orin

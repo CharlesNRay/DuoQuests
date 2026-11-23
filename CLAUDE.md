@@ -152,7 +152,11 @@ Git Bash; they find a working Python themselves (`python3`/`python` there are St
   results with 4 heroes and a personal best): `Shared/Fishing` + `Config/Fishing` (12 paid catches a day, mostly pet
   food; casts kept in server memory, os.clock timing with a grace window), handlers `FishCast`/`FishReel` at
   `TownSpots.Pond`; `Shared/TrainingDummy` (20 s fight vs enemy `TrainingDummy`, no rewards, `Season.DummyBest`),
-  handler `TrainDummy` at `TownSpots.Dummy`. UI: `UI/FishingGame`, `UI/DummyScreen`. Not done: pet park, relics.
+  handler `TrainDummy` at `TownSpots.Dummy`. UI: `UI/FishingGame`, `UI/DummyScreen`.
+- **Pet park + relics 2026-11-23** (SEEN in Studio: relic pickup card and it vanishes, pet play +4000 pet XP, Notice
+  Board "More to do in town" line): `Shared/TownLeisure`. Pet park once a day (`Season.PetPlayDay`, handler `PetPlay`);
+  10 relics `TownSpots.Relic1..10` (2 Wishstones each per season, all 10 = +10 and title "Relic Hunter",
+  `Season.Relics`, handler `TakeRelic`). Not seen: the all-relics title moment; sparring ring not built (owner undecided).
 
 ## Gotchas
 - Studio testing: the HUD 🧪 button opens the "Test cheats" panel (Studio only, `UI/DevScreen` -> `handlers.Dev(action, n)`, `DEV_ACTIONS` in ApiService):
