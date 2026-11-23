@@ -460,7 +460,24 @@ Hub.Build({
 	PetStore = function() shopOpen("PetStore", "Pet Store - eggs & pet gear") end,
 	RuneCarver = function() shopOpen("RuneCarver", "Rune Carver - carve runes onto gear") end,
 	Tree = function() open("Wish", "Wishing Tree", true) end,
+	Store = function()
+		extra.StoreTab = extra.StoreTab or "Market"
+		open("Store", "Store", true)
+	end,
 })
+-- places in and around town that open a screen: Dungeon Gate, Expedition Camp, Guild Board
+Town.OnPlace = function(id)
+	if id == "DungeonGate" then
+		extra.BattleTab = "Dungeons"
+		open("Battle", "Dungeons", true)
+	elseif id == "ExpeditionCamp" then
+		extra.BattleTab = "Expeditions"
+		open("Battle", "Expeditions", true)
+	elseif id == "GuildBoard" then
+		extra.Guild = nil
+		open("Guild", "Guild", true)
+	end
+end
 
 -- Town errands (docs/TOWN.md phase 2): prompts at the townsfolk and pick-up spots, the Notice Board opens the list,
 -- and a small tracker shows the errand in hand.

@@ -133,6 +133,9 @@ Git Bash; they find a working Python themselves (`python3`/`python` there are St
   the next row back, it is just not drawn as "open"). Owner asked next (2026-11-23): dungeon location outside town, spots in
   town for guild / expeditions / store, sound + music (per content type, level-up, stage clear) with sound settings, a clear
   level-up notice and level-up points to spend.
+- **Town places 2026-11-23** (SEEN in Studio): Dungeon Gate (portal in a rocky hill west of the Grove, `TownSpots.DungeonGate`,
+  opens Battle > Dungeons), Expedition Camp (tents + map table outside the wall SE, opens Battle > Expeditions), Guild Board
+  beside the Guild Hall (opens Guild), Store stall on the plaza (`PlazaSpots.Store`). HUD buttons still open them too.
 
 ## Gotchas
 - Studio testing: the HUD 🧪 button opens the "Test cheats" panel (Studio only, `UI/DevScreen` -> `handlers.Dev(action, n)`, `DEV_ACTIONS` in ApiService):

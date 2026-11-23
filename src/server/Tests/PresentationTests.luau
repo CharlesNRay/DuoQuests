@@ -202,6 +202,44 @@ return function(modulesOverride)
 	local tx, tz = World.PlazaPoint("Tree")
 	local gx, gz = World.DistrictPoint("Grove")
 	check("The Wishing Tree stands in the Wishing Grove", math.sqrt((tx - gx) ^ 2 + (tz - gz) ^ 2) < World.Districts.Grove.Size)
+	-- the Dungeon Gate and the Expedition Camp sit outside the town: beyond the ring, clear of districts, lots and the Boss Field
+	local outsideOk = true
+	for _, id in ipairs({ "DungeonGate", "ExpeditionCamp" }) do
+		local x, z = World.TownSpot(id)
+		local r = math.sqrt((x - World.PLAZA.X) ^ 2 + (z - World.PLAZA.Z) ^ 2)
+		if r < World.TOWN_RING + 30 or math.abs(x) > 330 then
+			outsideOk = false
+		end
+		for _, did in ipairs(ids) do
+			local dx, dz = World.DistrictPoint(did)
+			if math.sqrt((x - dx) ^ 2 + (z - dz) ^ 2) < World.Districts[did].Size + 30 then
+				outsideOk = false
+			end
+		end
+		if math.sqrt((x - f.X) ^ 2 + (z - f.Z) ^ 2) < f.Radius + 30 then
+			outsideOk = false
+		end
+		for slot = 1, World.MAX_LOTS do
+			local ax, _, az = World.ArenaOrigin(slot)
+			if math.abs(x - ax) < World.ARENA_WIDTH / 2 + 30 and math.abs(z - az) < World.ARENA_DEPTH / 2 + 30 then
+				outsideOk = false
+			end
+		end
+	end
+	check("The Dungeon Gate and Expedition Camp stand outside town, clear of everything", outsideOk)
+	local spacingOk = true
+	for a, sa in pairs(World.PlazaSpots) do
+		for b, sb in pairs(World.PlazaSpots) do
+			if a < b and sa.Radius < 70 and sb.Radius < 70 then
+				local ax2, az2 = World.PlazaPoint(a)
+				local bx2, bz2 = World.PlazaPoint(b)
+				if math.sqrt((ax2 - bx2) ^ 2 + (az2 - bz2) ^ 2) < 18 then
+					spacingOk = false
+				end
+			end
+		end
+	end
+	check("Plaza stalls and boards are at least 18 studs apart", spacingOk)
 
 	print(("PresentationTests done: %d passed, %d failed"):format(passed, failed))
 end

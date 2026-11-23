@@ -63,10 +63,10 @@ local function sign(on, face, text, color)
 end
 
 -- a floating label over a spot (a "coming soon" tag for the activities of later phases)
-local function tag(on, title, subtitle, color)
+local function tag(on, title, subtitle, color, height)
 	local gui = Instance.new("BillboardGui")
 	gui.Size = UDim2.fromOffset(200, 46)
-	gui.StudsOffset = Vector3.new(0, 4, 0)
+	gui.StudsOffset = Vector3.new(0, height or 4, 0)
 	gui.MaxDistance = 110
 	gui.Adornee = on
 	gui.Parent = on
@@ -720,6 +720,147 @@ local function errands()
 	end
 end
 
+-- Places that open a screen (2026-11-23, owner: "a location for the dungeons outside of the town, a spot for the guild,
+-- for expeditions"): the Dungeon Gate west of the Wishing Grove, the Expedition Camp outside the town wall (south-east),
+-- the guild board at the Guild Hall. Town.OnPlace(id) is set by Main ("DungeonGate" | "ExpeditionCamp" | "GuildBoard").
+Town.OnPlace = nil
+
+local function placePrompt(on, id, action, object)
+	local pr = Instance.new("ProximityPrompt")
+	pr.ActionText = action
+	pr.ObjectText = object
+	pr.HoldDuration = 0
+	pr.MaxActivationDistance = 14
+	pr.RequiresLineOfSight = false
+	pr.Parent = on
+	pr.Triggered:Connect(function()
+		if Town.OnPlace then
+			Town.OnPlace(id)
+		end
+	end)
+	spots[id] = { Anchor = on, Prompt = pr, Kind = "Place" }
+	return pr
+end
+
+local function path(from, to, width)
+	local mid = (from + to) / 2
+	part({ Name = "Path", Size = Vector3.new(width or 9, 0.3, (to - from).Magnitude), CFrame = CFrame.lookAt(mid + Vector3.new(0, 0.15, 0), to + Vector3.new(0, 0.15, 0)), Color = ROAD, Material = Enum.Material.Pebble, CanCollide = false })
+end
+
+local function torch(position)
+	part({ Name = "TorchPost", Size = Vector3.new(0.6, 6, 0.6), Position = position + Vector3.new(0, 3, 0), Color = DARK_WOOD, Material = Enum.Material.Wood })
+	local flame = part({ Name = "TorchFlame", Shape = Enum.PartType.Ball, Size = Vector3.new(1.2, 1.5, 1.2), Position = position + Vector3.new(0, 6.5, 0), Color = Color3.fromRGB(255, 150, 50), Material = Enum.Material.Neon, CanCollide = false })
+	local light = Instance.new("PointLight")
+	light.Range = 18
+	light.Brightness = 1.4
+	light.Color = Color3.fromRGB(255, 170, 90)
+	light.Parent = flame
+	table.insert(pulsers, { Part = flame, Phase = position.X % 6, Base = 0.05, Amount = 0.2 })
+end
+
+-- the Dungeon Gate: a rocky hill with a glowing portal, west of the Wishing Grove, at the end of a path out of town
+local function dungeonGate()
+	local at = spotPos("DungeonGate")
+	local gx, gz = World.DistrictPoint("Grove")
+	local grove = Vector3.new(gx, 0, gz)
+	local toTown = (grove - at).Unit
+	path(grove - toTown * (World.Districts.Grove.Size - 3), at + toTown * 10, 9)
+	local cf = CFrame.lookAt(at, at + toTown) -- front (-Z) faces the town
+	disc(at, 30, 0.3, 0, Color3.fromRGB(96, 88, 82), Enum.Material.Ground)
+	-- the hill: a few big rocks behind and around the mouth
+	for index, r in ipairs({ { 0, 12, 26, 18, 16 }, { -15, 8, 14, 13, 14 }, { 15, 8, 14, 13, 14 }, { -9, 16, 12, 9, 10 }, { 10, 18, 12, 8, 11 } }) do
+		part({ Name = "HillRock", Shape = Enum.PartType.Ball, Size = Vector3.new(r[3], r[3], r[3]) * 1.3, CFrame = cf * CFrame.new(r[1], r[4] * 0.35, r[2] + 12), Color = Color3.fromRGB(92 + index * 4, 86 + index * 3, 84), Material = Enum.Material.Slate })
+	end
+	-- the stone frame and the portal
+	for _, side in ipairs({ -1, 1 }) do
+		part({ Name = "GatePillar", Size = Vector3.new(2.6, 14, 2.6), CFrame = cf * CFrame.new(side * 6.5, 7, 2), Color = Color3.fromRGB(70, 66, 76), Material = Enum.Material.Basalt })
+		torch((cf * CFrame.new(side * 10, 0, -2)).Position)
+	end
+	local lintel = part({ Name = "GateLintel", Size = Vector3.new(16.5, 3, 3.2), CFrame = cf * CFrame.new(0, 15, 2), Color = Color3.fromRGB(60, 56, 66), Material = Enum.Material.Basalt })
+	sign(lintel, Enum.NormalId.Front, "DUNGEONS", Color3.fromRGB(200, 160, 255))
+	local portal = part({ Name = "DungeonPortal", Size = Vector3.new(10.4, 13, 0.6), CFrame = cf * CFrame.new(0, 6.6, 2.4), Color = Color3.fromRGB(110, 50, 200), Material = Enum.Material.Neon, Transparency = 0.25 })
+	table.insert(pulsers, { Part = portal, Phase = 0, Base = 0.2, Amount = 0.2 })
+	local swirl = Instance.new("ParticleEmitter")
+	swirl.Color = ColorSequence.new(Color3.fromRGB(190, 140, 255), Color3.fromRGB(90, 40, 180))
+	swirl.LightEmission = 1
+	swirl.Rate = 14
+	swirl.Lifetime = NumberRange.new(1.2, 2)
+	swirl.Speed = NumberRange.new(1, 2.5)
+	swirl.Size = NumberSequence.new(0.6, 0)
+	swirl.SpreadAngle = Vector2.new(180, 180)
+	swirl.Parent = portal
+	tag(portal, "DUNGEON GATE", "Crypt, Foundry, Abyss, Spire", Color3.fromRGB(200, 160, 255), 11.5)
+	placePrompt(portal, "DungeonGate", "Enter dungeons", "Dungeon Gate")
+	-- a few bones and a warning sign by the path
+	local warn = part({ Name = "WarningSign", Size = Vector3.new(5, 2.4, 0.3), CFrame = cf * CFrame.new(-9, 3.4, -12) * CFrame.Angles(0, math.rad(20), 0), Color = Color3.fromRGB(170, 140, 100), Material = Enum.Material.WoodPlanks })
+	sign(warn, Enum.NormalId.Front, "Daily keys only!", Color3.fromRGB(70, 30, 20))
+	part({ Name = "WarningPost", Size = Vector3.new(0.5, 3, 0.5), CFrame = cf * CFrame.new(-9, 1.5, -12), Color = DARK_WOOD, Material = Enum.Material.Wood })
+	for index = 1, 3 do
+		part({ Name = "Bone", Size = Vector3.new(0.4, 0.4, 2), CFrame = cf * CFrame.new(6 + index, 0.4, -8 - index) * CFrame.Angles(0, math.rad(index * 50), 0), Color = Color3.fromRGB(235, 230, 215), Material = Enum.Material.SmoothPlastic })
+	end
+end
+
+-- the Expedition Camp: tents, a map table and a loaded cart outside the town wall, on a path off the ring road
+local function expeditionCamp()
+	local at = spotPos("ExpeditionCamp")
+	local centre = Vector3.new(World.PLAZA.X, 0, World.PLAZA.Z)
+	local dir = (at - centre).Unit
+	local ringPoint = centre + dir * (World.TOWN_RING + 4)
+	path(ringPoint, at - dir * 12, 8)
+	local cf = CFrame.lookAt(at, ringPoint) -- front faces the road in
+	disc(at, 24, 0.3, 0, Color3.fromRGB(160, 140, 100), Enum.Material.Ground)
+	-- tents: a wedge roof over each side
+	for _, t in ipairs({ { -12, 8, Color3.fromRGB(200, 120, 70) }, { 12, 8, Color3.fromRGB(80, 130, 170) }, { 0, 15, Color3.fromRGB(150, 170, 90) } }) do
+		local tentCf = cf * CFrame.new(t[1], 0, t[2]) * CFrame.Angles(0, math.rad(t[1] * 2), 0)
+		for _, side in ipairs({ -1, 1 }) do
+			part({ Name = "Tent", Size = Vector3.new(8, 6, 4), CFrame = tentCf * CFrame.new(side * 2, 3, 0) * CFrame.Angles(0, math.rad(side * -90), 0), Color = t[3], Material = Enum.Material.Fabric }, "WedgePart")
+		end
+	end
+	-- the map table in the middle: you plan expeditions here
+	local tableCf = cf * CFrame.new(0, 0, -2)
+	local top = part({ Name = "MapTable", Size = Vector3.new(7, 0.5, 4.4), CFrame = tableCf * CFrame.new(0, 3, 0), Color = WOOD, Material = Enum.Material.WoodPlanks })
+	for _, c in ipairs({ { -3, -1.8 }, { 3, -1.8 }, { -3, 1.8 }, { 3, 1.8 } }) do
+		part({ Name = "TableLeg", Size = Vector3.new(0.4, 3, 0.4), CFrame = tableCf * CFrame.new(c[1], 1.5, c[2]), Color = DARK_WOOD, Material = Enum.Material.Wood })
+	end
+	part({ Name = "Map", Size = Vector3.new(5.6, 0.05, 3.4), CFrame = tableCf * CFrame.new(0, 3.28, 0) * CFrame.Angles(0, math.rad(4), 0), Color = Color3.fromRGB(236, 220, 170), Material = Enum.Material.SmoothPlastic })
+	part({ Name = "MapPin", Size = Vector3.new(0.3, 0.7, 0.3), CFrame = tableCf * CFrame.new(1.2, 3.6, 0.6), Color = Color3.fromRGB(220, 50, 50), Material = Enum.Material.Neon })
+	tag(top, "EXPEDITION CAMP", "Send your party out for loot", Color3.fromRGB(255, 210, 130))
+	placePrompt(top, "ExpeditionCamp", "Plan an expedition", "Expedition Camp")
+	-- a cart with crates and a flag
+	local cartCf = cf * CFrame.new(-14, 0, -6) * CFrame.Angles(0, math.rad(30), 0)
+	part({ Name = "CartBed", Size = Vector3.new(4, 0.6, 7), CFrame = cartCf * CFrame.new(0, 2, 0), Color = WOOD, Material = Enum.Material.WoodPlanks })
+	for _, z in ipairs({ -2.4, 2.4 }) do
+		for _, side in ipairs({ -1, 1 }) do
+			part({ Name = "Wheel", Shape = Enum.PartType.Cylinder, Size = Vector3.new(0.4, 2.6, 2.6), CFrame = cartCf * CFrame.new(side * 2.2, 1.3, z), Color = DARK_WOOD, Material = Enum.Material.Wood })
+		end
+	end
+	for index = 1, 2 do
+		part({ Name = "Crate", Size = Vector3.new(2, 2, 2), CFrame = cartCf * CFrame.new(0, 3.3, index * 2.4 - 3.6), Color = Color3.fromRGB(170, 126, 80), Material = Enum.Material.WoodPlanks })
+	end
+	part({ Name = "FlagPole", Size = Vector3.new(0.4, 12, 0.4), CFrame = cf * CFrame.new(9, 6, -6), Color = DARK_WOOD, Material = Enum.Material.Wood })
+	part({ Name = "Flag", Size = Vector3.new(0.1, 2.6, 4), CFrame = cf * CFrame.new(9, 10.6, -4), Color = Color3.fromRGB(70, 140, 200), Material = Enum.Material.Fabric })
+	torch((cf * CFrame.new(-5, 0, -8)).Position)
+	torch((cf * CFrame.new(5, 0, -8)).Position)
+end
+
+-- the guild board beside the Guild Hall door (Guildmaster Orin stands at the other side)
+local function guildBoard()
+	local cf = spotFrame("GuildBoard")
+	for _, side in ipairs({ -1, 1 }) do
+		part({ Name = "BoardPost", Size = Vector3.new(0.6, 7, 0.6), CFrame = cf * CFrame.new(side * 3.2, 3.5, 0), Color = DARK_WOOD, Material = Enum.Material.Wood })
+	end
+	local face = part({ Name = "GuildBoard", Size = Vector3.new(7, 4.4, 0.4), CFrame = cf * CFrame.new(0, 4.6, 0), Color = Color3.fromRGB(90, 60, 130), Material = Enum.Material.WoodPlanks })
+	sign(face, Enum.NormalId.Front, "GUILD", Color3.fromRGB(255, 220, 120))
+	tag(face, "GUILD BOARD", "Join or run a guild", Color3.fromRGB(190, 150, 255))
+	placePrompt(face, "GuildBoard", "Open guild", "Guild Board")
+end
+
+local function places()
+	dungeonGate()
+	expeditionCamp()
+	guildBoard()
+end
+
 function Town.Build(parentFolder, hubPulsers, hubKit)
 	folder = Instance.new("Folder")
 	folder.Name = "Town"
@@ -735,6 +876,7 @@ function Town.Build(parentFolder, hubPulsers, hubKit)
 	if kit then
 		errands()
 	end
+	places()
 	return folder
 end
 

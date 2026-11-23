@@ -50,6 +50,7 @@ World.PlazaSpots = {
 	PetStore = { Angle = -28, Radius = 56 }, -- eggs, pet gear crates and pet food
 	Trainer = { Angle = 28, Radius = 56 }, -- the Skill Trainer levels your skill slots
 	RuneCarver = { Angle = -128, Radius = 54 }, -- carves runes onto gear, sells rune pouches
+	Store = { Angle = -154, Radius = 54 }, -- the Store (Sunstones, packs, cosmetics); not distance-checked
 	Map = { Angle = -100, Radius = 55 },
 	Rankings = { Angle = 100, Radius = 55 },
 	Season = { Angle = 126, Radius = 55 }, -- the season rewards board, next to the leaderboards
@@ -87,6 +88,10 @@ World.TownSpots = {
 	Hay = { District = "Grove", X = 19, Z = 20 }, -- hay pile beside the pet park
 	Warden = { X = -12, Z = 272 }, -- the Beast Warden, just inside the Boss Field arch
 	Altar = { X = 0, Z = 296 }, -- the offering stone on the Boss Field
+	-- places that open a screen (not errands)
+	DungeonGate = { X = -290, Z = 40 }, -- outside town, west of the Wishing Grove
+	ExpeditionCamp = { X = 100, Z = 262 }, -- outside the town wall, south-east
+	GuildBoard = { District = "Training", X = 6, Z = 24 }, -- beside the Guild Hall, the other side from Guildmaster Orin
 	Cat1 = { District = "Grove", X = -22, Z = 30 }, -- past the fishing pond
 	Cat2 = { District = "Training", X = -36, Z = 22 }, -- behind the sparring ring
 	Cat3 = { District = "Gate", X = 0, Z = -6 }, -- by the well
