@@ -1522,6 +1522,14 @@ function handlers.SparFight(player, profile, key)
 	sparUsed[player.UserId] = os.clock()
 	local me = { Id = tostring(player.UserId), Name = Character.DisplayName(profile, player.Name), Profile = profile }
 	local duel = Sparring.Duel(me, them, math.random(1, 1000000))
+	-- only what the client needs to replay the first bout as animation
+	local events = {}
+	for _, event in ipairs(duel.Fight.Events or {}) do
+		if REPLAYED[event.Type] then
+			table.insert(events, event)
+		end
+	end
+	duel.Fight.Events = events
 	duel.Lines = Sparring.Record(profile, duel.Won, Daily.DayNumber(os.time()))
 	duel.Opponent = them.Name
 	duel.Stats = Sparring.Stats(profile)

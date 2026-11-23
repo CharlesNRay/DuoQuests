@@ -17,6 +17,7 @@ return {
 		WorldBoss = { Id = 1842961333, Volume = 0.4 }, -- "Showdown" (APM)
 		SeasonBoss = { Id = 1842961147, Volume = 0.42 }, -- "Valhalla (Underscore Version)" (APM): the Colossus
 		GuildRaid = { Id = 1842961067, Volume = 0.4 }, -- "Hall Of Champions (Underscore Version)" (APM)
+		Duel = { Id = 1837301451, Volume = 0.38 }, -- "Epic Battle Simulator" (APM): sparring duels
 	},
 	Sfx = {
 		-- interface

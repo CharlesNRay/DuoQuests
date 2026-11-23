@@ -595,14 +595,28 @@ function extra.RunSpar(key)
 	sparRunning = false
 	if ok and type(data) == "table" then
 		extra.SparResult = data
-		Sound.Play(if data.Won then "Victory" else "Defeat")
-		if data.Won then
-			Celebrate.Burst(Color3.fromRGB(255, 140, 120), 22)
-		end
 		local fresh, newState = api:InvokeServer("GetState")
 		if fresh and newState then
 			state = newState
 		end
+		-- watch the first bout in the arena, then the result card and the Sparring screen with both bouts
+		local fight = data.Fight
+		data.Fight = nil
+		if fight and fight.Roster then
+			current, lastDrawn = nil, nil
+			panel.Visible = false
+			extra.BossMusic = "Duel"
+			local started = BossArena.Play({ Roster = fight.Roster, Events = fight.Events, Duration = fight.Duration, Won = data.Won, Label = "Duel vs " .. tostring(data.Opponent), Damage = data.MyDamage }, function()
+				if data.Won then
+					Celebrate.Burst(Color3.fromRGB(255, 140, 120), 22)
+				end
+				open("Spar", "Sparring Ring", true)
+			end)
+			if started then
+				return
+			end
+		end
+		Sound.Play(if data.Won then "Victory" else "Defeat")
 	else
 		extra.SparResult = { Error = if data == "TooFar" then "Step up to the sparring ring first." elseif data == "Busy" then "Catch your breath a moment..." else "Your opponent is gone." }
 	end

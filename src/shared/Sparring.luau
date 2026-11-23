@@ -8,12 +8,14 @@
 	the day pays DailyWinStones Wishstones.
 
 	  Sparring.Duel(me, them, seed)          me / them as StageRunner.NewParty takes members ({ Id, Name, Profile | Snapshot })
-	      -> { Won, Bouts = { { Won, Mine, Theirs, Seconds } x2 }, MyDamage, TheirDamage }   Mine/Theirs = health share left
+	      -> { Won, Bouts = { { Won, Mine, Theirs, Seconds } x2 }, MyDamage, TheirDamage, Fight }   Mine/Theirs = health share left
+	      Fight = the first bout for the client to replay: { Roster, Events, Duration } (the opponent's entries have Hero = true)
 	  Sparring.Record(profile, won, day)     -> reward lines (first win of the day pays), keeps Season.Sparring { Wins, Losses, PaidDay }
 	  Sparring.Stats(profile)                -> { Wins, Losses }
 ]]
 local StageRunner = require(script.Parent.StageRunner)
 local Simulation = require(script.Parent.Combat.Simulation)
+local Gear = require(script.Parent.Gear)
 
 local Sparring = {}
 
@@ -27,6 +29,21 @@ local function bout(a, b, seed)
 		entity.Team = "Enemy"
 	end
 	local sim = Simulation.new({ Party = party, Enemies = foes, Seed = seed, MaxSeconds = Sparring.Seconds, RecordEvents = true })
+	-- the roster the client needs to draw both heroes (like StageRunner's, but the other side are heroes too)
+	local roster = {}
+	local function lookOf(member)
+		local worn = if member.Profile then member.Profile.Season.Equipment and member.Profile.Season.Equipment.Equipped else member.Snapshot and member.Snapshot.Gear
+		return Gear.Look(worn)
+	end
+	for _, pair in ipairs({ { party, a, false }, { foes, b, true } }) do
+		for _, entity in ipairs(pair[1]) do
+			table.insert(roster, {
+				Id = entity.Id, Name = entity.Name, Team = entity.Team, DefId = entity.DefId, PetId = entity.PetId,
+				Look = lookOf(pair[2]), MaxHealth = entity.Stats.MaxHealth, Row = sim:RowOf(entity),
+				UserId = tonumber(entity.Id), Hero = if pair[3] then true else nil, Ghost = if pair[2].Profile then nil else true,
+			})
+		end
+	end
 	local result = sim:Run()
 	local function share(list)
 		local hp, max = 0, 0
@@ -53,7 +70,7 @@ local function bout(a, b, seed)
 	end
 	local mine, theirs = share(party), share(foes)
 	local won = if result.Winner == "Party" then true elseif result.Winner == "Enemy" then false else mine >= theirs
-	return { Won = won, Mine = mine, Theirs = theirs, Seconds = result.Duration or Sparring.Seconds }, damageBy.A or 0, damageBy.B or 0
+	return { Won = won, Mine = mine, Theirs = theirs, Seconds = result.Duration or Sparring.Seconds, Fight = { Roster = roster, Events = sim.Events, Duration = result.Duration } }, damageBy.A or 0, damageBy.B or 0
 end
 
 function Sparring.Duel(me, them, seed)
@@ -62,9 +79,11 @@ function Sparring.Duel(me, them, seed)
 	local second, theirDamage2, myDamage2 = bout(them, me, seed + 1)
 	-- the second bout is from their side: flip it to mine
 	second = { Won = not second.Won, Mine = second.Theirs, Theirs = second.Mine, Seconds = second.Seconds }
+	local fight = first.Fight
+	first.Fight = nil
 	local wins = (if first.Won then 1 else 0) + (if second.Won then 1 else 0)
 	local won = if wins == 2 then true elseif wins == 0 then false else (first.Mine + second.Mine) >= (first.Theirs + second.Theirs)
-	return { Won = won, Bouts = { first, second }, MyDamage = math.floor(myDamage1 + myDamage2), TheirDamage = math.floor(theirDamage1 + theirDamage2) }
+	return { Won = won, Bouts = { first, second }, MyDamage = math.floor(myDamage1 + myDamage2), TheirDamage = math.floor(theirDamage1 + theirDamage2), Fight = fight }
 end
 
 function Sparring.Record(profile, won, day)

@@ -383,6 +383,18 @@ function Replay:Play(info, onDone)
 		if entry.Team == "Party" then
 			heroIndex += 1
 			self:_hero(entry, heroIndex)
+		elseif entry.Hero then
+			-- a duel (Shared/Sparring): the other side is a hero too, drawn with their class body and gear, facing you
+			enemyIndex += 1
+			local actor = Actor.new(scene, Models.Hero(entry.DefId), { Name = entry.Name, Facing = -1, MaxHealth = entry.MaxHealth })
+			actor.ClassId = entry.DefId
+			if entry.Look then
+				pcall(function()
+					actor:SetLook(entry.Look)
+				end)
+			end
+			self.Enemies[entry.Id] = actor
+			self:_enlist(actor, "Enemy", entry.Row)
 		else
 			enemyIndex += 1
 			local actor = Actor.new(scene, Models.Enemy(entry.DefId), { Name = entry.Name, Facing = -1, MaxHealth = entry.MaxHealth })
