@@ -1614,6 +1614,10 @@ function handlers.SaveSettings(_, profile, values)
 			clean[key] = math.clamp(math.floor(v * 100 + 0.5) / 100, 0, 1)
 		end
 	end
+	local hud = tonumber(values.HudScale)
+	if hud and hud == hud then
+		clean.HudScale = math.clamp(math.floor(hud * 10 + 0.5) / 10, 0.7, 1.3) -- the HUD size slider
+	end
 	profile.Permanent.Settings = clean
 	return true
 end

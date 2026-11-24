@@ -7,6 +7,9 @@ Renamed 2026-11-23: only player-visible text says Idle Party Quest (menu title, 
   2 -> 4): a locked card on the menu sells it ("coming soon" until the id is set), also listed in the Store; Test cheats "Toggle +2 char slots".
   Back to the menu from in-game: Settings (⚙️) > "🏠 Main menu" (SEEN in Studio; CONTINUE returns, fights keep going). Boss name tags
   (world/season boss) have MaxDistance 400: they are AlwaysOnTop and showed through everything, even over the menu.
+- **HUD size + headshots 2026-11-23** (tests green, NOT seen in Studio): Settings "HUD size" 70-130% (multiplies the fit
+  scale in Main `fit()`, saved as `Permanent.Settings.HudScale`); HUD portrait shows your Roblox headshot with the level in a
+  corner chip; party rows show real players' headshots ringed in class colour (companions keep the class dot).
 
 Roblox co-op idle RPG (Luau, Rojo). Two players fight together (a ghost partner stands in when one is offline), the combat
 sim is server-authoritative and deterministic. Read `README.md` and `docs/` (PROGRESSION, BALANCE, SKILLS, ROADMAP) for design detail.

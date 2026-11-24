@@ -36,6 +36,21 @@ local Short = require(game:GetService("ReplicatedStorage"):WaitForChild("Shared"
 local Kit = require(script.Parent.Kit)
 local Icons = require(script.Parent.Icons)
 local Tips = require(script.Parent.Tips)
+local Players = game:GetService("Players")
+
+-- a player's Roblox headshot in a round frame ringed in their class colour (companions have no Roblox account: nil)
+local function headshot(parent, userId, size, position, color, z)
+	if type(userId) ~= "number" or userId <= 0 then
+		return nil
+	end
+	local img = Kit.new("ImageLabel", {
+		Size = UDim2.fromOffset(size, size), Position = position, BackgroundColor3 = Color3.fromRGB(40, 44, 64), BorderSizePixel = 0,
+		Image = ("rbxthumb://type=AvatarHeadShot&id=%d&w=48&h=48"):format(userId), ZIndex = z or 2, Parent = parent,
+	})
+	Kit.corner(size // 2).Parent = img
+	Kit.new("UIStroke", { Name = "Ring", Color = color or C.Accent, Thickness = 2, Parent = img })
+	return img
+end
 local C = Kit.Colors
 
 local Hud = {}
@@ -90,7 +105,12 @@ function Hud.new(root)
 	local portrait = pill(chrome, { Size = UDim2.fromOffset(220, 46), Position = UDim2.fromOffset(8, safeTop) })
 	self.Badge = Kit.frame({ Size = UDim2.fromOffset(38, 38), Position = UDim2.fromOffset(4, 4), BackgroundColor3 = C.Accent, Parent = portrait })
 	Kit.corner(19).Parent = self.Badge
-	self.LevelLabel = Kit.label({ Size = UDim2.fromScale(1, 1), Text = "1", TextSize = 17, Font = Enum.Font.GothamBlack, TextColor3 = C.Bg, TextStrokeTransparency = 1, TextXAlignment = Enum.TextXAlignment.Center, Parent = self.Badge })
+	-- your Roblox headshot fills the badge; the level sits in a small chip on its corner
+	self.Face = headshot(self.Badge, Players.LocalPlayer.UserId, 34, UDim2.fromOffset(2, 2), C.Bg, 2)
+	local levelChip = Kit.frame({ Size = UDim2.fromOffset(22, 15), Position = UDim2.fromOffset(24, 27), BackgroundColor3 = C.Bg, ZIndex = 4, Parent = portrait })
+	Kit.corner(7).Parent = levelChip
+	self.LevelChip = levelChip
+	self.LevelLabel = Kit.label({ Size = UDim2.fromScale(1, 1), Text = "1", TextSize = 11, Font = Enum.Font.GothamBlack, TextColor3 = C.Accent, TextStrokeTransparency = 1, TextXAlignment = Enum.TextXAlignment.Center, TextWrapped = false, ZIndex = 5, Parent = levelChip })
 	self.NameLabel = Kit.label({ Size = UDim2.new(1, -54, 0, 18), Position = UDim2.fromOffset(48, 3), Text = "", TextSize = 15, Font = Enum.Font.GothamBold, TextWrapped = false, TextTruncate = Enum.TextTruncate.AtEnd, Parent = portrait })
 	local xpBack = Kit.frame({ Size = UDim2.new(1, -130, 0, 8), Position = UDim2.fromOffset(48, 30), BackgroundColor3 = Color3.fromRGB(40, 44, 64), Parent = portrait })
 	self.XpFill = Kit.frame({ Size = UDim2.fromScale(0, 1), BackgroundColor3 = Color3.fromRGB(90, 180, 255), Parent = xpBack })
@@ -439,10 +459,13 @@ function Hud.new(root)
 
 		-- party cards
 		Kit.clear(self.Cards)
-		local function card(name, classId, level, note, onClick, tip, ip)
+		local function card(name, classId, level, note, onClick, tip, ip, userId)
 			local f = pill(self.Cards, { Size = UDim2.fromOffset(220, 28), Position = UDim2.new() })
-			local dot = Kit.frame({ Size = UDim2.fromOffset(18, 18), Position = UDim2.fromOffset(6, 5), BackgroundColor3 = C[classId] or C.Accent, Parent = f })
-			Kit.corner(10).Parent = dot
+			-- a real player shows their Roblox headshot (ringed in class colour); a companion keeps the class dot
+			if not headshot(f, userId, 22, UDim2.fromOffset(4, 3), C[classId] or C.Accent, 2) then
+				local dot = Kit.frame({ Size = UDim2.fromOffset(18, 18), Position = UDim2.fromOffset(6, 5), BackgroundColor3 = C[classId] or C.Accent, Parent = f })
+				Kit.corner(10).Parent = dot
+			end
 			Kit.label({ Size = UDim2.new(1, -if ip then 100 else 36, 1, 0), Position = UDim2.fromOffset(32, 0), Text = if classId ~= "" then ("%s  Lv %d %s%s"):format(name, level, classId, note or "") else name, TextSize = 12, TextWrapped = false, TextTruncate = Enum.TextTruncate.AtEnd, Parent = f })
 			if ip then
 				Kit.label({ Size = UDim2.fromOffset(60, 28), Position = UDim2.new(1, -64, 0, 0), Text = ("IP %s"):format(Short(ip)), TextSize = 11, Font = Enum.Font.GothamBlack, TextColor3 = C.Accent, TextXAlignment = Enum.TextXAlignment.Right, TextWrapped = false, ZIndex = 3, Parent = f })
@@ -462,7 +485,7 @@ function Hud.new(root)
 					if self.OnPartner then
 						self.OnPartner(index)
 					end
-				end, ("<b>%s</b>  Lv %d %s\n%s\nClick for stats, skills and gear"):format(p.Name, p.Level, p.ClassId, if p.IsCompanion then "A companion: a real player takes this seat when one joins" elseif p.Online then "Online" else "Fights as a ghost while away"), p.IP)
+				end, ("<b>%s</b>  Lv %d %s\n%s\nClick for stats, skills and gear"):format(p.Name, p.Level, p.ClassId, if p.IsCompanion then "A companion: a real player takes this seat when one joins" elseif p.Online then "Online" else "Fights as a ghost while away"), p.IP, if p.IsCompanion then nil else tonumber(p.UserId))
 			end
 		elseif party then
 			card("Waiting for partner...", "", 0, "", function()

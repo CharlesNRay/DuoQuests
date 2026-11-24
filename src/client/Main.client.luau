@@ -77,9 +77,10 @@ end)
 local gui = Kit.new("ScreenGui", { Name = "DuoQuestUI", ResetOnSpawn = false, ZIndexBehavior = Enum.ZIndexBehavior.Sibling, IgnoreGuiInset = false, Parent = Players.LocalPlayer:WaitForChild("PlayerGui") })
 local root = Kit.new("Frame", { Name = "Root", Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1, Parent = gui })
 local scale = Kit.new("UIScale", { Parent = root })
+local hudScale = 1 -- the player's "HUD size" setting (Settings screen), on top of the fit-to-screen scale
 local function fit()
 	local view = gui.AbsoluteSize
-	local s = math.max(0.5, math.min(view.X / Kit.RefW, view.Y / Kit.RefH))
+	local s = math.max(0.5, math.min(view.X / Kit.RefW, view.Y / Kit.RefH)) * hudScale
 	scale.Scale = s
 	root.Size = UDim2.fromOffset(view.X / s, view.Y / s)
 end
@@ -168,7 +169,7 @@ end
 local PANEL_DEFAULT = Vector2.new(500, 286)
 local PANEL_SIZES = {
 	Map = Vector2.new(640, 298), Hero = Vector2.new(640, 298), Skills = Vector2.new(660, 344),
-	Merchant = Vector2.new(540, 292), Blacksmith = Vector2.new(540, 292), Trainer = Vector2.new(540, 330), PetStore = Vector2.new(560, 330), RuneCarver = Vector2.new(600, 330), Wish = Vector2.new(640, 352), Store = Vector2.new(640, 336), Boss = Vector2.new(640, 310), Battle = Vector2.new(640, 330), Quests = Vector2.new(640, 330), Premium = Vector2.new(640, 330), Season = Vector2.new(640, 330), Cosmetics = Vector2.new(640, 330), Codes = Vector2.new(540, 300), Character = Vector2.new(640, 340), Guild = Vector2.new(720, 340), Dev = Vector2.new(640, 330), Party = Vector2.new(700, 330), Bag = Vector2.new(640, 330), Errands = Vector2.new(620, 330), Settings = Vector2.new(620, 390), Feedback = Vector2.new(640, 340), Talents = Vector2.new(660, 340), Dummy = Vector2.new(600, 300), Spar = Vector2.new(620, 330),
+	Merchant = Vector2.new(540, 292), Blacksmith = Vector2.new(540, 292), Trainer = Vector2.new(540, 330), PetStore = Vector2.new(560, 330), RuneCarver = Vector2.new(600, 330), Wish = Vector2.new(640, 352), Store = Vector2.new(640, 336), Boss = Vector2.new(640, 310), Battle = Vector2.new(640, 330), Quests = Vector2.new(640, 330), Premium = Vector2.new(640, 330), Season = Vector2.new(640, 330), Cosmetics = Vector2.new(640, 330), Codes = Vector2.new(540, 300), Character = Vector2.new(640, 340), Guild = Vector2.new(720, 340), Dev = Vector2.new(640, 330), Party = Vector2.new(700, 330), Bag = Vector2.new(640, 330), Errands = Vector2.new(620, 330), Settings = Vector2.new(620, 440), Feedback = Vector2.new(640, 340), Talents = Vector2.new(660, 340), Dummy = Vector2.new(600, 300), Spar = Vector2.new(620, 330),
 }
 local SHOP_NPC = { Merchant = "Merchant", Blacksmith = "Blacksmith", Trainer = "Trainer", PetStore = "PetStore", RuneCarver = "RuneCarver", Wish = "Tree" }
 local panel = Kit.frame({ Name = "Panel", Size = UDim2.new(0, 500, 0, 286), Position = UDim2.new(0.5, -250, 0, 42), BackgroundColor3 = Kit.Colors.Bg, Visible = false, ZIndex = 5, Parent = root })
@@ -249,6 +250,10 @@ local function redraw()
 	if not extra.SoundApplied then
 		extra.SoundApplied = true
 		Sound.Apply(state.Player.Settings)
+		local saved = state.Player.Settings and tonumber(state.Player.Settings.HudScale)
+		if saved and extra.SetHudScale then
+			extra.SetHudScale(saved)
+		end
 	end
 	-- level up: a big card, sparkles and a fanfare, wherever the player is
 	local level = state.Player.Level
@@ -718,7 +723,7 @@ hud:AddButton("Store", "mini", "🛍️", "Store", function()
 	open("Store", "Store")
 end)
 hud:AddButton("Quests", "mini", "📜", "Quests & Season Pass", function() open("Quests", "Quests & Season Pass") end)
-hud:AddButton("Settings", "mini", "⚙️", "Settings (sound, main menu)", function() open("Settings", "Settings") end)
+hud:AddButton("Settings", "mini", "⚙️", "Settings (sound, HUD size, main menu)", function() open("Settings", "Settings") end)
 Screens.Settings = require(script.Parent.UI.SettingsScreen).Settings
 -- playtest feedback (and, for the owner, the playtest log): UI/FeedbackScreen, server Services/PlaytestService
 hud:AddButton("Feedback", "mini", "📝", "Send feedback", function() open("Feedback", "Feedback") end)
@@ -758,6 +763,13 @@ do
 			api:InvokeServer("ReportError", key .. " | " .. tostring(trace or ""), where)
 		end)
 	end)
+end
+extra.HudScale = function()
+	return hudScale
+end
+extra.SetHudScale = function(value)
+	hudScale = math.clamp(math.floor((tonumber(value) or 1) * 10 + 0.5) / 10, 0.7, 1.3)
+	fit()
 end
 extra.SaveSettings = function(values)
 	task.spawn(function()
