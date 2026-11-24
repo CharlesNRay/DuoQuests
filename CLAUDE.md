@@ -238,6 +238,12 @@ Git Bash; they find a working Python themselves (`python3`/`python` there are St
   8 lots were considered: they do not fit inside the town wall (slot 6 would sit outside), so Max Players stays 4.
 
 ## Gotchas
+- Panels are not redrawn by state updates while the player types in one of their text boxes (Main: `GetFocusedTextBox`);
+  forms should still save what is typed on `Text` change (GuildScreen found-a-guild form does).
+- Tooltips (`Kit.Hover`) skip things covered by something solid (an open panel) at the mouse (`GetGuiObjectsAtPosition`).
+- Studio testing via computer use: a TextBox in the game view needs two clicks (the first focuses the viewport); Shift+F5
+  goes to whatever has focus, so use the toolbar Stop button; Rojo sometimes misses a file change (re-save the file) and
+  `Source:find(...)` in the command bar (Edit context) tells whether Studio has the new code.
 - Studio testing: the HUD 🧪 button opens the "Test cheats" panel (Studio only, `UI/DevScreen` -> `handlers.Dev(action, n)`, `DEV_ACTIONS` in ApiService):
   +1/5/10 levels, +5/10/25 stages (cleared like real wins, party moves there), +50M/500M gold, Sunstones, test items, Epic gear for your stage, all pets at max level,
   reset dailies (keys, dungeon bonuses, gifts, expedition ready), spawn world boss, toggle premium pass. Add new cheats there, not as new HUD buttons. SEEN in Studio 2026-11-22. Vendor prompts need you within 14 studs;

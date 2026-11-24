@@ -281,9 +281,15 @@ local function redraw()
 		if current == "Guild" and extra.Guild == nil then
 			extra.RefreshGuild()
 		end
+		-- the player is typing in this panel (a guild name, a code, a chat line): a redraw would rebuild the box and
+		-- throw the typing away, so wait; the next update (or the action they send) redraws it
+		local focused = game:GetService("UserInputService"):GetFocusedTextBox()
+		local typing = focused ~= nil and lastDrawn == current and focused:IsDescendantOf(body)
 		-- redrawing a panel (after an upgrade, say) must not throw the player back to the top of its lists
 		local saved
-		if lastDrawn == current and not extra.SkillsScrollTop then
+		if typing then
+			-- skip this redraw
+		elseif lastDrawn == current and not extra.SkillsScrollTop then
 			saved = {}
 			for _, d in ipairs(body:GetDescendants()) do
 				if d:IsA("ScrollingFrame") then
@@ -291,9 +297,11 @@ local function redraw()
 				end
 			end
 		end
-		lastDrawn = current
-		Screens[current](body, state, call, extra)
-		extra.SkillsScrollTop = nil
+		if not typing then
+			lastDrawn = current
+			Screens[current](body, state, call, extra)
+			extra.SkillsScrollTop = nil
+		end
 		if saved and #saved > 0 then
 			local frames = {}
 			for _, d in ipairs(body:GetDescendants()) do

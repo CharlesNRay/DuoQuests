@@ -201,8 +201,32 @@ function Kit.HideTip()
 	hideTip(nil)
 end
 
+-- is something solid (an open panel, say) drawn on top of inst where the mouse is? Then its tooltip must not show
+-- (MouseEnter fires for things underneath too)
+local function covered(inst)
+	local player = game:GetService("Players").LocalPlayer
+	local gui = player and player:FindFirstChildOfClass("PlayerGui")
+	if not gui then
+		return false
+	end
+	local m = UserInputService:GetMouseLocation() - game:GetService("GuiService"):GetGuiInset()
+	for _, o in ipairs(gui:GetGuiObjectsAtPosition(m.X, m.Y)) do -- top-most first
+		if o == inst or o:IsDescendantOf(inst) then
+			return false
+		end
+		local isTip = tip and (o == tip.Frame or o:IsDescendantOf(tip.Frame))
+		if not isTip and o.Visible and o.BackgroundTransparency < 0.5 then
+			return true
+		end
+	end
+	return false
+end
+
 function Kit.Hover(inst, getText)
 	inst.MouseEnter:Connect(function()
+		if covered(inst) then
+			return
+		end
 		showTip(inst, getText())
 	end)
 	inst.MouseLeave:Connect(function()

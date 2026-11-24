@@ -32,7 +32,8 @@ Last updated 2026-11-24. Claude keeps this list current. Short entries; details 
 
 ## Not seen working in Studio yet
 
-Seen 2026-11-24: HUD size (now scales only the HUD), map badge tooltip, tutorial arrows (steps 3-5), fallen ally tags, lightning.
+Seen 2026-11-24: HUD size (now scales only the HUD), map badge tooltip, tutorial arrows (steps 3-5), fallen ally tags,
+lightning, founding a guild and guild chat.
 
 These pass the tests but nobody has looked at them in the game.
 
@@ -45,7 +46,7 @@ These pass the tests but nobody has looked at them in the game.
   - Headshots of other real players in your party.
   - The owner sign of a lot shared by two real players.
   - The skipped-tutorial toast.
-- **Social:** guild chat, gifting.
+- **Social:** gifting (needs two real players).
 - **Pets:** the VIP second pet slot, the pet-food shard bar.
 - **Town:**
   - The "Relic Hunter" title moment.

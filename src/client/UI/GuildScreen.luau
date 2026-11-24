@@ -126,6 +126,13 @@ function GuildScreen.Guild(container, state, call, extra)
 		Kit.label({ Size = UDim2.new(1, -16, 0, 22), Position = UDim2.fromOffset(8, 6), Text = "Found a guild", TextSize = 16, Font = Enum.Font.GothamBold, Parent = right })
 		local nameBox = input(right, { Size = UDim2.new(1, -16, 0, 28), Position = UDim2.fromOffset(8, 34), PlaceholderText = "Guild name", Text = extra.GuildNewName or "" })
 		local tagBox = input(right, { Size = UDim2.new(0.5, -12, 0, 28), Position = UDim2.fromOffset(8, 68), PlaceholderText = "TAG", Text = extra.GuildNewTag or "" })
+		-- remember what is typed as it is typed (a redraw rebuilds the boxes)
+		nameBox:GetPropertyChangedSignal("Text"):Connect(function()
+			extra.GuildNewName = nameBox.Text
+		end)
+		tagBox:GetPropertyChangedSignal("Text"):Connect(function()
+			extra.GuildNewTag = tagBox.Text
+		end)
 		local open = extra.GuildNewOpen ~= false
 		Kit.button({ Size = UDim2.new(0.5, -12, 0, 28), Position = UDim2.new(0.5, 4, 0, 68), Text = if open then "Open to all" else "Request only", TextSize = 12, Parent = right }, function()
 			extra.GuildNewName, extra.GuildNewTag, extra.GuildNewOpen = nameBox.Text, tagBox.Text, not open
