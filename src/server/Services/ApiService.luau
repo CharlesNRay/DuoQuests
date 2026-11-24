@@ -963,6 +963,15 @@ function DEV_ACTIONS.Sunstones(profile)
 	Premium.AddSunstones(profile, 1000)
 	return "+1,000 Sunstones"
 end
+-- Studio now saves to the live game data, so test purchases stay on the account: this clears them (and the packs'
+-- first-time bonuses come back)
+function DEV_ACTIONS.ClearSunstones(profile)
+	Premium.AddSunstones(profile, 0) -- makes sure the account table exists
+	local a = profile.Permanent.Premium
+	a.Sunstones = 0
+	a.PacksBought = {}
+	return "Sunstones reset to 0 (first-time pack bonuses back)"
+end
 function DEV_ACTIONS.VipPass(profile)
 	local owned = profile.Permanent.Passes or {}
 	profile.Permanent.Passes = owned
