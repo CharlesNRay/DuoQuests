@@ -153,9 +153,10 @@ local function fence(a, b, height, color)
 	end
 end
 
--- a flower bed: soil, a low leafy bush, and flowers on stems (petals round a yellow middle), so it reads as flowers
+-- a flower bed: a low mat of leaves, a leafy bush, and flowers on stems (petals round a yellow middle), so it reads as flowers
+-- (it had a bare brown soil disc under it, which read as an odd "circle of dirt" on the stone; playtest report 2026-11-23)
 local function flowerBed(position, color)
-	disc(position, 2.6, 0.4, 0.2, Color3.fromRGB(110, 80, 56), Enum.Material.Ground)
+	disc(position, 2.6, 0.4, 0.2, Color3.fromRGB(64, 128, 62), Enum.Material.Grass)
 	for index = 1, 4 do
 		local a = index * math.pi / 2 + 0.4
 		part({ Name = "Leaves", Shape = Enum.PartType.Ball, Size = Vector3.new(1.6, 0.9, 1.6), Position = position + Vector3.new(math.cos(a) * 1.1, 0.75, math.sin(a) * 1.1), Color = Color3.fromRGB(70, 150, 70), Material = Enum.Material.Grass, CanCollide = false })
