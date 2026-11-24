@@ -222,8 +222,8 @@ def thumbnail():
   {heroes}
   {fx}
   {title(960, 190, "IDLE PARTY QUEST", 150, 6)}
-  <g><rect x="560" y="236" width="800" height="64" rx="32" fill="{INK}" opacity="0.55"/>
-  <text x="960" y="281" text-anchor="middle" font-family="{FONT}" font-size="34" letter-spacing="3" fill="#ffffff">TEAM UP · AUTO-BATTLE · 200 STAGES</text></g>
+  <g><rect x="400" y="236" width="1120" height="64" rx="32" fill="{INK}" opacity="0.55"/>
+  <text x="960" y="281" text-anchor="middle" font-family="{FONT}" font-size="34" letter-spacing="3" fill="#ffffff">TEAM UP · AUTO-BATTLE · HUNDREDS OF STAGES</text></g>
 </svg>"""
 
 
@@ -295,8 +295,8 @@ def thumbnail_hype():
   {heroes}
   {arrow(1060, 420, 1290, 350)}
   {starburst(1700, 190, 150, 14, "url(#red)")}
-  {shout(1700, 205, "200", 84, "url(#gold)", rot=-10)}
-  {shout(1700, 262, "STAGES!", 46, rot=-10)}
+  {shout(1700, 200, "100s", 80, "url(#gold)", rot=-10)}
+  {shout(1700, 258, "OF STAGES!", 36, rot=-10)}
   {shout(560, 150, "GO AFK...", 120, "url(#white)", rot=-4)}
   {shout(600, 300, "GET OP!!", 150, "url(#gold)", rot=-4)}
   {pop(1600, 900, "999.9M", 70, "#fff3b0", -6)}
