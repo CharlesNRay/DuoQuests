@@ -80,12 +80,12 @@ local function makeCard(origin)
 	return anchor, label
 end
 
--- A wooden sign at the lot's street edge saying whose home it is. It stands side-on to the lot, so its two faces look up
--- and down the street: people walking by read it without walking up to the lot.
+-- A wooden sign at the lot's street edge saying whose home it is, facing the street (owner 2026-11-24), so people
+-- walking by read it without walking up to the lot.
 local function makeOwnerSign(origin)
 	local folder = Instance.new("Folder")
 	folder.Name = "OwnerSign"
-	local base = origin * CFrame.new(-World.ARENA_WIDTH / 2 + 6, 0, World.ARENA_DEPTH / 2 + 3) * CFrame.Angles(0, math.rad(90), 0)
+	local base = origin * CFrame.new(-World.ARENA_WIDTH / 2 + 10, 0, World.ARENA_DEPTH / 2 + 3)
 	local function piece(name, size, cf, color, material)
 		local p = Instance.new("Part")
 		p.Name = name

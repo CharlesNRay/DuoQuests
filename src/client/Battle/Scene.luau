@@ -257,7 +257,8 @@ function Scene:_ambient(theme)
 	self.AmbientPart = emitterPart
 end
 
--- distant hills (or dunes, peaks...) behind the fight; they scroll slower than the near scenery
+-- low hills (or dunes, peaks...) behind the fight; they scroll slower than the near scenery. Kept small and on the lot's
+-- own back strip (2026-11-24 owner: the big round hills looked like odd bubbles and spilled over the town)
 function Scene:_backdrop(theme, rng)
 	local ground, sky = color(theme.Ground), color(theme.Sky)
 	local far = sky:Lerp(ground, 0.35)
@@ -266,10 +267,10 @@ function Scene:_backdrop(theme, rng)
 	for layer = 1, 2 do
 		local count = if layer == 1 then 5 else 6
 		for i = 1, count do
-			local h = rng:NextNumber(10, 22) * (if layer == 1 then 1.1 else 0.8)
-			local w = h * rng:NextNumber(1.8, 2.8)
+			local h = rng:NextNumber(5, 10) * (if layer == 1 then 1.1 else 0.85)
+			local w = h * rng:NextNumber(1.5, 2.2)
 			local m = newModel(self.Scenery)
-			local z = if layer == 1 then -46 else -34
+			local z = if layer == 1 then -35 else -30
 			local col = if layer == 1 then far else near
 			if theme.Scenery == "Pillars" or theme.Scenery == "LavaRocks" or isCave then
 				prop(m, { Size = Vector3.new(w * 0.4, h * 1.3, w * 0.4), Color = col, Material = Enum.Material.Slate, CFrame = CFrame.new(0, h * 0.5, 0) })
@@ -290,7 +291,7 @@ function Scene:_backdrop(theme, rng)
 			for j = -1, 1 do
 				prop(m, { Shape = Enum.PartType.Ball, Size = Vector3.new(h * 1.4, h * 0.7, h), Color = if theme.Scenery == "LavaRocks" then Color3.fromRGB(90, 55, 50) else Color3.fromRGB(255, 255, 255), Transparency = 0.15, CFrame = CFrame.new(j * h * 0.9, math.abs(j) * -0.3, 0) })
 			end
-			table.insert(self.Props, { Root = m, BaseX = -SPAN + (i - 1) * (SPAN * 2 / 4), Z = -49, Y = rng:NextNumber(26, 38), Par = 0.1, Drift = rng:NextNumber(0.3, 0.8), Phase = 0 })
+			table.insert(self.Props, { Root = m, BaseX = -SPAN + (i - 1) * (SPAN * 2 / 4), Z = -40, Y = rng:NextNumber(20, 28), Par = 0.1, Drift = rng:NextNumber(0.3, 0.8), Phase = 0 })
 		end
 	end
 end
