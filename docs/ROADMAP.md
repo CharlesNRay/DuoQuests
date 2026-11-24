@@ -1,4 +1,4 @@
-# Duo Quest Roadmap
+# Idle Party Quest Roadmap
 
 > Living document. Updated whenever we finish or reprioritise something.
 > **Last updated:** 2026-11-24

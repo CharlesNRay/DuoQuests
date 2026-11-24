@@ -8,7 +8,8 @@ Last updated 2026-11-24. Claude keeps this list current. Short entries; details 
   *Sunstone* Developer Products, then send the ids. Until then the buttons say "coming soon".
 - **Rename on Roblox.** Set the experience title to *Idle Party Quest* in Creator Hub. Put the search words in the
   description, for example "idle RPG, incremental, co-op with friends".
-- **Logo.** `branding/logo.png` still shows the old Duo Quest art. Upload a new one and set `Config/Branding.LogoImage`.
+- **Logo.** New art is in `branding/` (2026-11-24): `icon_512.png` for the game icon, `thumbnail.png` (and the louder
+  `thumbnail_hype.png` / `icon_hype.png`) for the page. Upload `logo.png` as an image too and send the id for the main menu.
 - **Studio API access.** Game Settings > Security > "Enable Studio Access to API Services". Without it, Studio saves
   nothing and the 📝 feedback log only lasts until Play stops.
 - **Season dates.** Season 1 runs Nov 1 to Feb 1, which is a placeholder. Suggested: 6-week seasons, the first one 4 weeks,

@@ -1,6 +1,6 @@
 # Presentation: how the game looks and feels
 
-Duo Quest should look like a living idle RPG (Ulala: Idle Adventure, Go Go
+Idle Party Quest should look like a living idle RPG (Ulala: Idle Adventure, Go Go
 Muffin): the party travels through scenery, fights monsters, plays skill
 animations, and moves on to new regions after bosses. The panels built so far
 (HUD, Skills, Passives, Ultimate, Party) sit on top of this view.

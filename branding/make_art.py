@@ -96,7 +96,7 @@ def icon():
 SKIN = "#f7cf3e"
 
 
-def hero(x, ground, s, kind):
+def hero(x, ground, s, kind, face="smile"):
     """A chunky block hero facing right. kind: Warrior / Mage / Ranger / Cleric."""
     look = {
         "Warrior": ("#c8352b", "#8c2219", "#4a4f63"),
@@ -122,8 +122,13 @@ def hero(x, ground, s, kind):
         a(f'<rect x="-36" y="-80" width="72" height="14" fill="{trim}"/>')
     # head
     a(f'<rect x="-30" y="-196" width="60" height="58" rx="12" fill="{SKIN}"/>')
-    a(f'<rect x="4" y="-176" width="8" height="12" rx="2" fill="{INK}" stroke="none"/><rect x="18" y="-176" width="8" height="12" rx="2" fill="{INK}" stroke="none"/>')
-    a(f'<path d="M6 -156 Q16 -149 26 -156" fill="none" stroke="{INK}" stroke-width="4" stroke-linecap="round"/>')
+    if face == "shock":
+        a(f'<circle cx="6" cy="-162" r="9" fill="#fff" stroke-width="4"/><circle cx="24" cy="-162" r="9" fill="#fff" stroke-width="4"/>')
+        a(f'<circle cx="8" cy="-161" r="4" fill="{INK}" stroke="none"/><circle cx="26" cy="-161" r="4" fill="{INK}" stroke="none"/>')
+        a(f'<ellipse cx="16" cy="-146" rx="7" ry="7" fill="#5a1010" stroke-width="4"/>')
+    else:
+        a(f'<rect x="4" y="-176" width="8" height="12" rx="2" fill="{INK}" stroke="none"/><rect x="18" y="-176" width="8" height="12" rx="2" fill="{INK}" stroke="none"/>')
+        a(f'<path d="M6 -156 Q16 -149 26 -156" fill="none" stroke="{INK}" stroke-width="4" stroke-linecap="round"/>')
     # headgear
     if kind == "Warrior":
         a(f'<path d="M-36 -176 Q-36 -214 0 -214 Q36 -214 36 -176 L36 -170 H-36 Z" fill="#b9c0d8"/>')
@@ -222,6 +227,100 @@ def thumbnail():
 </svg>"""
 
 
+# ---- louder "hype" variants (bright burst, giant boss, shocked heroes, arrows) -----------------------------------------
+
+HYPE_DEFS = """
+    <radialGradient id="burstBg" cx="0.5" cy="0.5" r="0.75"><stop offset="0" stop-color="#fff6a0"/><stop offset="0.35" stop-color="#ffb020"/><stop offset="0.75" stop-color="#ff4d2e"/><stop offset="1" stop-color="#8a0f3c"/></radialGradient>
+    <linearGradient id="red" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff5a4a"/><stop offset="1" stop-color="#c4121f"/></linearGradient>
+    <linearGradient id="white" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#dfe6ff"/></linearGradient>
+"""
+
+
+def rays(cx, cy, n, length, color, opacity):
+    import math
+    out = []
+    for i in range(n):
+        a0 = (i / n) * 2 * math.pi
+        a1 = a0 + math.pi / n
+        out.append(f'M{cx} {cy} L{cx + length * math.cos(a0):.0f} {cy + length * math.sin(a0):.0f} L{cx + length * math.cos(a1):.0f} {cy + length * math.sin(a1):.0f} Z')
+    return f'<path d="{" ".join(out)}" fill="{color}" opacity="{opacity}"/>'
+
+
+def starburst(cx, cy, r, points, fill):
+    import math
+    pts = []
+    for i in range(points * 2):
+        rr = r if i % 2 == 0 else r * 0.74
+        a = i * math.pi / points - math.pi / 2
+        pts.append(f"{cx + rr * math.cos(a):.0f},{cy + rr * math.sin(a):.0f}")
+    return f'<polygon points="{" ".join(pts)}" fill="{fill}" stroke="{INK}" stroke-width="10" stroke-linejoin="round"/>'
+
+
+def shout(x, y, text, size, fill="url(#white)", rot=0, spacing=2):
+    common = f'x="{x}" y="{y}" text-anchor="middle" font-family="{FONT}" font-size="{size}" letter-spacing="{spacing}"'
+    return (f'<g transform="rotate({rot} {x} {y})">'
+            f'<text {common} fill="{INK}" stroke="{INK}" stroke-width="{size * 0.3}" stroke-linejoin="round" transform="translate(0 {size * 0.07})">{text}</text>'
+            f'<text {common} fill="{INK}" stroke="{INK}" stroke-width="{size * 0.2}" stroke-linejoin="round">{text}</text>'
+            f'<text {common} fill="{fill}">{text}</text></g>')
+
+
+def arrow(x1, y1, x2, y2, width=34):
+    import math
+    ang = math.degrees(math.atan2(y2 - y1, x2 - x1))
+    length = math.hypot(x2 - x1, y2 - y1)
+    head = width * 2.4
+    shaft = length - head
+    path = (f'M0 {-width / 2} L{shaft} {-width / 2} L{shaft} {-width * 1.3} L{length} 0 L{shaft} {width * 1.3} '
+            f'L{shaft} {width / 2} L0 {width / 2} Z')
+    return f'<path d="{path}" fill="url(#red)" stroke="{INK}" stroke-width="10" stroke-linejoin="round" transform="translate({x1} {y1}) rotate({ang:.1f})"/>'
+
+
+def thumbnail_hype():
+    W, H, G = 1920, 1080, 1010
+    heroes = (hero(170, G, 1.35, "Cleric", "shock") + hero(430, G - 4, 1.4, "Mage", "shock")
+              + hero(700, G - 8, 1.5, "Ranger", "shock") + hero(980, G - 10, 1.65, "Warrior", "shock"))
+    return f"""<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W} {H}" width="{W}" height="{H}">
+  <defs>{GOLD}{HYPE_DEFS}
+    <linearGradient id="rainbow" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff5f7e"/><stop offset="0.25" stop-color="#ffb347"/><stop offset="0.45" stop-color="#ffe66b"/><stop offset="0.65" stop-color="#6fe39a"/><stop offset="0.82" stop-color="#5fb8ff"/><stop offset="1" stop-color="#b77bff"/></linearGradient>
+    <radialGradient id="slimeShade" cx="0.35" cy="0.3" r="0.8"><stop offset="0" stop-color="#fff" stop-opacity="0.25"/><stop offset="0.6" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity="0.25"/></radialGradient>
+    <radialGradient id="orbT" cx="0.4" cy="0.35" r="0.7"><stop offset="0" stop-color="#ffffff"/><stop offset="0.35" stop-color="#b9f3ff"/><stop offset="1" stop-color="#3aa0ff"/></radialGradient>
+    <radialGradient id="orbGlowT"><stop offset="0" stop-color="#9fe8ff" stop-opacity="0.9"/><stop offset="1" stop-color="#9fe8ff" stop-opacity="0"/></radialGradient>
+    <radialGradient id="holyGlow"><stop offset="0" stop-color="#fff3b0" stop-opacity="0.9"/><stop offset="1" stop-color="#fff3b0" stop-opacity="0"/></radialGradient>
+  </defs>
+  <rect width="{W}" height="{H}" fill="url(#burstBg)"/>
+  {rays(1450, 560, 22, 1800, "#fff3a0", 0.28)}
+  <path d="M0 {G - 10} Q960 {G - 50} 1920 {G - 20} V{H} H0 Z" fill="#3cba5c" stroke="{INK}" stroke-width="8"/>
+  {slime(1480, G - 20, 380)}
+  <circle cx="1480" cy="310" r="165" fill="none" stroke="#ff2a2a" stroke-width="16"/>
+  {heroes}
+  {arrow(1060, 420, 1290, 350)}
+  {starburst(1700, 190, 150, 14, "url(#red)")}
+  {shout(1700, 205, "200", 84, "url(#gold)", rot=-10)}
+  {shout(1700, 262, "STAGES!", 46, rot=-10)}
+  {shout(560, 150, "GO AFK...", 120, "url(#white)", rot=-4)}
+  {shout(600, 300, "GET OP!!", 150, "url(#gold)", rot=-4)}
+  {pop(1600, 900, "999.9M", 70, "#fff3b0", -6)}
+  {shout(1610, 1052, "IDLE PARTY QUEST", 44, "url(#gold)")}
+</svg>"""
+
+
+def icon_hype():
+    return f"""<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <defs>{GOLD}{HYPE_DEFS}
+    <linearGradient id="rainbow" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff5f7e"/><stop offset="0.25" stop-color="#ffb347"/><stop offset="0.45" stop-color="#ffe66b"/><stop offset="0.65" stop-color="#6fe39a"/><stop offset="0.82" stop-color="#5fb8ff"/><stop offset="1" stop-color="#b77bff"/></linearGradient>
+    <radialGradient id="slimeShade" cx="0.35" cy="0.3" r="0.8"><stop offset="0" stop-color="#fff" stop-opacity="0.25"/><stop offset="0.6" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity="0.25"/></radialGradient>
+  </defs>
+  <rect width="1024" height="1024" fill="url(#burstBg)"/>
+  {rays(620, 420, 18, 1200, "#fff3a0", 0.3)}
+  {slime(650, 900, 300)}
+  {hero(250, 1080, 2.6, "Warrior", "shock")}
+  {starburst(830, 160, 130, 12, "url(#red)")}
+  {shout(830, 150, "AFK", 70, rot=-10)}
+  {shout(830, 220, "= OP", 56, "url(#gold)", rot=-10)}
+  {shout(512, 990, "IDLE PARTY QUEST", 92, "url(#gold)")}
+</svg>"""
+
+
 def render(svg_text, name, w, h, extra_sizes=()):
     svg_path = os.path.join(HERE, name + ".svg")
     with open(svg_path, "w", encoding="utf-8") as f:
@@ -241,3 +340,5 @@ def render(svg_text, name, w, h, extra_sizes=()):
 if __name__ == "__main__":
     render(icon(), "icon", 1024, 1024, extra_sizes=(512, 150))
     render(thumbnail(), "thumbnail", 1920, 1080)
+    render(icon_hype(), "icon_hype", 1024, 1024, extra_sizes=(512,))
+    render(thumbnail_hype(), "thumbnail_hype", 1920, 1080)
