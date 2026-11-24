@@ -273,13 +273,64 @@ return function(modulesOverride)
 		local x, z = World.DistrictPoint(did)
 		inside = inside and r(x, z) + World.Districts[did].Size + 8 < wall.Radius
 	end
+	-- lots 1-4 stand inside the wall, lots 5-8 outside the Homes gate; none straddles the wall (corners in the lot's own
+	-- turned frame: the pad, the front strip toward the street and the apron behind)
+	local lotsClear, outsideLots = true, 0
 	for slot = 1, World.MAX_LOTS do
-		local ax, _, az = World.ArenaOrigin(slot)
-		for _, c in ipairs({ { -1, -1 }, { 1, -1 }, { -1, 1 }, { 1, 1 } }) do
-			inside = inside and r(ax + c[1] * World.ARENA_WIDTH / 2, az + c[2] * World.ARENA_DEPTH / 2) + 8 < wall.Radius
+		local ax, _, az, yaw = World.ArenaOrigin(slot)
+		local c, sn = math.cos(yaw), math.sin(yaw)
+		local ins, outs = 0, 0
+		for _, lx in ipairs({ -World.ARENA_WIDTH / 2, World.ARENA_WIDTH / 2 }) do
+			for _, lz in ipairs({ World.ARENA_DEPTH / 2 + 8, -World.ARENA_DEPTH / 2 - World.APRON_DEPTH }) do
+				-- local -> world (inverse of the frame used by Town.clearOfEverything)
+				local wx, wz = ax + lx * c + lz * sn, az - lx * sn + lz * c
+				local d = r(wx, wz)
+				if d + 6 < wall.Radius then
+					ins += 1
+				elseif d - 6 > wall.Radius then
+					outs += 1
+				end
+			end
+		end
+		if ins ~= 4 and outs ~= 4 then
+			lotsClear = false
+		end
+		if outs == 4 then
+			outsideLots += 1
 		end
 	end
-	check("The town wall rings the plaza, every district and every lot", inside)
+	local homesGate = false
+	for _, g in ipairs(wall.Gates) do
+		homesGate = homesGate or (not g.Hill and g.Angle == World.HOMES_STREET.Angle)
+	end
+	check("The town wall rings the plaza and every district", inside)
+	check("No lot straddles the town wall (lots 1-4 inside, 5-8 outside)", lotsClear and outsideLots == World.MAX_LOTS - 4)
+	check("The homes street goes through a gate in the wall", homesGate)
+	-- every lot that can ever exist (LOT_LIMIT = Max Players) stands on ground: the town Ground part (720 x 840 centred
+	-- on (0, 20), WorldService) or the strip outside the Homes gate (World.OuterGround), corners included
+	local gx, gz, gyaw, glen, gwid = World.OuterGround()
+	local function onGround(x, z)
+		if math.abs(x) <= 360 and math.abs(z - 20) <= 420 then
+			return true
+		end
+		local dx, dz = x - gx, z - gz
+		local along = dx * math.sin(gyaw) + dz * math.cos(gyaw)
+		local across = dx * math.cos(gyaw) - dz * math.sin(gyaw)
+		return math.abs(along) <= glen / 2 and math.abs(across) <= gwid / 2
+	end
+	local floorOk = true
+	for slot = 1, World.LOT_LIMIT do
+		local ax, _, az, yaw = World.ArenaOrigin(slot)
+		local c, sn = math.cos(yaw), math.sin(yaw)
+		for _, lx in ipairs({ -World.ARENA_WIDTH / 2, World.ARENA_WIDTH / 2 }) do
+			for _, lz in ipairs({ World.ARENA_DEPTH / 2 + 8, -World.ARENA_DEPTH / 2 - World.APRON_DEPTH }) do
+				if not onGround(ax + lx * c + lz * sn, az - lx * sn + lz * c) then
+					floorOk = false
+				end
+			end
+		end
+	end
+	check("Every lot (overflow lots up to Max Players included) stands on ground", floorOk and World.LOT_LIMIT >= World.MAX_PLAYERS)
 	local dgx, dgz = World.TownSpot("DungeonGate")
 	local ecx, ecz = World.TownSpot("ExpeditionCamp")
 	check("The Giant Bosses field and the Expedition Camp are outside the wall", r(f.X, f.Z) - f.Radius > wall.Radius + 4 and r(ecx, ecz) - 24 > wall.Radius)

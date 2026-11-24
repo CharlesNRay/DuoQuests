@@ -40,6 +40,11 @@ Renamed 2026-11-23: only player-visible text says Idle Party Quest (menu title, 
 - **Wish sounds 2026-11-24** (all 12 ids load in Studio; nobody has listened yet): `Config/Audio` Wish* + `UI/WishAnim`
   (fall, charge pitched by best rarity, burst, flip per card, ding Rare, chimes Epic; Legendary = music duck + heartbeat +
   drum roll, boom + orchestra hit, NEW adds harp + fanfare). `Sound.Play` returns the Sound, `Sound.Stop`, `Sound.Duck`.
+- **8 lots + overflow 2026-11-24** (SEEN in Studio: the PLAYER HOMES gate and lots 5-8 outside it): `World.MAX_LOTS` 8,
+  `MAX_PLAYERS`/`LOT_LIMIT` 16 (Roblox Max Players 16; owner's pick). Pairs 1-2 inside the wall, from pair 3 the street goes
+  through a wall gate (`TOWN_WALL.Gates` angle 145, `HOMES_STREET.Outside/OuterFirst`); `World.OuterGround` = grass strip
+  under lots 5-16 (WorldService). Lots 9-16 exist only while used; `Hub.SetLots` runs an OverflowStreet piece out to them
+  (not seen). Party max stays 4.
 - **Studio test mute**: Workspace attribute `StudioMute = true` (Edit mode, command bar) silences all game sound in Studio
   (owner asked: no sound while Claude tests). Set it before test runs, clear it (nil) before Ctrl+S.
 

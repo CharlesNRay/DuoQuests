@@ -12,9 +12,9 @@ Roblox errors, old saves upgraded), so the live check below is a confirmation, n
 2. **Turn on DataStores for Studio** (so Studio playtests save too): Home > Game Settings > Security >
    "Enable Studio Access to API Services" = On. Studio and the live game then share the same saved data:
    a Studio playtest changes your real profile.
-3. **Server size**: Game Settings > Places > (the place) > Max Players = **4** for now. The town has 4 battle lots
-   ("player homes"); each party takes one, and a solo player is a party of one. A 5th party would get a lot outside
-   the yard (it still works, it just looks odd). Players who party up share a lot, so 4 per server is safe.
+3. **Server size**: Creator Hub > Places > (the place) > Access > Maximum Visitor Count = **16**. Every party (1-4
+   players) gets one of the 8 lots; if more than 8 parties are on one server, the 9th-16th get overflow lots further
+   down the homes street (World.MAX_PLAYERS / LOT_LIMIT).
 4. **Who can join**: Game Settings > Permissions: keep the game Private and add testers as friends/collaborators,
    or make it Public (it is unlisted until it has players). Friends can join you from your profile.
 5. Purchases are switched off (Game Pass and product ids are 0), so nobody can spend Robux by mistake.

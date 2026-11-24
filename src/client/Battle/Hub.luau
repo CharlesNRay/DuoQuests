@@ -602,6 +602,23 @@ function Hub.SetLots(taken)
 	for _, child in ipairs(lotFolder:GetChildren()) do
 		child:Destroy()
 	end
+	-- overflow lots (past MAX_LOTS) only exist while a party uses one: run the street on to the farthest one in use
+	local farthest = 0
+	for slot in pairs(taken) do
+		if type(slot) == "number" and slot > World.MAX_LOTS and slot > farthest then
+			farthest = slot
+		end
+	end
+	if farthest > 0 then
+		local sx, sz, dx, dz, length = World.HomesStreet()
+		local fx, _, fz = World.ArenaOrigin(farthest)
+		local endAlong = (fx - sx) * dx + (fz - sz) * dz + World.ARENA_WIDTH / 2 + 8
+		local a = Vector3.new(sx + dx * length, 0.16, sz + dz * length)
+		local b = Vector3.new(sx + dx * endAlong, 0.16, sz + dz * endAlong)
+		if (b - a).Magnitude > 1 then
+			part(lotFolder, { Name = "OverflowStreet", Size = Vector3.new(World.HOMES_STREET.Width, 0.3, (b - a).Magnitude), CFrame = CFrame.lookAt((a + b) / 2, b), Color = Color3.fromRGB(150, 138, 116), Material = Enum.Material.Pebble, CanCollide = false }) -- Town ROAD colour
+		end
+	end
 	for slot = 1, World.MAX_LOTS do
 		if not taken[slot] then
 			local x, _, z, yaw = World.ArenaOrigin(slot)

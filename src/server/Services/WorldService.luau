@@ -88,12 +88,21 @@ function WorldService.BuildHub()
 	local floor = Instance.new("Part")
 	floor.Name = "Ground"
 	floor.Anchored = true
-	floor.Size = Vector3.new(720, 2, 840) -- covers the lots (north), the town districts and the Boss Field (south)
+	floor.Size = Vector3.new(720, 2, 840) -- covers the Boss Field (north) and the town
 	floor.Position = Vector3.new(0, -1, 20)
 	floor.Color = Color3.fromRGB(96, 160, 84)
 	floor.Material = Enum.Material.Grass
 	floor.TopSurface = Enum.SurfaceType.Smooth
 	floor.Parent = hub
+	-- a grass strip outside the Homes gate under lots 5-8 and the overflow lots (World.OuterGround)
+	do
+		local gx, gz, yaw, length, width = World.OuterGround()
+		local strip = floor:Clone()
+		strip.Name = "HomesGround"
+		strip.Size = Vector3.new(width, 2, length)
+		strip.CFrame = CFrame.new(gx, -1.01, gz) * CFrame.Angles(0, yaw, 0)
+		strip.Parent = hub
+	end
 
 	local x, y, z = World.SpawnPosition()
 	local spawn = Instance.new("SpawnLocation")

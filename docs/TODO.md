@@ -27,7 +27,10 @@ Last updated 2026-11-24. Claude keeps this list current. Short entries; details 
 
 - Done 2026-11-24: monsters and bosses for stages 101-200; the sky follows the biome in battle view; Mastery talents (level 81+).
 
-- More player homes. Lots 5-8 continue down the homes street, which needs a gate in the town wall. Max Players is 4 until then.
+- DONE 2026-11-24: 8 lots (5-8 outside the new PLAYER HOMES gate, seen in Studio) and overflow lots 9-16 down the same
+  street for servers of up to 16 (only built while used; the overflow street piece has not been seen in Studio).
+  Owner: set Max Players to 16 (Creator Hub > Places > Access > Maximum Visitor Count).
+  Party members are sent to their party's server: untested live (needs 2 real accounts).
 - Balance pass:
   - The class roster spread (docs/BALANCE.md).
   - (Checked 2026-11-24: Judgment is fine at equal rank; it lags only because Epic skills rank up slower.)

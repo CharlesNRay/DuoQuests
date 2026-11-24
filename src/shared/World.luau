@@ -32,8 +32,19 @@ World.APRON_DEPTH = 12 -- the strip of extra ground behind a fight (was 24; the 
 -- their fronts (watch pad, owner sign, battle camera side) facing the street, so no lot is behind another and nobody
 -- walks through a fight. Lots go in pairs (odd slots on the left, even on the right as you walk out); First = distance
 -- from the plaza centre to the first pair, Spacing = pair to pair, Lateral = street centre line to a lot's centre.
--- Pairs 1-2 fit inside the wall; slots 5-8 (later) carry on down the street, which needs a gate in the wall there.
-World.HOMES_STREET = { Angle = 145, First = 162, Spacing = 72, Lateral = 39, Width = 12 }
+-- Pairs 1-2 (slots 1-4) fit inside the wall; from pair 3 (slots 5-8, owner's pick 2026-11-24 for 8-player servers)
+-- the street carries on through the Homes gate in the wall: OuterFirst = distance to the first pair outside it, so no lot
+-- straddles the wall (Outside = the pair number from which lots stand outside).
+World.HOMES_STREET = { Angle = 145, First = 162, Spacing = 72, Lateral = 39, Width = 12, Outside = 2, OuterFirst = 332 }
+
+-- distance along the homes street from the plaza centre to lot pair `pair` (0-based)
+local function pairAlong(pair)
+	local s = World.HOMES_STREET
+	if pair < s.Outside then
+		return s.First + pair * s.Spacing
+	end
+	return s.OuterFirst + (pair - s.Outside) * s.Spacing
+end
 
 -- The plaza: a big circle in the middle with the fountain, the boards and the daily chest.
 World.PLAZA = { X = 0, Z = 40, Radius = 70 }
@@ -49,7 +60,7 @@ function World.HomesStreet()
 	local dx, dz = math.sin(a), -math.cos(a)
 	local x, z = polar(s.Angle, World.PLAZA.Radius - 1)
 	local pairCount = math.ceil(World.MAX_LOTS / 2)
-	local length = s.First + (pairCount - 1) * s.Spacing + World.ARENA_WIDTH / 2 + 8 - (World.PLAZA.Radius - 1)
+	local length = pairAlong(pairCount - 1) + World.ARENA_WIDTH / 2 + 8 - (World.PLAZA.Radius - 1)
 	return x, z, dx, dz, length
 end
 
@@ -57,7 +68,7 @@ function World.ArenaOrigin(slot)
 	local s = World.HOMES_STREET
 	local index = slot - 1
 	local side = if index % 2 == 0 then -1 else 1 -- -1 = left of the street walking out, 1 = right
-	local along = s.First + (index // 2) * s.Spacing
+	local along = pairAlong(index // 2)
 	local a = math.rad(s.Angle)
 	local dx, dz = math.sin(a), -math.cos(a) -- along the street, away from the plaza
 	local rx, rz = -dz, dx -- to the right of it
@@ -68,7 +79,24 @@ function World.ArenaOrigin(slot)
 	return x, 0.5, z, yaw
 end
 
-World.MAX_LOTS = 4 -- lots built and shown as "open". One lot per party; a 5th party still gets slot 5 (further down the street).
+World.MAX_LOTS = 8 -- lots always built and shown as "open". One lot per party (a party of up to 4 shares it).
+-- Servers hold up to MAX_PLAYERS (Roblox Max Players, owner's pick 2026-11-24): if more than 8 parties are on one server
+-- (many solo players), the 9th..16th get overflow lots further down the same street, built only while in use
+-- (Hub.SetLots draws the road on to them; WorldService lays the ground strip for them).
+World.MAX_PLAYERS = 16
+World.LOT_LIMIT = World.MAX_PLAYERS -- every player solo = one lot each
+
+-- the ground strip outside the Homes gate under lots 5..LOT_LIMIT: centre x, z, yaw, length (along the street), width
+function World.OuterGround()
+	local s = World.HOMES_STREET
+	local from = s.OuterFirst - World.ARENA_WIDTH / 2 - 10
+	local to = pairAlong(math.ceil(World.LOT_LIMIT / 2) - 1) + World.ARENA_WIDTH / 2 + 20
+	local a = math.rad(s.Angle)
+	local dx, dz = math.sin(a), -math.cos(a)
+	local mid = (from + to) / 2
+	local width = 2 * (s.Lateral + World.ARENA_DEPTH / 2 + World.APRON_DEPTH + 20)
+	return World.PLAZA.X + dx * mid, World.PLAZA.Z + dz * mid, math.atan2(dx, dz), to - from, width
+end
 World.SHOP_RANGE = 30 -- studs from a shop within which buying/selling/upgrading is allowed
 
 -- Shops and boards. The boards and the daily chest: an angle and a distance from the plaza centre. The shops stand in a
@@ -116,6 +144,7 @@ World.TOWN_WALL = {
 		{ Angle = 180, Width = 26, Name = "IDLE PARTY TOWN", Main = true },
 		{ Angle = 38, Width = 18, Name = "TO THE GIANT BOSSES" },
 		{ Angle = 112, Width = 44, Hill = true }, -- the Dungeon's hill
+		{ Angle = 145, Width = 22, Name = "PLAYER HOMES" }, -- the homes street goes on to lots 5-8 (World.HOMES_STREET)
 	},
 }
 
