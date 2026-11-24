@@ -4,8 +4,10 @@ Last updated 2026-11-24. Claude keeps this list current. Short entries; details 
 
 ## Waiting on the owner (only you can do these)
 
-- **Game Passes and products.** In Creator Hub, make the *VIP* and *Extra Character Slots* Game Passes and the four
-  *Sunstone* Developer Products, then send the ids. Until then the buttons say "coming soon".
+- DONE 2026-11-24: the game is on Roblox ("Idle Party Quest", private, Studio API access on); VIP (2101996470) and Extra
+  Character Slots (2102236400) Game Passes and the 4 Sunstone products (3735896385/525/614/758) exist and their ids are in
+  `Config/Premium`. Not tested: an actual purchase (Studio test purchases are free). Sunstone products have Roblox
+  "Managed pricing" on, so their Robux price may drift from the numbers shown in our Store.
 - **Rename on Roblox.** Set the experience title to *Idle Party Quest* in Creator Hub. Put the search words in the
   description, for example "idle RPG, incremental, co-op with friends".
 - **Logo.** New art is in `branding/` (2026-11-24): `icon_512.png` for the game icon, `thumbnail.png` (and the louder

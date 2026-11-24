@@ -42,10 +42,10 @@ return {
 	},
 
 	Packs = {
-		{ Id = "Sun1", Name = "Handful of Sunstones", Sunstones = 80, Robux = 79, FirstBonus = 80, ProductId = 0 },
-		{ Id = "Sun2", Name = "Pouch of Sunstones", Sunstones = 420, Robux = 399, FirstBonus = 420, ProductId = 0 },
-		{ Id = "Sun3", Name = "Chest of Sunstones", Sunstones = 900, Robux = 799, FirstBonus = 900, ProductId = 0 },
-		{ Id = "Sun4", Name = "Vault of Sunstones", Sunstones = 2000, Robux = 1699, FirstBonus = 2000, ProductId = 0 },
+		{ Id = "Sun1", Name = "Handful of Sunstones", Sunstones = 80, Robux = 79, FirstBonus = 80, ProductId = 3735896385 },
+		{ Id = "Sun2", Name = "Pouch of Sunstones", Sunstones = 420, Robux = 399, FirstBonus = 420, ProductId = 3735896525 },
+		{ Id = "Sun3", Name = "Chest of Sunstones", Sunstones = 900, Robux = 799, FirstBonus = 900, ProductId = 3735896614 },
+		{ Id = "Sun4", Name = "Vault of Sunstones", Sunstones = 2000, Robux = 1699, FirstBonus = 2000, ProductId = 3735896758 },
 	},
 
 	Items = {
