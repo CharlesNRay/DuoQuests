@@ -35,7 +35,7 @@ return {
 		},
 		-- sold on the main menu (a locked third card) and in the Store
 		CharacterSlots = {
-			Id = "CharacterSlots", Name = "Extra Character Slots", Robux = 149, GamePassId = 0,
+			Id = "CharacterSlots", Name = "Extra Character Slots", Robux = 149, GamePassId = 2102236400,
 			Text = "2 more character slots (4 in all): play two more classes, each with its own level, gear and progress.",
 			Perks = { CharacterSlots = 2 },
 		},
