@@ -20,7 +20,7 @@ sim is server-authoritative and deterministic. Read `README.md` and `docs/` (PRO
 `tools/sim/` — see its README. `tools/sim/runall.sh` runs every suite (all must be "0 failed"); `tools/sim/abl.sh` simulates hours of play per class
 with parts turned off (`full|nogear|noskill|nopet|nogold|lazy`). Needs the standalone `luau` binary: on the owner's PC it is
 `~/bin/luau.exe` (official 0.747 release; Aftman cannot install it because luau tags are "0.747", not semver). Run the scripts with
-Git Bash; they find a working Python themselves (`python3`/`python` there are Store stubs; `py -3` works). ~45 s for all 44 suites. New suites go in `src/server/Tests` and
+Git Bash; they find a working Python themselves (`python3`/`python` there are Store stubs; `py -3` works). ~50 s for all 51 suites. New suites go in `src/server/Tests` and
 `tools/sim/runners/extra.luau`.
 
 ## Systems added/changed 2026-11-15/16 (all tests green, pushed, none verified in Studio)
@@ -188,6 +188,9 @@ Git Bash; they find a working Python themselves (`python3`/`python` there are St
   FOUND AND FIXED: `Season.StageRewardsClaimed` was keyed by stage numbers (10, 20...): every live save after the first
   boss clear would have failed. Now string keys; schema v4 migration converts old data. Playtest setup and tester
   checklist: docs/PLAYTEST.md (publish, Studio API access, Max Players 4 = the 4 lots, rejoin check).
+  `DataServiceTests` run the REAL DataService headless (sync.py writes `.build/hl6/DataServiceSim.luau`, DataService as a
+  factory taking game/task/warn/os) on a fake DataStore with fake servers: join/leave/rejoin elsewhere, double login,
+  crash + stale lock, teleport wait, retries, bad tables, v3 upgrade, rollback refusal, shutdown. Writes pass `{ userId }`.
 
 - **Playtest log 2026-11-23** (tests green, NOT seen in Studio): HUD 📝 Feedback (`UI/FeedbackScreen`, handler `SendFeedback`,
   topics Bug/Confusing/Idea/Fun, 1 per 20 s, 15/day); server errors (`ScriptContext.Error` + ApiService handler failures via

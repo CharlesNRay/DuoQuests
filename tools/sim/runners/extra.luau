@@ -111,3 +111,5 @@ m.Guilds = m.Guilds or require("./Guilds") m.Party = m.Party or require("./Party
 require("./SaveSafetyTests")(m)
 m.PlaytestLog = require("./PlaytestLog")
 require("./PlaytestLogTests")(m)
+m.DataServiceSim = require("./DataServiceSim") m.ProfileTemplate = m.ProfileTemplate or require("./ProfileTemplate") m.Gear = m.Gear or require("./Gear") m.Talents = m.Talents or require("./Talents")
+require("./DataServiceTests")(m)

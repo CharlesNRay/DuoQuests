@@ -26,3 +26,10 @@ for f in os.listdir(SRC+"/server/Tests"):
     put(SRC+"/server/Tests/"+f,f)
 put(SRC+"/server/Services/PartyCore.luau","PartyCore.luau")
 put(SRC+"/server/Data/CodeList.luau","CodeList.luau")
+# DataService as a factory for the headless save tests (DataServiceTests): the Roblox services it touches are
+# parameters, so a test can start two fake servers that share one fake DataStore.
+_ds = open(SRC + "/server/Services/DataService.luau", encoding="utf-8").read()
+_ds = re.sub(r'require\(Shared\.Util\.(\w+)\)', r'require("./Util/\1")', _ds)
+_ds = re.sub(r'require\(Shared\.(\w+)\)', r'require("./\1")', _ds)
+open(os.path.join(OUT, "DataServiceSim.luau"), "w", encoding="utf-8", newline="").write(
+    "return function(game, task, warn, os)\n" + _ds + "\nend\n")

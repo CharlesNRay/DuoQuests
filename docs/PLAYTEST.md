@@ -3,7 +3,9 @@
 Written 2026-11-23 for the first live tests. Progress saving is built in (DataService): a player's profile is saved
 every 2 minutes, when they leave, and when a server shuts down. Each profile is locked to one server at a time, so it
 cannot be edited from two places at once. In Studio without API access it falls back to memory (every playtest starts
-fresh), which is why saving has not been seen working yet.
+fresh), which is why saving has not been seen working yet. The real save code is tested headless against a fake DataStore
+(`DataServiceTests`: leave and rejoin on another server, opening the game twice, a crashed server, a party teleport,
+Roblox errors, old saves upgraded), so the live check below is a confirmation, not a first try.
 
 ## One-time setup (owner, in Roblox Studio)
 1. **Publish the place**: File > Publish to Roblox (or "Publish to Roblox As..." the first time). Note the game link.

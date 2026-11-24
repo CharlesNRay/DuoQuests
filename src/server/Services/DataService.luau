@@ -178,7 +178,7 @@ local function saveSession(userId, session, release)
 		return {
 			Data = session.Data,
 			SessionLock = if release then nil else { JobId = SERVER_ID, Timestamp = os.time() },
-		}
+		}, { userId } -- the key's user ids (Roblox uses them for data-removal requests)
 	end)
 
 	session.Saving = false
@@ -281,7 +281,7 @@ function DataService.LoadProfile(player)
 				return {
 					Data = ProfileTemplate.New(),
 					SessionLock = { JobId = SERVER_ID, Timestamp = now },
-				}
+				}, { userId }
 			end
 			local lock = old.SessionLock
 			if lock ~= nil and lock.JobId ~= SERVER_ID and (now - lock.Timestamp) < LOCK_TIMEOUT then
@@ -290,7 +290,7 @@ function DataService.LoadProfile(player)
 			end
 			blocked = false
 			old.SessionLock = { JobId = SERVER_ID, Timestamp = now }
-			return old
+			return old, { userId }
 		end)
 
 		if not ok then
