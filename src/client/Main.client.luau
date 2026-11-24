@@ -75,7 +75,7 @@ end)
 
 -- The UI fills the whole screen (below Roblox's top bar). A UIScale sizes everything for the
 -- screen, and the root is stretched by the inverse so the edges really are the screen edges.
-local gui = Kit.new("ScreenGui", { Name = "DuoQuestUI", ResetOnSpawn = false, ZIndexBehavior = Enum.ZIndexBehavior.Sibling, IgnoreGuiInset = false, Parent = Players.LocalPlayer:WaitForChild("PlayerGui") })
+local gui = Kit.new("ScreenGui", { Name = "IdlePartyUI", ResetOnSpawn = false, ZIndexBehavior = Enum.ZIndexBehavior.Sibling, IgnoreGuiInset = false, Parent = Players.LocalPlayer:WaitForChild("PlayerGui") })
 local root = Kit.new("Frame", { Name = "Root", Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1, Parent = gui })
 local scale = Kit.new("UIScale", { Parent = root })
 local hudScale = 1 -- the player's "HUD size" setting (Settings screen): scales the HUD only (hud:SetScale), not the panels
@@ -348,7 +348,7 @@ function call(action, ...)
 		extra.Code = data
 	end
 	if not ok then
-		warn("[DuoQuest] " .. action .. " failed: " .. tostring(data))
+		warn("[IdlePartyQuest] " .. action .. " failed: " .. tostring(data))
 		if QUIET_ACTIONS[action] then
 			return ok, data -- the screen shows its own message
 		end

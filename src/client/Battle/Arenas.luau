@@ -169,7 +169,7 @@ local function makePad(origin)
 	pad.Transparency = 0.25
 	pad.Parent = workspace
 	local prompt = Instance.new("ProximityPrompt")
-	prompt.Name = "DuoQuestWatch"
+	prompt.Name = "IdlePartyWatch"
 	prompt.ActionText = "Watch battle"
 	prompt.ObjectText = ""
 	prompt.HoldDuration = 0

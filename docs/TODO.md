@@ -19,7 +19,7 @@ Last updated 2026-11-24. Claude keeps this list current. Short entries; details 
   - Market "Pet Food x5" (2,304g) vs. Pet Store "Pet Snack" (6,900g each) for the same item.
   - A Crypt run at stage 6 pays about 9.7K gold.
 - **Fresh start at launch?** If testers' progress should not carry into the real launch, rename the save store
-  `PlayerData_v1` to `PlayerData_v2` just before launch.
+  `IPQ_PlayerData` (renamed from `PlayerData_v1` on 2026-11-24, so saving starts clean now) just before launch.
 
 ## Building next (Claude)
 

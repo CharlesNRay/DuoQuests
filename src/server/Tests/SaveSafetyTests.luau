@@ -77,7 +77,7 @@ return function(modulesOverride)
 	check(("It is far under the 4 MB limit (%d characters)"):format(size), size < DS.LIMIT / 20)
 	check("A fresh profile is DataStore-safe", #DS.Problems(m.ProfileTemplate.New()) == 0)
 
-	-- a busy guild record (stored in the DuoQuestGuilds DataStore)
+	-- a busy guild record (stored in the IPQ_Guilds DataStore)
 	if m.Guilds then
 		local G = m.Guilds
 		local t0 = 1800000000

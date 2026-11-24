@@ -82,7 +82,7 @@ function WorldService.BuildHub()
 	Lighting.OutdoorAmbient = Color3.fromRGB(140, 140, 150)
 
 	local hub = Instance.new("Folder")
-	hub.Name = "DuoQuestHub"
+	hub.Name = "IdlePartyHub"
 	hub.Parent = workspace
 
 	local floor = Instance.new("Part")
@@ -111,7 +111,7 @@ end
 
 -- Called by LeaderboardService after each refresh: textByCategory[id] = lines.
 function WorldService.SetBoardText(textByCategory)
-	local hub = workspace:FindFirstChild("DuoQuestHub")
+	local hub = workspace:FindFirstChild("IdlePartyHub")
 	local sign = hub and hub:FindFirstChild("LeaderboardSign")
 	local label = sign and sign:FindFirstChild("Board") and sign.Board:FindFirstChild("Text")
 	if label then

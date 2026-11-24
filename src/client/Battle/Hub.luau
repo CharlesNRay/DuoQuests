@@ -478,7 +478,7 @@ function Hub.Build(handlers)
 	table.clear(orbiters)
 	table.clear(pulsers)
 	folder = Instance.new("Folder")
-	folder.Name = "DuoQuestPlaza"
+	folder.Name = "IdlePartyPlaza"
 	folder.Parent = workspace
 
 	local centre = Vector3.new(World.PLAZA.X, 0, World.PLAZA.Z)

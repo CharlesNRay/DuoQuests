@@ -101,7 +101,7 @@ function Celebrate.Burst(color, count)
 	local UserInputService = game:GetService("UserInputService")
 	if not burstGui or not burstGui.Parent then
 		burstGui = Instance.new("ScreenGui")
-		burstGui.Name = "DuoQuestBursts"
+		burstGui.Name = "IdlePartyBursts"
 		burstGui.IgnoreGuiInset = true
 		burstGui.ResetOnSpawn = false
 		burstGui.DisplayOrder = 80

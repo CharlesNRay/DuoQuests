@@ -37,7 +37,7 @@ local ProfileTemplate = require(Shared.ProfileTemplate)
 local TableUtil = require(Shared.Util.TableUtil)
 local DataSafety = require(Shared.Util.DataSafety)
 
-local DATASTORE_NAME = "PlayerData_v1"
+local DATASTORE_NAME = "IPQ_PlayerData"
 local AUTOSAVE_INTERVAL = 120 -- seconds between autosaves (also refreshes the lock)
 local LOCK_TIMEOUT = 300 -- a lock older than this is treated as a crashed server
 local MAX_ATTEMPTS = 3 -- DataStore call retries

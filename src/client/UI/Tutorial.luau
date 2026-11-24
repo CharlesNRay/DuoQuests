@@ -135,7 +135,7 @@ function TutorialUI.new(root, hud, call, getContext)
 			local state, hidden = getContext()
 			local ok, err = pcall(self.Update, self, state, hidden)
 			if not ok then
-				warn("[DuoQuest] tutorial: " .. tostring(err))
+				warn("[IdlePartyQuest] tutorial: " .. tostring(err))
 				task.wait(5)
 			end
 		end

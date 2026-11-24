@@ -49,7 +49,7 @@ function Scene.new(origin)
 	local frame = if typeof(origin) == "CFrame" then origin else CFrame.new(origin)
 	local self = setmetatable({ Origin = frame.Position, Frame = frame, Walking = false, Scroll = 0, Props = {}, Fx = {} }, Scene)
 	self.Folder = Instance.new("Folder")
-	self.Folder.Name = "DuoQuestArena"
+	self.Folder.Name = "IdlePartyArena"
 	self.Folder.Parent = workspace
 
 	self.Ground = prop(self.Folder, { Name = "Ground", Size = Vector3.new(World.ARENA_WIDTH, 1, World.ARENA_DEPTH), CFrame = frame * CFrame.new(0, -0.5, 0) })

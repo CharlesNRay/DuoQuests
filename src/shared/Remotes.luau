@@ -3,7 +3,7 @@
 	Location: ReplicatedStorage > Shared > Remotes
 
 	Names of the two remotes the UI uses. The server (ApiService) creates them
-	in ReplicatedStorage > DuoQuestRemotes; the client waits for them.
+	in ReplicatedStorage > IdlePartyRemotes; the client waits for them.
 
 	  Api   RemoteFunction   client -> server requests: Api:InvokeServer(action, ...)
 	                         returns ok (boolean), data or a reason string
@@ -16,7 +16,7 @@
 ]]
 
 return {
-	FolderName = "DuoQuestRemotes",
+	FolderName = "IdlePartyRemotes",
 	Api = "Api",
 	Push = "Push",
 }

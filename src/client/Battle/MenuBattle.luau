@@ -73,7 +73,7 @@ function MenuBattle.Start()
 		scene:SetZone(Zones.ForStage(5).Theme)
 	end)
 	if not ok then
-		warn("[DuoQuest] menu battle could not start: " .. tostring(why))
+		warn("[IdlePartyQuest] menu battle could not start: " .. tostring(why))
 		MenuBattle.Stop()
 		return false
 	end
@@ -82,7 +82,7 @@ function MenuBattle.Start()
 	-- dusk lighting (this client only) and a fixed side-on camera
 	saved = { ClockTime = Lighting.ClockTime, Brightness = Lighting.Brightness, Ambient = Lighting.Ambient, OutdoorAmbient = Lighting.OutdoorAmbient }
 	TweenService:Create(Lighting, TweenInfo.new(1.5), { ClockTime = 17.4, Brightness = 2.6, Ambient = Color3.fromRGB(130, 105, 150), OutdoorAmbient = Color3.fromRGB(165, 135, 165) }):Play()
-	RunService:BindToRenderStep("DuoQuestMenuCamera", Enum.RenderPriority.Camera.Value + 2, function()
+	RunService:BindToRenderStep("IdlePartyMenuCamera", Enum.RenderPriority.Camera.Value + 2, function()
 		local cam = workspace.CurrentCamera
 		cam.CameraType = Enum.CameraType.Scriptable
 		cam.FieldOfView = 38
@@ -101,7 +101,7 @@ function MenuBattle.Start()
 			index += 1
 			local okFight, info, stage = pcall(newFight, index)
 			if not okFight then
-				warn("[DuoQuest] menu battle fight failed: " .. tostring(info))
+				warn("[IdlePartyQuest] menu battle fight failed: " .. tostring(info))
 				task.wait(3)
 				continue
 			end
@@ -114,7 +114,7 @@ function MenuBattle.Start()
 				finished = true
 			end)
 			if not okPlay then
-				warn("[DuoQuest] menu battle replay failed: " .. tostring(err))
+				warn("[IdlePartyQuest] menu battle replay failed: " .. tostring(err))
 				finished = true
 			end
 			local started = os.clock()
@@ -133,7 +133,7 @@ end
 function MenuBattle.Stop()
 	running = false
 	pcall(function()
-		RunService:UnbindFromRenderStep("DuoQuestMenuCamera")
+		RunService:UnbindFromRenderStep("IdlePartyMenuCamera")
 	end)
 	if replay then
 		pcall(function()

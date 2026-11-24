@@ -369,7 +369,7 @@ two paths of 3 skills, a season prize pet (Arcanix, Skyhawk, Shadowcat, Spiritli
 - Boss fights already hold the party's stage fights while the replay plays (no passive progress meanwhile).
 
 ## Guilds (cross-server)
-- Guilds live in a shared DataStore (`DuoQuestGuilds`: G_<id>, N_<name>, U_<userId>, Directory) so every server sees the same guild; Studio falls back to memory. All writes use `UpdateAsync` with pure transforms (`Shared/Guilds`).
+- Guilds live in a shared DataStore (`IPQ_Guilds`, was `DuoQuestGuilds`: G_<id>, N_<name>, U_<userId>, Directory) so every server sees the same guild; Studio falls back to memory. All writes use `UpdateAsync` with pure transforms (`Shared/Guilds`).
 - Collective daily (3) and weekly (3) missions: everyone's actions (queued in `Permanent.GuildPending` by `Quests.Record`, flushed every ~2 min) fill one bar; goals scale with active members; the guild earns Guild Points when a bar fills (+bonus for finishing all); each contributor claims personal gold, wishstones and Guild Marks.
 - The leader alone spends Guild Points on upgrades (Attack, Max Health, Defense, Attack Speed, Crit Chance/Damage, EXP, Gold, member slots). Combat upgrades ride on `Pets.Collection(...).Mods`, EXP/gold on `Permanent.GuildBuffs` in `Progression.ApplyClear`.
 - Succession: leader unseen 5 days -> next officer (longest serving), then top contributor, who must have been seen in the last 3 days; otherwise nothing changes and it is checked again whenever the guild is opened or flushed.

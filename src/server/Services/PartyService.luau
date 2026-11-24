@@ -61,8 +61,8 @@ end
 local TableUtil = require(Shared.Util.TableUtil)
 local PartyCore = require(script.Parent.PartyCore)
 
-local PARTY_STORE = "Parties_v1"
-local CODE_STORE = "PartyCodes_v1"
+local PARTY_STORE = "IPQ_Parties"
+local CODE_STORE = "IPQ_PartyCodes"
 local LOOP_INTERVAL = 0.25 -- seconds between checks of the hosted parties (small, so the next fight starts on time: a 1 s check left up to 1 s of empty field after a win)
 local SAVE_INTERVAL = 30 -- seconds between saves of a changed party
 local HEARTBEAT_INTERVAL = PartyCore.HOST_TIMEOUT / 3 -- keeps the host lock fresh

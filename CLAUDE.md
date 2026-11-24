@@ -1,6 +1,6 @@
 # Idle Party Quest (formerly Duo Quest) — notes for Claude Code
 
-Renamed 2026-11-23: only player-visible text says Idle Party Quest (menu title, town gate, tutorial). Keep DuoQuest in instance, remote and DataStore names (renaming a DataStore loses every save). SEEN in Studio 2026-11-23: menu title "IDLE PARTY ⚔ QUEST" fits, gate reads IDLE PARTY TOWN; tutorial welcome card seen too.
+Renamed 2026-11-23: only player-visible text says Idle Party Quest (menu title, town gate, tutorial). 2026-11-24 (before any real player had a save): internal names renamed too. Instances/remotes `IdleParty*` (e.g. `IdlePartyRemotes`), sound groups and lighting `IPQ_*`, every DataStore `IPQ_*` (`IPQ_PlayerData`, `IPQ_Parties`, `IPQ_PartyCodes`, `IPQ_Guilds`, `IPQ_SeasonBoss`, `IPQ_Playtest`, `IPQ_SeasonResults`, `IPQ_SeasonHist_S<n>`, `IPQ_Leaderboard_S<n>_*`), log prefix `[IdlePartyQuest]`. Do NOT rename DataStores again once the game is live (that loses every save). Repo/folder and place file are still called DuoQuest(s). SEEN in Studio 2026-11-24: boots, new character, fights run. SEEN in Studio 2026-11-23: menu title "IDLE PARTY ⚔ QUEST" fits, gate reads IDLE PARTY TOWN; tutorial welcome card seen too.
 - **Main menu 2026-11-23** (SEEN in Studio): menu battle is 4 heroes (Warrior in your avatar, Mira, Ilsa, Wren), fights retuned to stage 9-13
   (the old ones wiped in 1 s); the menu is centered on big screens (UIScale grows around the middle, Body is now anchored 0.5);
   title centered by text width. **Extra Character Slots** Game Pass (`Config/Premium.Passes.CharacterSlots`, 149 R$, `Characters.Max(profile)`
@@ -176,8 +176,8 @@ Git Bash; they find a working Python themselves (`python3`/`python` there are St
   beside the Guild Hall (opens Guild), Store stall on the plaza (`PlazaSpots.Store`). HUD buttons still open them too.
 - **Sound 2026-11-23** (SEEN in Studio: all 32 ids load, town/stage/dungeon music switch, sliders change SoundGroup volume,
   level-up card, combat sounds created): `Config/Audio` (APMOfficial music, ProSoundEffects/Roblox SFX; ids from the Creator
-  Store search API `toolbox-service/v2/assets:search?searchCategoryType=Audio`), `client/Sound.luau` (SoundGroups DQ_Music /
-  DQ_Effects / DQ_Interface, 3D combat sounds at the fighter, music cross-fade by context: boss arena `info.Kind`
+  Store search API `toolbox-service/v2/assets:search?searchCategoryType=Audio`), `client/Sound.luau` (SoundGroups IPQ_Music /
+  IPQ_Effects / IPQ_Interface, 3D combat sounds at the fighter, music cross-fade by context: boss arena `info.Kind`
   WorldBoss/SeasonBoss/GuildRaid/Dungeon, battle view = Stage, else Town). Settings screen (HUD gear button, handler
   `SaveSettings`, `Permanent.Settings`). `UI/Celebrate` = big level-up / errand card + sparkles. NOT heard (no audio check
   possible from here): loudness balance between tracks and effects; world/season/guild boss music not seen switching.
@@ -233,7 +233,7 @@ Git Bash; they find a working Python themselves (`python3`/`python` there are St
 - **Playtest log 2026-11-23** (tests green, NOT seen in Studio): HUD 📝 Feedback (`UI/FeedbackScreen`, handler `SendFeedback`,
   topics Bug/Confusing/Idea/Fun, 1 per 20 s, 15/day); server errors (`ScriptContext.Error` + ApiService handler failures via
   `xpcall` traceback), client errors (`ReportError`, 6/min, each message once per visit) and one Session line per visit;
-  `Shared/PlaytestLog` rules, `Services/PlaytestService` buffers and writes DataStore `DuoQuestPlaytest` keys `Feedback|Errors|Sessions:<day>`
+  `Shared/PlaytestLog` rules, `Services/PlaytestService` buffers and writes DataStore `IPQ_Playtest` keys `Feedback|Errors|Sessions:<day>`
   every 60 s + on close. Reader: Feedback > "Read log" tab (`PlaytestRead`, `state.Player.CanReadLog`: Studio or the place's creator).
   8 lots were considered: they do not fit inside the town wall (slot 6 would sit outside), so Max Players stays 4.
 

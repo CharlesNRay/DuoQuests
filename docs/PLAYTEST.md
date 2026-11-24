@@ -41,7 +41,7 @@ Play for 20-30 minutes, then write down anything odd. The things to try:
 
 ## The playtest log (owner)
 Everything testers send and everything that goes wrong is kept for you, from every server, in the DataStore
-`DuoQuestPlaytest` (one list per day, UTC): open 📝 **Feedback > Read log** in Studio (needs API access on) or in the
+`IPQ_Playtest` (one list per day, UTC): open 📝 **Feedback > Read log** in Studio (needs API access on) or in the
 live game (only the place's creator, or rank 254+ in the owning group, sees that tab).
 - **Feedback**: topic, who (level, class, stage), where they stood (district + position, or "battle view"), the note.
 - **Errors**: server script errors, handlers that threw (with a stack trace, "handler Wish" etc.) and players' client

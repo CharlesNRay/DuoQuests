@@ -24,8 +24,8 @@ local Sound = {}
 
 local groups = {}
 for _, name in ipairs({ "Music", "Effects", "Interface" }) do
-	local g = SoundService:FindFirstChild("DQ_" .. name) or Instance.new("SoundGroup")
-	g.Name = "DQ_" .. name
+	local g = SoundService:FindFirstChild("IPQ_" .. name) or Instance.new("SoundGroup")
+	g.Name = "IPQ_" .. name
 	g.Parent = SoundService
 	groups[name] = g
 end

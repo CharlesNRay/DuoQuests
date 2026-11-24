@@ -364,7 +364,7 @@ end
 local function safely(fn, ...)
 	local ok, err = pcall(fn, ...)
 	if not ok then
-		warn("[DuoQuest] skill effect failed: " .. tostring(err))
+		warn("[IdlePartyQuest] skill effect failed: " .. tostring(err))
 	end
 end
 

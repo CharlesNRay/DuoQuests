@@ -25,8 +25,8 @@ local function ensureAtmosphere()
 	if atmosphere and atmosphere.Parent then
 		return atmosphere
 	end
-	atmosphere = Lighting:FindFirstChild("DQ_ZoneAir") or Instance.new("Atmosphere")
-	atmosphere.Name = "DQ_ZoneAir"
+	atmosphere = Lighting:FindFirstChild("IPQ_ZoneAir") or Instance.new("Atmosphere")
+	atmosphere.Name = "IPQ_ZoneAir"
 	if not atmosphere.Parent then
 		atmosphere.Density = 0
 		atmosphere.Offset = 0.1

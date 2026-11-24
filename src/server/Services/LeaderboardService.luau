@@ -44,7 +44,7 @@ local refreshCallback = nil
 local initialized = false
 
 local function storeName(categoryId)
-	return ("Leaderboard_S%d_%s"):format(Seasons.CurrentSeasonId, categoryId)
+	return ("IPQ_Leaderboard_S%d_%s"):format(Seasons.CurrentSeasonId, categoryId)
 end
 
 local function nameOf(userId)

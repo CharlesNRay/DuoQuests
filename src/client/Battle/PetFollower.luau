@@ -27,7 +27,7 @@ end
 function PetFollower.new(getPetIds)
 	local self = { Pets = {} }
 	local folder = Instance.new("Folder")
-	folder.Name = "DuoQuestPets"
+	folder.Name = "IdlePartyPets"
 	folder.Parent = workspace
 
 	local function sync(ids)

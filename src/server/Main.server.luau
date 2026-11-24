@@ -38,7 +38,7 @@ local function onPlayerAdded(player)
 	end
 
 	print(
-		("[DuoQuest] %s loaded - Season %d, %s, level %d"):format(
+		("[IdlePartyQuest] %s loaded - Season %d, %s, level %d"):format(
 			player.Name,
 			profile.Season.SeasonId,
 			profile.Season.ClassId,

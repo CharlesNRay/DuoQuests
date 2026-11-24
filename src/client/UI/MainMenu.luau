@@ -219,7 +219,7 @@ function MainMenu.new(root, call, extra, CharacterScreen)
 	self.Call, self.Extra, self.CharacterScreen = call, extra, CharacterScreen
 	self.Root = root
 	-- its own ScreenGui that ignores the top bar inset, so the backdrop really covers the whole screen
-	local gui = Kit.new("ScreenGui", { Name = "DuoQuestMenu", ResetOnSpawn = false, IgnoreGuiInset = true, DisplayOrder = 100, Enabled = false, ZIndexBehavior = Enum.ZIndexBehavior.Sibling, Parent = Players.LocalPlayer:WaitForChild("PlayerGui") })
+	local gui = Kit.new("ScreenGui", { Name = "IdlePartyMenu", ResetOnSpawn = false, IgnoreGuiInset = true, DisplayOrder = 100, Enabled = false, ZIndexBehavior = Enum.ZIndexBehavior.Sibling, Parent = Players.LocalPlayer:WaitForChild("PlayerGui") })
 	self.Gui = gui
 	self.Frame = Kit.frame({ Name = "MainMenu", Size = UDim2.fromScale(1, 1), BackgroundColor3 = Color3.fromRGB(14, 16, 28), NoCorner = true, Active = true, ZIndex = 1, Parent = gui })
 	self.Bg = buildBackground(self.Frame)

@@ -395,7 +395,7 @@ function BossService.Init(pushRemote, profileGetter)
 
 	if not IS_STUDIO then
 		local ok, result = pcall(function()
-			return DataStoreService:GetDataStore("DuoQuestSeasonBoss")
+			return DataStoreService:GetDataStore("IPQ_SeasonBoss")
 		end)
 		store = ok and result or nil
 	end

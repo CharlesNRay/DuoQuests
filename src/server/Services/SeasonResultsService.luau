@@ -53,13 +53,13 @@ function SeasonResultsService.Ended(seasonId)
 end
 
 local function stageStore(seasonId)
-	return DataStoreService:GetOrderedDataStore(("Leaderboard_S%d_Stage"):format(seasonId))
+	return DataStoreService:GetOrderedDataStore(("IPQ_Leaderboard_S%d_Stage"):format(seasonId))
 end
 local function classStore(seasonId, classId)
-	return DataStoreService:GetOrderedDataStore(("Leaderboard_S%d_Class_%s"):format(seasonId, classId))
+	return DataStoreService:GetOrderedDataStore(("IPQ_Leaderboard_S%d_Class_%s"):format(seasonId, classId))
 end
 local function histStore(seasonId)
-	return DataStoreService:GetDataStore(("SeasonHist_S%d"):format(seasonId))
+	return DataStoreService:GetDataStore(("IPQ_SeasonHist_S%d"):format(seasonId))
 end
 
 local function bump(board, userId, value)
@@ -233,7 +233,7 @@ function SeasonResultsService.Results(seasonId)
 	if not SeasonResultsService.Ended(seasonId) then
 		return nil
 	end
-	local store = if useMemory then nil else DataStoreService:GetDataStore("SeasonResults")
+	local store = if useMemory then nil else DataStoreService:GetDataStore("IPQ_SeasonResults")
 	local key = "S" .. seasonId
 	if useMemory then
 		frozen[seasonId] = memory.Final[seasonId]

@@ -1,5 +1,5 @@
 {
-  "name": "DuoQuest",
+  "name": "IdlePartyQuest",
   "tree": {
     "$className": "DataModel",
     "ReplicatedStorage": {

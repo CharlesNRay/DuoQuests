@@ -705,7 +705,7 @@ function GuildService.Init(profileGetter, changedCallback)
 	getProfile, onChanged = profileGetter, changedCallback
 	if not IS_STUDIO then
 		local ok, result = pcall(function()
-			return DataStoreService:GetDataStore("DuoQuestGuilds")
+			return DataStoreService:GetDataStore("IPQ_Guilds")
 		end)
 		store = if ok then result else nil
 	end

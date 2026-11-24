@@ -32,7 +32,7 @@ local leaving = false
 
 local function restore()
 	pcall(function()
-		RunService:UnbindFromRenderStep("DuoQuestBossCamera")
+		RunService:UnbindFromRenderStep("IdlePartyBossCamera")
 	end)
 	if replay then
 		pcall(function() replay:Destroy() end)
@@ -79,7 +79,7 @@ end
 
 local function showResults(info, onClose)
 	local gui = Instance.new("ScreenGui")
-	gui.Name = "DuoQuestBossResults"
+	gui.Name = "IdlePartyBossResults"
 	gui.ResetOnSpawn = false
 	gui.IgnoreGuiInset = true
 	gui.DisplayOrder = 60
@@ -137,13 +137,13 @@ function BossArena.Play(info, onClose)
 		scene:SetZone(THEME)
 	end)
 	if not ok then
-		warn("[DuoQuest] boss arena could not start: " .. tostring(why))
+		warn("[IdlePartyQuest] boss arena could not start: " .. tostring(why))
 		restore()
 		return false
 	end
 	saved = { ClockTime = Lighting.ClockTime, Brightness = Lighting.Brightness, Ambient = Lighting.Ambient, OutdoorAmbient = Lighting.OutdoorAmbient }
 	TweenService:Create(Lighting, TweenInfo.new(1), { ClockTime = 19, Brightness = 2, Ambient = Color3.fromRGB(150, 80, 70), OutdoorAmbient = Color3.fromRGB(170, 90, 80) }):Play()
-	RunService:BindToRenderStep("DuoQuestBossCamera", Enum.RenderPriority.Camera.Value + 2, function()
+	RunService:BindToRenderStep("IdlePartyBossCamera", Enum.RenderPriority.Camera.Value + 2, function()
 		local cam = workspace.CurrentCamera
 		cam.CameraType = Enum.CameraType.Scriptable
 		cam.FieldOfView = 40
@@ -157,7 +157,7 @@ function BossArena.Play(info, onClose)
 	leaving = false
 	pcall(function()
 		local gui = Instance.new("ScreenGui")
-		gui.Name = "DuoQuestBossLeave"
+		gui.Name = "IdlePartyBossLeave"
 		gui.ResetOnSpawn = false
 		gui.IgnoreGuiInset = true
 		gui.DisplayOrder = 55
@@ -181,7 +181,7 @@ function BossArena.Play(info, onClose)
 			finished = true
 		end)
 		if not played then
-			warn("[DuoQuest] boss arena replay failed: " .. tostring(err))
+			warn("[IdlePartyQuest] boss arena replay failed: " .. tostring(err))
 			finished = true
 		end
 		local started = os.clock()

@@ -47,7 +47,7 @@ function BattleCamera.Start()
 		return
 	end
 	started = true
-	RunService:BindToRenderStep("DuoQuestBattleCamera", Enum.RenderPriority.Camera.Value + 1, function()
+	RunService:BindToRenderStep("IdlePartyBattleCamera", Enum.RenderPriority.Camera.Value + 1, function()
 		if not battleView or not target then
 			return
 		end

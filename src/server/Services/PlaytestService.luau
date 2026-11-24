@@ -2,7 +2,7 @@
 	PlaytestService (ModuleScript): the playtest log (rules in Shared/PlaytestLog).
 
 	Collects tester feedback, server and client errors and one line per player visit, buffers them in memory and adds
-	them to the DataStore "DuoQuestPlaytest" (keys "Feedback:<day>", "Errors:<day>", "Sessions:<day>") every 60 s and
+	them to the DataStore "IPQ_Playtest" (keys "Feedback:<day>", "Errors:<day>", "Sessions:<day>") every 60 s and
 	when the server closes. UpdateAsync merges, so every live server adds to the same day lists.
 	In Studio without API access it keeps everything in memory (gone when Play stops).
 
@@ -24,7 +24,7 @@ local PlaytestLog = require(Shared.PlaytestLog)
 
 local PlaytestService = {}
 
-local STORE_NAME = "DuoQuestPlaytest"
+local STORE_NAME = "IPQ_Playtest"
 local FLUSH_EVERY = 60
 local READ_MAX = 200 -- rows per list sent to the reader (keeps the remote reply small)
 
