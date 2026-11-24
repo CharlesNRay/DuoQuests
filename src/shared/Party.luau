@@ -248,6 +248,7 @@ function Party.MakeSnapshot(profile, userId, name, previous, now)
 			return mods
 		end)(),
 		Level = season.Level,
+		PartySpirit = Talents.Rank(profile, "PartySpirit"), -- the Mastery talent that boosts the whole party
 		Frontier = season.HighestStage,
 		SlotLevels = SkillProgress.SlotLevelsFor(season, season.Loadouts[classId], classId),
 		SlotBonus = SkillProgress.SlotBonus(season, classId, #(season.Loadouts[classId] or {})),

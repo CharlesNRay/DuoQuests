@@ -29,6 +29,11 @@ Renamed 2026-11-23: only player-visible text says Idle Party Quest (menu title, 
   Arcane Lich (existing body shapes + new Look extras Material / Transparency / Glow, applied in `Models.Enemy finish`;
   existing enemy abilities only). Battle view tints the sky per zone (`client/Battle/ZoneLighting`: zone ClockTime + Haze,
   night zones get a brighter fill + exposure; Clear on leaving battle view). SEEN in Studio with command-bar demo fights.
+- **Mastery talents 2026-11-24** (SEEN in Studio: locked row at L80, open at L100): 4 talents x 10 ranks open at level 81
+  (`Config/Talents` Unlock/Mastery): Onslaught (DamageDealt), Fortitude (DamageTaken -1.2%/rank), Party Spirit (Mode "Party":
+  ranks of everyone in the fight add up, +0.5% Attack and Health per rank for the whole party, `StageRunner.NewParty`,
+  ghost snapshots carry `PartySpirit`), Fortune (Mode "Reward": +2% gold and XP per rank in `Progression.ApplyClear`).
+  Talents panel is 660 x 392 (RefH is 400: taller panels get cut off).
 - **Studio test mute**: Workspace attribute `StudioMute = true` (Edit mode, command bar) silences all game sound in Studio
   (owner asked: no sound while Claude tests). Set it before test runs, clear it (nil) before Ctrl+S.
 

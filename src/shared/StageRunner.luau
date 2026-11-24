@@ -56,6 +56,16 @@ local Talents = require(script.Parent.Talents)
 local StageRunner = {}
 
 function StageRunner.NewParty(members)
+	-- Party Spirit (Mastery talent): everyone's ranks add up and the whole party gets the bonus
+	local spirit = 0
+	for _, member in ipairs(members) do
+		if member.Profile then
+			spirit += Talents.Rank(member.Profile, "PartySpirit")
+		elseif member.Snapshot then
+			spirit += member.Snapshot.PartySpirit or 0
+		end
+	end
+	local partyMods = Talents.PartyMods(spirit)
 	local party = {}
 	for _, member in ipairs(members) do
 		local classId, level, loadout, slotLevels, passiveIds, passiveLevels, petId, petLevel, petRank, equipped, subclassId, extraMods
@@ -88,6 +98,12 @@ function StageRunner.NewParty(members)
 			subclassId = snapshot.SubclassId
 			equipped = snapshot.Gear
 			extraMods = snapshot.CollectionMods
+		end
+		if #partyMods > 0 then
+			extraMods = if extraMods then table.clone(extraMods) else {}
+			for _, mod in ipairs(partyMods) do
+				table.insert(extraMods, mod)
+			end
 		end
 		table.insert(
 			party,

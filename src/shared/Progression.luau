@@ -34,6 +34,7 @@ local GearConfig = require(script.Parent.Config.Gear)
 local Consumables = require(script.Parent.Consumables)
 local Quests = require(script.Parent.Quests)
 local Passes = require(script.Parent.Passes)
+local Talents = require(script.Parent.Talents)
 
 local Progression = {}
 
@@ -111,7 +112,8 @@ function Progression.ApplyClear(profile, stage, rand)
 	local boost = Consumables.Rewards(profile, os.time())
 	local guildBuffs = profile.Permanent and profile.Permanent.GuildBuffs or {} -- from the guild's upgrades
 	local perks = Passes.Perks(profile)
-	bonuses = { GoldGain = (bonuses.GoldGain or 0) + boost.GoldGain + (guildBuffs.GoldGain or 0) + perks.GoldGain, XPGain = (bonuses.XPGain or 0) + boost.XPGain + (guildBuffs.XPGain or 0) + perks.XPGain, ItemRarity = bonuses.ItemRarity }
+	local fortune = Talents.Rewards(profile) -- the Fortune Mastery talent
+	bonuses = { GoldGain = (bonuses.GoldGain or 0) + boost.GoldGain + (guildBuffs.GoldGain or 0) + perks.GoldGain + fortune.GoldGain, XPGain = (bonuses.XPGain or 0) + boost.XPGain + (guildBuffs.XPGain or 0) + perks.XPGain + fortune.XPGain, ItemRarity = bonuses.ItemRarity }
 	local rewards = Progression.ClearRewards(stage, isFrontier, bonuses)
 
 	season.Currencies.Gold += rewards.Gold

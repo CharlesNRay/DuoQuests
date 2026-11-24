@@ -13,9 +13,6 @@ Last updated 2026-11-24. Claude keeps this list current. Short entries; details 
   nothing and the 📝 feedback log only lasts until Play stops.
 - **Season dates.** Season 1 runs Nov 1 to Feb 1, which is a placeholder. Suggested: 6-week seasons, the first one 4 weeks,
   starting on launch day.
-- **Talent points after level 81.** All talents are full at level 81 and levels go to 120, so levels 82-120 give no points.
-  Suggested: a *Mastery* row of 4 talents with 10 ranks each that opens at level 81 (Skill Power, Overdrive, Party Spirit,
-  Fortune). Not decided yet.
 - **Open questions.**
   - The 4 questions in docs/TOWN.md.
   - Market "Pet Food x5" (2,304g) vs. Pet Store "Pet Snack" (6,900g each) for the same item.
@@ -25,9 +22,8 @@ Last updated 2026-11-24. Claude keeps this list current. Short entries; details 
 
 ## Building next (Claude)
 
-- Done 2026-11-24: monsters and bosses for stages 101-200; the sky follows the biome in battle view.
+- Done 2026-11-24: monsters and bosses for stages 101-200; the sky follows the biome in battle view; Mastery talents (level 81+).
 
-- The Mastery talent row, once you say yes.
 - More player homes. Lots 5-8 continue down the homes street, which needs a gate in the town wall. Max Players is 4 until then.
 - Balance pass:
   - The class roster spread (docs/BALANCE.md).

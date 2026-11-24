@@ -51,7 +51,7 @@ return function(modulesOverride)
 	local n = Talents.AutoSpend(profile)
 	check("Auto-spend uses every point (39 at level 40)", n == 39 and select(3, Talents.Points(profile)) == 0)
 	local status = Talents.Status(profile)
-	check("Status lists every talent with its text", #status.List == #Config.Order and status.Free == 0 and status.List[1].Now ~= nil)
+	check("Status lists every talent with its text", #status.List == #Config.Order and status.MasteryLevel == 81 and status.Free == 0 and status.List[1].Now ~= nil)
 	check("Describe reads like a stat line", Talents.Describe("Might", 3) == "+4.5% Attack" and Talents.Describe("Ferocity", 2) == "+6% Crit damage")
 	local maxRanks = 0
 	for _, def in pairs(Config.Defs) do
@@ -76,6 +76,43 @@ return function(modulesOverride)
 		end
 	end
 	check("A ghost snapshot carries the talents", found)
+
+	-- Mastery (level 81+): four more talents for levels 82-120
+	local low = PT.New()
+	low.Season.Level = 80
+	local okLow, whyLow = Talents.Spend(low, "Onslaught")
+	check("Mastery is locked below level 81", okLow == false and whyLow == "Locked")
+	local mas = PT.New()
+	mas.Season.Level = 120
+	Talents.AutoSpend(mas)
+	local _, spentAll, freeAll = Talents.Points(mas)
+	check("At level 120 auto-spend uses every point, Mastery included", spentAll == 119 and freeAll == 0 and Talents.Rank(mas, "Onslaught") > 0 and Talents.Rank(mas, "PartySpirit") > 0)
+	check("Fortitude reads as less damage taken", Talents.Describe("Fortitude", 5) == "-6% Damage taken")
+	local fortune = PT.New()
+	fortune.Season.Level = 100
+	Talents.Spend(fortune, "Fortune", 10)
+	check("Fortune: +20% gold and XP at 10 ranks", math.abs(Talents.Rewards(fortune).GoldGain - 0.2) < 1e-9)
+	local onlyStats = true
+	for _, mod in ipairs(Talents.Mods(fortune)) do
+		onlyStats = onlyStats and mod.Stat ~= "Fortune" and mod.Stat ~= "PartySpirit"
+	end
+	check("Fortune and Party Spirit are not combat stats on the hero", onlyStats)
+	-- Party Spirit: everyone in the fight gets the summed bonus
+	if m.StageRunner then
+		local giver = PT.New()
+		giver.Season.Level = 100
+		giver.Season.ClassId = "Cleric"
+		PT.GrantClassStarters(giver.Season, "Cleric")
+		Talents.Spend(giver, "PartySpirit", 10)
+		local friend = PT.New()
+		friend.Season.Level = 100
+		local alone = m.StageRunner.NewParty({ { Id = "1", Name = "F", Profile = friend } })
+		local together = m.StageRunner.NewParty({ { Id = "1", Name = "F", Profile = friend }, { Id = "2", Name = "G", Profile = giver } })
+		check("Party Spirit raises a teammate's Attack and Health", together[1].Stats.Attack > alone[1].Stats.Attack * 1.04 and together[1].Stats.MaxHealth > alone[1].Stats.MaxHealth * 1.04)
+		local snapG = m.Party.MakeSnapshot(giver, 2, "G", nil, 0)
+		local viaGhost = m.StageRunner.NewParty({ { Id = "1", Name = "F", Profile = friend }, { Id = "2", Name = "G", Snapshot = snapG } })
+		check("A ghost's Party Spirit counts too", snapG.PartySpirit == 10 and viaGhost[1].Stats.Attack > alone[1].Stats.Attack * 1.04)
+	end
 
 	print(("TalentTests done: %d passed, %d failed"):format(passed, failed))
 end
