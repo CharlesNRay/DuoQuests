@@ -24,6 +24,7 @@ local World = require(Shared.World)
 local Zones = require(Shared.Zones)
 local Stages = require(Shared.Stages)
 local PetConfig = require(Shared.Config.Pets)
+local Kit = require(script.Parent.Parent.UI.Kit)
 local Scene = require(script.Parent.Scene)
 local Replay = require(script.Parent.Replay)
 
@@ -51,6 +52,27 @@ function Arenas:MySlot()
 	return self.Mine
 end
 
+-- The battle card over a lot (owner 2026-11-24 mockup): a header bar (zone left, big STAGE right) and a table of the
+-- party with aligned columns HERO | LV | CLASS | PET, a class colour dot and a small "ghost" tag. It floats high over the
+-- front of the lot so the damage numbers pop below it instead of over it.
+local CARD_W = 340
+local HEAD_H, COLS_H, ROW_H = 34, 18, 26
+local CARD_GOLD = Color3.fromRGB(242, 193, 78)
+
+local function cardLabel(props)
+	local t = Instance.new("TextLabel")
+	t.BackgroundTransparency = 1
+	t.TextColor3 = Color3.new(1, 1, 1)
+	t.Font = Enum.Font.GothamBold
+	t.TextSize = 14
+	t.TextXAlignment = Enum.TextXAlignment.Left
+	t.TextTruncate = Enum.TextTruncate.AtEnd
+	for key, value in pairs(props) do
+		t[key] = value
+	end
+	return t
+end
+
 local function makeCard(origin)
 	local anchor = Instance.new("Part")
 	anchor.Name = "ArenaCard"
@@ -59,31 +81,56 @@ local function makeCard(origin)
 	anchor.CanQuery = false
 	anchor.Transparency = 1
 	anchor.Size = Vector3.new(1, 1, 1)
-	anchor.Position = origin:PointToWorldSpace(Vector3.new(0, 15, World.ARENA_DEPTH / 2 + 3))
+	anchor.Position = origin:PointToWorldSpace(Vector3.new(0, 24, World.ARENA_DEPTH / 2 + 3))
 	anchor.Parent = workspace
 	local gui = Instance.new("BillboardGui")
-	gui.Size = UDim2.fromOffset(260, 120)
-	gui.MaxDistance = 55 -- only readable when you are close; far cards would overlap
+	gui.Size = UDim2.fromOffset(CARD_W, HEAD_H + COLS_H + 4 * ROW_H + 10)
+	gui.MaxDistance = 70 -- only readable when you are close; far cards would overlap
 	gui.Adornee = anchor
 	gui.Parent = anchor
 	local frame = Instance.new("Frame")
+	frame.Name = "Card"
 	frame.Size = UDim2.fromScale(1, 1)
-	frame.BackgroundColor3 = Color3.fromRGB(20, 22, 34)
-	frame.BackgroundTransparency = 0.25
+	frame.BackgroundColor3 = Color3.fromRGB(18, 20, 32)
+	frame.BackgroundTransparency = 0.1
 	frame.Parent = gui
-	Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 10)
-	local label = Instance.new("TextLabel")
-	label.Size = UDim2.new(1, -12, 1, -8)
-	label.Position = UDim2.fromOffset(6, 4)
-	label.BackgroundTransparency = 1
-	label.RichText = true
-	label.TextColor3 = Color3.new(1, 1, 1)
-	label.Font = Enum.Font.GothamMedium
-	label.TextSize = 16
-	label.TextXAlignment = Enum.TextXAlignment.Left
-	label.TextYAlignment = Enum.TextYAlignment.Top
-	label.Parent = frame
-	return anchor, label
+	Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 12)
+	local stroke = Instance.new("UIStroke", frame)
+	stroke.Color = CARD_GOLD
+	stroke.Thickness = 2
+	-- header: zone on the left, the stage big on the right, a line under it
+	local head = Instance.new("Frame")
+	head.Name = "Head"
+	head.Size = UDim2.new(1, 0, 0, HEAD_H)
+	head.BackgroundColor3 = CARD_GOLD
+	head.BackgroundTransparency = 0.84
+	head.Parent = frame
+	Instance.new("UICorner", head).CornerRadius = UDim.new(0, 12)
+	local line = Instance.new("Frame")
+	line.Size = UDim2.new(1, 0, 0, 1)
+	line.Position = UDim2.fromOffset(0, HEAD_H)
+	line.BackgroundColor3 = CARD_GOLD
+	line.BackgroundTransparency = 0.5
+	line.BorderSizePixel = 0
+	line.Parent = frame
+	cardLabel({ Name = "Zone", Size = UDim2.new(0.6, -12, 1, 0), Position = UDim2.fromOffset(12, 0), TextColor3 = Color3.fromRGB(216, 220, 239), Font = Enum.Font.GothamMedium, Parent = head })
+	cardLabel({ Name = "Stage", Size = UDim2.new(0.4, -12, 1, 0), Position = UDim2.new(0.6, 0, 0, 0), TextXAlignment = Enum.TextXAlignment.Right, TextColor3 = Color3.fromRGB(255, 215, 106), Font = Enum.Font.GothamBlack, TextSize = 20, Parent = head })
+	-- column headings
+	local dim = Color3.fromRGB(141, 147, 179)
+	local function heading(text, x, w, right)
+		cardLabel({ Text = text, Size = UDim2.fromOffset(w, COLS_H), Position = UDim2.fromOffset(x, HEAD_H + 3), TextColor3 = dim, TextSize = 11, Font = Enum.Font.GothamBlack, TextXAlignment = if right then Enum.TextXAlignment.Right else Enum.TextXAlignment.Left, Parent = frame })
+	end
+	heading("HERO", 35, 110)
+	heading("LV", 150, 40, true)
+	heading("CLASS", 204, 70)
+	heading("PET", 276, 60)
+	local rows = Instance.new("Frame")
+	rows.Name = "Rows"
+	rows.BackgroundTransparency = 1
+	rows.Position = UDim2.fromOffset(0, HEAD_H + COLS_H + 3)
+	rows.Size = UDim2.new(1, 0, 1, -(HEAD_H + COLS_H + 3))
+	rows.Parent = frame
+	return anchor, { Gui = gui, Frame = frame, Rows = rows }
 end
 
 -- A wooden sign at the lot's street edge saying whose home it is, facing the street (owner 2026-11-24), so people
@@ -222,13 +269,57 @@ local function rosterOf(party)
 	return roster
 end
 
-local function cardText(party, zone)
-	local lines = { ("<b>%s</b>  -  Stage %d%s"):format(zone.Name, party.Stage, Stages.IsBoss(party.Stage) and " BOSS" or "") }
-	for _, member in ipairs(party.Members) do
-		local pet = member.PetId and PetConfig.Defs[member.PetId]
-		table.insert(lines, ("%s  Lv %d %s%s%s"):format(member.Name, member.Level, member.ClassId, pet and ("  + " .. pet.DisplayName) or "", member.Online and "" or "  (ghost)"))
+local function fillCard(card, party, zone)
+	local head = card.Frame.Head
+	head.Zone.Text = zone.Name
+	local boss = Stages.IsBoss(party.Stage)
+	head.Stage.Text = ("STAGE %d%s"):format(party.Stage, if boss then " BOSS" else "")
+	head.Stage.TextColor3 = if boss then Color3.fromRGB(255, 120, 90) else Color3.fromRGB(255, 215, 106)
+	for _, child in ipairs(card.Rows:GetChildren()) do
+		child:Destroy()
 	end
-	return table.concat(lines, "\n")
+	for i, member in ipairs(party.Members) do
+		local y = (i - 1) * ROW_H
+		local row = Instance.new("Frame")
+		row.BackgroundTransparency = 1
+		row.Size = UDim2.new(1, 0, 0, ROW_H)
+		row.Position = UDim2.fromOffset(0, y)
+		row.Parent = card.Rows
+		-- a real player's Roblox headshot ringed in their class colour; companions (ids below 0) a class colour dot
+		local classColor = Kit.Colors[member.ClassId] or Color3.fromRGB(200, 200, 200)
+		local userId = tonumber(member.UserId) or 0
+		if userId > 0 then
+			local icon = Instance.new("ImageLabel")
+			icon.Size = UDim2.fromOffset(20, 20)
+			icon.Position = UDim2.fromOffset(9, (ROW_H - 20) / 2)
+			icon.BackgroundColor3 = Color3.fromRGB(40, 44, 64)
+			icon.Image = ("rbxthumb://type=AvatarHeadShot&id=%d&w=48&h=48"):format(userId)
+			icon.Parent = row
+			Instance.new("UICorner", icon).CornerRadius = UDim.new(1, 0)
+			local ring = Instance.new("UIStroke", icon)
+			ring.Color = classColor
+			ring.Thickness = 2
+		else
+			local dot = Instance.new("Frame")
+			dot.Size = UDim2.fromOffset(10, 10)
+			dot.Position = UDim2.fromOffset(14, (ROW_H - 10) / 2)
+			dot.BackgroundColor3 = classColor
+			dot.Parent = row
+			Instance.new("UICorner", dot).CornerRadius = UDim.new(1, 0)
+		end
+		local nameX = 35
+		local name = cardLabel({ Text = member.Name, Size = UDim2.fromOffset(if member.Online then 108 else 76, ROW_H), Position = UDim2.fromOffset(nameX, 0), Parent = row })
+		if not member.Online then
+			local w = math.min(76, name.TextBounds.X + 2)
+			name.Size = UDim2.fromOffset(w, ROW_H)
+			cardLabel({ Text = "ghost", Size = UDim2.fromOffset(36, ROW_H), Position = UDim2.fromOffset(nameX + w + 4, 1), TextSize = 10, Font = Enum.Font.GothamMedium, TextColor3 = Color3.fromRGB(154, 160, 192), Parent = row })
+		end
+		cardLabel({ Text = tostring(member.Level or 1), Size = UDim2.fromOffset(40, ROW_H), Position = UDim2.fromOffset(150, 0), TextXAlignment = Enum.TextXAlignment.Right, TextColor3 = Color3.fromRGB(255, 215, 106), Font = Enum.Font.GothamBlack, Parent = row })
+		cardLabel({ Text = tostring(member.ClassId or ""), Size = UDim2.fromOffset(70, ROW_H), Position = UDim2.fromOffset(204, 0), Parent = row })
+		local pet = member.PetId and PetConfig.Defs[member.PetId]
+		cardLabel({ Text = pet and pet.DisplayName or "-", Size = UDim2.fromOffset(CARD_W - 286, ROW_H), Position = UDim2.fromOffset(276, 0), TextColor3 = if pet then Color3.fromRGB(185, 230, 166) else Color3.fromRGB(110, 116, 140), Parent = row })
+	end
+	card.Gui.Size = UDim2.fromOffset(CARD_W, HEAD_H + COLS_H + #party.Members * ROW_H + 10)
 end
 
 -- Make every hero in an arena clickable (a click opens their inspect card).
@@ -280,7 +371,7 @@ function Arenas:Apply(snapshot)
 				self.OnZone(party.Slot, zone.Theme) -- Main re-tints the sky if this is the fight being watched
 			end
 		end
-		arena.Label.Text = cardText(party, zone)
+		fillCard(arena.Label, party, zone)
 		local big, small = ownerText(party)
 		for _, signLabel in ipairs(arena.SignLabels) do
 			signLabel.Name.Text = big
