@@ -1,6 +1,6 @@
 # Idle Party Quest (formerly Duo Quest) — notes for Claude Code
 
-Renamed 2026-11-23: only player-visible text says Idle Party Quest (menu title, town gate, tutorial). Keep DuoQuest in instance, remote and DataStore names (renaming a DataStore loses every save).
+Renamed 2026-11-23: only player-visible text says Idle Party Quest (menu title, town gate, tutorial). Keep DuoQuest in instance, remote and DataStore names (renaming a DataStore loses every save). SEEN in Studio 2026-11-23: menu title "IDLE PARTY ⚔ QUEST" fits, gate reads IDLE PARTY TOWN; tutorial welcome card not seen.
 
 Roblox co-op idle RPG (Luau, Rojo). Two players fight together (a ghost partner stands in when one is offline), the combat
 sim is server-authoritative and deterministic. Read `README.md` and `docs/` (PROGRESSION, BALANCE, SKILLS, ROADMAP) for design detail.
