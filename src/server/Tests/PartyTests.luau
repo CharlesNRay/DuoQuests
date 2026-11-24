@@ -199,6 +199,19 @@ return function(modulesOverride)
 	local soloW = ProfileTemplate.New()
 	check("Without a partner snapshot there is no AFK", Party.OpenSession(solo, 1, WARRIOR_ID, "Warrior", soloW, false, 100 + 5 * H) == nil)
 
+	-- A solo player (a party of one, companions in the other seats) earns while away too.
+	local alone = Party.NewOpen("alone", 1, WARRIOR_ID, 100, 1)
+	local aloneP = ProfileTemplate.New()
+	aloneP.Season.ClassId = "Warrior"
+	Party.SyncCompanions(alone, aloneP, 100)
+	check("A solo player's first login has no AFK (no snapshot yet)", Party.OpenSession(alone, 1, WARRIOR_ID, "Solo", aloneP, false, 100) == nil)
+	Party.CloseSession(alone, WARRIOR_ID, "Solo", aloneP, 200)
+	local soloEst = Party.OpenSession(alone, 1, WARRIOR_ID, "Solo", aloneP, false, 200 + 5 * H)
+	local soloPending = alone.Pending[tostring(WARRIOR_ID)]
+	check("A solo player earns AFK gold and XP while away", soloEst ~= nil and soloPending ~= nil and soloPending.Gold > 0 and soloPending.XP > 0 and soloPending.Fights > 0)
+	local soloClaim = Party.Claim(alone, WARRIOR_ID, aloneP)
+	check("The solo AFK gains are paid at login", soloClaim.Afk ~= nil and soloClaim.Afk.Gold == soloPending.Gold and alone.Pending[tostring(WARRIOR_ID)] == nil)
+
 	-- Season reset
 	local sp = newParty(newPlayers())
 	sp.Stage, sp.Frontier = 40, 40

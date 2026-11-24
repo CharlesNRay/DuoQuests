@@ -551,9 +551,10 @@ function Party.OpenSession(party, seasonId, userId, name, profile, partnerOnline
 
 	local estimate = nil
 	local gap = now - party.LastActiveAt
-	if not partnerOnline and gap > 0 and #party.Members >= 2 and next(party.Snapshots) ~= nil then
-		-- Both snapshots must exist to simulate the pair; a party whose partner
-		-- has never logged in cannot farm AFK yet.
+	if not partnerOnline and gap > 0 and #party.Members >= 1 and next(party.Snapshots) ~= nil then
+		-- Every member's snapshot must exist to simulate the party; a party whose partner has never logged in cannot
+		-- farm AFK yet. A solo player farms too (2026-11-24: it used to need 2 members, so solo players with
+		-- companions earned nothing while away): the companions fill the empty seats.
 		local complete = true
 		for _, memberId in ipairs(party.Members) do
 			if party.Snapshots[key(memberId)] == nil then

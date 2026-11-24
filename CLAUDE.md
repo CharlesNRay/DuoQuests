@@ -45,6 +45,11 @@ Renamed 2026-11-23: only player-visible text says Idle Party Quest (menu title, 
   through a wall gate (`TOWN_WALL.Gates` angle 145, `HOMES_STREET.Outside/OuterFirst`); `World.OuterGround` = grass strip
   under lots 5-16 (WorldService). Lots 9-16 exist only while used; `Hub.SetLots` runs an OverflowStreet piece out to them
   (not seen). Party max stays 4.
+- **Welcome back + expeditions 2026-11-24** (tests green, NOT seen in Studio): solo players now earn AFK too (`Party.OpenSession`
+  needed 2 members, so a solo player with companions got nothing while away); `UI/WelcomeBack` card after the menu shows
+  `state.LastClaim` (AFK + stages the party cleared, `claim.At` = show once) plus what waits (expedition back, daily chest).
+  Expedition back: `Town.SetExpeditionReady` sign over the Expedition Camp (studs-sized, MaxDistance 700) and a dot on
+  the HUD Battle button (`extra.UpdateExpeditionReady`, rechecked every 5 s).
 - **Studio test mute**: Workspace attribute `StudioMute = true` (Edit mode, command bar) silences all game sound in Studio
   (owner asked: no sound while Claude tests). Set it before test runs, clear it (nil) before Ctrl+S.
 

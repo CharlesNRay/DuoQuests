@@ -46,6 +46,8 @@ local Hub = require(script.Parent.Battle.Hub)
 local Town = require(script.Parent.Battle.Town)
 local Sound = require(script.Parent.Sound)
 local Celebrate = require(script.Parent.UI.Celebrate)
+local WelcomeBack = require(script.Parent.UI.WelcomeBack)
+local ActivitiesShared = require(Shared:WaitForChild("Activities"))
 local FishingGame = require(script.Parent.UI.FishingGame)
 local StagesModule = require(game:GetService("ReplicatedStorage"):WaitForChild("Shared"):WaitForChild("Stages"))
 local BossArena = require(script.Parent.Battle.BossArena)
@@ -250,6 +252,28 @@ local function redraw()
 	Hub.SetDailyReady(state.Player.Daily ~= nil and state.Player.Daily.CanClaim == true)
 	Town.SetErrands(state.Player.Errands)
 	Town.SetRelics(state.Player.Relics and state.Player.Relics.Found)
+	-- expeditions: a sign over the Expedition Camp and a dot on the Battle button while one waits to be collected
+	extra.Expedition = state.Player.Activities and state.Player.Activities.Expedition
+	if extra.UpdateExpeditionReady then
+		extra.UpdateExpeditionReady()
+	end
+	-- welcome back: what the party earned while you were away, and what is waiting (once per login, after the menu)
+	local claim = state.LastClaim
+	if type(claim) == "table" and claim.At and extra.ShownClaimAt ~= claim.At and not (menu and menu.Visible) then
+		extra.ShownClaimAt = claim.At
+		local waiting = {}
+		local e = extra.Expedition
+		if e and (e.Ready or (e.EndsAt or math.huge) <= os.time()) then
+			table.insert(waiting, { "🧭", (extra.ExpeditionName and extra.ExpeditionName(e.Id) or "Your expedition") .. " is back: collect it at the Expedition Camp" })
+		end
+		if state.Player.Daily and state.Player.Daily.CanClaim then
+			table.insert(waiting, { "🎁", "Your daily chest is ready on the plaza" })
+		end
+		if WelcomeBack.Worth(claim, waiting) then
+			Sound.Play("Reward")
+			WelcomeBack.Show(root, claim, waiting)
+		end
+	end
 	-- sound settings come from the account once; after that the Settings screen owns them
 	if not extra.SoundApplied then
 		extra.SoundApplied = true
@@ -729,6 +753,28 @@ end)
 hud:AddButton("Battle", "mini", "⚔️", "Battle: bosses, dungeons, expeditions", function()
 	extra.BattleTab = nil
 	open("Battle", "Battle")
+end)
+-- an expedition waiting to be collected: the camp sign (Town) and a dot on the Battle button. Rechecked every few
+-- seconds too, so a run that ends while you play lights up without waiting for the next state.
+function extra.ExpeditionName(id)
+	for _, def in ipairs(ActivitiesShared.Expeditions) do
+		if def.Id == id then
+			return def.Name
+		end
+	end
+	return "Your expedition"
+end
+function extra.UpdateExpeditionReady()
+	local e = extra.Expedition
+	local ready = e ~= nil and (e.Ready == true or (e.EndsAt or math.huge) <= os.time())
+	hud:SetBadge("Battle", ready)
+	Town.SetExpeditionReady(ready, if e then extra.ExpeditionName(e.Id) else nil)
+end
+task.spawn(function()
+	while true do
+		task.wait(5)
+		extra.UpdateExpeditionReady()
+	end
 end)
 hud:AddButton("Store", "mini", "🛍️", "Store", function()
 	extra.StoreTab = extra.StoreTab or "Market"

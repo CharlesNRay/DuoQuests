@@ -1209,6 +1209,63 @@ local function places()
 	end
 end
 
+-- the Expedition Camp sign: a big "Expedition back!" over the camp when an expedition can be collected (seen from the
+-- town over the wall; sized in studs so it reads from far away)
+local expeditionSign = nil
+function Town.SetExpeditionReady(ready, name)
+	if not expeditionSign then
+		local x, z = World.TownSpot("ExpeditionCamp")
+		local anchor = Instance.new("Part")
+		anchor.Name = "ExpeditionReadyAnchor"
+		anchor.Anchored, anchor.CanCollide, anchor.CanQuery, anchor.CanTouch = true, false, false, false
+		anchor.Transparency = 1
+		anchor.Size = Vector3.new(1, 1, 1)
+		anchor.Position = Vector3.new(x, 26, z)
+		anchor.Parent = workspace
+		local gui = Instance.new("BillboardGui")
+		gui.Name = "ExpeditionReady"
+		gui.Size = UDim2.new(26, 0, 9, 0) -- studs
+		gui.LightInfluence = 0
+		gui.MaxDistance = 700
+		gui.Adornee = anchor
+		gui.Parent = anchor
+		local bang = Instance.new("TextLabel")
+		bang.Name = "Bang"
+		bang.Size = UDim2.fromScale(1, 0.62)
+		bang.BackgroundTransparency = 1
+		bang.Text = "!"
+		bang.TextColor3 = Color3.fromRGB(255, 214, 60)
+		bang.TextStrokeTransparency = 0
+		bang.TextStrokeColor3 = Color3.fromRGB(60, 40, 0)
+		bang.Font = Enum.Font.GothamBlack
+		bang.TextScaled = true
+		bang.Parent = gui
+		local line = Instance.new("TextLabel")
+		line.Name = "Line"
+		line.Size = UDim2.fromScale(1, 0.38)
+		line.Position = UDim2.fromScale(0, 0.62)
+		line.BackgroundTransparency = 1
+		line.TextColor3 = Color3.fromRGB(255, 240, 200)
+		line.TextStrokeTransparency = 0
+		line.Font = Enum.Font.GothamBlack
+		line.TextScaled = true
+		line.Parent = gui
+		expeditionSign = gui
+		-- a gentle bob so it catches the eye
+		task.spawn(function()
+			local t = 0
+			while anchor.Parent do
+				t += task.wait(0.05)
+				if gui.Enabled then
+					anchor.Position = Vector3.new(x, 26 + math.sin(t * 2.2) * 1.2, z)
+				end
+			end
+		end)
+	end
+	expeditionSign.Enabled = ready == true
+	expeditionSign.Line.Text = ("🧭 %s is back!"):format(name or "Expedition")
+end
+
 -- hide the relics this player has already found (found = { [relicId] = true })
 function Town.SetRelics(found)
 	for id, spot in pairs(spots) do

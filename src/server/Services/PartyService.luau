@@ -262,6 +262,7 @@ function attach(player, profile)
 	entry.Online[userId] = { Player = player, Profile = profile, Name = nameOf(player, profile) }
 
 	local claim = Party.Claim(entry.Record, userId, profile)
+	claim.At = os.time() -- the client's "welcome back" card shows each claim once
 	lastClaim[userId] = claim
 	entry.Dirty = true
 
