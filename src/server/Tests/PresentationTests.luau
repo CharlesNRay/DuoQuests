@@ -143,7 +143,11 @@ return function(modulesOverride)
 	for a = 1, 24 do
 		for b = a + 1, 24 do
 			local pa, pb = seen[select(1, World.ArenaOrigin(a)) .. "," .. select(3, World.ArenaOrigin(a))], seen[select(1, World.ArenaOrigin(b)) .. "," .. select(3, World.ArenaOrigin(b))]
-			if math.abs(pa[1] - pb[1]) < World.ARENA_WIDTH and math.abs(pa[2] - pb[2]) < World.ARENA_DEPTH then
+			-- the lots share one turn (World.LotBlock): compare them in the block's own axes
+			local _, _, yaw = World.LotBlock()
+			local dx, dz = pa[1] - pb[1], pa[2] - pb[2]
+			local lx, lz = dx * math.cos(yaw) - dz * math.sin(yaw), dx * math.sin(yaw) + dz * math.cos(yaw)
+			if math.abs(lx) < World.ARENA_WIDTH - 0.01 and math.abs(lz) < World.ARENA_DEPTH - 0.01 then
 				clear = false
 			end
 		end
@@ -272,7 +276,7 @@ return function(modulesOverride)
 	local spacingOk = true
 	for a, sa in pairs(World.PlazaSpots) do
 		for b, sb in pairs(World.PlazaSpots) do
-			if a < b and sa.Radius < 70 and sb.Radius < 70 then
+			if a < b and ((sa.Radius or 0) < 70) == ((sb.Radius or 0) < 70) then -- plaza boards with each other, Market stalls with each other
 				local ax2, az2 = World.PlazaPoint(a)
 				local bx2, bz2 = World.PlazaPoint(b)
 				if math.sqrt((ax2 - bx2) ^ 2 + (az2 - bz2) ^ 2) < 18 then
@@ -281,7 +285,7 @@ return function(modulesOverride)
 			end
 		end
 	end
-	check("Plaza stalls and boards are at least 18 studs apart", spacingOk)
+	check("Plaza boards and Market stalls are at least 18 studs apart", spacingOk)
 
 	print(("PresentationTests done: %d passed, %d failed"):format(passed, failed))
 end

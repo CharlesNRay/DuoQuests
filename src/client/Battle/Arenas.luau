@@ -11,7 +11,7 @@
 	  arenas:Apply(snapshot)            snapshot = WorldService.Snapshot()
 	  arenas:Play(slot, info, onDone)   draw a fight in a slot
 	  arenas:MySlot()                   slot of the party you are in (or nil)
-	  arenas:OriginOf(slot)             Vector3
+	  arenas:OriginOf(slot)             CFrame of the arena (centre + turn; .Position is the centre)
 	  arenas.OnBanner                   optional function(text, color) for YOUR arena's callouts
 	  arenas.OnInspect                  optional function(userId): a hero was clicked
 	  arenas.OnWatch                    optional function(slot, origin): the "Watch battle" pad was used
@@ -37,8 +37,8 @@ function Arenas.new(localUserId)
 end
 
 function Arenas:OriginOf(slot)
-	local x, y, z = World.ArenaOrigin(slot)
-	return Vector3.new(x, y, z)
+	local x, y, z, yaw = World.ArenaOrigin(slot)
+	return CFrame.new(x, y, z) * CFrame.Angles(0, yaw or 0, 0)
 end
 
 function Arenas:MySlot()
@@ -53,7 +53,7 @@ local function makeCard(origin)
 	anchor.CanQuery = false
 	anchor.Transparency = 1
 	anchor.Size = Vector3.new(1, 1, 1)
-	anchor.Position = origin + Vector3.new(0, 15, World.ARENA_DEPTH / 2 + 3)
+	anchor.Position = origin:PointToWorldSpace(Vector3.new(0, 15, World.ARENA_DEPTH / 2 + 3))
 	anchor.Parent = workspace
 	local gui = Instance.new("BillboardGui")
 	gui.Size = UDim2.fromOffset(260, 120)
@@ -89,7 +89,7 @@ local function makePad(origin)
 	pad.CanCollide = false
 	pad.Shape = Enum.PartType.Cylinder
 	pad.Size = Vector3.new(0.4, 5, 5)
-	pad.CFrame = CFrame.new(origin + Vector3.new(0, 0.2, World.ARENA_DEPTH / 2 + 6)) * CFrame.Angles(0, 0, math.rad(90))
+	pad.CFrame = origin * CFrame.new(0, 0.2, World.ARENA_DEPTH / 2 + 6) * CFrame.Angles(0, 0, math.rad(90))
 	pad.Color = Color3.fromRGB(255, 196, 70)
 	pad.Material = Enum.Material.Neon
 	pad.Transparency = 0.25

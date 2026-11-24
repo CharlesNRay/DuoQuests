@@ -6,10 +6,12 @@
 	of arenas can exist at once (yours and other parties') and players can walk
 	between them. See Battle/BattleCamera for the fixed side view.
 
-	  Scene.new(origin)                 -> scene (origin = Vector3 centre of the pad)
+	  Scene.new(origin)                 -> scene (origin = Vector3 centre of the pad, or a CFrame: centre + turn)
 	  scene:SetZone(theme)              rebuild scenery/colours for a Config/Zones theme
 	  scene:Walk(on)                    scenery scrolls so the party looks like it travels
-	  scene.Folder / scene.Origin       parent for actors and effects; world origin
+	  scene.Folder / scene.Origin       parent for actors and effects; world origin (Vector3)
+	  scene.Frame                       CFrame of the pad: every spot in the fight is Frame * (x, y, z) (lots are turned
+	                                    to face the plaza, so +X is not always world east)
 	  scene:Destroy()
 
 	Heroes stand at x < 0 (left) facing right, enemies at x > 0.
@@ -43,12 +45,13 @@ local function prop(parent, props)
 end
 
 function Scene.new(origin)
-	local self = setmetatable({ Origin = origin, Walking = false, Scroll = 0, Props = {} }, Scene)
+	local frame = if typeof(origin) == "CFrame" then origin else CFrame.new(origin)
+	local self = setmetatable({ Origin = frame.Position, Frame = frame, Walking = false, Scroll = 0, Props = {} }, Scene)
 	self.Folder = Instance.new("Folder")
 	self.Folder.Name = "DuoQuestArena"
 	self.Folder.Parent = workspace
 
-	self.Ground = prop(self.Folder, { Name = "Ground", Size = Vector3.new(World.ARENA_WIDTH, 1, World.ARENA_DEPTH), CFrame = CFrame.new(origin + Vector3.new(0, -0.5, 0)) })
+	self.Ground = prop(self.Folder, { Name = "Ground", Size = Vector3.new(World.ARENA_WIDTH, 1, World.ARENA_DEPTH), CFrame = frame * CFrame.new(0, -0.5, 0) })
 	-- (no backdrop wall: the real sky and horizon show behind the fight)
 	self.Scenery = Instance.new("Folder")
 	self.Scenery.Name = "Scenery"
@@ -71,7 +74,7 @@ function Scene:_update(dt)
 	local now = os.clock()
 	for _, p in ipairs(self.Props) do
 		local x = wrap(p.BaseX - self.Scroll * (p.Par or 1) + (p.Drift or 0) * now)
-		local cf = CFrame.new(self.Origin + Vector3.new(x, p.Y or 0, p.Z))
+		local cf = self.Frame * CFrame.new(x, p.Y or 0, p.Z)
 		if p.Sway then
 			cf = cf * CFrame.Angles(0, 0, math.sin(now * p.Sway + p.Phase) * 0.025)
 		end
@@ -237,7 +240,7 @@ function Scene:_ambient(theme)
 	if not spec then
 		return
 	end
-	local emitterPart = prop(self.Folder, { Name = "Ambient", Size = Vector3.new(60, 14, 30), Transparency = 1, CFrame = CFrame.new(self.Origin + Vector3.new(0, 8, 4)) })
+	local emitterPart = prop(self.Folder, { Name = "Ambient", Size = Vector3.new(60, 14, 30), Transparency = 1, CFrame = self.Frame * CFrame.new(0, 8, 4) })
 	local e = Instance.new("ParticleEmitter")
 	e.Texture = "rbxasset://textures/particles/sparkles_main.dds"
 	e.Color = ColorSequence.new(color(spec.Color))
@@ -303,7 +306,7 @@ function Scene:SetZone(theme)
 	self.Ground.Color = color(theme.Ground)
 	if not self.Apron then
 		-- more ground behind the fight, so the distant hills stand on something
-		self.Apron = prop(self.Folder, { Name = "Apron", Size = Vector3.new(World.ARENA_WIDTH, 1, 24), CFrame = CFrame.new(self.Origin + Vector3.new(0, -0.5, -37)) })
+		self.Apron = prop(self.Folder, { Name = "Apron", Size = Vector3.new(World.ARENA_WIDTH, 1, 24), CFrame = self.Frame * CFrame.new(0, -0.5, -37) })
 	end
 	self.Apron.Color = color(theme.Ground):Lerp(color(theme.Sky), 0.1)
 	local sky = color(theme.Sky)
@@ -319,7 +322,7 @@ function Scene:SetZone(theme)
 		local baseX = -SPAN + (i - 1) * (SPAN * 2 / 8) + rng:NextNumber(-3, 3)
 		local z = -11 - rng:NextInteger(0, 2) * 4 -- behind the back lane of a full four-hero row
 		local model = build(self.Scenery, theme, rng:NextNumber(5, 9))
-		model:PivotTo(CFrame.new(self.Origin + Vector3.new(baseX, 0, z)))
+		model:PivotTo(self.Frame * CFrame.new(baseX, 0, z))
 		table.insert(self.Props, { Root = model, BaseX = baseX, Z = z, Sway = rng:NextNumber(0.8, 1.6), Phase = rng:NextNumber(0, 6) })
 	end
 	self:_backdrop(theme, rng)
@@ -330,7 +333,7 @@ function Scene:SetZone(theme)
 			local baseX = -SPAN + (i - 1) * (SPAN * 2 / 10) + rng:NextNumber(-2, 2)
 			local z = rng:NextNumber(13, 22)
 			local model = decor(self.Scenery, theme.Decor.Kind, theme.Decor.Color, 1)
-			model:PivotTo(CFrame.new(self.Origin + Vector3.new(baseX, 0, z)) * CFrame.Angles(0, rng:NextNumber(0, 6.28), 0))
+			model:PivotTo(self.Frame * CFrame.new(baseX, 0, z) * CFrame.Angles(0, rng:NextNumber(0, 6.28), 0))
 			table.insert(self.Props, { Root = model, BaseX = baseX, Z = z })
 		end
 	end

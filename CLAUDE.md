@@ -10,6 +10,11 @@ Renamed 2026-11-23: only player-visible text says Idle Party Quest (menu title, 
 - **HUD size + headshots 2026-11-23** (tests green, NOT seen in Studio): Settings "HUD size" 70-130% (multiplies the fit
   scale in Main `fit()`, saved as `Permanent.Settings.HudScale`); HUD portrait shows your Roblox headshot with the level in a
   corner chip; party rows show real players' headshots ringed in class colour (companions keep the class dot).
+- **Lots + Market relayout 2026-11-23** (SEEN in Studio): the 2 x 2 lot block (`World.LOT_BLOCK` 145 / 183, spacing 68 x 72) is
+  turned so every lot's front (+Z: watch pad, sign, battle camera) faces the plaza. Arenas are CFrames now: `World.ArenaOrigin`
+  returns a 4th value yaw, `Arenas:OriginOf` a CFrame, `Scene.Frame` (place fight things with `scene.Frame * ...`, not
+  `Origin + Vector3`), BattleCamera takes a CFrame. Shops stand in a ring round the Market square (`PlazaSpots.X.Market` = angle,
+  `World.MARKET_RING` 34, `World.ShopLook`), maypole + bunting in the middle. The block only just fits (Market, main road, wall).
 
 Roblox co-op idle RPG (Luau, Rojo). Two players fight together (a ghost partner stands in when one is offline), the combat
 sim is server-authoritative and deterministic. Read `README.md` and `docs/` (PROGRESSION, BALANCE, SKILLS, ROADMAP) for design detail.

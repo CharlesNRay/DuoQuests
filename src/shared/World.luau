@@ -8,7 +8,9 @@
 	Arenas (the battle lots, "player homes") are a 2 x 2 block south-east of the plaza:
 	  slot 1 = first arena, slots are reused when a party leaves the server.
 
-	  World.ArenaOrigin(slot)    -> x, y, z of the arena's centre on the ground
+	  World.ArenaOrigin(slot)    -> x, y, z, yaw: the arena's centre on the ground and its turn (radians about Y; the
+	                                arena's front, +Z in its own frame, where the camera and the sign are, faces the plaza)
+	  World.LotBlock()           -> x, z, yaw of the middle of the block of lots (same turn)
 	  World.SpawnPosition()      -> x, y, z where players arrive (on the plaza)
 	  World.PLAZA, World.PlazaSpots, World.PlazaPoint(name), World.NearShop(x, z, name)
 	  World.ARENA_WIDTH / ARENA_DEPTH   size of one arena pad in studs
@@ -26,9 +28,11 @@ local World = {}
 World.ARENA_WIDTH = 64
 World.ARENA_DEPTH = 50 -- deep enough for four heroes, their pets and summons between the trees and the front decor
 World.LOT_COLUMNS = 2
-World.SPACING_X = 76 -- lot centre to lot centre (12 studs between pads)
-World.SPACING_Z = 62
-World.LOT_BLOCK = { Angle = 135, Radius = 185 } -- the middle of the 2 x 2 block of lots
+World.SPACING_X = 68 -- lot centre to lot centre (4 studs between pads)
+World.SPACING_Z = 72 -- row to row (was 62); the block just fits between the Market, the main road and the wall
+-- the middle of the 2 x 2 block of lots, south-east between the Market and the main road; the whole block is turned so
+-- every lot's front faces the plaza (2026-11-23 owner feedback: the homes overlapped the Market and faced away)
+World.LOT_BLOCK = { Angle = 145, Radius = 183 }
 
 -- The plaza: a big circle in the middle with the fountain, the boards and the daily chest.
 World.PLAZA = { X = 0, Z = 40, Radius = 70 }
@@ -38,27 +42,46 @@ local function polar(angle, radius)
 	return World.PLAZA.X + math.sin(a) * radius, World.PLAZA.Z - math.cos(a) * radius
 end
 
+function World.LotBlock()
+	local cx, cz = polar(World.LOT_BLOCK.Angle, World.LOT_BLOCK.Radius)
+	-- turn so the block's +Z points at the plaza centre: (sin yaw, cos yaw) = direction to the plaza
+	local yaw = math.atan2(World.PLAZA.X - cx, World.PLAZA.Z - cz)
+	return cx, cz, yaw
+end
+
+-- a point (lx, lz) in the block's own frame -> world x, z
+function World.LotBlockPoint(lx, lz)
+	local cx, cz, yaw = World.LotBlock()
+	local c, s = math.cos(yaw), math.sin(yaw)
+	return cx + lx * c + lz * s, cz - lx * s + lz * c
+end
+
 function World.ArenaOrigin(slot)
 	local index = slot - 1
 	local col = index % World.LOT_COLUMNS
 	local row = index // World.LOT_COLUMNS
-	local cx, cz = polar(World.LOT_BLOCK.Angle, World.LOT_BLOCK.Radius)
-	-- slots 5+ (a busy server) carry on in rows to the south of the block
-	return cx + (col - (World.LOT_COLUMNS - 1) / 2) * World.SPACING_X, 0.5, cz + (row - 0.5) * World.SPACING_Z
+	-- row 0 is the one nearer the plaza (+Z); slots 5+ (a busy server) carry on in rows further back
+	local lx = (col - (World.LOT_COLUMNS - 1) / 2) * World.SPACING_X
+	local lz = (0.5 - row) * World.SPACING_Z
+	local x, z = World.LotBlockPoint(lx, lz)
+	local _, _, yaw = World.LotBlock()
+	return x, 0.5, z, yaw
 end
 
 World.MAX_LOTS = 4 -- lots built and shown as "open". One lot per party; a 5th party still gets slot 5 (the next row).
 World.SHOP_RANGE = 30 -- studs from a shop within which buying/selling/upgrading is allowed
 
--- Shops and boards, as an angle and a distance from the plaza centre. The shops stand in an arc in the Market (east),
--- facing the plaza; the boards and the daily chest stay on the plaza.
+-- Shops and boards. The boards and the daily chest: an angle and a distance from the plaza centre. The shops stand in a
+-- ring round the Market square (east), facing its middle: Market = angle round the square, 0 = the side toward the
+-- plaza (where the road comes in), clockwise seen from above; the gaps at 0 and 180 are the ways in.
+World.MARKET_RING = 34 -- studs from the middle of the Market square to a stall
 World.PlazaSpots = {
-	Merchant = { Angle = 70, Radius = 150 },
-	PetStore = { Angle = 78, Radius = 150 }, -- eggs, pet gear crates and pet food
-	Trainer = { Angle = 86, Radius = 150 }, -- the Skill Trainer levels your skill slots
-	Blacksmith = { Angle = 94, Radius = 150 },
-	RuneCarver = { Angle = 102, Radius = 150 }, -- carves runes onto gear, sells rune pouches
-	Store = { Angle = 110, Radius = 150 }, -- the Store (Sunstones, packs, cosmetics); not distance-checked
+	Merchant = { Market = 40 },
+	PetStore = { Market = 90 }, -- eggs, pet gear crates and pet food
+	Trainer = { Market = 140 }, -- the Skill Trainer levels your skill slots
+	Blacksmith = { Market = 220 },
+	RuneCarver = { Market = 270 }, -- carves runes onto gear, sells rune pouches
+	Store = { Market = 320 }, -- the Store (Sunstones, packs, cosmetics); not distance-checked
 	Map = { Angle = -68, Radius = 55 },
 	Rankings = { Angle = 68, Radius = 55 },
 	Season = { Angle = 112, Radius = 55 }, -- the season rewards board
@@ -177,10 +200,33 @@ function World.NearSpot(x, z, id)
 	return sx ~= nil and (x - sx) ^ 2 + (z - sz) ^ 2 <= World.SPOT_RANGE ^ 2
 end
 
+-- a point (lx, lz) in a district's frame (as TownSpots: -Z toward the plaza, +X to the right facing the plaza) -> world
+function World.DistrictToWorld(id, lx, lz)
+	local px, pz = World.DistrictPoint(id)
+	local fx, fz = World.PLAZA.X - px, World.PLAZA.Z - pz
+	local len = math.sqrt(fx * fx + fz * fz)
+	fx, fz = fx / len, fz / len
+	return px - fz * lx - fx * lz, pz + fx * lx - fz * lz
+end
+
+-- where a shop / board stands
 function World.PlazaPoint(name)
 	local spot = World.PlazaSpots[name]
+	if spot.Market then
+		local a = math.rad(spot.Market)
+		return World.DistrictToWorld("Market", math.sin(a) * World.MARKET_RING, -math.cos(a) * World.MARKET_RING)
+	end
 	local a = math.rad(spot.Angle)
 	return World.PLAZA.X + math.sin(a) * spot.Radius, World.PLAZA.Z - math.cos(a) * spot.Radius
+end
+
+-- the point a shop / board faces: the middle of the Market square for the stalls, the plaza centre for the rest
+function World.ShopLook(name)
+	local spot = World.PlazaSpots[name]
+	if spot and spot.Market then
+		return World.DistrictPoint("Market")
+	end
+	return World.PLAZA.X, World.PLAZA.Z
 end
 
 -- Is a world position within range of a shop ("Merchant" | "Blacksmith" | "Trainer" | "PetStore" | "RuneCarver" | "Tree")?

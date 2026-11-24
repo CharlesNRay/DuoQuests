@@ -27,7 +27,7 @@ end
 function V.Dot(a, b) return a.X * b.X + a.Y * b.Y + a.Z * b.Z end
 function V.Cross(a, b) return vec(a.Y * b.Z - a.Z * b.Y, a.Z * b.X - a.X * b.Z, a.X * b.Y - a.Y * b.X) end
 function V.Lerp(a, b, t) return a + (b - a) * t end
-Vector3 = { new = vec, zero = vec(), one = vec(1, 1, 1) }
+Vector3 = { new = vec, zero = vec(), one = vec(1, 1, 1), xAxis = vec(1, 0, 0), yAxis = vec(0, 1, 0), zAxis = vec(0, 0, 1) }
 Vector2 = { new = function(x, y) return { X = x, Y = y } end }
 
 -- CFrame: rotation columns (right r, up u, back b) + position p

@@ -356,7 +356,8 @@ local stallDecor -- below: what each stall sells
 -- A market stall: the NPC stands behind a counter under an awning, all facing the plaza centre.
 local function shopNpc(name, subtitle, spotName, look, action, handler, centre, accent)
 	local at = pointOf(spotName)
-	local cf = facing(at, centre)
+	local lx, lz = World.ShopLook(spotName) -- Market stalls face the middle of the Market square
+	local cf = facing(at, Vector3.new(lx, at.Y, lz))
 	local model, root = villager(name, look)
 	model:PivotTo(cf * CFrame.new(0, TORSO_HEIGHT, 0))
 	nameTag(root, name:upper(), subtitle, accent, 4.6)
@@ -579,17 +580,21 @@ function Hub.Build(handlers)
 	lotFolder = Instance.new("Folder")
 	lotFolder.Name = "Lots"
 	lotFolder.Parent = folder
-	local x1, _, z1 = World.ArenaOrigin(1)
-	local x4, _, z4 = World.ArenaOrigin(math.min(4, World.MAX_LOTS))
-	local cx, cz = (x1 + x4) / 2, (z1 + z4) / 2
-	local yardW = math.abs(x4 - x1) + World.ARENA_WIDTH + 16
-	local yardD = math.abs(z4 - z1) + World.ARENA_DEPTH + 16
-	part(folder, { Name = "LotYard", Size = Vector3.new(yardW, 0.26, yardD), Position = Vector3.new(cx, 0.13, cz), Color = Color3.fromRGB(150, 160, 110), Material = Enum.Material.Ground, CanCollide = false })
-	part(folder, { Name = "LotPath", Size = Vector3.new(8, 0.3, yardD), Position = Vector3.new(cx, 0.15, cz), Color = Color3.fromRGB(150, 138, 116), Material = Enum.Material.Pebble, CanCollide = false })
-	part(folder, { Name = "LotPath", Size = Vector3.new(yardW, 0.3, 8), Position = Vector3.new(cx, 0.16, cz), Color = Color3.fromRGB(150, 138, 116), Material = Enum.Material.Pebble, CanCollide = false })
-	local homes = part(folder, { Name = "HomesSign", Size = Vector3.new(14, 3, 0.4), CFrame = CFrame.lookAt(Vector3.new(cx - yardW / 2 + 2, 6, cz - yardD / 2 + 2), centre + Vector3.new(0, 6, 0)), Color = Color3.fromRGB(80, 60, 40), Material = Enum.Material.Wood })
+	-- the block is turned so each lot's front (+Z, the watch pad and sign) faces the plaza
+	local bx, bz, yaw = World.LotBlock()
+	local block = CFrame.new(bx, 0, bz) * CFrame.Angles(0, yaw, 0)
+	local rows = math.ceil(math.min(4, World.MAX_LOTS) / World.LOT_COLUMNS)
+	local yardW = (World.LOT_COLUMNS - 1) * World.SPACING_X + World.ARENA_WIDTH + 8
+	local yardD = (rows - 1) * World.SPACING_Z + World.ARENA_DEPTH + 14 + 24 -- + the back row's apron
+	local yardMid = -12 -- shifted back a little for the apron behind the back row
+	part(folder, { Name = "LotYard", Size = Vector3.new(yardW, 0.26, yardD), CFrame = block * CFrame.new(0, 0.13, yardMid), Color = Color3.fromRGB(150, 160, 110), Material = Enum.Material.Ground, CanCollide = false })
+	part(folder, { Name = "LotPath", Size = Vector3.new(8, 0.3, yardD), CFrame = block * CFrame.new(0, 0.15, yardMid), Color = Color3.fromRGB(150, 138, 116), Material = Enum.Material.Pebble, CanCollide = false })
+	part(folder, { Name = "LotPath", Size = Vector3.new(yardW, 0.3, 8), CFrame = block * CFrame.new(0, 0.16, 0), Color = Color3.fromRGB(150, 138, 116), Material = Enum.Material.Pebble, CanCollide = false })
+	-- the sign stands at the front of the block where the road from the plaza arrives, readable from the plaza
+	local signAt = block * CFrame.new(-14, 0, yardMid + yardD / 2 + 3)
+	local homes = part(folder, { Name = "HomesSign", Size = Vector3.new(14, 3, 0.4), CFrame = CFrame.lookAt(signAt.Position + Vector3.new(0, 6, 0), centre + Vector3.new(0, 6, 0)), Color = Color3.fromRGB(80, 60, 40), Material = Enum.Material.Wood })
 	sign(homes, Enum.NormalId.Front, "PLAYER HOMES", Color3.fromRGB(255, 230, 170))
-	part(folder, { Name = "HomesSignPost", Size = Vector3.new(0.6, 6, 0.6), Position = Vector3.new(cx - yardW / 2 + 2, 3, cz - yardD / 2 + 2), Color = WOOD, Material = Enum.Material.Wood })
+	part(folder, { Name = "HomesSignPost", Size = Vector3.new(0.6, 6, 0.6), CFrame = signAt * CFrame.new(0, 3, 0), Color = WOOD, Material = Enum.Material.Wood })
 end
 
 function Hub.SetDailyReady(ready)
@@ -608,10 +613,11 @@ function Hub.SetLots(taken)
 	end
 	for slot = 1, World.MAX_LOTS do
 		if not taken[slot] then
-			local x, _, z = World.ArenaOrigin(slot)
-			part(lotFolder, { Name = "OpenLot", Size = Vector3.new(World.ARENA_WIDTH, 0.2, World.ARENA_DEPTH), Position = Vector3.new(x, 0.12, z), Color = Color3.fromRGB(120, 168, 104), Material = Enum.Material.Grass, CanCollide = false })
-			local post = part(lotFolder, { Name = "LotSign", Size = Vector3.new(7, 3.4, 0.4), Position = Vector3.new(x, 5, z + World.ARENA_DEPTH / 2 + 2), Color = Color3.fromRGB(60, 52, 40), Material = Enum.Material.Wood })
-			part(lotFolder, { Name = "LotPost", Size = Vector3.new(0.6, 5, 0.6), Position = Vector3.new(x, 2.5, z + World.ARENA_DEPTH / 2 + 2), Color = WOOD, Material = Enum.Material.Wood })
+			local x, _, z, yaw = World.ArenaOrigin(slot)
+			local lot = CFrame.new(x, 0, z) * CFrame.Angles(0, yaw, 0)
+			part(lotFolder, { Name = "OpenLot", Size = Vector3.new(World.ARENA_WIDTH, 0.2, World.ARENA_DEPTH), CFrame = lot * CFrame.new(0, 0.12, 0), Color = Color3.fromRGB(120, 168, 104), Material = Enum.Material.Grass, CanCollide = false })
+			local post = part(lotFolder, { Name = "LotSign", Size = Vector3.new(7, 3.4, 0.4), CFrame = lot * CFrame.new(0, 5, World.ARENA_DEPTH / 2 + 2), Color = Color3.fromRGB(60, 52, 40), Material = Enum.Material.Wood })
+			part(lotFolder, { Name = "LotPost", Size = Vector3.new(0.6, 5, 0.6), CFrame = lot * CFrame.new(0, 2.5, World.ARENA_DEPTH / 2 + 2), Color = WOOD, Material = Enum.Material.Wood })
 			sign(post, Enum.NormalId.Back, ("LOT %d\nopen"):format(slot), Color3.fromRGB(240, 230, 190))
 			sign(post, Enum.NormalId.Front, ("LOT %d\nopen"):format(slot), Color3.fromRGB(240, 230, 190))
 		end

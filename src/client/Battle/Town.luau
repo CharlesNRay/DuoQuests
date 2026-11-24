@@ -202,7 +202,8 @@ local function roads()
 	-- the high road south to the main gate
 	road(polar(180, World.PLAZA.Radius - 1), polar(180, World.TOWN_WALL.Radius + 6), 14, "HighRoad")
 	-- to the battle lots (player homes), south-east
-	road(polar(World.LOT_BLOCK.Angle, World.PLAZA.Radius - 1), polar(World.LOT_BLOCK.Angle, World.LOT_BLOCK.Radius - 40), 10, "LotRoad")
+	-- to the front of the lot block (the front row's watch pads sit SPACING_Z / 2 + ARENA_DEPTH / 2 + 6 before the middle)
+	road(polar(World.LOT_BLOCK.Angle, World.PLAZA.Radius - 1), polar(World.LOT_BLOCK.Angle, World.LOT_BLOCK.Radius - World.SPACING_Z / 2 - World.ARENA_DEPTH / 2 - 10), 10, "LotRoad")
 	-- through the Wishing Grove to the Giant Bosses gate (north-east)
 	local grove = World.Districts.Grove
 	road(polar(grove.Angle, grove.Radius + grove.Size - 4), polar(38, World.TOWN_WALL.Radius + 6), 9, "BossRoad")
@@ -221,8 +222,12 @@ local function clearOfEverything(p, margin)
 		end
 	end
 	for slot = 1, World.MAX_LOTS do
-		local ax, _, az = World.ArenaOrigin(slot)
-		if math.abs(p.X - ax) < World.ARENA_WIDTH / 2 + margin and math.abs(p.Z - az) < World.ARENA_DEPTH / 2 + margin then
+		local ax, _, az, yaw = World.ArenaOrigin(slot)
+		-- into the lot's own (turned) frame; the strip behind it (apron, 24 deep) counts too
+		local dx, dz = p.X - ax, p.Z - az
+		local c, s = math.cos(yaw), math.sin(yaw)
+		local lx, lz = dx * c - dz * s, dx * s + dz * c
+		if math.abs(lx) < World.ARENA_WIDTH / 2 + margin and lz < World.ARENA_DEPTH / 2 + 8 + margin and lz > -World.ARENA_DEPTH / 2 - 24 - margin then
 			return false
 		end
 	end
@@ -482,28 +487,42 @@ local function guild()
 	end
 end
 
--- the Market (east): the shop stalls stand in an arc here (built by Hub at PlazaSpots); this is the ground and decor
+-- the Market (east): the shop stalls stand in a ring round the square facing its middle (built by Hub at PlazaSpots,
+-- World.MARKET_RING); this is the ground, a maypole in the middle with bunting out to every stall, and barrels and
+-- lamps in the gaps. Angles round the square: 0 = toward the plaza (the way in), clockwise from above.
 local function market()
 	local d = World.Districts.Market
 	local cf = districtFrame("Market")
 	disc(cf.Position, d.Size, 0.38, 0, Color3.fromRGB(176, 160, 136), Enum.Material.Cobblestone)
-	-- barrels, crates and bunting between and behind the stalls
-	for index = 1, 6 do
-		local p = cf * CFrame.new((index - 3.5) * 14, 0, 26)
-		part({ Name = "MarketBarrel", Shape = Enum.PartType.Cylinder, Size = Vector3.new(2.4, 2.2, 2.2), CFrame = p * CFrame.new(0, 1.2, 0) * CFrame.Angles(0, 0, math.rad(90)), Color = Color3.fromRGB(150, 100, 60), Material = Enum.Material.WoodPlanks })
-		part({ Name = "MarketCrate", Size = Vector3.new(2.2, 2.2, 2.2), CFrame = p * CFrame.new(3, 1.1, 1) * CFrame.Angles(0, math.rad(index * 17), 0), Color = Color3.fromRGB(170, 126, 80), Material = Enum.Material.WoodPlanks })
+	local function at(angle, radius)
+		local a = math.rad(angle)
+		return cf * CFrame.new(math.sin(a) * radius, 0, -math.cos(a) * radius)
 	end
 	local colors = { Color3.fromRGB(220, 70, 70), Color3.fromRGB(240, 200, 70), Color3.fromRGB(70, 140, 220), Color3.fromRGB(90, 190, 110) }
-	for index = 0, 13 do
-		local x = (index - 6.5) * 6
-		part({ Name = "Bunting", Size = Vector3.new(1.6, 1.8, 0.1), CFrame = cf * CFrame.new(x, 11, 38) * CFrame.Angles(0, 0, math.rad(180)), Color = colors[index % 4 + 1], Material = Enum.Material.Fabric, CanCollide = false })
+	-- the maypole, and a string of flags from its top to each stall's awning
+	local top = cf * CFrame.new(0, 14, 0)
+	part({ Name = "MarketPole", Size = Vector3.new(0.8, 14.5, 0.8), CFrame = cf * CFrame.new(0, 7.2, 0), Color = DARK_WOOD, Material = Enum.Material.Wood })
+	part({ Name = "MarketPoleTop", Shape = Enum.PartType.Ball, Size = Vector3.new(1.6, 1.6, 1.6), CFrame = top * CFrame.new(0, 0.6, 0), Color = Color3.fromRGB(240, 200, 70), Material = Enum.Material.SmoothPlastic })
+	for _, name in ipairs({ "Merchant", "PetStore", "Trainer", "Blacksmith", "RuneCarver", "Store" }) do
+		local spot = World.PlazaSpots[name]
+		local stall = at(spot.Market, World.MARKET_RING - 3) * CFrame.new(0, 10, 0)
+		local from, to = top.Position, stall.Position
+		local length = (to - from).Magnitude
+		part({ Name = "BuntingLine", Size = Vector3.new(0.1, 0.1, length), CFrame = CFrame.lookAt(from:Lerp(to, 0.5), to), Color = Color3.fromRGB(80, 60, 40), CanCollide = false })
+		local side = (to - from):Cross(Vector3.yAxis)
+		for index = 1, 5 do
+			local p = from:Lerp(to, index / 6) - Vector3.new(0, 0.9, 0)
+			part({ Name = "Bunting", Size = Vector3.new(1.4, 1.6, 0.1), CFrame = CFrame.lookAt(p, p + side) * CFrame.Angles(0, 0, math.rad(180)), Color = colors[index % 4 + 1], Material = Enum.Material.Fabric, CanCollide = false })
+		end
 	end
-	for _, side in ipairs({ -1, 1 }) do
-		part({ Name = "BuntingPole", Size = Vector3.new(0.6, 12, 0.6), CFrame = cf * CFrame.new(side * 42, 6, 38), Color = DARK_WOOD, Material = Enum.Material.Wood })
+	-- barrels and crates in the side gaps between the stalls, lamps at both ways in
+	for index, angle in ipairs({ 65, 115, 245, 295 }) do
+		local p = at(angle, World.MARKET_RING + 2)
+		part({ Name = "MarketBarrel", Shape = Enum.PartType.Cylinder, Size = Vector3.new(2.4, 2.2, 2.2), CFrame = p * CFrame.new(0, 1.2, 0) * CFrame.Angles(0, 0, math.rad(90)), Color = Color3.fromRGB(150, 100, 60), Material = Enum.Material.WoodPlanks })
+		part({ Name = "MarketCrate", Size = Vector3.new(2.2, 2.2, 2.2), CFrame = p * CFrame.new(2.8, 1.1, 0.6) * CFrame.Angles(0, math.rad(index * 17), 0), Color = Color3.fromRGB(170, 126, 80), Material = Enum.Material.WoodPlanks })
 	end
-	part({ Name = "BuntingLine", Size = Vector3.new(84, 0.1, 0.1), CFrame = cf * CFrame.new(0, 11.9, 38), Color = Color3.fromRGB(80, 60, 40), CanCollide = false })
-	for _, off in ipairs({ { -30, -30 }, { 30, -30 }, { -46, 10 }, { 46, 10 } }) do
-		lamp((cf * CFrame.new(off[1], 0.4, off[2])).Position)
+	for _, angle in ipairs({ -14, 14, 166, 194 }) do
+		lamp(at(angle, World.MARKET_RING + 6).Position)
 	end
 end
 

@@ -107,8 +107,8 @@ local function goHome()
 	if not mine then
 		return
 	end
-	local origin = arenas:OriginOf(mine)
-	local spot = origin + Vector3.new(0, 4, 40)
+	local origin = arenas:OriginOf(mine) -- the lot's CFrame: its front (+Z) faces the plaza
+	local spot = origin:PointToWorldSpace(Vector3.new(0, 4, 40))
 	teleport(CFrame.lookAt(spot, Vector3.new(origin.X, spot.Y, origin.Z)))
 end
 local function goPlaza()
@@ -961,7 +961,8 @@ tutorial.GoTo = function(spot)
 		stopWatching()
 	end
 	local sx, sz = World.PlazaPoint(spot)
-	local toCentre = Vector3.new(World.PLAZA.X - sx, 0, World.PLAZA.Z - sz)
+	local lx, lz = World.ShopLook(spot)
+	local toCentre = Vector3.new(lx - sx, 0, lz - sz)
 	local stand = Vector3.new(sx, 4, sz) + (if toCentre.Magnitude > 0 then toCentre.Unit * 14 else Vector3.new(0, 0, 14))
 	teleport(CFrame.lookAt(stand, Vector3.new(sx, 4, sz)))
 	-- turn the camera to look over the hero's shoulder at the spot, so its prompt is on screen

@@ -3,7 +3,7 @@
 	switch back to normal Roblox walking.
 
 	  BattleCamera.Start()
-	  BattleCamera.SetTarget(origin)    Vector3 centre of your arena (nil = none)
+	  BattleCamera.SetTarget(origin)    the arena's CFrame (or a Vector3 centre); the camera stands on its +Z side (nil = none)
 	  BattleCamera.SetBattleView(on)    true: fixed side view; false: walk camera
 	  BattleCamera.IsBattleView()
 
@@ -22,7 +22,7 @@ local battleView = false -- Main switches it on from the Battle view button
 local started = false
 
 function BattleCamera.SetTarget(origin)
-	target = origin
+	target = if typeof(origin) == "Vector3" then CFrame.new(origin) else origin
 end
 
 function BattleCamera.SetBattleView(on)
@@ -59,8 +59,8 @@ function BattleCamera.Start()
 		local halfTan = math.tan(math.rad(cam.FieldOfView) / 2)
 		local distance = math.max(WIDTH_NEEDED / (2 * halfTan * aspect), HEIGHT_NEEDED / (2 * halfTan))
 		local sway = math.sin(os.clock() * 0.6) * 0.4
-		local look = target + Vector3.new(sway, 5.5, 0)
-		cam.CFrame = CFrame.lookAt(look + Vector3.new(0, 2.5, distance), look)
+		local look = target:PointToWorldSpace(Vector3.new(sway, 5.5, 0))
+		cam.CFrame = CFrame.lookAt(target:PointToWorldSpace(Vector3.new(sway, 8, distance)), look)
 	end)
 end
 

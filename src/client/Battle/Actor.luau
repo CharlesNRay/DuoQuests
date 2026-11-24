@@ -152,7 +152,9 @@ function Actor.new(scene, model, info)
 			return
 		end
 		local bob = if not self.Alive then 0 elseif self.Walking then math.abs(math.sin(os.clock() * 9 + self.Phase)) * 0.3 else math.sin(os.clock() * 3 + self.Phase) * 0.12
-		local base = CFrame.lookAt(Vector3.new(self.X, self.Height + bob, self.Z or 0) + scene.Origin, Vector3.new(self.X, self.Height + bob, self.Z or 0) + scene.Origin + Vector3.new(self.Facing, 0, 0))
+		local frame = scene.Frame or CFrame.new(scene.Origin)
+		local at = frame:PointToWorldSpace(Vector3.new(self.X, self.Height + bob, self.Z or 0))
+		local base = CFrame.lookAt(at, at + frame:VectorToWorldSpace(Vector3.new(self.Facing, 0, 0)))
 		self.Model:PivotTo(base * self.Offset)
 		self:_animate(os.clock())
 		self:_animateJoints(os.clock())
@@ -837,7 +839,8 @@ function Actor:_layoutShield(grow)
 end
 
 function Actor:Pos()
-	return self.Scene.Origin + Vector3.new(self.X, self.Height + self.Top * 0.2, self.Z or 0)
+	local frame = self.Scene.Frame or CFrame.new(self.Scene.Origin)
+	return frame:PointToWorldSpace(Vector3.new(self.X, self.Height + self.Top * 0.2, self.Z or 0))
 end
 
 function Actor:Lunge(towardX)
