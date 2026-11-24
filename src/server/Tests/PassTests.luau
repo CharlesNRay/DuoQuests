@@ -28,7 +28,7 @@ return function(modulesOverride)
 	check("Granting twice is harmless", Passes.Grant(vip, "VIP") and Passes.Has(vip, "VIP"))
 	local ok, reason = Passes.Grant(vip, "Nope")
 	check("An unknown pass is refused", ok == false and reason == "BadPass")
-	check("Perks apply", Passes.Perks(vip).GoldGain > 0 and Passes.Perks(vip).XPGain > 0)
+	check("Perks apply (gold and the pet slot, no XP bonus)", Passes.Perks(vip).GoldGain > 0 and Passes.Perks(vip).PetSlots == 1 and Passes.Perks(vip).XPGain == 0)
 	check("The bag is bigger", Gear.Cap(vip) == Gear.Cap(plain) + Passes.Perks(vip).BagSlots)
 	local day = 86400 * 10
 	check("More dungeon keys", Activities.Of(vip, day).MaxKeys == Activities.Of(plain, day).MaxKeys + Passes.Perks(vip).DungeonKeys)

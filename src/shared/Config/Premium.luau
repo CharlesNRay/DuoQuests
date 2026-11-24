@@ -30,8 +30,8 @@ return {
 	Passes = {
 		VIP = {
 			Id = "VIP", Name = "VIP Pass", Robux = 499, GamePassId = 0,
-			Text = "+25% gold, +25% XP, 20 more bag slots, 2 more dungeon keys a day and a second pet slot (its stat bonuses count too).",
-			Perks = { GoldGain = 0.25, XPGain = 0.25, BagSlots = 20, DungeonKeys = 2, PetSlots = 1 },
+			Text = "A second pet slot (its stat bonuses count too), +25% gold, 20 more bag slots and 2 more dungeon keys a day.",
+			Perks = { GoldGain = 0.25, BagSlots = 20, DungeonKeys = 2, PetSlots = 1 }, -- no XP bonus (owner, 2026-11-24): the pet slot is the selling point
 		},
 		-- sold on the main menu (a locked third card) and in the Store
 		CharacterSlots = {
