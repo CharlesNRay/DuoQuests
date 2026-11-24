@@ -107,6 +107,43 @@ function Models.Enemy(defId)
 		root:SetAttribute("Anim", "Squish")
 		eyes(model, root, s * 0.1, s * 0.15, -s * 0.42)
 		model.PrimaryPart = root
+		if look.Crown then -- a little gold crown (welded so it squishes along)
+			local crown = part(model, { Name = "Crown", Shape = Enum.PartType.Cylinder, Size = Vector3.new(s * 0.14, s * 0.32, s * 0.32), Color = Color3.fromRGB(255, 205, 70), Material = Enum.Material.Foil, CFrame = CFrame.new(0, s * 0.84, 0) * CFrame.Angles(0, 0, math.rad(90)) })
+			for i = 0, 4 do
+				local a = i * math.pi * 2 / 5
+				part(model, { Name = "CrownPoint", Size = Vector3.new(s * 0.05, s * 0.1, s * 0.05), Color = Color3.fromRGB(255, 205, 70), Material = Enum.Material.Foil, CFrame = CFrame.new(math.cos(a) * s * 0.13, s * 0.95, math.sin(a) * s * 0.13) })
+			end
+			for _, p in ipairs(model:GetChildren()) do
+				if p:IsA("BasePart") and p ~= root and (p.Name == "Crown" or p.Name == "CrownPoint") then
+					local weld = Instance.new("WeldConstraint")
+					weld.Part0, weld.Part1 = root, p
+					weld.Parent = p
+				end
+			end
+		end
+		if look.Rainbow then -- the body shifts through the rainbow, with a glowing core and sparkles
+			local core = part(model, { Name = "Core", Shape = Enum.PartType.Ball, Size = Vector3.new(s * 0.5, s * 0.4, s * 0.5), Color = Color3.new(1, 1, 1), Material = Enum.Material.Neon, Transparency = 0.35, CanCollide = false, CFrame = CFrame.new(0, s * 0.4, 0) })
+			local weld = Instance.new("WeldConstraint")
+			weld.Part0, weld.Part1 = root, core
+			weld.Parent = core
+			local sparkles = Instance.new("Sparkles")
+			sparkles.Parent = root
+			local conn, placed
+			conn = game:GetService("RunService").Heartbeat:Connect(function()
+				if root:IsDescendantOf(workspace) then
+					placed = true
+				elseif placed then -- it was in the world and is gone now
+					conn:Disconnect()
+					return
+				end
+				local hue = (os.clock() * 0.15) % 1
+				root.Color = Color3.fromHSV(hue, 0.55, 1)
+				core.Color = Color3.fromHSV((hue + 0.5) % 1, 0.35, 1)
+			end)
+			model.Destroying:Connect(function()
+				conn:Disconnect()
+			end)
+		end
 	end
 	return model
 end

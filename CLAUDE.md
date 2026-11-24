@@ -18,6 +18,15 @@ Renamed 2026-11-23: only player-visible text says Idle Party Quest (menu title, 
   `World.ArenaOrigin` returns a 4th value yaw, `Arenas:OriginOf` a CFrame, `Scene.Frame` (place fight things with
   `scene.Frame * ...`, not `Origin + Vector3`), BattleCamera takes a CFrame. Shops stand in a ring round the Market square
   (`PlazaSpots.X.Market` = angle, `World.MARKET_RING` 34, `World.ShopLook`), maypole + bunting in the middle.
+- **Biomes + backdrops 2026-11-24** (SEEN in Studio via a 20-scene gallery built from the command bar): 20 zones now (stages
+  1-200, then loop). 101-200 are elemental/magical: Stormspire (lightning flashes), Tidal Deep, Phoenix Pyre, Glowshroom
+  Hollow, Aurora Wastes, Astral Expanse, Void Rift, Radiant Sanctum, Slime Meadows (owner idea; boss = Rainbow Slime via
+  `Config/Zones` `Boss`, a crowned rainbow-cycling slime), Arcane Archive. Backdrops are silhouettes from
+  `client/Battle/Backdrops.luau` (zone `Backdrop` style: wedge-ridge mountains with caps, hills with trees, mesas, volcano,
+  ruins, floating islands, crystals...; `fx` "Bolt"/"Wave" animate in `Scene._update`); puffy clouds (`NoClouds`, `CloudColor`).
+  Not done: the real sky does not change per zone (dark zones show a blue sky in battle view).
+- **Studio test mute**: Workspace attribute `StudioMute = true` (Edit mode, command bar) silences all game sound in Studio
+  (owner asked: no sound while Claude tests). Set it before test runs, clear it (nil) before Ctrl+S.
 
 Roblox co-op idle RPG (Luau, Rojo). Two players fight together (a ghost partner stands in when one is offline), the combat
 sim is server-authoritative and deterministic. Read `README.md` and `docs/` (PROGRESSION, BALANCE, SKILLS, ROADMAP) for design detail.

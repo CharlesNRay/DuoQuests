@@ -14,6 +14,7 @@
 ]]
 
 local Config = require(script.Parent.Config.Stages)
+local ZoneConfig = require(script.Parent.Config.Zones)
 local StatCalc = require(script.Parent.Combat.StatCalc)
 
 local Stages = {}
@@ -73,6 +74,11 @@ function Stages.Build(stage)
 	if Stages.IsBoss(stage) then
 		local bossNumber = stage // Config.BossEvery
 		local enemyId = Config.BossPool[(bossNumber - 1) % #Config.BossPool + 1]
+		-- a zone can name its own boss (Config/Zones Boss: Slime Meadows has the Rainbow Slime)
+		local zone = ZoneConfig[(bossNumber - 1) % #ZoneConfig + 1]
+		if zone and zone.Boss then
+			enemyId = zone.Boss
+		end
 		table.insert(enemies, { Id = "e1", EnemyId = enemyId, Scale = scale * (Config.BossScaleMult or 1) * (if bossNumber == 1 then Config.FirstBossMult or 1 else 1), HealthMult = Stages.HealthMult(stage) })
 	else
 		local count = math.min(Config.MaxEnemies, 1 + (stage - 1) // 2)

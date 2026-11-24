@@ -59,6 +59,7 @@ local short
 local MAP_GLYPHS = {
 	Trees = "🌳", Pines = "🌲", Rocks = "⛰️", Crystals = "💎", Cacti = "🌵",
 	SnowPines = "❄️", LavaRocks = "🌋", DeadTrees = "🪦", Pillars = "🏛️", Clouds = "☁️",
+	StormRocks = "⚡", Coral = "🐚", FlameCrystals = "🔥", GlowShrooms = "🍄", IceSpikes = "🌌", StarRocks = "⭐", VoidShards = "🌑", GoldPillars = "☀", WindTrees = "💨", RuneStones = "🔮", Slimelings = "💚",
 }
 local INTRO = 0.8 -- matches Battle/Replay: monsters run in before the first blow
 

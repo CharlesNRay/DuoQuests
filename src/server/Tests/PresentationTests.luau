@@ -50,6 +50,16 @@ return function(modulesOverride)
 	local z = Zones.ForStage(15)
 	check("A zone reports its first and last stage", z.FirstStage == 11 and z.LastStage == 20)
 	local count = Zones.Count()
+	-- stages 1-100: ten real-world zones; 101-200: ten elemental / magical ones; every zone names its scenery and backdrop
+	local styles = { Hills = true, Peaks = true, Cave = true, Dunes = true, Volcano = true, Swamp = true, Ruins = true, Sky = true, Storm = true, Reef = true, Pyre = true, Fungal = true, Aurora = true, Astral = true, Void = true, Radiant = true, Gale = true, Slime = true, Arcane = true }
+	local complete, names = true, {}
+	for _, zone in ipairs(ZoneConfig) do
+		complete = complete and type(zone.Scenery) == "string" and styles[zone.Backdrop] == true and zone.Decor ~= nil and not names[zone.Name]
+		names[zone.Name] = true
+	end
+	check("20 zones (200 stages), each with a known backdrop and a unique name", count == 20 and complete)
+	check("Slime Meadows ends in the Rainbow Slime; other zones keep the boss rotation", Stages.Build(190).Enemies[1].EnemyId == "RainbowSlime" and Stages.Build(180).Enemies[1].EnemyId ~= "RainbowSlime" and Stages.Build(390).Enemies[1].EnemyId == "RainbowSlime")
+	check("Stage 101 is Stormspire Peaks and 201 loops back to the meadow", Zones.ForStage(101).Theme.Name == "Stormspire Peaks" and Zones.ForStage(201).Theme.Name == "Sunny Meadow" and Zones.ForStage(201).Loop == 2)
 	check("Zones loop after the authored list with a loop number", Zones.ForStage(count * 10 + 1).Loop == 2 and Zones.ForStage(1).Loop == 1)
 	check("Every zone theme has the fields the scene needs", (function()
 		for _, theme in ipairs(ZoneConfig) do

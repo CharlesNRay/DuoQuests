@@ -10,6 +10,9 @@
 	  Sound.PlayAt(name, position)       a 3D sound in the world (combat): only nearby fights are heard
 	  Sound.Music(trackName | nil)       cross-fades to that track (Town, Stage, Dungeon, WorldBoss, SeasonBoss, GuildRaid)
 	  Sound.Settings()                   the current slider values
+
+	Studio only: Workspace attribute StudioMute = true silences everything (set in Edit mode before an automated test
+	run so the owner does not hear it; cleared afterwards). It is ignored in the live game.
 ]]
 local SoundService = game:GetService("SoundService")
 local TweenService = game:GetService("TweenService")
@@ -38,11 +41,15 @@ function Sound.Apply(new)
 		local v = new and tonumber(new[channel])
 		settings[channel] = if v then math.clamp(v, 0, 1) else Config.Defaults[channel]
 	end
+	local mute = game:GetService("RunService"):IsStudio() and workspace:GetAttribute("StudioMute") == true
 	for name, g in pairs(groups) do
-		g.Volume = settings.Master * settings[name]
+		g.Volume = if mute then 0 else settings.Master * settings[name]
 	end
 end
 Sound.Apply(nil)
+workspace:GetAttributeChangedSignal("StudioMute"):Connect(function()
+	Sound.Apply(settings)
+end)
 
 local lastPlayed = {} -- [name] = os.clock(): the same effect at most every MIN_GAP seconds (a big fight has many hits)
 local MIN_GAP = 0.06

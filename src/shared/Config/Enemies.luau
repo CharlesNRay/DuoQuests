@@ -292,6 +292,14 @@ local Enemies = {
 		BaseStats = { MaxHealth = 620, Attack = 11, Defense = 8, AttackSpeed = 0.9, CritChance = 0.03 },
 		Abilities = { { Id = "WebShot", Level = 1, Timer = 5 }, { Id = "PoisonSpit", Level = 1, Timer = 9 }, { Id = "Enrage", Level = 1 } },
 	},
+	-- the boss of Slime Meadows (Config/Zones Boss): a crowned slime that shifts through the rainbow
+	RainbowSlime = {
+		Id = "RainbowSlime", DisplayName = "Rainbow Slime",
+		Look = { Shape = "Ball", Color = { 255, 120, 200 }, Size = 9, Rainbow = true, Crown = true },
+		IsBoss = true, DamageType = "Magical",
+		BaseStats = { MaxHealth = 640, Attack = 12, Defense = 8, AttackSpeed = 0.95, CritChance = 0.05 },
+		Abilities = { { Id = "SlimeSplit", Level = 1, Timer = 5 }, { Id = "Enrage", Level = 1 } },
+	},
 	LichKing = {
 		Id = "LichKing", DisplayName = "Lich King",
 		Look = { Shape = "Skeleton", Color = { 190, 200, 215 }, Size = 9 },

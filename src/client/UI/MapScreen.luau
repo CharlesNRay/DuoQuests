@@ -26,6 +26,7 @@ local MapScreen = {}
 local GLYPHS = {
 	Trees = "🌳", Pines = "🌲", Rocks = "⛰️", Crystals = "💎", Cacti = "🌵",
 	SnowPines = "❄️", LavaRocks = "🌋", DeadTrees = "🍂", Pillars = "🏛️", Clouds = "☁️",
+	StormRocks = "⚡", Coral = "🐚", FlameCrystals = "🔥", GlowShrooms = "🍄", IceSpikes = "🌌", StarRocks = "⭐", VoidShards = "🌑", GoldPillars = "☀", WindTrees = "💨", RuneStones = "🔮", Slimelings = "💚",
 }
 local PAPER = Color3.fromRGB(226, 205, 160)
 local PAPER_DARK = Color3.fromRGB(190, 164, 118)
