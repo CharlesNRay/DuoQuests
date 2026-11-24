@@ -3,6 +3,7 @@
 
 	  Passes.Has(profile, passId)       -> true when the pass is owned
 	  Passes.Grant(profile, passId)     -> true (false, "BadPass" for an unknown id); safe to call again
+	  Passes.Revoke(profile, passId)    removes a pass (Roblox says the player no longer owns it, e.g. a refund)
 	  Passes.Perks(profile)             -> { GoldGain, XPGain, BagSlots, DungeonKeys, PetSlots, CharacterSlots } summed over owned passes (zeros when none)
 	  Passes.List(profile)              -> { { Id, Name, Text, Robux, Available, Owned } } for the shop
 ]]
@@ -31,6 +32,10 @@ function Passes.Grant(profile, passId)
 	end
 	owned(profile)[passId] = true
 	return true
+end
+
+function Passes.Revoke(profile, passId)
+	owned(profile)[passId] = nil
 end
 
 function Passes.Perks(profile)

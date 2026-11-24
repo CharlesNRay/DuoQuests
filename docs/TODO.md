@@ -6,7 +6,7 @@ Last updated 2026-11-24. Claude keeps this list current. Short entries; details 
 
 - DONE 2026-11-24: the game is on Roblox ("Idle Party Quest", private, Studio API access on); VIP (2101996470) and Extra
   Character Slots (2102236400) Game Passes and the 4 Sunstone products (3735896385/525/614/758) exist and their ids are in
-  `Config/Premium`. Not tested: an actual purchase (Studio test purchases are free). Sunstone products have Roblox
+  `Config/Premium`. SEEN in Studio 2026-11-24 with free test purchases: the creator owns both passes (4 slots, VIP perks: gold 25%, no XP, pet slot, bag +20); each pack pays its Sunstones + first-time bonus once (160/840/1800/4000, a 2nd Handful = +80). The owner's live save now holds those 6,880 test Sunstones. Passes are re-checked on join (live only): a refunded pass is removed. Sunstone products have Roblox
   "Managed pricing" on, so their Robux price may drift from the numbers shown in our Store.
 - **Rename on Roblox.** Set the experience title to *Idle Party Quest* in Creator Hub. Put the search words in the
   description, for example "idle RPG, incremental, co-op with friends".

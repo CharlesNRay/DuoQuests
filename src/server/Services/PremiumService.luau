@@ -12,6 +12,7 @@
 
 local MarketplaceService = game:GetService("MarketplaceService")
 local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
@@ -73,15 +74,20 @@ function PremiumService.PaidRandomAllowed(player)
 	return ok and info ~= nil and info.ArePaidRandomItemsRestricted == false
 end
 
--- Gives a pass to a profile whose player owns its Game Pass (ignores passes with no id yet).
+-- Matches the profile's passes to what Roblox says the player owns (ignores passes with no id yet): grants owned ones and,
+-- in the live game, removes ones the player no longer owns (a refund). Studio keeps them: test purchases and the
+-- Test cheats toggles are not real ownership. A failed check changes nothing.
 function PremiumService.SyncPasses(player, profile)
+	local live = not RunService:IsStudio()
 	for id, def in pairs(Config.Passes) do
-		if def.GamePassId ~= 0 and not Passes.Has(profile, id) then
+		if def.GamePassId ~= 0 then
 			local ok, owns = pcall(function()
 				return MarketplaceService:UserOwnsGamePassAsync(player.UserId, def.GamePassId)
 			end)
-			if ok and owns then
+			if ok and owns and not Passes.Has(profile, id) then
 				Passes.Grant(profile, id)
+			elseif ok and owns == false and live and Passes.Has(profile, id) then
+				Passes.Revoke(profile, id)
 			end
 		end
 	end
