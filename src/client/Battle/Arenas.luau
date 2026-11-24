@@ -73,6 +73,8 @@ local function cardLabel(props)
 	return t
 end
 
+local buildCard -- defined below makeCard
+
 local function makeCard(origin)
 	local anchor = Instance.new("Part")
 	anchor.Name = "ArenaCard"
@@ -85,15 +87,22 @@ local function makeCard(origin)
 	anchor.Parent = workspace
 	local gui = Instance.new("BillboardGui")
 	gui.Size = UDim2.fromOffset(CARD_W, HEAD_H + COLS_H + 4 * ROW_H + 10)
-	gui.MaxDistance = 70 -- only readable when you are close; far cards would overlap
+	gui.MaxDistance = 160 -- the homes street: you read the lots' cards walking by (constant size on screen)
 	gui.Adornee = anchor
 	gui.Parent = anchor
+	local card = buildCard(gui)
+	card.Gui = gui
+	return anchor, card
+end
+
+-- the card itself (header, column headings, rows) inside `parent` (a BillboardGui, or the screen panel)
+buildCard = function(parent)
 	local frame = Instance.new("Frame")
 	frame.Name = "Card"
 	frame.Size = UDim2.fromScale(1, 1)
 	frame.BackgroundColor3 = Color3.fromRGB(18, 20, 32)
 	frame.BackgroundTransparency = 0.1
-	frame.Parent = gui
+	frame.Parent = parent
 	Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 12)
 	local stroke = Instance.new("UIStroke", frame)
 	stroke.Color = CARD_GOLD
@@ -130,7 +139,7 @@ local function makeCard(origin)
 	rows.Position = UDim2.fromOffset(0, HEAD_H + COLS_H + 3)
 	rows.Size = UDim2.new(1, 0, 1, -(HEAD_H + COLS_H + 3))
 	rows.Parent = frame
-	return anchor, { Gui = gui, Frame = frame, Rows = rows }
+	return { Frame = frame, Rows = rows }
 end
 
 -- A wooden sign at the lot's street edge saying whose home it is, facing the street (owner 2026-11-24), so people
@@ -319,7 +328,12 @@ local function fillCard(card, party, zone)
 		local pet = member.PetId and PetConfig.Defs[member.PetId]
 		cardLabel({ Text = pet and pet.DisplayName or "-", Size = UDim2.fromOffset(CARD_W - 286, ROW_H), Position = UDim2.fromOffset(276, 0), TextColor3 = if pet then Color3.fromRGB(185, 230, 166) else Color3.fromRGB(110, 116, 140), Parent = row })
 	end
-	card.Gui.Size = UDim2.fromOffset(CARD_W, HEAD_H + COLS_H + #party.Members * ROW_H + 10)
+	local size = UDim2.fromOffset(CARD_W, HEAD_H + COLS_H + #party.Members * ROW_H + 10)
+	if card.Gui then
+		card.Gui.Size = size
+	else
+		card.Frame.Size = size
+	end
 end
 
 -- Make every hero in an arena clickable (a click opens their inspect card).
@@ -372,6 +386,10 @@ function Arenas:Apply(snapshot)
 			end
 		end
 		fillCard(arena.Label, party, zone)
+		arena.Party, arena.ZoneDef = party, zone
+		if self.FocusSlot == party.Slot and self.Screen then
+			fillCard(self.Screen, party, zone)
+		end
 		local big, small = ownerText(party)
 		for _, signLabel in ipairs(arena.SignLabels) do
 			signLabel.Name.Text = big
@@ -384,6 +402,39 @@ function Arenas:Apply(snapshot)
 		end
 		arena.Replay.OnBanner = if party.Slot == self.Mine then self.OnBanner else nil
 		self:_wireClicks(arena)
+	end
+end
+
+-- The battle card as a fixed panel on the screen (owner 2026-11-24: the floating card was hard to read zoomed in or
+-- out). Main calls Arenas:Focus(slot) with the fight you watch or the lot you stand at; that lot's world card hides
+-- while its panel shows.
+function Arenas:SetScreenParent(parent)
+	self.Screen = buildCard(parent)
+	local f = self.Screen.Frame
+	f.Name = "BattleCardPanel"
+	f.Position = UDim2.fromOffset(10, 176) -- under the HUD's party list, top-left
+	f.Size = UDim2.fromOffset(CARD_W, HEAD_H + COLS_H + 4 * ROW_H + 10)
+	f.Visible = false
+	f.ZIndex = 5
+	Instance.new("UIScale", f).Scale = 0.82
+end
+
+function Arenas:Focus(slot)
+	self.FocusSlot = slot
+	local arena = slot and self.BySlot[slot]
+	for s, a in pairs(self.BySlot) do
+		if a.Label and a.Label.Gui then
+			a.Label.Gui.Enabled = s ~= slot or not self.Screen
+		end
+	end
+	if not self.Screen then
+		return
+	end
+	if arena and arena.Party then
+		fillCard(self.Screen, arena.Party, arena.ZoneDef)
+		self.Screen.Frame.Visible = true
+	else
+		self.Screen.Frame.Visible = false
 	end
 end
 

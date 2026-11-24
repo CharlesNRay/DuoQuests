@@ -258,21 +258,8 @@ local function redraw()
 		extra.UpdateExpeditionReady()
 	end
 	-- welcome back: what the party earned while you were away, and what is waiting (once per login, after the menu)
-	local claim = state.LastClaim
-	if type(claim) == "table" and claim.At and extra.ShownClaimAt ~= claim.At and not (menu and menu.Visible) then
-		extra.ShownClaimAt = claim.At
-		local waiting = {}
-		local e = extra.Expedition
-		if e and (e.Ready or (e.EndsAt or math.huge) <= os.time()) then
-			table.insert(waiting, { "🧭", (extra.ExpeditionName and extra.ExpeditionName(e.Id) or "Your expedition") .. " is back: collect it at the Expedition Camp" })
-		end
-		if state.Player.Daily and state.Player.Daily.CanClaim then
-			table.insert(waiting, { "🎁", "Your daily chest is ready on the plaza" })
-		end
-		if WelcomeBack.Worth(claim, waiting) then
-			Sound.Play("Reward")
-			WelcomeBack.Show(root, claim, waiting)
-		end
+	if extra.CheckWelcome then
+		extra.CheckWelcome()
 	end
 	-- sound settings come from the account once; after that the Settings screen owns them
 	if not extra.SoundApplied then
@@ -988,6 +975,53 @@ local function watch(slot, origin)
 	end
 end
 arenas.OnWatch = watch
+-- the "welcome back" card: checked on every state and every 0.3 s (the state can arrive while the main menu is still
+-- up, and the next one may be a while)
+function extra.CheckWelcome()
+	local claim = state and state.LastClaim
+	if type(claim) == "table" and claim.At and extra.ShownClaimAt ~= claim.At and not (menu and menu.Visible) then
+		extra.ShownClaimAt = claim.At
+		local waiting = {}
+		local e = extra.Expedition
+		if e and (e.Ready or (e.EndsAt or math.huge) <= os.time()) then
+			table.insert(waiting, { "🧭", (extra.ExpeditionName and extra.ExpeditionName(e.Id) or "Your expedition") .. " is back: collect it at the Expedition Camp" })
+		end
+		if state.Player.Daily and state.Player.Daily.CanClaim then
+			table.insert(waiting, { "🎁", "Your daily chest is ready on the plaza" })
+		end
+		if WelcomeBack.Worth(claim, waiting) then
+			Sound.Play("Reward")
+			WelcomeBack.Show(root, claim, waiting)
+		end
+	end
+end
+-- the battle card as a fixed panel: the fight you watch, or your own lot while you stand near it (Arenas:Focus).
+-- It lives on the combat-log layer, so the HUD size setting scales it too.
+arenas:SetScreenParent(logLayer)
+task.spawn(function()
+	while true do
+		task.wait(0.3)
+		local focus = nil
+		if watchingSlot and BattleCamera.IsBattleView() then
+			focus = watchingSlot
+		else
+			local mine = arenas:MySlot()
+			local character = Players.LocalPlayer.Character
+			local rootPart = character and character:FindFirstChild("HumanoidRootPart")
+			if mine and rootPart then
+				local origin = arenas:OriginOf(mine)
+				local flat = Vector3.new(rootPart.Position.X - origin.Position.X, 0, rootPart.Position.Z - origin.Position.Z)
+				if flat.Magnitude < World.ARENA_WIDTH * 0.9 then
+					focus = mine
+				end
+			end
+		end
+		if focus ~= arenas.FocusSlot then
+			arenas:Focus(focus)
+		end
+		extra.CheckWelcome()
+	end
+end)
 arenas.OnZone = function(slot, theme)
 	if watchingSlot == slot and BattleCamera.IsBattleView() then
 		ZoneLighting.Apply(theme)
