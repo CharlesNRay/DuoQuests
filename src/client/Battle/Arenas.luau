@@ -41,6 +41,12 @@ function Arenas:OriginOf(slot)
 	return CFrame.new(x, y, z) * CFrame.Angles(0, yaw or 0, 0)
 end
 
+-- the zone theme (Config/Zones entry) an arena is showing, or nil
+function Arenas:ThemeOf(slot)
+	local arena = self.BySlot[slot]
+	return arena and arena.Theme
+end
+
 function Arenas:MySlot()
 	return self.Mine
 end
@@ -268,7 +274,11 @@ function Arenas:Apply(snapshot)
 		local zone = Zones.ForStage(party.Stage)
 		if arena.Zone ~= zone.Name then
 			arena.Zone = zone.Name
+			arena.Theme = zone.Theme
 			arena.Scene:SetZone(zone.Theme)
+			if self.OnZone then
+				self.OnZone(party.Slot, zone.Theme) -- Main re-tints the sky if this is the fight being watched
+			end
 		end
 		arena.Label.Text = cardText(party, zone)
 		local big, small = ownerText(party)

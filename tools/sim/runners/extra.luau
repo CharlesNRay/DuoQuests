@@ -11,6 +11,7 @@ local m = {
 }
 m.FightStats = require("./FightStats")
 m.SkillProgress = require("./SkillProgress") m.SkillConfig = require("./Config/SkillProgress")
+m.StageConfig = m.StageConfig or require("./Config/Stages")
 require("./PresentationTests")(m)
 require("./PetTests")(m)
 require("./PassiveUltimateTests")(m)

@@ -23,6 +23,17 @@ return {
 		{ "Frog", "BogWraith", "Spider" },
 		{ "Skeleton", "Ghost", "RuinGolem" },
 		{ "SkyHarpy", "StormSprite", "Bat" },
+		-- stages 101-200: the elemental / magical zones
+		{ "StormHound", "ThunderHawk", "VoltWisp" },
+		{ "ReefCrab", "GlowEel", "Jellyfish" },
+		{ "FlameHawk", "CinderGolem", "Salamander" },
+		{ "Shroomling", "GlowMoth", "SporeBeetle" },
+		{ "IceWraith", "FrostBear", "AuroraFox" },
+		{ "StarSprite", "MeteorGolem", "CometSerpent" },
+		{ "VoidStalker", "Shade", "VoidWeaver" },
+		{ "Sentinel", "Seraph", "LightWisp" },
+		{ "BubbleSlime", "JellySlime", "GummyFrog" },
+		{ "FlyingTome", "RuneGolem", "ArcaneWisp" },
 	},
 	TimeLimit = 60, -- seconds to clear a regular stage; running out counts as a loss
 	BossTimeLimit = 90, -- seconds to clear a boss stage

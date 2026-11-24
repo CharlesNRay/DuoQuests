@@ -51,6 +51,7 @@ local StagesModule = require(game:GetService("ReplicatedStorage"):WaitForChild("
 local BossArena = require(script.Parent.Battle.BossArena)
 local PetFollower = require(script.Parent.Battle.PetFollower)
 local BattleCamera = require(script.Parent.Battle.BattleCamera)
+local ZoneLighting = require(script.Parent.Battle.ZoneLighting)
 
 local folder = ReplicatedStorage:WaitForChild(Remotes.FolderName)
 local api = folder:WaitForChild(Remotes.Api)
@@ -898,6 +899,7 @@ function stopWatching()
 		BattleCamera.SetTarget(arenas:OriginOf(mine))
 	end
 	BattleCamera.SetBattleView(false)
+	ZoneLighting.Clear()
 	hud:SetWatching(nil)
 end
 
@@ -910,6 +912,7 @@ local function watch(slot, origin)
 	Kit.HideTip()
 	BattleCamera.SetTarget(origin)
 	BattleCamera.SetBattleView(true)
+	ZoneLighting.Apply(arenas:ThemeOf(slot)) -- the sky and light follow the zone of the fight you watch
 	local label = "Your battle"
 	if slot ~= mine then
 		label = "Watching a battle"
@@ -925,6 +928,11 @@ local function watch(slot, origin)
 	end
 end
 arenas.OnWatch = watch
+arenas.OnZone = function(slot, theme)
+	if watchingSlot == slot and BattleCamera.IsBattleView() then
+		ZoneLighting.Apply(theme)
+	end
+end
 function extra.WatchMine()
 	local mine = arenas:MySlot()
 	if mine then

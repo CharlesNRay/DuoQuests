@@ -25,10 +25,8 @@ Last updated 2026-11-24. Claude keeps this list current. Short entries; details 
 
 ## Building next (Claude)
 
-- Enemies and bosses of their own for the stage 101-200 biomes. Right now they reuse the stage 1-100 monsters.
-  (in progress)
-- The sky and light change with the biome in battle view. Dark biomes such as Void and Astral show a blue daytime sky now.
-  (in progress)
+- Done 2026-11-24: monsters and bosses for stages 101-200; the sky follows the biome in battle view.
+
 - The Mastery talent row, once you say yes.
 - More player homes. Lots 5-8 continue down the homes street, which needs a gate in the town wall. Max Players is 4 until then.
 - Balance pass:

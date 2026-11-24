@@ -24,7 +24,11 @@ Renamed 2026-11-23: only player-visible text says Idle Party Quest (menu title, 
   `Config/Zones` `Boss`, a crowned rainbow-cycling slime), Arcane Archive. Backdrops are silhouettes from
   `client/Battle/Backdrops.luau` (zone `Backdrop` style: wedge-ridge mountains with caps, hills with trees, mesas, volcano,
   ruins, floating islands, crystals...; `fx` "Bolt"/"Wave" animate in `Scene._update`); puffy clouds (`NoClouds`, `CloudColor`).
-  Not done: the real sky does not change per zone (dark zones show a blue sky in battle view).
+  Zones 11-20 have their own monsters (`Config/Stages.ZonePools` 11-20, 30 new enemies) and bosses (`Config/Zones Boss`):
+  Thunder Titan, Leviathan, The Phoenix, Elder Mycelid, Frost Wyrm, Astral Watcher, Void Herald, Solar Archon, Rainbow Slime,
+  Arcane Lich (existing body shapes + new Look extras Material / Transparency / Glow, applied in `Models.Enemy finish`;
+  existing enemy abilities only). Battle view tints the sky per zone (`client/Battle/ZoneLighting`: zone ClockTime + Haze,
+  night zones get a brighter fill + exposure; Clear on leaving battle view). SEEN in Studio with command-bar demo fights.
 - **Studio test mute**: Workspace attribute `StudioMute = true` (Edit mode, command bar) silences all game sound in Studio
   (owner asked: no sound while Claude tests). Set it before test runs, clear it (nil) before Ctrl+S.
 

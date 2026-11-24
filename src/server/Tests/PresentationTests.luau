@@ -20,6 +20,7 @@ local function loadModules(override)
 		ZoneConfig = require(Shared.Config.Zones),
 		Enemies = require(Shared.Config.Enemies),
 		Stages = require(Shared.Stages),
+		StageConfig = require(Shared.Config.Stages),
 		StageRunner = require(Shared.StageRunner),
 		Party = require(Shared.Party),
 		ProfileTemplate = require(Shared.ProfileTemplate),
@@ -59,6 +60,27 @@ return function(modulesOverride)
 	end
 	check("20 zones (200 stages), each with a known backdrop and a unique name", count == 20 and complete)
 	check("Slime Meadows ends in the Rainbow Slime; other zones keep the boss rotation", Stages.Build(190).Enemies[1].EnemyId == "RainbowSlime" and Stages.Build(180).Enemies[1].EnemyId ~= "RainbowSlime" and Stages.Build(390).Enemies[1].EnemyId == "RainbowSlime")
+	do -- stages 101-200 have monsters and a boss of their own (not the stage 1-100 ones again)
+		local StageConfig = m.StageConfig
+		local early, ok = {}, true
+		for zone = 1, 10 do
+			for _, id in ipairs(StageConfig.ZonePools[zone]) do
+				early[id] = true
+			end
+		end
+		for zone = 11, 20 do
+			local pool = StageConfig.ZonePools[zone]
+			ok = ok and pool ~= nil and #pool == 3
+			for _, id in ipairs(pool or {}) do
+				ok = ok and Enemies[id] ~= nil and not early[id] and Enemies[id].IsBoss == false
+			end
+			local boss = ZoneConfig[zone].Boss
+			ok = ok and boss ~= nil and Enemies[boss] ~= nil and Enemies[boss].IsBoss == true
+			local built = Stages.Build(zone * 10)
+			ok = ok and built.Enemies[1].EnemyId == boss
+		end
+		check("Zones 11-20 field their own 3 monsters and their own boss", ok)
+	end
 	check("Stage 101 is Stormspire Peaks and 201 loops back to the meadow", Zones.ForStage(101).Theme.Name == "Stormspire Peaks" and Zones.ForStage(201).Theme.Name == "Sunny Meadow" and Zones.ForStage(201).Loop == 2)
 	check("Zones loop after the authored list with a loop number", Zones.ForStage(count * 10 + 1).Loop == 2 and Zones.ForStage(1).Loop == 1)
 	check("Every zone theme has the fields the scene needs", (function()

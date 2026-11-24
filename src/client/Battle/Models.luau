@@ -73,12 +73,44 @@ function Models.AttackStyle(defId)
 	return look and (look.Attack or ATTACK_BY_SHAPE[look.Shape]) or "Lunge"
 end
 
+-- optional look extras for any enemy (stage 101-200 monsters use them): Material ("Neon", "Glass", "Ice", "Foil"...)
+-- and Transparency on the body (eyes stay as they are), Glow = { r, g, b } adds a light
+local function finish(model, look)
+	if not (look.Material or look.Transparency or look.Glow) then
+		return model
+	end
+	local okMat, material = pcall(function()
+		return look.Material and Enum.Material[look.Material]
+	end)
+	for _, p in ipairs(model:GetDescendants()) do
+		if p:IsA("BasePart") and p.Transparency < 1 then
+			local isEye = p.Color == Color3.new(0, 0, 0) or p.Material == Enum.Material.Neon and p.Size.Magnitude < (look.Size or 4) * 0.2
+			if not isEye then
+				if okMat and material then
+					p.Material = material
+				end
+				if look.Transparency then
+					p.Transparency = math.max(p.Transparency, look.Transparency)
+				end
+			end
+		end
+	end
+	if look.Glow and model.PrimaryPart then
+		local light = Instance.new("PointLight")
+		light.Color = Color3.fromRGB(look.Glow[1], look.Glow[2], look.Glow[3])
+		light.Range = (look.Size or 4) * 2.2
+		light.Brightness = 1.4
+		light.Parent = model.PrimaryPart
+	end
+	return model
+end
+
 function Models.Enemy(defId)
 	local def = Enemies[defId] or Minions[defId]
 	local look = (def and def.Look) or { Shape = "Ball", Color = { 200, 80, 80 }, Size = 3 }
 	local built = Creatures.Build(look)
 	if built then
-		return built
+		return finish(built, look)
 	end
 	local c = Color3.fromRGB(look.Color[1], look.Color[2], look.Color[3])
 	local s = look.Size
@@ -145,7 +177,7 @@ function Models.Enemy(defId)
 			end)
 		end
 	end
-	return model
+	return finish(model, look)
 end
 
 function Models.Pet(petId)
