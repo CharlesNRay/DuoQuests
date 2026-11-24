@@ -306,3 +306,10 @@ Level-up talent points (`Config/Talents`, 1 per level, 39 at L40, 8 talents x 10
 
 About +7 stages at L40, inside the 40-90 target; L40 time unchanged (~8 h). Warrior gains most (Vitality/Bulwark keep the
 tank up, which carries the party). `abl.sh` mode `notalent` turns talents off for comparison.
+
+## Judgment at equal rank (2026-11-24)
+`tools/sim/runners/judgeprobe.luau`: the same 4-hero gearless L35 party, Cleric kit Heal/Blessing/Smite/Judgment vs
+Heal/Blessing/RadiantBurst/Smite, every skill at rank 1, 30 seeds. Cleric damage per fight, Judgment vs Radiant:
+stage 14 6210 vs 4907, stage 17 6277 vs 6162, stage 20 (boss, lost) 8781 vs 6715; wins equal. So Judgment is not weak in
+itself: it trails in real play because it is Epic and ranks up slower than the Common/Rare starters (and Smite feeds it).
+No stat change. If players still skip it, the lever is its rank (copies from wishes), not its numbers.

@@ -27,7 +27,7 @@ Last updated 2026-11-24. Claude keeps this list current. Short entries; details 
 - More player homes. Lots 5-8 continue down the homes street, which needs a gate in the town wall. Max Players is 4 until then.
 - Balance pass:
   - The class roster spread (docs/BALANCE.md).
-  - Judgment is a weak 4th Cleric skill.
+  - (Checked 2026-11-24: Judgment is fine at equal rank; it lags only because Epic skills rank up slower.)
   - Stages 101-200 have not been tuned; the bot rarely gets past stage 90.
 
 ## Not seen working in Studio yet
