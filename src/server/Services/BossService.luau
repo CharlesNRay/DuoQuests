@@ -103,7 +103,7 @@ local function buildWorldBoss()
 	tag.Size = UDim2.fromOffset(240, 60)
 	tag.StudsOffsetWorldSpace = Vector3.new(0, h * 0.5, 0)
 	tag.AlwaysOnTop = true
-	tag.MaxDistance = 400 -- drawn through walls, so without a limit it showed from anywhere (even over the main menu)
+	tag.MaxDistance = 250 -- drawn through walls: only near the boss field (400 still reached the homes street and the plaza)
 	tag.Adornee = root
 	tag.Parent = root
 	local label = Instance.new("TextLabel")
@@ -153,7 +153,7 @@ local function buildColossus()
 	tag.Size = UDim2.fromOffset(300, 70)
 	tag.StudsOffsetWorldSpace = Vector3.new(0, h * 0.55, 0)
 	tag.AlwaysOnTop = true
-	tag.MaxDistance = 400 -- drawn through walls, so without a limit it showed from anywhere (even over the main menu)
+	tag.MaxDistance = 250 -- drawn through walls: only near the boss field (400 still reached the homes street and the plaza)
 	tag.Adornee = body
 	tag.Parent = body
 	hpLabel = Instance.new("TextLabel")

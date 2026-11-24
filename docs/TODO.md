@@ -33,15 +33,13 @@ Last updated 2026-11-24. Claude keeps this list current. Short entries; details 
 ## Not seen working in Studio yet
 
 Seen 2026-11-24: HUD size (now scales only the HUD), map badge tooltip, tutorial arrows (steps 3-5), fallen ally tags,
-lightning, founding a guild and guild chat.
+lightning, founding a guild and guild chat, cosmetics Try, COMBO pop-ups and status icons.
 
 These pass the tests but nobody has looked at them in the game.
 
 - **Combat:**
   - Wave banners in dungeons.
-  - The combo pips and the "COMBO xN!" pop-up.
-  - The new status icons.
-- **Cosmetics:** season auras once won, the other auras and kill effects, cosmetics "Try" (60 s).
+- **Cosmetics:** season auras once won, the other auras and kill effects.
 - **HUD and menus:**
   - Headshots of other real players in your party.
   - The owner sign of a lot shared by two real players.
