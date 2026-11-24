@@ -50,6 +50,10 @@ Renamed 2026-11-23: only player-visible text says Idle Party Quest (menu title, 
   `state.LastClaim` (AFK + stages the party cleared, `claim.At` = show once) plus what waits (expedition back, daily chest).
   Expedition back: `Town.SetExpeditionReady` sign over the Expedition Camp (studs-sized, MaxDistance 700) and a dot on
   the HUD Battle button (`extra.UpdateExpeditionReady`, rechecked every 5 s).
+- **Hide HUD 2026-11-24** (SEEN in Studio; the narrower corner stage card NOT re-seen): also hides the small buttons under
+  the map card except 📝 Feedback; the stage card + fight timer move to the top-right corner (192 wide) and the watching bar
+  (Log / Show HUD / Stop) to the bottom-left (`Hud:SetHudHidden`). Battle card is also a fixed panel top-left in battle
+  view and at your own lot (`Arenas:SetScreenParent/Focus`, on the log layer); world cards MaxDistance 160.
 - **Battle card 2026-11-24** (SEEN in Studio): the card over each lot (`Arenas` makeCard/fillCard) = header (zone, big STAGE,
   red BOSS), HERO | LV | CLASS | PET columns, headshot ringed in class colour (class dot for companions), "ghost" tag;
   raised to y 24 so damage numbers pop below it. Mockup: `branding/mockups/arena_card.png`.

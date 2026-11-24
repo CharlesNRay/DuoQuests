@@ -344,11 +344,28 @@ function Hud.new(root)
 			self.Dock.Visible = not hidden
 		end
 		self.HideButton.Text = if hidden then "Show HUD" else "Hide HUD"
+		-- the small buttons under the map card go too, all but 📝 Feedback (owner 2026-11-24)
+		for key, button in pairs(self.Buttons) do
+			if button.Parent == self.Rails.mini then
+				button.Visible = not hidden or key == "Feedback"
+			end
+		end
 		-- the skill bar sits above the menu dock; with the dock hidden it drops to the bottom edge
 		local drop = if hidden then 66 else 0
 		local info = TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
 		TweenService:Create(self.Bar, info, { Position = UDim2.new(0.5, -170, 1, -128 + drop) }):Play()
 		TweenService:Create(self.CombatBuffRow, info, { Position = UDim2.new(0.5, -150, 1, -158 + drop) }):Play()
+		-- nothing floats in the middle of the screen: the stage card and its timer take the map card's corner (top-right),
+		-- the watching bar (Log / Show HUD / Stop) goes to the bottom-left where Home and Plaza were
+		if hidden then
+			TweenService:Create(self.CombatCard, info, { Position = UDim2.new(1, -200, 0, 8), Size = UDim2.fromOffset(192, 86) }):Play() -- the map card's width, clear of the currencies
+			TweenService:Create(self.Fight, info, { Position = UDim2.new(1, -194, 0, 100) }):Play()
+			TweenService:Create(self.Watching, info, { Position = UDim2.new(0, 10, 1, -42) }):Play()
+		else
+			TweenService:Create(self.CombatCard, info, { Position = UDim2.new(0.5, -110, 0, 36), Size = UDim2.fromOffset(220, 86) }):Play()
+			TweenService:Create(self.Fight, info, { Position = UDim2.new(0.5, -90, 0, 128) }):Play()
+			TweenService:Create(self.Watching, info, { Position = UDim2.new(0.5, -210, 0, 6) }):Play()
+		end
 	end
 
 	-- text = nil: not watching. The combat layer (skill bar, stage pill, timer) shows only while watching.
