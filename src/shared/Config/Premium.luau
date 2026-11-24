@@ -29,7 +29,7 @@ return {
 	-- Perks are permanent and checked with Passes.Perks(profile). Every number is a PLACEHOLDER to be tuned.
 	Passes = {
 		VIP = {
-			Id = "VIP", Name = "VIP Pass", Robux = 499, GamePassId = 0,
+			Id = "VIP", Name = "VIP Pass", Robux = 499, GamePassId = 2101996470,
 			Text = "A second pet slot (its stat bonuses count too), +25% gold, 20 more bag slots and 2 more dungeon keys a day.",
 			Perks = { GoldGain = 0.25, BagSlots = 20, DungeonKeys = 2, PetSlots = 1 }, -- no XP bonus (owner, 2026-11-24): the pet slot is the selling point
 		},
