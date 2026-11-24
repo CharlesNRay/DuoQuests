@@ -963,6 +963,12 @@ function DEV_ACTIONS.Sunstones(profile)
 	Premium.AddSunstones(profile, 1000)
 	return "+1,000 Sunstones"
 end
+function DEV_ACTIONS.VipPass(profile)
+	local owned = profile.Permanent.Passes or {}
+	profile.Permanent.Passes = owned
+	owned.VIP = if owned.VIP then nil else true
+	return if owned.VIP then "VIP pass on" else "VIP pass off"
+end
 function DEV_ACTIONS.SlotPass(profile)
 	local owned = profile.Permanent.Passes or {}
 	profile.Permanent.Passes = owned
