@@ -202,8 +202,11 @@ local function roads()
 	-- the high road south to the main gate
 	road(polar(180, World.PLAZA.Radius - 1), polar(180, World.TOWN_WALL.Radius + 6), 14, "HighRoad")
 	-- to the battle lots (player homes), south-east
-	-- to the front of the lot block (the front row's watch pads sit SPACING_Z / 2 + ARENA_DEPTH / 2 + 6 before the middle)
-	road(polar(World.LOT_BLOCK.Angle, World.PLAZA.Radius - 1), polar(World.LOT_BLOCK.Angle, World.LOT_BLOCK.Radius - World.SPACING_Z / 2 - World.ARENA_DEPTH / 2 - 10), 10, "LotRoad")
+	-- the homes street: lots on both sides face it (World.HOMES_STREET)
+	do
+		local sx, sz, dx, dz, length = World.HomesStreet()
+		road(Vector3.new(sx, 0, sz), Vector3.new(sx + dx * length, 0, sz + dz * length), World.HOMES_STREET.Width, "HomesStreet")
+	end
 	-- through the Wishing Grove to the Giant Bosses gate (north-east)
 	local grove = World.Districts.Grove
 	road(polar(grove.Angle, grove.Radius + grove.Size - 4), polar(38, World.TOWN_WALL.Radius + 6), 9, "BossRoad")
@@ -227,7 +230,7 @@ local function clearOfEverything(p, margin)
 		local dx, dz = p.X - ax, p.Z - az
 		local c, s = math.cos(yaw), math.sin(yaw)
 		local lx, lz = dx * c - dz * s, dx * s + dz * c
-		if math.abs(lx) < World.ARENA_WIDTH / 2 + margin and lz < World.ARENA_DEPTH / 2 + 8 + margin and lz > -World.ARENA_DEPTH / 2 - 24 - margin then
+		if math.abs(lx) < World.ARENA_WIDTH / 2 + margin and lz < World.ARENA_DEPTH / 2 + 8 + margin and lz > -World.ARENA_DEPTH / 2 - World.APRON_DEPTH - margin then
 			return false
 		end
 	end
@@ -238,7 +241,7 @@ local function clearOfEverything(p, margin)
 	-- not on a road: the angle of every spoke, the high road and the lot road
 	local a = math.deg(math.atan2(p.X - centre.X, -(p.Z - centre.Z))) % 360
 	local r = (p - centre).Magnitude
-	local roadAngles = { 180, World.LOT_BLOCK.Angle, 38 }
+	local roadAngles = { 180, World.HOMES_STREET.Angle, 38 }
 	for _, id in ipairs(World.DistrictOrder) do
 		table.insert(roadAngles, World.Districts[id].Angle % 360)
 	end

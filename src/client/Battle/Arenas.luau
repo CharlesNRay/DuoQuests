@@ -80,6 +80,74 @@ local function makeCard(origin)
 	return anchor, label
 end
 
+-- A wooden sign at the lot's street edge saying whose home it is. It stands side-on to the lot, so its two faces look up
+-- and down the street: people walking by read it without walking up to the lot.
+local function makeOwnerSign(origin)
+	local folder = Instance.new("Folder")
+	folder.Name = "OwnerSign"
+	local base = origin * CFrame.new(-World.ARENA_WIDTH / 2 + 6, 0, World.ARENA_DEPTH / 2 + 3) * CFrame.Angles(0, math.rad(90), 0)
+	local function piece(name, size, cf, color, material)
+		local p = Instance.new("Part")
+		p.Name = name
+		p.Anchored = true
+		p.CanCollide = false
+		p.CanQuery = false
+		p.Size = size
+		p.CFrame = cf
+		p.Color = color
+		p.Material = material
+		p.Parent = folder
+		return p
+	end
+	local wood = Color3.fromRGB(120, 84, 52)
+	piece("PostL", Vector3.new(0.5, 7, 0.5), base * CFrame.new(-4.2, 3.5, 0), wood, Enum.Material.Wood)
+	piece("PostR", Vector3.new(0.5, 7, 0.5), base * CFrame.new(4.2, 3.5, 0), wood, Enum.Material.Wood)
+	local board = piece("Board", Vector3.new(9.4, 3.2, 0.35), base * CFrame.new(0, 5.6, 0), Color3.fromRGB(88, 62, 40), Enum.Material.WoodPlanks)
+	local labels = {}
+	for _, face in ipairs({ Enum.NormalId.Front, Enum.NormalId.Back }) do
+		local gui = Instance.new("SurfaceGui")
+		gui.Face = face
+		gui.CanvasSize = Vector2.new(300, 100)
+		gui.LightInfluence = 0.2
+		gui.Parent = board
+		-- the owner's name big on top, "with ..." (the rest of the party) smaller underneath
+		local name = Instance.new("TextLabel")
+		name.Size = UDim2.new(1, -36, 0.56, -6)
+		name.Position = UDim2.fromOffset(18, 6)
+		name.BackgroundTransparency = 1
+		name.TextScaled = true
+		name.Font = Enum.Font.GothamBlack
+		name.TextColor3 = Color3.fromRGB(255, 232, 180)
+		name.Text = ""
+		name.Parent = gui
+		local rest = Instance.new("TextLabel")
+		rest.Size = UDim2.new(1, -44, 0.3, 0)
+		rest.Position = UDim2.new(0, 22, 0.6, 0)
+		rest.BackgroundTransparency = 1
+		rest.TextScaled = true
+		rest.Font = Enum.Font.GothamMedium
+		rest.TextColor3 = Color3.fromRGB(225, 205, 165)
+		rest.Text = ""
+		rest.Parent = gui
+		table.insert(labels, { Name = name, Rest = rest })
+	end
+	folder.Parent = workspace
+	return folder, labels
+end
+
+-- -> big line (whose home), small line (the rest of the party)
+local function ownerText(party)
+	local first = party.Members[1]
+	if not first then
+		return "Empty lot", ""
+	end
+	local others = {}
+	for index = 2, #party.Members do
+		table.insert(others, party.Members[index].Name)
+	end
+	return ("%s's home"):format(first.Name), if #others > 0 then "with " .. table.concat(others, ", ") else ""
+end
+
 -- A gold pad in front of the arena with a "Watch battle" prompt: step up to it and
 -- use it to snap the camera to that fight (anyone can watch anyone).
 local function makePad(origin)
@@ -115,7 +183,8 @@ function Arenas:_get(slot)
 	local scene = Scene.new(origin)
 	local anchor, label = makeCard(origin)
 	local pad, prompt = makePad(origin)
-	arena = { Slot = slot, Scene = scene, Replay = Replay.new(scene), Anchor = anchor, Label = label, Pad = pad, Prompt = prompt, Fighting = false, Zone = nil }
+	local signFolder, signLabels = makeOwnerSign(origin)
+	arena = { Slot = slot, Scene = scene, Replay = Replay.new(scene), Anchor = anchor, Label = label, Pad = pad, Prompt = prompt, Sign = signFolder, SignLabels = signLabels, Fighting = false, Zone = nil }
 	prompt.Triggered:Connect(function()
 		if self.OnWatch then
 			self.OnWatch(slot, origin)
@@ -190,6 +259,7 @@ function Arenas:Apply(snapshot)
 			arena.Scene:Destroy()
 			arena.Anchor:Destroy()
 			arena.Pad:Destroy()
+			arena.Sign:Destroy()
 			self.BySlot[slot] = nil
 		end
 	end
@@ -201,6 +271,11 @@ function Arenas:Apply(snapshot)
 			arena.Scene:SetZone(zone.Theme)
 		end
 		arena.Label.Text = cardText(party, zone)
+		local big, small = ownerText(party)
+		for _, signLabel in ipairs(arena.SignLabels) do
+			signLabel.Name.Text = big
+			signLabel.Rest.Text = small
+		end
 		arena.Prompt.ActionText = if party.Slot == self.Mine then "Battle view" else "Watch battle"
 		arena.Prompt.ObjectText = (party.Members[1] and party.Members[1].Name or "") .. " - " .. zone.Name
 		if not arena.Fighting then

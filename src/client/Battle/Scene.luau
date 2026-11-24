@@ -306,7 +306,7 @@ function Scene:SetZone(theme)
 	self.Ground.Color = color(theme.Ground)
 	if not self.Apron then
 		-- more ground behind the fight, so the distant hills stand on something
-		self.Apron = prop(self.Folder, { Name = "Apron", Size = Vector3.new(World.ARENA_WIDTH, 1, 24), CFrame = self.Frame * CFrame.new(0, -0.5, -37) })
+		self.Apron = prop(self.Folder, { Name = "Apron", Size = Vector3.new(World.ARENA_WIDTH, 1, World.APRON_DEPTH), CFrame = self.Frame * CFrame.new(0, -0.5, -World.ARENA_DEPTH / 2 - World.APRON_DEPTH / 2) })
 	end
 	self.Apron.Color = color(theme.Ground):Lerp(color(theme.Sky), 0.1)
 	local sky = color(theme.Sky)

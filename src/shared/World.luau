@@ -10,7 +10,7 @@
 
 	  World.ArenaOrigin(slot)    -> x, y, z, yaw: the arena's centre on the ground and its turn (radians about Y; the
 	                                arena's front, +Z in its own frame, where the camera and the sign are, faces the plaza)
-	  World.LotBlock()           -> x, z, yaw of the middle of the block of lots (same turn)
+	  World.HomesStreet()        -> x, z (where the street leaves the plaza), dx, dz (its direction), length
 	  World.SpawnPosition()      -> x, y, z where players arrive (on the plaza)
 	  World.PLAZA, World.PlazaSpots, World.PlazaPoint(name), World.NearShop(x, z, name)
 	  World.ARENA_WIDTH / ARENA_DEPTH   size of one arena pad in studs
@@ -27,12 +27,13 @@ local World = {}
 -- the NE gate, the main gate is south and the Expedition Camp is outside it. Angles: 0 = north (-Z), clockwise.
 World.ARENA_WIDTH = 64
 World.ARENA_DEPTH = 50 -- deep enough for four heroes, their pets and summons between the trees and the front decor
-World.LOT_COLUMNS = 2
-World.SPACING_X = 68 -- lot centre to lot centre (4 studs between pads)
-World.SPACING_Z = 72 -- row to row (was 62); the block just fits between the Market, the main road and the wall
--- the middle of the 2 x 2 block of lots, south-east between the Market and the main road; the whole block is turned so
--- every lot's front faces the plaza (2026-11-23 owner feedback: the homes overlapped the Market and faced away)
-World.LOT_BLOCK = { Angle = 145, Radius = 183 }
+World.APRON_DEPTH = 12 -- the strip of extra ground behind a fight (was 24; the street only fits with 12)
+-- The homes street (owner's pick 2026-11-24): a street from the plaza toward the south-east, lots on both sides with
+-- their fronts (watch pad, owner sign, battle camera side) facing the street, so no lot is behind another and nobody
+-- walks through a fight. Lots go in pairs (odd slots on the left, even on the right as you walk out); First = distance
+-- from the plaza centre to the first pair, Spacing = pair to pair, Lateral = street centre line to a lot's centre.
+-- Pairs 1-2 fit inside the wall; slots 5-8 (later) carry on down the street, which needs a gate in the wall there.
+World.HOMES_STREET = { Angle = 145, First = 162, Spacing = 72, Lateral = 39, Width = 12 }
 
 -- The plaza: a big circle in the middle with the fountain, the boards and the daily chest.
 World.PLAZA = { X = 0, Z = 40, Radius = 70 }
@@ -42,33 +43,32 @@ local function polar(angle, radius)
 	return World.PLAZA.X + math.sin(a) * radius, World.PLAZA.Z - math.cos(a) * radius
 end
 
-function World.LotBlock()
-	local cx, cz = polar(World.LOT_BLOCK.Angle, World.LOT_BLOCK.Radius)
-	-- turn so the block's +Z points at the plaza centre: (sin yaw, cos yaw) = direction to the plaza
-	local yaw = math.atan2(World.PLAZA.X - cx, World.PLAZA.Z - cz)
-	return cx, cz, yaw
-end
-
--- a point (lx, lz) in the block's own frame -> world x, z
-function World.LotBlockPoint(lx, lz)
-	local cx, cz, yaw = World.LotBlock()
-	local c, s = math.cos(yaw), math.sin(yaw)
-	return cx + lx * c + lz * s, cz - lx * s + lz * c
+function World.HomesStreet()
+	local s = World.HOMES_STREET
+	local a = math.rad(s.Angle)
+	local dx, dz = math.sin(a), -math.cos(a)
+	local x, z = polar(s.Angle, World.PLAZA.Radius - 1)
+	local pairCount = math.ceil(World.MAX_LOTS / 2)
+	local length = s.First + (pairCount - 1) * s.Spacing + World.ARENA_WIDTH / 2 + 8 - (World.PLAZA.Radius - 1)
+	return x, z, dx, dz, length
 end
 
 function World.ArenaOrigin(slot)
+	local s = World.HOMES_STREET
 	local index = slot - 1
-	local col = index % World.LOT_COLUMNS
-	local row = index // World.LOT_COLUMNS
-	-- row 0 is the one nearer the plaza (+Z); slots 5+ (a busy server) carry on in rows further back
-	local lx = (col - (World.LOT_COLUMNS - 1) / 2) * World.SPACING_X
-	local lz = (0.5 - row) * World.SPACING_Z
-	local x, z = World.LotBlockPoint(lx, lz)
-	local _, _, yaw = World.LotBlock()
+	local side = if index % 2 == 0 then -1 else 1 -- -1 = left of the street walking out, 1 = right
+	local along = s.First + (index // 2) * s.Spacing
+	local a = math.rad(s.Angle)
+	local dx, dz = math.sin(a), -math.cos(a) -- along the street, away from the plaza
+	local rx, rz = -dz, dx -- to the right of it
+	local x = World.PLAZA.X + dx * along + rx * side * s.Lateral
+	local z = World.PLAZA.Z + dz * along + rz * side * s.Lateral
+	-- the lot's +Z (its front) points back across to the street: (sin yaw, cos yaw) = -side * right
+	local yaw = math.atan2(-side * rx, -side * rz)
 	return x, 0.5, z, yaw
 end
 
-World.MAX_LOTS = 4 -- lots built and shown as "open". One lot per party; a 5th party still gets slot 5 (the next row).
+World.MAX_LOTS = 4 -- lots built and shown as "open". One lot per party; a 5th party still gets slot 5 (further down the street).
 World.SHOP_RANGE = 30 -- studs from a shop within which buying/selling/upgrading is allowed
 
 -- Shops and boards. The boards and the daily chest: an angle and a distance from the plaza centre. The shops stand in a

@@ -143,8 +143,8 @@ return function(modulesOverride)
 	for a = 1, 24 do
 		for b = a + 1, 24 do
 			local pa, pb = seen[select(1, World.ArenaOrigin(a)) .. "," .. select(3, World.ArenaOrigin(a))], seen[select(1, World.ArenaOrigin(b)) .. "," .. select(3, World.ArenaOrigin(b))]
-			-- the lots share one turn (World.LotBlock): compare them in the block's own axes
-			local _, _, yaw = World.LotBlock()
+			-- the lots face the homes street from both sides (turns 180 degrees apart, so the same axes): compare in a's axes
+			local yaw = select(4, World.ArenaOrigin(a))
 			local dx, dz = pa[1] - pb[1], pa[2] - pb[2]
 			local lx, lz = dx * math.cos(yaw) - dz * math.sin(yaw), dx * math.sin(yaw) + dz * math.cos(yaw)
 			if math.abs(lx) < World.ARENA_WIDTH - 0.01 and math.abs(lz) < World.ARENA_DEPTH - 0.01 then
