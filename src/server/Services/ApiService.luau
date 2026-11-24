@@ -330,7 +330,7 @@ function characterOf(profile)
 	return {
 		Created = c.Created, Name = c.Name, Look = c.Look, UseAvatar = c.UseAvatar, Renames = c.Renames,
 		RenameCost = CharacterConfig.RenameCost, Classes = classes,
-		MaxCharacters = Characters.MAX, Characters = Characters.List(profile), Active = Characters.Active(profile), InGame = Characters.Entered(profile),
+		MaxCharacters = Characters.Max(profile), SlotPass = { Owned = Passes.Has(profile, "CharacterSlots"), Robux = require(Shared.Config.Premium).Passes.CharacterSlots.Robux, Extra = require(Shared.Config.Premium).Passes.CharacterSlots.Perks.CharacterSlots }, Characters = Characters.List(profile), Active = Characters.Active(profile), InGame = Characters.Entered(profile),
 		NameMin = CharacterConfig.Name.Min, NameMax = CharacterConfig.Name.Max,
 		Skins = CharacterConfig.Skins, Hairs = CharacterConfig.HairColors, Outfits = CharacterConfig.Outfits,
 	}
@@ -963,6 +963,12 @@ function DEV_ACTIONS.Sunstones(profile)
 	Premium.AddSunstones(profile, 1000)
 	return "+1,000 Sunstones"
 end
+function DEV_ACTIONS.SlotPass(profile)
+	local owned = profile.Permanent.Passes or {}
+	profile.Permanent.Passes = owned
+	owned.CharacterSlots = if owned.CharacterSlots then nil else true
+	return if owned.CharacterSlots then "Extra Character Slots pass on (4 slots)" else "Extra Character Slots pass off (2 slots)"
+end
 function DEV_ACTIONS.Premium(profile)
 	local owned = not Quests.Pass(profile).Premium
 	Quests.SetPremium(profile, owned)
@@ -1178,7 +1184,7 @@ local function filterOk(player, text)
 	return result == text
 end
 
--- Main menu: make a character (just a class choice, up to Characters.MAX). It does not start playing it.
+-- Main menu: make a character (just a class choice, up to Characters.Max(profile)). It does not start playing it.
 function handlers.MakeCharacter(player, profile, classId)
 	if type(classId) ~= "string" then
 		return false, "BadArgs"

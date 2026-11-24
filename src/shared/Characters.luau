@@ -3,7 +3,8 @@
 	Location: ReplicatedStorage > Shared > Characters
 
 	The main menu's characters. A character is just a class choice with its own season progress (level, gear, skills,
-	stage frontier, currencies). A player keeps up to MAX of them and picks one to play at the main menu.
+	stage frontier, currencies). A player keeps up to Max(profile) of them (MAX, +2 with the "Extra Character Slots"
+	Game Pass, Config/Premium) and picks one to play at the main menu.
 
 	Saved in Permanent.Slots (a list) and Permanent.ActiveSlot (0 = none yet):
 	  Slots[i] = { ClassId, Season = <that character's season data, only while it is NOT the one being played> }
@@ -12,7 +13,8 @@
 
 	Permanent.Character.Created is kept true while a character is active, so older checks keep working.
 
-	  Characters.MAX                        -> 2
+	  Characters.MAX                        -> 2 (without the pass)
+	  Characters.Max(profile)               -> MAX + the pass's CharacterSlots (4 with it)
 	  Characters.Ensure(profile)            -- migrates an old single-class profile into slot 1 (safe to call any time)
 	  Characters.List(profile)              -> { { Slot, ClassId, Level, HighestStage, SubclassId?, Active } }
 	  Characters.Create(profile, classId)   -> true, slot | false, "Full" | "BadClass"   (does not start playing it)
@@ -25,10 +27,15 @@ local ProfileTemplate = require(script.Parent.ProfileTemplate)
 local Seasons = require(script.Parent.Config.Seasons)
 local Character = require(script.Parent.Character)
 local Gear = require(script.Parent.Gear)
+local Passes = require(script.Parent.Passes)
 
 local Characters = {}
 
 Characters.MAX = 2
+
+function Characters.Max(profile)
+	return Characters.MAX + (Passes.Perks(profile).CharacterSlots or 0)
+end
 
 local entered = setmetatable({}, { __mode = "k" }) -- [profile] = true once the player has picked a character this session
 
@@ -82,7 +89,7 @@ end
 function Characters.Create(profile, classId)
 	Characters.Ensure(profile)
 	local list = profile.Permanent.Slots
-	if #list >= Characters.MAX then
+	if #list >= Characters.Max(profile) then
 		return false, "Full"
 	end
 	if not Character.Playable(profile, classId) then

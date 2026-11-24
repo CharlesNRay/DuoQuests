@@ -8,6 +8,7 @@
 ]]
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
+local TextService = game:GetService("TextService")
 local Kit = require(script.Parent.Kit)
 local MenuBattle = require(script.Parent.Parent.Battle.MenuBattle)
 local Branding = require(game:GetService("ReplicatedStorage"):WaitForChild("Shared").Config.Branding)
@@ -223,7 +224,8 @@ function MainMenu.new(root, call, extra, CharacterScreen)
 	self.Frame = Kit.frame({ Name = "MainMenu", Size = UDim2.fromScale(1, 1), BackgroundColor3 = Color3.fromRGB(14, 16, 28), NoCorner = true, Active = true, ZIndex = 1, Parent = gui })
 	self.Bg = buildBackground(self.Frame)
 	local scale = Kit.new("UIScale", {})
-	self.Body = Kit.frame({ Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1, NoCorner = true, ZIndex = 10, Parent = self.Frame })
+	-- centered: UIScale grows a frame around its middle, so a top-left frame slid the whole menu left on big screens
+	self.Body = Kit.frame({ Size = UDim2.fromScale(1, 1), AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.5), BackgroundTransparency = 1, NoCorner = true, ZIndex = 10, Parent = self.Frame })
 	scale.Parent = self.Body
 	local function fit()
 		local view = gui.AbsoluteSize
@@ -334,16 +336,23 @@ function MainMenu:Render(state)
 	local holder = Kit.frame({ Name = "Title", Size = UDim2.new(1, 0, 0, 70), BackgroundTransparency = 1, NoCorner = true, ZIndex = 62, Parent = stage })
 	self.TitleHolder = holder
 	self.TitleGradients = {}
+	local LEFT, RIGHT, TITLE_SIZE = "IDLE PARTY", "QUEST", 42
+	local function wordWidth(text)
+		local ok, size = pcall(TextService.GetTextSize, TextService, text, TITLE_SIZE, Enum.Font.GothamBlack, Vector2.new(1000, 100))
+		return if ok then size.X else #text * TITLE_SIZE * 0.7
+	end
+	-- the swords sit between the words; move everything so the whole title (not the swords) is centered
+	local shift = math.floor((wordWidth(LEFT) - wordWidth(RIGHT)) / 2)
 	if Branding.LogoImage ~= "" then
-		Kit.new("ImageLabel", { Size = UDim2.fromOffset(64, 64), Position = UDim2.new(0.5, -32, 0, 17), BackgroundTransparency = 1, Image = Branding.LogoImage, ScaleType = Enum.ScaleType.Fit, ZIndex = 63, Parent = holder })
+		Kit.new("ImageLabel", { Size = UDim2.fromOffset(64, 64), Position = UDim2.new(0.5, -32 + shift, 0, 17), BackgroundTransparency = 1, Image = Branding.LogoImage, ScaleType = Enum.ScaleType.Fit, ZIndex = 63, Parent = holder })
 	else
-		Kit.label({ Size = UDim2.fromOffset(50, 54), Position = UDim2.new(0.5, -25, 0, 22), Text = "⚔", TextSize = 34, TextYAlignment = Enum.TextYAlignment.Center, TextXAlignment = Enum.TextXAlignment.Center, TextColor3 = Color3.fromRGB(255, 232, 150), TextWrapped = false, ZIndex = 64, Parent = holder })
+		Kit.label({ Size = UDim2.fromOffset(50, 54), Position = UDim2.new(0.5, -25 + shift, 0, 22), Text = "⚔", TextSize = 34, TextYAlignment = Enum.TextYAlignment.Center, TextXAlignment = Enum.TextXAlignment.Center, TextColor3 = Color3.fromRGB(255, 232, 150), TextWrapped = false, ZIndex = 64, Parent = holder })
 	end
 	local function word(text, anchorRight, warm)
 		local function make(color, dx, dy, z, stroke)
 			local l = Kit.label({
-				Size = UDim2.fromOffset(320, 54), AnchorPoint = Vector2.new(if anchorRight then 1 else 0, 0), Position = UDim2.new(0.5, (if anchorRight then -30 else 30) + dx, 0, 22 + dy),
-				Text = text, TextSize = 42, Font = Enum.Font.GothamBlack, TextColor3 = color, TextXAlignment = if anchorRight then Enum.TextXAlignment.Right else Enum.TextXAlignment.Left,
+				Size = UDim2.fromOffset(320, 54), AnchorPoint = Vector2.new(if anchorRight then 1 else 0, 0), Position = UDim2.new(0.5, (if anchorRight then -30 else 30) + dx + shift, 0, 22 + dy),
+				Text = text, TextSize = TITLE_SIZE, Font = Enum.Font.GothamBlack, TextColor3 = color, TextXAlignment = if anchorRight then Enum.TextXAlignment.Right else Enum.TextXAlignment.Left,
 				TextWrapped = false, TextStrokeTransparency = 1, ZIndex = z, Parent = holder,
 			})
 			if stroke then
@@ -361,8 +370,8 @@ function MainMenu:Render(state)
 		})
 		table.insert(self.TitleGradients, gradient)
 	end
-	word("IDLE PARTY", true, true)
-	word("QUEST", false, false)
+	word(LEFT, true, true)
+	word(RIGHT, false, false)
 	Kit.label({ Size = UDim2.new(1, 0, 0, 18), Position = UDim2.fromOffset(0, 80), Text = "SELECT A CHARACTER", TextSize = 12, Font = Enum.Font.GothamBold, TextColor3 = Color3.fromRGB(220, 205, 245), TextXAlignment = Enum.TextXAlignment.Center, ZIndex = 62, Parent = stage })
 
 	local max = char and char.MaxCharacters or 2
@@ -371,14 +380,35 @@ function MainMenu:Render(state)
 	for _, class in ipairs(char and char.Classes or {}) do
 		classes[class.Id] = class
 	end
+	local slotPass = char and char.SlotPass
+	local locked = slotPass ~= nil and not slotPass.Owned -- one extra card that sells the "Extra Character Slots" pass
+	local count = max + (if locked then 1 else 0)
 	local cardW, cardH, gap, top = 290, 236, 28, 108
-	local total = max * cardW + (max - 1) * gap
+	if count > 2 then
+		cardW, gap = 230, 18
+	end
+	local total = count * cardW + (count - 1) * gap
 	local inGame = char and char.InGame
-	for index = 1, max do
+	for index = 1, count do
 		local x = (STAGE_W - total) / 2 + (index - 1) * (cardW + gap)
 		local entry = list[index]
 		local card = Kit.frame({ Name = "Slot" .. index, Size = UDim2.fromOffset(cardW, cardH), Position = UDim2.fromOffset(x, top), BackgroundColor3 = C.Panel, BackgroundTransparency = 0.12, ZIndex = 62, Parent = stage })
-		if entry then
+		if index > max then
+			-- the locked card: buy 2 more slots (Game Pass; MainMenu re-renders when PremiumService grants it)
+			Kit.new("UIStroke", { Color = C.Accent, Thickness = 1.5, Transparency = 0.3, Parent = card })
+			card.BackgroundTransparency = 0.3
+			Kit.label({ Size = UDim2.new(1, 0, 0, 56), Position = UDim2.fromOffset(0, 32), Text = "🔒", TextSize = 40, TextXAlignment = Enum.TextXAlignment.Center, ZIndex = 63, Parent = card })
+			Kit.label({ Size = UDim2.new(1, -28, 0, 18), Position = UDim2.fromOffset(14, 98), Text = ("+%d character slots"):format(slotPass.Extra or 2), TextSize = 15, Font = Enum.Font.GothamBold, TextColor3 = C.Accent, TextXAlignment = Enum.TextXAlignment.Center, ZIndex = 63, Parent = card })
+			Kit.label({ Size = UDim2.new(1, -28, 0, 48), Position = UDim2.fromOffset(14, 120), Text = "Play two more classes, each with its own level, gear and progress. Yours for good.", TextSize = 12, TextWrapped = true, TextColor3 = C.Dim, TextXAlignment = Enum.TextXAlignment.Center, ZIndex = 63, Parent = card })
+			Kit.button({
+				Name = "BuySlots", Size = UDim2.new(1, -28, 0, 40), Position = UDim2.new(0, 14, 1, -54), Text = ("UNLOCK  R$ %d"):format(slotPass.Robux or 0),
+				BackgroundColor3 = C.Accent, TextColor3 = Color3.fromRGB(30, 24, 10), TextSize = 15, ZIndex = 63, Parent = card,
+			}, function()
+				local ok, reason = self.Call("BuyPass", "CharacterSlots")
+				self.Message = if ok then nil elseif reason == "NotAvailable" then "Extra character slots are coming soon." else ("Could not open the purchase: " .. tostring(reason))
+				self:Render(self.Extra.State)
+			end)
+		elseif entry then
 			local class = classes[entry.ClassId] or { Name = entry.ClassId }
 			local color = C[entry.ClassId] or C.Accent
 			local playing = entry.Active and inGame

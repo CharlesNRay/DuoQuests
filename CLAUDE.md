@@ -1,6 +1,11 @@
 # Idle Party Quest (formerly Duo Quest) — notes for Claude Code
 
-Renamed 2026-11-23: only player-visible text says Idle Party Quest (menu title, town gate, tutorial). Keep DuoQuest in instance, remote and DataStore names (renaming a DataStore loses every save). SEEN in Studio 2026-11-23: menu title "IDLE PARTY ⚔ QUEST" fits, gate reads IDLE PARTY TOWN; tutorial welcome card not seen.
+Renamed 2026-11-23: only player-visible text says Idle Party Quest (menu title, town gate, tutorial). Keep DuoQuest in instance, remote and DataStore names (renaming a DataStore loses every save). SEEN in Studio 2026-11-23: menu title "IDLE PARTY ⚔ QUEST" fits, gate reads IDLE PARTY TOWN; tutorial welcome card seen too.
+- **Main menu 2026-11-23** (SEEN in Studio): menu battle is 4 heroes (Warrior in your avatar, Mira, Ilsa, Wren), fights retuned to stage 9-13
+  (the old ones wiped in 1 s); the menu is centered on big screens (UIScale grows around the middle, Body is now anchored 0.5);
+  title centered by text width. **Extra Character Slots** Game Pass (`Config/Premium.Passes.CharacterSlots`, 149 R$, `Characters.Max(profile)`
+  2 -> 4): a locked card on the menu sells it ("coming soon" until the id is set), also listed in the Store; Test cheats "Toggle +2 char slots".
+  Gap: nothing in-game opens the Character screen, so its "Main menu" button (the only way back to the menu) is unreachable; rejoin to switch.
 
 Roblox co-op idle RPG (Luau, Rojo). Two players fight together (a ghost partner stands in when one is offline), the combat
 sim is server-authoritative and deterministic. Read `README.md` and `docs/` (PROGRESSION, BALANCE, SKILLS, ROADMAP) for design detail.
@@ -72,7 +77,7 @@ Git Bash; they find a working Python themselves (`python3`/`python` there are St
    (their skills: pick a slot, Earlier/Later, swap in any skill they own; Party ultimate: icon row + Equip). Checked the rest in Studio:
    Hero, Skills, Map, Quests, Store, Battle, Wish were already in the new style. VIP second pet slot done 2026-11-16 (`Pets.Second`, support pet: its stats count, only the main pet fights; Pets screen "Set 2nd"; not seen in Studio).
 4. DONE 2026-11-22 (tests green, NOT seen in Studio): guild chat (Guild > Chat tab, `GuildService.Chat`, filtered, 30 kept, 1 msg/3 s), gifting (`Shared/Gifts`, Bag > Stash "🎁 Gift" to online party/guild mates on this server, 5 sent/10 received a day, no wish tickets), cosmetics try-on (Cosmetics shop "Try", 60 s, local only via `CosmeticsVisuals.TryOn`). (Skipped-tutorial payout notice DONE 2026-11-19: the Fight push carries `Reward.Tutorial`, the HUD toast shows it after that fight; toast is now 520x40 and wraps. Not seen in Studio.)
-5. Owner-side: create the VIP Game Pass + Sunstone Developer Products and give the ids (`GamePassId`/`ProductId` are 0); upload `branding/logo.png` and set `Config/Branding.LogoImage`.
+5. Owner-side: create the VIP and Extra Character Slots Game Passes + Sunstone Developer Products and give the ids (`GamePassId`/`ProductId` are 0); upload `branding/logo.png` and set `Config/Branding.LogoImage`.
 6. DONE 2026-11-22: `docs/ROADMAP.md` has a 2026-11-17..22 entry; keep adding a dated entry when a batch of work lands.
 
 - **Skill rework 2026-11-19** (tests green, NOT seen in Studio): class combos (builders add layers, a finisher consumes them),

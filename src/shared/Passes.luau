@@ -3,7 +3,7 @@
 
 	  Passes.Has(profile, passId)       -> true when the pass is owned
 	  Passes.Grant(profile, passId)     -> true (false, "BadPass" for an unknown id); safe to call again
-	  Passes.Perks(profile)             -> { GoldGain, XPGain, BagSlots, DungeonKeys, PetSlots } summed over owned passes (zeros when none)
+	  Passes.Perks(profile)             -> { GoldGain, XPGain, BagSlots, DungeonKeys, PetSlots, CharacterSlots } summed over owned passes (zeros when none)
 	  Passes.List(profile)              -> { { Id, Name, Text, Robux, Available, Owned } } for the shop
 ]]
 local Config = require(script.Parent.Config.Premium)
@@ -34,7 +34,7 @@ function Passes.Grant(profile, passId)
 end
 
 function Passes.Perks(profile)
-	local sum = { GoldGain = 0, XPGain = 0, BagSlots = 0, DungeonKeys = 0, PetSlots = 0 }
+	local sum = { GoldGain = 0, XPGain = 0, BagSlots = 0, DungeonKeys = 0, PetSlots = 0, CharacterSlots = 0 }
 	for id, def in pairs(Config.Passes) do
 		if owned(profile)[id] then
 			for key, value in pairs(def.Perks) do
