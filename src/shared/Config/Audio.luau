@@ -47,6 +47,20 @@ return {
 		EnemyDown = { Ids = { 15675055424 }, Volume = 0.3, Pitch = { 0.8, 1.0 }, Group = "Effects" }, -- Roblox_UI_Cute_Pop
 		AllyDown = { Ids = { 9113971531 }, Volume = 0.4, Group = "Effects" }, -- Creature Growls Lion 4
 		BossRoar = { Ids = { 9113980480 }, Volume = 0.55, Group = "Effects" }, -- Creature Mix Giant Crab Monster Roar Growl 2
+		-- wishing (UI/WishAnim): the star falls, charges (higher pitch for a better pull), bursts, then each card flips
+		WishFall = { Ids = { 9116418234 }, Volume = 0.45, Group = "Interface" }, -- Magic Tone Falling Shimmer Flanged 1
+		WishCharge = { Ids = { 9116420445 }, Volume = 0.4, Group = "Interface" }, -- Magic Tone Tonal Shimmer Shaking Rattle 1
+		WishBurst = { Ids = { 9126076030 }, Volume = 0.55, Group = "Interface" }, -- Synth Sparkle Tone High Pitch Tone Burst Pin
+		WishFlip = { Ids = { 9118835414, 9118835637 }, Volume = 0.5, Pitch = { 0.95, 1.1 }, Group = "Interface" }, -- Scrapbook Turn Pages 2 / 5
+		WishRare = { Ids = { 9126073001 }, Volume = 0.5, Pitch = { 1.0, 1.06 }, Group = "Interface" }, -- Synth Sparkle Bell Tone Ding
+		WishEpic = { Ids = { 9119447936 }, Volume = 0.55, Group = "Interface" }, -- Sparkle Bell Tree Wind Chimes 1
+		-- Legendary: heartbeat + drum roll build-up, a deep boom and an orchestra hit with choir, harp and a fanfare for a NEW one
+		WishHeart = { Ids = { 1839090417 }, Volume = 0.7, Group = "Interface" }, -- Heart Beat OL (APM)
+		WishDrumRoll = { Ids = { 1846267750 }, Volume = 0.6, Group = "Interface" }, -- Timpani Roll (APM)
+		WishBoom = { Ids = { 9125404320 }, Volume = 0.7, Group = "Interface" }, -- Boom Impact Deep Distant Thumping Hits
+		WishLegendary = { Ids = { 1843054451 }, Volume = 0.65, Group = "Interface" }, -- Orchestra Hit G (with choir) (APM)
+		WishHarp = { Ids = { 1840525342 }, Volume = 0.45, Group = "Interface" }, -- Harp Glissando (A) (APM)
+		WishFanfare = { Ids = { 1844259840 }, Volume = 0.55, Group = "Interface" }, -- Glorious Victory Link 1 (APM)
 	},
 	Defaults = { Master = 0.8, Music = 0.6, Effects = 0.8, Interface = 0.8 },
 	Channels = { "Master", "Music", "Effects", "Interface" },

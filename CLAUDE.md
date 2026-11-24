@@ -35,6 +35,11 @@ Renamed 2026-11-23: only player-visible text says Idle Party Quest (menu title, 
   ranks of everyone in the fight add up, +0.5% Attack and Health per rank for the whole party, `StageRunner.NewParty`,
   ghost snapshots carry `PartySpirit`), Fortune (Mode "Reward": +2% gold and XP per rank in `Progression.ApplyClear`).
   Talents panel is 660 x 392 (RefH is 400: taller panels get cut off).
+- **On Roblox 2026-11-24**: the owner used Save to Roblox; the experience is "Idle Party Quest" (private), Studio API access ON
+  (saves now persist between Studio runs). Ctrl+S in Studio now saves to Roblox, not only the local .rbxl.
+- **Wish sounds 2026-11-24** (all 12 ids load in Studio; nobody has listened yet): `Config/Audio` Wish* + `UI/WishAnim`
+  (fall, charge pitched by best rarity, burst, flip per card, ding Rare, chimes Epic; Legendary = music duck + heartbeat +
+  drum roll, boom + orchestra hit, NEW adds harp + fanfare). `Sound.Play` returns the Sound, `Sound.Stop`, `Sound.Duck`.
 - **Studio test mute**: Workspace attribute `StudioMute = true` (Edit mode, command bar) silences all game sound in Studio
   (owner asked: no sound while Claude tests). Set it before test runs, clear it (nil) before Ctrl+S.
 

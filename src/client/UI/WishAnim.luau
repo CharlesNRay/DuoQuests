@@ -9,12 +9,17 @@
 	A star falls into the tree's light, pulses and shakes (its colour hints at the best thing you got), rings spread,
 	then it bursts and the results flip face-up one at a time, rarest last. Rare and better pull a sparkle burst,
 	Legendary also flashes gold and shakes the stage. Tap anywhere to skip ahead; tap again to close.
+
+	Sound (Config/Audio Wish*): a falling shimmer, a charge that rises in pitch with the best rarity, a burst, a flip per
+	card (plus a ding for Rare, chimes for Epic). Legendary: the music dips, a heartbeat and a drum roll build up, then a
+	deep boom and an orchestra hit with choir; a NEW Legendary adds a harp sweep and a fanfare.
 ]]
 local TweenService = game:GetService("TweenService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Short = require(game:GetService("ReplicatedStorage"):WaitForChild("Shared").Util.NumberFormat).Short
 local Kit = require(script.Parent.Kit)
+local Sound = require(script.Parent.Parent.Sound)
 local Icons = require(script.Parent.Icons)
 local Abilities = require(Shared.Config.Abilities)
 local PetConfig = require(Shared.Config.Pets)
@@ -116,6 +121,19 @@ function WishAnim.Play(parent, kind, rows, onDone)
 	local catcher = Kit.new("TextButton", { Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1, Text = "", AutoButtonColor = false, ZIndex = 45, Parent = overlay })
 
 	local skipped, finished, closed = false, false, false
+	local held = {} -- long sounds (charge, heartbeat, drum roll) stopped at the burst, on skip and on close
+	local function hold(s)
+		if s then
+			table.insert(held, s)
+		end
+		return s
+	end
+	local function stopHeld(fade)
+		for _, s in ipairs(held) do
+			Sound.Stop(s, fade or 0.25)
+		end
+		table.clear(held)
+	end
 	local function pause(seconds)
 		if not skipped and overlay.Parent then
 			task.wait(seconds)
@@ -129,6 +147,7 @@ function WishAnim.Play(parent, kind, rows, onDone)
 			return
 		end
 		closed = true
+		stopHeld(0.2)
 		overlay:Destroy()
 		if onDone then
 			onDone()
@@ -139,6 +158,7 @@ function WishAnim.Play(parent, kind, rows, onDone)
 			close()
 		else
 			skipped = true
+			stopHeld(0.15)
 		end
 	end)
 
@@ -147,6 +167,7 @@ function WishAnim.Play(parent, kind, rows, onDone)
 		local orb = Kit.new("Frame", { Size = UDim2.fromOffset(18, 18), AnchorPoint = Vector2.new(0.5, 0.5), Rotation = 45, BackgroundColor3 = WHITE, BorderSizePixel = 0, Position = UDim2.new(0.5, 0, -0.1, 0), ZIndex = 34, Parent = stage })
 		local glow = Kit.new("UIStroke", { Color = Color3.fromRGB(150, 210, 255), Thickness = 3, Parent = orb })
 		if not skipped then
+			Sound.Play("WishFall")
 			tween(orb, 0.85, { Position = UDim2.new(0.5, 0, 0.5, -10) }, Enum.EasingStyle.Quad, Enum.EasingDirection.In)
 			for i = 1, 8 do
 				if skipped or not alive() then
@@ -166,6 +187,7 @@ function WishAnim.Play(parent, kind, rows, onDone)
 		-- 2. it gathers power: it grows, shakes and its colour moves towards the best result
 		orb.Position = UDim2.new(0.5, 0, 0.5, -10)
 		if not skipped then
+			hold(Sound.Play("WishCharge", { Pitch = 0.85 + 0.1 * RANK[best] }))
 			tween(orb, 1.1, { Size = UDim2.fromOffset(58, 58), BackgroundColor3 = bestColor }, Enum.EasingStyle.Quad, Enum.EasingDirection.In)
 			tween(glow, 1.1, { Color = bestColor, Thickness = 8 })
 			for i = 1, 3 do
@@ -186,6 +208,9 @@ function WishAnim.Play(parent, kind, rows, onDone)
 		-- 2b. first Legendary: everything goes quiet, the light turns gold and slowly beats
 		if firstLegend and not skipped then
 			local gold = Kit.Colors.Legendary
+			Sound.Duck(9, 0.15)
+			stopHeld(0.6)
+			hold(Sound.Play("WishHeart"))
 			hint.Text = "..."
 			tween(overlay, 0.6, { BackgroundColor3 = Color3.fromRGB(14, 10, 4) })
 			tween(orb, 1.2, { BackgroundColor3 = gold, Size = UDim2.fromOffset(74, 74) })
@@ -201,6 +226,9 @@ function WishAnim.Play(parent, kind, rows, onDone)
 				pause(0.55 - beat * 0.08)
 			end
 			-- one held breath, then a very fast flicker before the burst
+			if not skipped then
+				hold(Sound.Play("WishDrumRoll"))
+			end
 			pause(0.6)
 			for _ = 1, 6 do
 				if skipped or not alive() then
@@ -219,6 +247,11 @@ function WishAnim.Play(parent, kind, rows, onDone)
 		end
 		-- 3. burst
 		orb:Destroy()
+		stopHeld(0.15)
+		Sound.Play("WishBurst", { Pitch = 0.9 + 0.05 * RANK[best] })
+		if RANK[best] >= 4 then
+			Sound.Play("WishBoom")
+		end
 		flash.BackgroundColor3 = if RANK[best] >= 4 then Kit.Colors.Legendary else WHITE
 		flash.BackgroundTransparency = if RANK[best] >= 3 then 0.2 else 0.55
 		tween(flash, 0.45, { BackgroundTransparency = 1 })
@@ -276,6 +309,8 @@ function WishAnim.Play(parent, kind, rows, onDone)
 				stroke.Color = Kit.Colors.Legendary
 				stroke.Thickness = 4
 				back.TextColor3 = Kit.Colors.Legendary
+				Sound.Duck(7, 0.15)
+				hold(Sound.Play("WishDrumRoll"))
 				for beat = 1, 3 do
 					if skipped or not alive() then
 						break
@@ -289,6 +324,20 @@ function WishAnim.Play(parent, kind, rows, onDone)
 				tween(card, 0.1, { Size = UDim2.fromOffset(0, ch) })
 				pause(0.1)
 				if alive() then
+					stopHeld(0.1)
+					Sound.Play("WishFlip")
+					if RANK[rarity] == 2 then
+						Sound.Play("WishRare")
+					elseif RANK[rarity] == 3 then
+						Sound.Play("WishEpic")
+					elseif RANK[rarity] >= 4 then
+						Sound.Play("WishBoom")
+						Sound.Play("WishLegendary")
+						if row.New then
+							Sound.Play("WishHarp")
+							Sound.Play("WishFanfare")
+						end
+					end
 					back.Visible = false
 					face.Visible = true
 					stroke.Color = color

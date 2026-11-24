@@ -6,7 +6,10 @@
 	is called whenever the state arrives.
 
 	  Sound.Apply(settings)              { Master, Music, Effects, Interface } each 0..1 (nil = defaults)
-	  Sound.Play(name)                   a 2D sound (interface, big moments)
+	  Sound.Play(name, opts?)            a 2D sound (interface, big moments) -> the Sound (or nil)
+	                                     opts = { Pitch = speed, Volume = x base } override the config for this play
+	  Sound.Stop(sound, fade?)           fades a sound from Sound.Play out and removes it
+	  Sound.Duck(seconds, level?)        music dips to `level` (default 0.25) of its volume for `seconds`, then comes back
 	  Sound.PlayAt(name, position)       a 3D sound in the world (combat): only nearby fights are heard
 	  Sound.Music(trackName | nil)       cross-fades to that track (Town, Stage, Dungeon, WorldBoss, SeasonBoss, GuildRaid)
 	  Sound.Settings()                   the current slider values
@@ -74,10 +77,18 @@ local function make(name)
 	return s
 end
 
-function Sound.Play(name)
+function Sound.Play(name, opts)
 	local s = make(name)
 	if not s then
-		return
+		return nil
+	end
+	if opts then
+		if opts.Pitch then
+			s.PlaybackSpeed = opts.Pitch
+		end
+		if opts.Volume then
+			s.Volume *= opts.Volume
+		end
 	end
 	s.Parent = SoundService
 	s.Ended:Connect(function()
@@ -85,6 +96,35 @@ function Sound.Play(name)
 	end)
 	s:Play()
 	Debris:AddItem(s, 15)
+	return s
+end
+
+function Sound.Stop(s, fade)
+	if typeof(s) ~= "Instance" or not s.Parent then
+		return
+	end
+	local t = TweenService:Create(s, TweenInfo.new(fade or 0.3), { Volume = 0 })
+	t:Play()
+	t.Completed:Connect(function()
+		s:Destroy()
+	end)
+end
+
+local duckToken = 0
+function Sound.Duck(seconds, level)
+	duckToken += 1
+	local token = duckToken
+	local g = groups.Music
+	local full = function()
+		local mute = game:GetService("RunService"):IsStudio() and workspace:GetAttribute("StudioMute") == true
+		return if mute then 0 else settings.Master * settings.Music
+	end
+	TweenService:Create(g, TweenInfo.new(0.4), { Volume = full() * (level or 0.25) }):Play()
+	task.delay(seconds, function()
+		if token == duckToken then
+			TweenService:Create(g, TweenInfo.new(1.2), { Volume = full() }):Play()
+		end
+	end)
 end
 
 function Sound.PlayAt(name, position)
