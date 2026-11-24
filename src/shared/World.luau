@@ -90,7 +90,7 @@ World.BossSpots = {
 World.TOWN_WALL = {
 	Radius = 290,
 	Gates = {
-		{ Angle = 180, Width = 26, Name = "DUO QUEST TOWN", Main = true },
+		{ Angle = 180, Width = 26, Name = "IDLE PARTY TOWN", Main = true },
 		{ Angle = 38, Width = 18, Name = "TO THE GIANT BOSSES" },
 		{ Angle = 112, Width = 44, Hill = true }, -- the Dungeon's hill
 	},

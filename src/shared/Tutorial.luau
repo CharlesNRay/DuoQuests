@@ -24,7 +24,7 @@ Tutorial.BossStage = 10
 Tutorial.Reward = { PetWish = 10, SkillWish = 10 } -- wish tickets (Consumables), paid once for beating the first boss
 
 Tutorial.Steps = {
-	{ Id = "Welcome", Title = "Welcome to Duo Quest!", Text = "You and a partner fight together, even while you are away.", Target = nil, Kind = "next" },
+	{ Id = "Welcome", Title = "Welcome to Idle Party Quest!", Text = "Your party of up to four heroes fights together, even while you are away.", Target = nil, Kind = "next" },
 	{ Id = "Fight", Title = "Fights run by themselves", Text = "Just wait. Your team wins fights and climbs stages. Reach stage 3.", Target = "Stage", Kind = "frontier", Goal = 3 },
 	{ Id = "SkillsOpen", Title = "Your skills", Text = "Tap Skills. This is where your power comes from.", Target = "Skills", Kind = "open", Goal = "Skills" },
 	{ Id = "HeroOpen", Title = "Your hero", Text = "Tap Hero to see your stats and gear.", Target = "Hero", Kind = "open", Goal = "Hero" },

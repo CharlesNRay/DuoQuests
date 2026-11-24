@@ -330,7 +330,7 @@ function MainMenu:Render(state)
 	end
 	self.Extra.MenuCreate = false
 
-	-- title block: DUO (gold) and QUEST (blue) with crossed swords between, a drop shadow, a stroke and a moving shine
+	-- title block: IDLE PARTY (gold) and QUEST (blue) with crossed swords between, a drop shadow, a stroke and a moving shine
 	local holder = Kit.frame({ Name = "Title", Size = UDim2.new(1, 0, 0, 70), BackgroundTransparency = 1, NoCorner = true, ZIndex = 62, Parent = stage })
 	self.TitleHolder = holder
 	self.TitleGradients = {}
@@ -342,8 +342,8 @@ function MainMenu:Render(state)
 	local function word(text, anchorRight, warm)
 		local function make(color, dx, dy, z, stroke)
 			local l = Kit.label({
-				Size = UDim2.fromOffset(300, 54), AnchorPoint = Vector2.new(if anchorRight then 1 else 0, 0), Position = UDim2.new(0.5, (if anchorRight then -30 else 30) + dx, 0, 22 + dy),
-				Text = text, TextSize = 52, Font = Enum.Font.GothamBlack, TextColor3 = color, TextXAlignment = if anchorRight then Enum.TextXAlignment.Right else Enum.TextXAlignment.Left,
+				Size = UDim2.fromOffset(320, 54), AnchorPoint = Vector2.new(if anchorRight then 1 else 0, 0), Position = UDim2.new(0.5, (if anchorRight then -30 else 30) + dx, 0, 22 + dy),
+				Text = text, TextSize = 42, Font = Enum.Font.GothamBlack, TextColor3 = color, TextXAlignment = if anchorRight then Enum.TextXAlignment.Right else Enum.TextXAlignment.Left,
 				TextWrapped = false, TextStrokeTransparency = 1, ZIndex = z, Parent = holder,
 			})
 			if stroke then
@@ -361,7 +361,7 @@ function MainMenu:Render(state)
 		})
 		table.insert(self.TitleGradients, gradient)
 	end
-	word("DUO", true, true)
+	word("IDLE PARTY", true, true)
 	word("QUEST", false, false)
 	Kit.label({ Size = UDim2.new(1, 0, 0, 18), Position = UDim2.fromOffset(0, 80), Text = "SELECT A CHARACTER", TextSize = 12, Font = Enum.Font.GothamBold, TextColor3 = Color3.fromRGB(220, 205, 245), TextXAlignment = Enum.TextXAlignment.Center, ZIndex = 62, Parent = stage })
 

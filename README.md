@@ -1,4 +1,6 @@
-# Duo Quest
+# Idle Party Quest
+
+(Formerly "Duo Quest"; code, instance and DataStore names still say DuoQuest on purpose, so saves keep working.)
 
 A cooperative idle RPG for Roblox built around persistent two-player parties,
 automated combat, seasonal resets and capped permanent account progression.
