@@ -1,8 +1,8 @@
 --[[
 	MenuBattle (ModuleScript): a "fake" auto battle that plays behind the main menu.
 
-	It runs the REAL combat simulation locally (Shared/StageRunner) for two made-up heroes, a Warrior in the player's own avatar
-	and a Cleric, and replays it in a private 3D arena far from the world with the same Replay/Actor code the game uses, so the menu
+	It runs the REAL combat simulation locally (Shared/StageRunner) for a made-up party of four (like every fight in the game): a Warrior in the
+	player's own avatar, a Cleric, a Mage and a Ranger, and replays it in a private 3D arena far from the world with the same Replay/Actor code the game uses, so the menu
 	shows genuine shields, heals, buffs, poison and bleeds. Nothing here touches the server or any save.
 
 	  MenuBattle.Start()   builds the arena, takes the camera, dims the light to dusk, and loops fights
@@ -25,8 +25,11 @@ local Replay = require(script.Parent.Replay)
 local MenuBattle = {}
 
 local ORIGIN = Vector3.new(4000, 300, 4000) -- far from the plaza and every arena
--- (stage, level) pairs the made-up party can win with a bit of drama: the fights last 12 to 18 seconds
-local FIGHTS = { { 28, 12 }, { 33, 14 }, { 38, 16 }, { 33, 13 }, { 28, 11 } }
+-- (stage, level) pairs the gearless four-hero party wins, 8 to 18 s each (stage 10 is a boss). The Warrior wears the
+-- player's own avatar, so it should rarely fall: it dies in 0-23% of these fights (a level lower and it dies in nearly
+-- all). Checked headless 2026-11-23, 30 seeds each, 149/150 won. The old pairs (stage 28-38 at level 11-16) were set
+-- for two heroes before the balance passes and ended in a 1 s wipe.
+local FIGHTS = { { 9, 12 }, { 11, 19 }, { 10, 14 }, { 12, 24 }, { 13, 27 } }
 
 local running = false
 local scene, replay
@@ -50,6 +53,8 @@ local function newFight(index)
 		local party = {
 			member(tostring(Players.LocalPlayer.UserId), Players.LocalPlayer.DisplayName, "Warrior", level, { "Taunt", "IronSkin", "ShieldBash", "Whirlwind" }),
 			member("-7", "Mira", "Cleric", level, { "Heal", "DivineShield", "Blessing", "Smite" }),
+			member("-8", "Ilsa", "Mage", level, { "Fireball", "Blizzard", "ChainLightning", "Meteor" }),
+			member("-9", "Wren", "Ranger", level, { "PowerShot", "Volley", "Snare", "ExplosiveArrow" }),
 		}
 		local outcome = StageRunner.Run(party, stage, math.random(1, 1000000), nil, true)
 		if outcome.Won or attempt == 4 then
