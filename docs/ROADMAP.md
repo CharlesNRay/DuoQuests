@@ -1,7 +1,7 @@
 # Duo Quest Roadmap
 
 > Living document. Updated whenever we finish or reprioritise something.
-> **Last updated:** 2026-11-23
+> **Last updated:** 2026-11-24
 
 **Jump to:** [Now](#now) · [Next up](#next-up) · [Later](#later) · [Done](#done) · [Open questions](#open-questions) · [Known gaps](#known-gaps)
 
@@ -35,6 +35,17 @@ In rough order.
 
 ## Done
 Newest first.
+
+### 2026-11-24 (rename, homes street, biomes 101-200, Mastery)
+- Renamed to Idle Party Quest (player-visible text only; DataStore and instance names keep DuoQuest).
+- Main menu: 4-hero menu battle, centered on big screens, +2 character slots Game Pass (locked card), back to the menu from Settings.
+- HUD: size setting (HUD and combat log only), Roblox headshots on the portrait and party rows.
+- Town: player homes are a street (lots both sides facing it, owner signs), shops in a ring round the Market square.
+- Battles: backdrops rebuilt per biome (Battle/Backdrops), ten elemental/magical biomes for stages 101-200 with 30 monsters
+  and a boss each (Rainbow Slime in Slime Meadows), the sky and light follow the biome in battle view.
+- Mastery talents (level 81+): Onslaught, Fortitude, Party Spirit (whole party), Fortune.
+- Fixes found in Studio: typing no longer wiped by panel redraws, tooltips hidden under panels, Settings/Talents panels fit
+  the screen, boss name tags short-range, the cheat panel's pass row. docs/TODO.md lists what is left.
 
 ### 2026-11-23 (town, sound, talents)
 - ✅ Town districts round the plaza (Wishing Grove, Town Gate, Training Grounds), ring road, Boss Field outside the gate; signposts removed; 4 lots. Seen in Studio.
