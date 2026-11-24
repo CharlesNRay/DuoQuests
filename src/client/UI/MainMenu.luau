@@ -262,6 +262,7 @@ end
 function MainMenu:Show(state)
 	self.Visible = true
 	self.Creating = false
+	self.Message = nil -- an old "could not play" line from the last visit
 	self.Gui.Enabled = true
 	local hud = self.Root and (if self.Root:IsA("ScreenGui") then self.Root else self.Root:FindFirstAncestorOfClass("ScreenGui"))
 	if hud and hud ~= self.Gui then

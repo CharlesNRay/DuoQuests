@@ -5,7 +5,8 @@ Renamed 2026-11-23: only player-visible text says Idle Party Quest (menu title, 
   (the old ones wiped in 1 s); the menu is centered on big screens (UIScale grows around the middle, Body is now anchored 0.5);
   title centered by text width. **Extra Character Slots** Game Pass (`Config/Premium.Passes.CharacterSlots`, 149 R$, `Characters.Max(profile)`
   2 -> 4): a locked card on the menu sells it ("coming soon" until the id is set), also listed in the Store; Test cheats "Toggle +2 char slots".
-  Gap: nothing in-game opens the Character screen, so its "Main menu" button (the only way back to the menu) is unreachable; rejoin to switch.
+  Back to the menu from in-game: Settings (⚙️) > "🏠 Main menu" (SEEN in Studio; CONTINUE returns, fights keep going). Boss name tags
+  (world/season boss) have MaxDistance 400: they are AlwaysOnTop and showed through everything, even over the menu.
 
 Roblox co-op idle RPG (Luau, Rojo). Two players fight together (a ghost partner stands in when one is offline), the combat
 sim is server-authoritative and deterministic. Read `README.md` and `docs/` (PROGRESSION, BALANCE, SKILLS, ROADMAP) for design detail.

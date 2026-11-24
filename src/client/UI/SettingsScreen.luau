@@ -68,6 +68,14 @@ function SettingsScreen.Settings(container, state, _, extra)
 		redraw()
 	end)
 	Kit.label({ Size = UDim2.new(1, -220, 0, 34), Position = UDim2.fromOffset(212, 6), Text = "Settings are saved with your account.", TextSize = 12, TextColor3 = C.Dim, Parent = muteRow })
+	-- back to the main menu (switch character, make a new one); the only way there once you are in the game
+	if extra.OpenMenu then
+		local menuRow = Kit.frame({ Size = UDim2.new(1, -8, 0, 46), BackgroundColor3 = C.PanelLight, Parent = list })
+		Kit.button({ Name = "MainMenuButton", Size = UDim2.fromOffset(190, 34), Position = UDim2.fromOffset(10, 6), Text = "🏠 Main menu", BackgroundColor3 = C.Accent, TextColor3 = C.Bg, Parent = menuRow }, function()
+			extra.OpenMenu()
+		end)
+		Kit.label({ Size = UDim2.new(1, -220, 0, 34), Position = UDim2.fromOffset(212, 6), Text = "Switch character or make a new one. Your fights keep going.", TextSize = 12, TextWrapped = true, TextColor3 = C.Dim, Parent = menuRow })
+	end
 	redraw = function()
 		for key, bar in pairs(bars) do
 			bar.Fill.Size = UDim2.fromScale(math.clamp(values[key], 0, 1), 1)
