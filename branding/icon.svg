@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <defs><linearGradient id="gold" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff3b0"/><stop offset="0.55" stop-color="#ffc93c"/><stop offset="1" stop-color="#f29a00"/></linearGradient>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4a2f9a"/><stop offset="0.6" stop-color="#241d5c"/><stop offset="1" stop-color="#120f2e"/></linearGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.36" r="0.5"><stop offset="0" stop-color="#ffd76a" stop-opacity="0.55"/><stop offset="0.5" stop-color="#b06cff" stop-opacity="0.2"/><stop offset="1" stop-color="#b06cff" stop-opacity="0"/></radialGradient>
+  </defs>
+  <rect width="1024" height="1024" fill="url(#bg)"/>
+  <rect width="1024" height="1024" fill="url(#glow)"/>
+  <g opacity="0.16" stroke="#ffe9a0" stroke-width="30"><path d="M512 380 L1412 380"/><path d="M512 380 L1142.0 1010.0"/><path d="M512 380 L512 1280"/><path d="M512 380 L-118.0 1010.0"/><path d="M512 380 L-388 380"/><path d="M512 380 L-118.0 -250.0"/><path d="M512 380 L512 -520"/><path d="M512 380 L1142.0 -250.0"/></g>
+  <path d="M120 118 Q123.96 136.04 142 140 Q123.96 143.96 120 162 Q116.04 143.96 98 140 Q116.04 136.04 120 118 Z" fill="#fff6c8" opacity="0.9"/><path d="M900 92 Q905.04 114.96 928 120 Q905.04 125.04 900 148 Q894.96 125.04 872 120 Q894.96 114.96 900 92 Z" fill="#fff6c8" opacity="0.95"/><path d="M170 506 Q172.52 517.48 184 520 Q172.52 522.52 170 534 Q167.48 522.52 156 520 Q167.48 517.48 170 506 Z" fill="#fff6c8" opacity="0.6"/><path d="M880 454 Q882.88 467.12 896 470 Q882.88 472.88 880 486 Q877.12 472.88 864 470 Q877.12 467.12 880 454 Z" fill="#fff6c8" opacity="0.7"/><path d="M80 320 Q81.8 328.2 90 330 Q81.8 331.8 80 340 Q78.2 331.8 70 330 Q78.2 328.2 80 320 Z" fill="#fff6c8" opacity="0.5"/><path d="M950 289 Q951.98 298.02 961 300 Q951.98 301.98 950 311 Q948.02 301.98 939 300 Q948.02 298.02 950 289 Z" fill="#fff6c8" opacity="0.5"/>
+  <g transform="translate(512 40) scale(0.84) translate(-512 -150)">
+  <defs><linearGradient id="q0" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff7a45"/><stop offset="1" stop-color="#d63a2a"/></linearGradient><linearGradient id="q1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7aa8ff"/><stop offset="1" stop-color="#3b5fe0"/></linearGradient><linearGradient id="q2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7ee08a"/><stop offset="1" stop-color="#2f9e57"/></linearGradient><linearGradient id="q3" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff1b8"/><stop offset="1" stop-color="#f0b93a"/></linearGradient><clipPath id="shieldClip"><path d="M512 150 L790 230 C790 470 720 650 512 780 C304 650 234 470 234 230 Z"/></clipPath>
+    <radialGradient id="orb" cx="0.4" cy="0.35" r="0.7"><stop offset="0" stop-color="#ffffff"/><stop offset="0.35" stop-color="#b9f3ff"/><stop offset="1" stop-color="#3aa0ff"/></radialGradient>
+    <radialGradient id="orbGlow"><stop offset="0" stop-color="#9fe8ff" stop-opacity="0.9"/><stop offset="1" stop-color="#9fe8ff" stop-opacity="0"/></radialGradient>
+  </defs>
+  <path d="M512 150 L790 230 C790 470 720 650 512 780 C304 650 234 470 234 230 Z" fill="#1b1d3a" stroke="#0b0c1c" stroke-width="26" stroke-linejoin="round"/>
+  <g clip-path="url(#shieldClip)"><rect x="200" y="120" width="312" height="325" fill="url(#q0)"/><rect x="512" y="120" width="312" height="325" fill="url(#q1)"/><rect x="200" y="445" width="312" height="325" fill="url(#q2)"/><rect x="512" y="445" width="312" height="325" fill="url(#q3)"/>
+    <path d="M512 120 V820 M200 445 H824" stroke="#0b0c1c" stroke-width="12"/>
+    <path d="M300 200 Q512 150 724 200 L700 260 Q512 215 324 260 Z" fill="#ffffff" opacity="0.18"/>
+  </g>
+  <path d="M512 150 L790 230 C790 470 720 650 512 780 C304 650 234 470 234 230 Z" fill="none" stroke="url(#gold)" stroke-width="18" stroke-linejoin="round"/>
+  <g stroke="#0b0c1c" stroke-width="9" stroke-linejoin="round">
+    <g transform="rotate(40 512 440)">
+      <path d="M512 175 L540 240 V560 H484 V240 Z" fill="#f4f6ff"/>
+      <path d="M512 200 L524 240 V545 H512 Z" fill="#c9d2f5" stroke="none"/>
+      <rect x="436" y="560" width="152" height="30" rx="10" fill="url(#gold)"/>
+      <rect x="496" y="590" width="32" height="86" rx="9" fill="#6b3a1e"/>
+      <circle cx="512" cy="694" r="22" fill="url(#gold)"/>
+    </g>
+    <g transform="rotate(-40 512 440)">
+      <rect x="496" y="230" width="32" height="470" rx="12" fill="#8a5a2b"/>
+      <path d="M470 250 Q512 150 554 250 Q512 225 470 250 Z" fill="url(#gold)"/>
+    </g>
+  </g>
+  <circle cx="358" cy="262" r="92" fill="url(#orbGlow)"/>
+  <circle cx="358" cy="262" r="44" fill="url(#orb)" stroke="#0b0c1c" stroke-width="9"/>
+  <path d="M342 246 a14 14 0 0 1 16 -8" stroke="#fff" stroke-width="7" fill="none" stroke-linecap="round"/>
+</g>
+  <text x="512" y="790" text-anchor="middle" font-family="Arial Black, Impact, sans-serif" font-weight="900" font-size="132" letter-spacing="4" fill="#0b0c1c" stroke="#0b0c1c" stroke-width="33.792" stroke-linejoin="round" transform="translate(0 6.6000000000000005)">IDLE PARTY</text><text x="512" y="790" text-anchor="middle" font-family="Arial Black, Impact, sans-serif" font-weight="900" font-size="132" letter-spacing="4" fill="#0b0c1c" stroke="#0b0c1c" stroke-width="21.12" stroke-linejoin="round">IDLE PARTY</text><text x="512" y="790" text-anchor="middle" font-family="Arial Black, Impact, sans-serif" font-weight="900" font-size="132" letter-spacing="4" fill="url(#gold)">IDLE PARTY</text>
+  <text x="512" y="962" text-anchor="middle" font-family="Arial Black, Impact, sans-serif" font-weight="900" font-size="196" letter-spacing="14" fill="#0b0c1c" stroke="#0b0c1c" stroke-width="50.176" stroke-linejoin="round" transform="translate(0 9.8)">QUEST</text><text x="512" y="962" text-anchor="middle" font-family="Arial Black, Impact, sans-serif" font-weight="900" font-size="196" letter-spacing="14" fill="#0b0c1c" stroke="#0b0c1c" stroke-width="31.36" stroke-linejoin="round">QUEST</text><text x="512" y="962" text-anchor="middle" font-family="Arial Black, Impact, sans-serif" font-weight="900" font-size="196" letter-spacing="14" fill="url(#gold)">QUEST</text>
+</svg>
