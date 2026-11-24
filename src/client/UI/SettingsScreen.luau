@@ -1,6 +1,6 @@
 --[[
 	SettingsScreen (ModuleScript): sound settings (master, music, effects, interface), each 0-100% in steps of 10, a
-	mute switch, the HUD size (70-130%, extra.SetHudScale) and the Main menu button. Changes apply at once (Sound.Apply) and are saved on the server (handler SaveSettings) a moment later.
+	mute switch, the HUD size (70-130%, extra.SetHudScale: the HUD only, panels keep their size) and the Main menu button. Changes apply at once (Sound.Apply) and are saved on the server (handler SaveSettings) a moment later.
 
 	  SettingsScreen.Settings(container, state, call, extra)
 ]]
@@ -34,14 +34,14 @@ function SettingsScreen.Settings(container, state, _, extra)
 		end)
 	end
 	local list = Kit.new("Frame", { Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1, Parent = container })
-	Kit.new("UIListLayout", { Padding = UDim.new(0, 8), Parent = list })
+	Kit.new("UIListLayout", { Padding = UDim.new(0, 5), Parent = list })
 	Kit.label({ Size = UDim2.new(1, 0, 0, 22), Text = "🔊 Sound", TextSize = 18, Font = Enum.Font.GothamBold, TextColor3 = C.Accent, Parent = list })
 	local redraw
 	local bars = {}
 	for _, r in ipairs(ROWS) do
-		local row = Kit.frame({ Size = UDim2.new(1, -8, 0, 46), BackgroundColor3 = C.PanelLight, Parent = list })
-		Kit.label({ Size = UDim2.fromOffset(170, 22), Position = UDim2.fromOffset(10, 4), Text = r.Label, TextSize = 15, Font = Enum.Font.GothamBold, Parent = row })
-		Kit.label({ Size = UDim2.fromOffset(200, 16), Position = UDim2.fromOffset(10, 26), Text = r.Hint, TextSize = 11, TextColor3 = C.Dim, Parent = row })
+		local row = Kit.frame({ Size = UDim2.new(1, -8, 0, 40), BackgroundColor3 = C.PanelLight, Parent = list })
+		Kit.label({ Size = UDim2.fromOffset(170, 20), Position = UDim2.fromOffset(10, 2), Text = r.Label, TextSize = 15, Font = Enum.Font.GothamBold, Parent = row })
+		Kit.label({ Size = UDim2.fromOffset(200, 16), Position = UDim2.fromOffset(10, 21), Text = r.Hint, TextSize = 11, TextColor3 = C.Dim, Parent = row })
 		local track = Kit.frame({ Size = UDim2.new(1, -400, 0, 12), Position = UDim2.new(0, 220, 0.5, -6), BackgroundColor3 = Color3.fromRGB(30, 34, 52), Parent = row })
 		local fill = Kit.frame({ Size = UDim2.fromScale(values[r.Key], 1), BackgroundColor3 = C.Accent, Parent = track })
 		local pct = Kit.label({ Size = UDim2.fromOffset(50, 22), Position = UDim2.new(1, -170, 0.5, -11), Text = "", TextSize = 14, Font = Enum.Font.GothamBold, TextXAlignment = Enum.TextXAlignment.Center, Parent = row })
@@ -57,8 +57,8 @@ function SettingsScreen.Settings(container, state, _, extra)
 			redraw()
 		end)
 	end
-	local muteRow = Kit.frame({ Size = UDim2.new(1, -8, 0, 46), BackgroundColor3 = C.PanelLight, Parent = list })
-	local muteButton = Kit.button({ Size = UDim2.fromOffset(190, 34), Position = UDim2.fromOffset(10, 6), Text = "", Parent = muteRow }, function()
+	local muteRow = Kit.frame({ Size = UDim2.new(1, -8, 0, 40), BackgroundColor3 = C.PanelLight, Parent = list })
+	local muteButton = Kit.button({ Size = UDim2.fromOffset(190, 32), Position = UDim2.fromOffset(10, 4), Text = "", Parent = muteRow }, function()
 		if values.Master > 0 then
 			values.SavedMaster = values.Master
 			values.Master = 0
@@ -68,12 +68,12 @@ function SettingsScreen.Settings(container, state, _, extra)
 		save()
 		redraw()
 	end)
-	Kit.label({ Size = UDim2.new(1, -220, 0, 34), Position = UDim2.fromOffset(212, 6), Text = "Settings are saved with your account.", TextSize = 12, TextColor3 = C.Dim, Parent = muteRow })
+	Kit.label({ Size = UDim2.new(1, -220, 0, 32), Position = UDim2.fromOffset(212, 4), Text = "Settings are saved with your account.", TextSize = 12, TextColor3 = C.Dim, Parent = muteRow })
 	-- HUD size: everything on screen grows or shrinks (the panel too, so you see it at once)
 	if extra.SetHudScale then
-		local hudRow = Kit.frame({ Size = UDim2.new(1, -8, 0, 46), BackgroundColor3 = C.PanelLight, Parent = list })
-		Kit.label({ Size = UDim2.fromOffset(170, 22), Position = UDim2.fromOffset(10, 4), Text = "HUD size", TextSize = 15, Font = Enum.Font.GothamBold, Parent = hudRow })
-		Kit.label({ Size = UDim2.fromOffset(240, 16), Position = UDim2.fromOffset(10, 26), Text = "Buttons, panels and text on screen", TextSize = 11, TextColor3 = C.Dim, Parent = hudRow })
+		local hudRow = Kit.frame({ Size = UDim2.new(1, -8, 0, 40), BackgroundColor3 = C.PanelLight, Parent = list })
+		Kit.label({ Size = UDim2.fromOffset(170, 20), Position = UDim2.fromOffset(10, 2), Text = "HUD size", TextSize = 15, Font = Enum.Font.GothamBold, Parent = hudRow })
+		Kit.label({ Size = UDim2.fromOffset(240, 16), Position = UDim2.fromOffset(10, 21), Text = "The HUD: buttons, cards and the skill bar", TextSize = 11, TextColor3 = C.Dim, Parent = hudRow })
 		local pct = Kit.label({ Size = UDim2.fromOffset(60, 34), Position = UDim2.new(1, -180, 0.5, -17), Text = "", TextSize = 14, Font = Enum.Font.GothamBold, TextXAlignment = Enum.TextXAlignment.Right, Parent = hudRow })
 		local function show()
 			pct.Text = ("%d%%"):format(math.floor(extra.HudScale() * 100 + 0.5))
@@ -93,8 +93,8 @@ function SettingsScreen.Settings(container, state, _, extra)
 	end
 	-- back to the main menu (switch character, make a new one); the only way there once you are in the game
 	if extra.OpenMenu then
-		local menuRow = Kit.frame({ Size = UDim2.new(1, -8, 0, 46), BackgroundColor3 = C.PanelLight, Parent = list })
-		Kit.button({ Name = "MainMenuButton", Size = UDim2.fromOffset(190, 34), Position = UDim2.fromOffset(10, 6), Text = "🏠 Main menu", BackgroundColor3 = C.Accent, TextColor3 = C.Bg, Parent = menuRow }, function()
+		local menuRow = Kit.frame({ Size = UDim2.new(1, -8, 0, 40), BackgroundColor3 = C.PanelLight, Parent = list })
+		Kit.button({ Name = "MainMenuButton", Size = UDim2.fromOffset(190, 32), Position = UDim2.fromOffset(10, 4), Text = "🏠 Main menu", BackgroundColor3 = C.Accent, TextColor3 = C.Bg, Parent = menuRow }, function()
 			extra.OpenMenu()
 		end)
 		Kit.label({ Size = UDim2.new(1, -220, 0, 34), Position = UDim2.fromOffset(212, 6), Text = "Switch character or make a new one. Your fights keep going.", TextSize = 12, TextWrapped = true, TextColor3 = C.Dim, Parent = menuRow })

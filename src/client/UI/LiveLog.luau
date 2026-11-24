@@ -15,6 +15,11 @@ LiveLog.__index = LiveLog
 
 local OPEN_H, BAR_H, WIDTH = 178, 22, 290
 
+function LiveLog:SetHeightScale(scale)
+	self.HeightScale = scale
+	self:SetOpen(self.Open)
+end
+
 function LiveLog.new(parent, buildLog, buildMeter)
 	local self = setmetatable({ BuildLog = buildLog, BuildMeter = buildMeter, Mode = "Damage", Lines = {}, Times = {}, Shown = 0, Open = true }, LiveLog)
 	local frame = Kit.frame({
@@ -95,7 +100,9 @@ function LiveLog:SetOpen(open)
 	self.Open = open
 	self:_Layout()
 	self.Toggle.Text = if open then "-" else "+"
-	self.Frame.Size = UDim2.fromOffset(WIDTH, if open then OPEN_H else BAR_H)
+	-- with a bigger HUD (Settings) the log is drawn larger, so it gets fewer rows and stays clear of the
+	-- (also bigger) corner buttons above it
+	self.Frame.Size = UDim2.fromOffset(WIDTH, if open then math.floor(OPEN_H / (self.HeightScale or 1) ^ 2) else BAR_H)
 end
 
 function LiveLog:Play(fight, delay)

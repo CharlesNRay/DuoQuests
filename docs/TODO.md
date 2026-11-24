@@ -32,21 +32,18 @@ Last updated 2026-11-24. Claude keeps this list current. Short entries; details 
 
 ## Not seen working in Studio yet
 
+Seen 2026-11-24: HUD size (now scales only the HUD), map badge tooltip, tutorial arrows (steps 3-5), fallen ally tags, lightning.
+
 These pass the tests but nobody has looked at them in the game.
 
 - **Combat:**
-  - A fallen ally's red outline and "is down" banner.
   - Wave banners in dungeons.
   - The combo pips and the "COMBO xN!" pop-up.
   - The new status icons.
-  - Lightning flashing in Stormspire, seen in a real fight.
 - **Cosmetics:** season auras once won, the other auras and kill effects, cosmetics "Try" (60 s).
 - **HUD and menus:**
-  - The HUD size setting.
   - Headshots of other real players in your party.
   - The owner sign of a lot shared by two real players.
-  - The map badge tooltip.
-  - Tutorial arrow steps after step 1.
   - The skipped-tutorial toast.
 - **Social:** guild chat, gifting.
 - **Pets:** the VIP second pet slot, the pet-food shard bar.

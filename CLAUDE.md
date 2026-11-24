@@ -7,8 +7,9 @@ Renamed 2026-11-23: only player-visible text says Idle Party Quest (menu title, 
   2 -> 4): a locked card on the menu sells it ("coming soon" until the id is set), also listed in the Store; Test cheats "Toggle +2 char slots".
   Back to the menu from in-game: Settings (⚙️) > "🏠 Main menu" (SEEN in Studio; CONTINUE returns, fights keep going). Boss name tags
   (world/season boss) have MaxDistance 400: they are AlwaysOnTop and showed through everything, even over the menu.
-- **HUD size + headshots 2026-11-23** (tests green, NOT seen in Studio): Settings "HUD size" 70-130% (multiplies the fit
-  scale in Main `fit()`, saved as `Permanent.Settings.HudScale`); HUD portrait shows your Roblox headshot with the level in a
+- **HUD size + headshots 2026-11-23** (HUD size SEEN 2026-11-24): Settings "HUD size" 70-130% scales only the HUD layers
+  (`hud:SetScale`, Chrome/Combat stretched by 1/scale) and the combat log (`LogLayer`, shorter at bigger sizes); panels keep
+  the fit scale (panels taller than RefH 400 get cut off: Settings is 620 x 392). Saved as `Permanent.Settings.HudScale`; HUD portrait shows your Roblox headshot with the level in a
   corner chip; party rows show real players' headshots ringed in class colour (companions keep the class dot).
 - **Homes street + Market ring 2026-11-24** (SEEN in Studio, with 3 fake teams run from the command bar): lots stand on both
   sides of a street from the plaza (`World.HOMES_STREET` angle 145, pairs at 162 / 234, lateral 39), fronts facing the street,

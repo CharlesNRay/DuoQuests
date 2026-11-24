@@ -100,6 +100,20 @@ function Hud.new(root)
 	local chrome = Kit.frame({ Name = "Chrome", Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1, NoCorner = true, Parent = gui })
 	local combat = Kit.frame({ Name = "Combat", Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1, NoCorner = true, Visible = false, Parent = gui })
 	self.Chrome, self.Combat = chrome, combat
+	-- HUD size (Settings): each layer is stretched by 1/scale and scaled by scale, so it still fills the screen and its
+	-- corner-anchored pieces stay in their corners; panels are not part of the HUD and keep their size
+	self.Scales = {}
+	for _, layer in ipairs({ chrome, combat }) do
+		layer.AnchorPoint = Vector2.new(0.5, 0.5)
+		layer.Position = UDim2.fromScale(0.5, 0.5)
+		self.Scales[layer] = Kit.new("UIScale", { Scale = 1, Parent = layer })
+	end
+	function self:SetScale(scale)
+		for layer, uiScale in pairs(self.Scales) do
+			uiScale.Scale = scale
+			layer.Size = UDim2.fromScale(1 / scale, 1 / scale)
+		end
+	end
 
 	-- top-left: portrait + partner -----------------------------------------
 	local safeTop = if UserInputService.KeyboardEnabled then 12 else 14 -- just under Roblox's own menu + chat buttons

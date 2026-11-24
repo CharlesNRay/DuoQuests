@@ -78,10 +78,10 @@ end)
 local gui = Kit.new("ScreenGui", { Name = "DuoQuestUI", ResetOnSpawn = false, ZIndexBehavior = Enum.ZIndexBehavior.Sibling, IgnoreGuiInset = false, Parent = Players.LocalPlayer:WaitForChild("PlayerGui") })
 local root = Kit.new("Frame", { Name = "Root", Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1, Parent = gui })
 local scale = Kit.new("UIScale", { Parent = root })
-local hudScale = 1 -- the player's "HUD size" setting (Settings screen), on top of the fit-to-screen scale
+local hudScale = 1 -- the player's "HUD size" setting (Settings screen): scales the HUD only (hud:SetScale), not the panels
 local function fit()
 	local view = gui.AbsoluteSize
-	local s = math.max(0.5, math.min(view.X / Kit.RefW, view.Y / Kit.RefH)) * hudScale
+	local s = math.max(0.5, math.min(view.X / Kit.RefW, view.Y / Kit.RefH))
 	scale.Scale = s
 	root.Size = UDim2.fromOffset(view.X / s, view.Y / s)
 end
@@ -91,7 +91,10 @@ Kit.SetupTooltips(root, scale)
 
 local hud = Hud.new(root)
 local state
-local liveLog = LiveLog.new(root, Screens.BuildLog, Screens.DamageMeter)
+-- the combat log grows and shrinks with the HUD size setting too (it sits under the HUD's corner buttons)
+local logLayer = Kit.frame({ Name = "LogLayer", Size = UDim2.fromScale(1, 1), AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.5), BackgroundTransparency = 1, NoCorner = true, Parent = root })
+local logScale = Kit.new("UIScale", { Scale = 1, Parent = logLayer })
+local liveLog = LiveLog.new(logLayer, Screens.BuildLog, Screens.DamageMeter)
 local fighting = false
 local arenas = Arenas.new(Players.LocalPlayer.UserId)
 
@@ -170,7 +173,7 @@ end
 local PANEL_DEFAULT = Vector2.new(500, 286)
 local PANEL_SIZES = {
 	Map = Vector2.new(640, 298), Hero = Vector2.new(640, 298), Skills = Vector2.new(660, 344),
-	Merchant = Vector2.new(540, 292), Blacksmith = Vector2.new(540, 292), Trainer = Vector2.new(540, 330), PetStore = Vector2.new(560, 330), RuneCarver = Vector2.new(600, 330), Wish = Vector2.new(640, 352), Store = Vector2.new(640, 336), Boss = Vector2.new(640, 310), Battle = Vector2.new(640, 330), Quests = Vector2.new(640, 330), Premium = Vector2.new(640, 330), Season = Vector2.new(640, 330), Cosmetics = Vector2.new(640, 330), Codes = Vector2.new(540, 300), Character = Vector2.new(640, 340), Guild = Vector2.new(720, 340), Dev = Vector2.new(640, 330), Party = Vector2.new(700, 330), Bag = Vector2.new(640, 330), Errands = Vector2.new(620, 330), Settings = Vector2.new(620, 440), Feedback = Vector2.new(640, 340), Talents = Vector2.new(660, 392), Dummy = Vector2.new(600, 300), Spar = Vector2.new(620, 330),
+	Merchant = Vector2.new(540, 292), Blacksmith = Vector2.new(540, 292), Trainer = Vector2.new(540, 330), PetStore = Vector2.new(560, 330), RuneCarver = Vector2.new(600, 330), Wish = Vector2.new(640, 352), Store = Vector2.new(640, 336), Boss = Vector2.new(640, 310), Battle = Vector2.new(640, 330), Quests = Vector2.new(640, 330), Premium = Vector2.new(640, 330), Season = Vector2.new(640, 330), Cosmetics = Vector2.new(640, 330), Codes = Vector2.new(540, 300), Character = Vector2.new(640, 340), Guild = Vector2.new(720, 340), Dev = Vector2.new(640, 330), Party = Vector2.new(700, 330), Bag = Vector2.new(640, 330), Errands = Vector2.new(620, 330), Settings = Vector2.new(620, 392), Feedback = Vector2.new(640, 340), Talents = Vector2.new(660, 392), Dummy = Vector2.new(600, 300), Spar = Vector2.new(620, 330),
 }
 local SHOP_NPC = { Merchant = "Merchant", Blacksmith = "Blacksmith", Trainer = "Trainer", PetStore = "PetStore", RuneCarver = "RuneCarver", Wish = "Tree" }
 local panel = Kit.frame({ Name = "Panel", Size = UDim2.new(0, 500, 0, 286), Position = UDim2.new(0.5, -250, 0, 42), BackgroundColor3 = Kit.Colors.Bg, Visible = false, ZIndex = 5, Parent = root })
@@ -770,7 +773,10 @@ extra.HudScale = function()
 end
 extra.SetHudScale = function(value)
 	hudScale = math.clamp(math.floor((tonumber(value) or 1) * 10 + 0.5) / 10, 0.7, 1.3)
-	fit()
+	hud:SetScale(hudScale)
+	logScale.Scale = hudScale
+	logLayer.Size = UDim2.fromScale(1 / hudScale, 1 / hudScale)
+	liveLog:SetHeightScale(hudScale)
 end
 extra.SaveSettings = function(values)
 	task.spawn(function()
