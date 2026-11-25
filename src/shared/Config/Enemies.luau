@@ -89,7 +89,7 @@ local Enemies = {
 		Look = { Shape = "Biped", Color = { 90, 140, 50 }, Size = 8 },
 		IsBoss = true,
 		DamageType = "Physical",
-		BaseStats = { MaxHealth = 650, Attack = 12, Defense = 10, AttackSpeed = 0.8, CritChance = 0.05 },
+		BaseStats = { MaxHealth = 650, Attack = 11, Defense = 10, AttackSpeed = 0.8, CritChance = 0.05 }, -- Attack was 12 (2026-11-25: boss 90 wall, up to 93 h)
 		-- Crushing Blow lands at 8s, 19s, 30s... : time a shield before it, or a heal after it.
 		Abilities = { { Id = "BossCrush", Level = 1, Timer = 8 }, { Id = "Stagger", Level = 1, Timer = 14 }, { Id = "Enrage", Level = 1 } },
 	},
@@ -311,7 +311,7 @@ local Enemies = {
 		Id = "InfernoLord", DisplayName = "Inferno Lord",
 		Look = { Shape = "Elemental", Color = { 255, 100, 30 }, Size = 9 },
 		IsBoss = true, DamageType = "Magical",
-		BaseStats = { MaxHealth = 650, Attack = 12, Defense = 8, AttackSpeed = 0.9, CritChance = 0.03 },
+		BaseStats = { MaxHealth = 650, Attack = 11, Defense = 8, AttackSpeed = 0.9, CritChance = 0.03 }, -- Attack was 12 (2026-11-25: boss 70 wall)
 		Abilities = { { Id = "EmberBolt", Level = 1, Timer = 5 }, { Id = "GroundPound", Level = 1, Timer = 12 }, { Id = "Stagger", Level = 1, Timer = 9 }, { Id = "Enrage", Level = 1 } },
 	},
 

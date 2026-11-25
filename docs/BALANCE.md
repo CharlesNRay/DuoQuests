@@ -387,3 +387,10 @@ Defense 3 -> 2.5; before those 172 / 165). L40: every path ~46-62. L100 in 31-45
 Why Warriors lead with a companion party: the player's own hero gets all the gear, pets and talents; when it is the
 tank the party holds, when the tank is the (ungeared) companion it falls first. A real party of four geared players
 does not have that gap, so Warriors were not cut further. Watch it in playtests.
+
+## Boss walls (2026-11-25, slow pacing)
+Time from reaching stage N-1 to beating boss N (14 runs to L90-100): boss 70 avg 5.7 h (max 39 h, ~570 losses), boss 90
+avg 27.6 h (max 93 h, ~1,860 losses, 2 runs never beat it); others under 2 h. Both are 12-attack bosses (Inferno Lord,
+Goblin Warlord) with Stagger and Enrage; with longer fights the enraged second half wiped parties.
+Enraged Attack x1.5 -> x1.3 and AttackSpeed x1.25 -> x1.15 (every boss); Goblin Warlord and Inferno Lord Attack 12 -> 11;
+Crushing Blow (Goblin Warlord) 3x -> 2.5x.

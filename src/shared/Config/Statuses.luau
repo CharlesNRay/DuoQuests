@@ -122,7 +122,7 @@ return {
 		Id = "Enraged",
 		DisplayName = "Enraged",
 		Description = "Hits much harder and faster.",
-		Mods = { { Stat = "Attack", Mode = "Mult", Value = 1.5 }, { Stat = "AttackSpeed", Mode = "Mult", Value = 1.25 } },
+		Mods = { { Stat = "Attack", Mode = "Mult", Value = 1.3 }, { Stat = "AttackSpeed", Mode = "Mult", Value = 1.15 } }, -- was 1.5 / 1.25 (2026-11-25: with longer fights the enraged half wiped parties at bosses 70 and 90)
 	},
 
 	-- Class statuses (Mage, Ranger, Rogue, Summoner) ---------------------------------------

@@ -685,7 +685,7 @@ return {
 		Rarity = "Common",
 		Cooldown = 11,
 		Telegraph = 1.5,
-		Effects = { { Type = "Damage", Target = "Primary", Multiplier = 3, PerLevel = { Multiplier = 0 } } },
+		Effects = { { Type = "Damage", Target = "Primary", Multiplier = 2.5, PerLevel = { Multiplier = 0 } } },
 	},
 
 	Enrage = {
