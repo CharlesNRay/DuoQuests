@@ -8,12 +8,10 @@ Last updated 2026-11-24. Claude keeps this list current. Short entries; details 
   Character Slots (2102236400) Game Passes and the 4 Sunstone products (3735896385/525/614/758) exist and their ids are in
   `Config/Premium`. SEEN in Studio 2026-11-24 with free test purchases: the creator owns both passes (4 slots, VIP perks: gold 25%, no XP, pet slot, bag +20); each pack pays its Sunstones + first-time bonus once (160/840/1800/4000, a 2nd Handful = +80). The test Sunstones were cleared (Test cheats "Sunstones = 0", which also restores the first-time pack bonuses). Passes are re-checked on join (live only): a refunded pass is removed. Sunstone products have Roblox
   "Managed pricing" on, so their Robux price may drift from the numbers shown in our Store.
-- **Rename on Roblox.** Set the experience title to *Idle Party Quest* in Creator Hub. Put the search words in the
-  description, for example "idle RPG, incremental, co-op with friends".
-- **Logo.** New art is in `branding/` (2026-11-24): `icon_512.png` for the game icon, `thumbnail.png` (and the louder
-  `thumbnail_hype.png` / `icon_hype.png`) for the page. Upload `logo.png` as an image too and send the id for the main menu.
-- **Studio API access.** Game Settings > Security > "Enable Studio Access to API Services". Without it, Studio saves
-  nothing and the 📝 feedback log only lasts until Play stops.
+- DONE 2026-11-24 (owner): renamed, description, icon + thumbnail uploaded, Studio API access on, Max Players 16.
+- **Publish** (File > Publish to Roblox; only "saved" so far), then fill in **Content rating** and set **Manage audience**
+  (friends can then playtest). Devices: Computer only until phone/tablet is checked.
+- **Logo for the main menu** (optional): upload `branding/logo.png` as an image and send the id (`Config/Branding.LogoImage`).
 - **Season dates.** Season 1 runs Nov 1 to Feb 1, which is a placeholder. Suggested: 6-week seasons, the first one 4 weeks,
   starting on launch day.
 - **Open questions.**
@@ -27,10 +25,10 @@ Last updated 2026-11-24. Claude keeps this list current. Short entries; details 
 
 - Done 2026-11-24: monsters and bosses for stages 101-200; the sky follows the biome in battle view; Mastery talents (level 81+).
 
-- DONE 2026-11-24: 8 lots (5-8 outside the new PLAYER HOMES gate, seen in Studio) and overflow lots 9-16 down the same
-  street for servers of up to 16 (only built while used; the overflow street piece has not been seen in Studio).
-  Owner: set Max Players to 16 (Creator Hub > Places > Access > Maximum Visitor Count).
-  Party members are sent to their party's server: untested live (needs 2 real accounts).
+- DONE 2026-11-24: 8 lots + overflow lots 9-16 (16-player servers), welcome back card, solo AFK earnings, expedition
+  sign, battle card panel, Hide HUD cleanup, wish sounds, training dummy countdown.
+- **Phone and tablet**: never checked; the UI shrinks to fit, small text/buttons likely need work (Studio device emulator).
+- **Party join across servers**: untested live (needs 2 real accounts).
 - Balance pass:
   - The class roster spread (docs/BALANCE.md).
   - (Checked 2026-11-24: Judgment is fine at equal rank; it lags only because Epic skills rank up slower.)
@@ -56,7 +54,11 @@ These pass the tests but nobody has looked at them in the game.
   - The "Relic Hunter" title moment.
   - A fishing catch made by hand.
   - Elder Thessaly's errand.
-- **Sound:** loudness between music and effects, and the music switching for the world, season and guild bosses.
+- **Sound:** loudness between music and effects, the music switching for the world, season and guild bosses, and the
+  new wish sounds (Legendary build-up).
+- **Expeditions:** the "!" sign over the Expedition Camp and the dot on the Battle button.
+- **Overflow lots 9-16** (needs 9+ parties on one server).
+- **Training dummy** "Again in Ns" countdown.
 
 ## Before launch
 
