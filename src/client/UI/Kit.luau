@@ -7,6 +7,12 @@ local UserInputService = game:GetService("UserInputService")
 
 local Kit = {}
 
+-- A phone or tablet (a touch screen with no keyboard): bigger HUD by default, Plaza/Home join the bottom row (the left
+-- of the screen belongs to Roblox's movement stick), the combat log stays clear of the jump button.
+local UserInputService = game:GetService("UserInputService")
+-- (Studio's device simulator has a keyboard too, so in Studio a touch screen alone counts)
+Kit.Touch = UserInputService.TouchEnabled and (not UserInputService.KeyboardEnabled or game:GetService("RunService"):IsStudio())
+
 -- Design size the UI is laid out for; the real screen is filled by stretching the root (see Main).
 Kit.RefW = 860
 Kit.RefH = 400

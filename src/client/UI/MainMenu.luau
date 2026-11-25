@@ -227,6 +227,7 @@ function MainMenu.new(root, call, extra, CharacterScreen)
 	-- centered: UIScale grows a frame around its middle, so a top-left frame slid the whole menu left on big screens
 	self.Body = Kit.frame({ Size = UDim2.fromScale(1, 1), AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.5), BackgroundTransparency = 1, NoCorner = true, ZIndex = 10, Parent = self.Frame })
 	scale.Parent = self.Body
+	self.BodyScale = scale
 	local function fit()
 		local view = gui.AbsoluteSize
 		local s = math.clamp(math.min(view.X / 800, view.Y / 470), 0.5, 2)
@@ -313,7 +314,11 @@ function MainMenu:Render(state)
 	if not self.Visible or not state then
 		return
 	end
+	-- keep the fit-to-screen UIScale: clearing the body used to destroy it, so the menu was never scaled (cards ran off
+	-- phone screens, 2026-11-24)
+	self.BodyScale.Parent = nil
 	Kit.clear(self.Body)
+	self.BodyScale.Parent = self.Body
 	local char = state.Player.Character
 	-- everything sits in one centered stage so the spacing is the same on any screen shape
 	local stage = Kit.frame({ Name = "Stage", Size = UDim2.fromOffset(STAGE_W, STAGE_H), AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.5), BackgroundTransparency = 1, NoCorner = true, ZIndex = 62, Parent = self.Body })
@@ -387,6 +392,12 @@ function MainMenu:Render(state)
 	local cardW, cardH, gap, top = 290, 236, 28, 108
 	if count > 2 then
 		cardW, gap = 230, 18
+	end
+	-- narrow screens (phones): the cards shrink to fit the width instead of running off both edges
+	local room = math.max(400, self.Body.Size.X.Offset - 24)
+	if count * cardW + (count - 1) * gap > room then
+		gap = math.min(gap, 12)
+		cardW = math.floor((room - (count - 1) * gap) / count)
 	end
 	local total = count * cardW + (count - 1) * gap
 	local inGame = char and char.InGame

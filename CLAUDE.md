@@ -50,6 +50,12 @@ Renamed 2026-11-23: only player-visible text says Idle Party Quest (menu title, 
   `state.LastClaim` (AFK + stages the party cleared, `claim.At` = show once) plus what waits (expedition back, daily chest).
   Expedition back: `Town.SetExpeditionReady` sign over the Expedition Camp (studs-sized, MaxDistance 700) and a dot on
   the HUD Battle button (`extra.UpdateExpeditionReady`, rechecked every 5 s).
+- **Phone + tablet pass 2026-11-24** (SEEN in Studio's Device Simulator, iPhone 7 / iPhone XR / Redmi Pad): `Kit.Touch`
+  (touch and no keyboard; in Studio a touch screen alone, since the simulator has a keyboard). Main menu was never scaled
+  (Render's Kit.clear destroyed the body's UIScale) -> fixed, slot cards also shrink to fit narrow screens. Touch: HUD
+  size defaults to 1.2 (unless saved), Plaza/Home join the dock's left end (the stick owns the bottom-left), the combat log
+  sits 70 higher and shorter (jump button), battle view uses the compact layout (stage card top-right, map card hidden,
+  watching bar under the party list). Device Simulator: Test menu > Device Simulator (only in Edit mode).
 - **Hide HUD 2026-11-24** (SEEN in Studio; the narrower corner stage card NOT re-seen): also hides the small buttons under
   the map card except 📝 Feedback; the stage card + fight timer move to the top-right corner (192 wide) and the watching bar
   (Log / Show HUD / Stop) to the bottom-left (`Hud:SetHudHidden`). Battle card is also a fixed panel top-left in battle

@@ -285,6 +285,11 @@ function Hud.new(root)
 
 	function self:AddButton(key, side, glyph, label, onClick)
 		self.NextOrder += 1
+		-- touch screens: Plaza and Home sit at the left end of the bottom row, away from the movement stick
+		local travelInDock = side == "travel" and Kit.Touch
+		if travelInDock then
+			side = "dock"
+		end
 		local small = side == "mini"
 		if side == "travel" then
 			local pill = Kit.button({ Size = UDim2.fromOffset(86, 34), Text = "", BackgroundColor3 = Color3.fromRGB(26, 30, 48), LayoutOrder = self.NextOrder, Parent = self.Rails.travel }, onClick)
@@ -304,6 +309,9 @@ function Hud.new(root)
 		else
 			Kit.label({ Size = UDim2.new(1, 0, 0, 26), Position = UDim2.fromOffset(0, 3), Text = glyph, TextSize = 22, TextXAlignment = Enum.TextXAlignment.Center, TextStrokeTransparency = 1, Parent = button })
 			Kit.label({ Size = UDim2.new(1, 0, 0, 14), Position = UDim2.fromOffset(0, 31), Text = label, TextSize = 11, TextColor3 = C.Text, TextXAlignment = Enum.TextXAlignment.Center, TextWrapped = false, TextStrokeTransparency = 1, Parent = button })
+		end
+		if travelInDock then
+			button.LayoutOrder = -100 + self.NextOrder
 		end
 		local dot = Kit.frame({ Size = UDim2.fromOffset(11, 11), Position = UDim2.new(1, -8, 0, -3), BackgroundColor3 = C.Bad, Visible = false, ZIndex = 3, Parent = button })
 		Kit.corner(6).Parent = dot
@@ -335,8 +343,11 @@ function Hud.new(root)
 	-- Hide / show everything that is not the battle itself (only meaningful while watching).
 	function self:SetHudHidden(hidden)
 		self.HudHidden = hidden
+		-- touch screens use the tidy layout (stage card in the corner, bar bottom-left) whenever a fight is watched: the
+		-- screen is too small for a centred bar and card (the map card makes way for the stage card)
+		local compact = hidden or (Kit.Touch and self.Watching.Visible)
 		-- the party (top-left) and the currencies (top-right) stay; only the map card and the menu dock go
-		self.MapCard.Visible = not hidden
+		self.MapCard.Visible = not compact
 		if self.Travel then
 			self.Travel.Visible = not hidden
 		end
@@ -357,10 +368,12 @@ function Hud.new(root)
 		TweenService:Create(self.CombatBuffRow, info, { Position = UDim2.new(0.5, -150, 1, -158 + drop) }):Play()
 		-- nothing floats in the middle of the screen: the stage card and its timer take the map card's corner (top-right),
 		-- the watching bar (Log / Show HUD / Stop) goes to the bottom-left where Home and Plaza were
-		if hidden then
+		if compact then
 			TweenService:Create(self.CombatCard, info, { Position = UDim2.new(1, -200, 0, 8), Size = UDim2.fromOffset(192, 86) }):Play() -- the map card's width, clear of the currencies
 			TweenService:Create(self.Fight, info, { Position = UDim2.new(1, -194, 0, 100) }):Play()
-			TweenService:Create(self.Watching, info, { Position = UDim2.new(0, 10, 1, -42) }):Play()
+			-- bottom-left when the dock is hidden; on a touch screen with the dock showing, under the party list
+			local barAt = if hidden and not Kit.Touch then UDim2.new(0, 10, 1, -42) else UDim2.new(0, 10, 0, 132)
+			TweenService:Create(self.Watching, info, { Position = barAt }):Play()
 		else
 			TweenService:Create(self.CombatCard, info, { Position = UDim2.new(0.5, -110, 0, 36), Size = UDim2.fromOffset(220, 86) }):Play()
 			TweenService:Create(self.Fight, info, { Position = UDim2.new(0.5, -90, 0, 128) }):Play()
@@ -374,9 +387,7 @@ function Hud.new(root)
 		self.Combat.Visible = text ~= nil
 		self.BuffRow.Visible = text == nil
 		self.WatchText.Text = text or ""
-		if text == nil then
-			self:SetHudHidden(false)
-		end
+		self:SetHudHidden(if text == nil then false else (self.HudHidden == true))
 		if self.StopConn then
 			self.StopConn:Disconnect()
 			self.StopConn = nil

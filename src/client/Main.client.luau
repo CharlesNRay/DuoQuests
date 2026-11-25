@@ -268,6 +268,8 @@ local function redraw()
 		local saved = state.Player.Settings and tonumber(state.Player.Settings.HudScale)
 		if saved and extra.SetHudScale then
 			extra.SetHudScale(saved)
+		elseif Kit.Touch and extra.SetHudScale then
+			extra.SetHudScale(1.2) -- phones and tablets start with a bigger HUD (Settings > HUD size changes it)
 		end
 	end
 	-- level up: a big card, sparkles and a fanfare, wherever the player is

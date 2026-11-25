@@ -102,7 +102,10 @@ function LiveLog:SetOpen(open)
 	self.Toggle.Text = if open then "-" else "+"
 	-- with a bigger HUD (Settings) the log is drawn larger, so it gets fewer rows and stays clear of the
 	-- (also bigger) corner buttons above it
-	self.Frame.Size = UDim2.fromOffset(WIDTH, if open then math.floor(OPEN_H / (self.HeightScale or 1) ^ 2) else BAR_H)
+	-- touch screens: the log sits higher and is shorter, so it never covers Roblox's jump button (bottom-right)
+	local lift = if Kit.Touch then 70 else 0
+	self.Frame.Position = UDim2.new(1, -10, 1, -78 - lift)
+	self.Frame.Size = UDim2.fromOffset(WIDTH, if open then math.max(BAR_H + 60, math.floor(OPEN_H / (self.HeightScale or 1) ^ 2) - lift) else BAR_H)
 end
 
 function LiveLog:Play(fight, delay)

@@ -27,7 +27,8 @@ Last updated 2026-11-24. Claude keeps this list current. Short entries; details 
 
 - DONE 2026-11-24: 8 lots + overflow lots 9-16 (16-player servers), welcome back card, solo AFK earnings, expedition
   sign, battle card panel, Hide HUD cleanup, wish sounds, training dummy countdown.
-- **Phone and tablet**: never checked; the UI shrinks to fit, small text/buttons likely need work (Studio device emulator).
+- Phone and tablet: first pass done 2026-11-24 (Device Simulator). Not done: a real phone test; text is still small on
+  the smallest phones (HUD size setting helps); Devices in Creator Hub can include Phone + Tablet after a real test.
 - **Party join across servers**: untested live (needs 2 real accounts).
 - Balance pass:
   - The class roster spread (docs/BALANCE.md).
