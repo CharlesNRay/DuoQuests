@@ -70,6 +70,11 @@ Renamed 2026-11-23: only player-visible text says Idle Party Quest (menu title, 
   adding a skill/status/pet/passive/talent/rune/item), combat log Effects view + 📌 hold (`StatusText`), Simulation
   `Metrics` + bot METRIC lines + `tools/sim/report.py` / `classreport.py` (class report). Symbols that render as boxes in
   Roblox: ✦ ✧ ➶ ✕ (checked in Studio; ▲ ▼ ★ ☆ ✓ ✚ ● ☐ ☑ render).
+- **Slow pacing + collections 2026-11-25** (tests green, NOT seen in Studio): owner wants a slow upgrade loop (upgrade,
+  push a few stages, wait). `Economy.LevelPace`, `Config/Stages.LateGrowth.Bands` (1.8% from 25, 0.5% from 70), stage 61
+  step removed, boss Enrage softened. Bot `LOOP` lines measure it. `NumberScale` 100 (was 10). Damage numbers by who hit
+  whom (`Replay`, your hero gold). Bestiary (`Shared/Bestiary`, `Permanent.Bestiary.Kills`) and Class mastery
+  (`Shared/ClassMastery`, `Permanent.Mastery`), screen `UI/CollectionScreen` (dock 🏅).
 - **Studio test mute**: Workspace attribute `StudioMute = true` (Edit mode, command bar) silences all game sound in Studio
   (owner asked: no sound while Claude tests). Set it before test runs, clear it (nil) before Ctrl+S.
 

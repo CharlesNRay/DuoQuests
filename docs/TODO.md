@@ -36,7 +36,15 @@ Last updated 2026-11-25. Claude keeps this list current. Short entries; details 
   - Late frontier fights are ~6-7 s (10-12 s through L40); longer would need more monster health past stage 80.
   - Not seen in Studio: how the longer fights feel at the frontier, the doubled talents in the Talents screen numbers.
 
+## Season goals (2026-11-25)
+- DONE (not seen in Studio): Bestiary and Class mastery, kept every season (dock 🏅 Collection). Party kills count;
+  small capped stat bonuses (bestiary +10% max, mastery +5% max).
+- Ideas not built: zone set collection, weekly challenge tower, account achievements, mastery head start next season.
+
 ## Not seen working in Studio yet
+
+- **Tonight (2026-11-25):** Collection screen (Bestiary/Mastery tabs, monster hover, pop-ups), damage numbers by who
+  hit whom, NumberScale 100 (10x numbers), the slow pacing in real play.
 
 Seen 2026-11-24: HUD size (now scales only the HUD), map badge tooltip, tutorial arrows (steps 3-5), fallen ally tags,
 lightning, founding a guild and guild chat, cosmetics Try, COMBO pop-ups and status icons, the VIP second pet slot.

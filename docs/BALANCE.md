@@ -394,3 +394,16 @@ avg 27.6 h (max 93 h, ~1,860 losses, 2 runs never beat it); others under 2 h. Bo
 Goblin Warlord) with Stagger and Enrage; with longer fights the enraged second half wiped parties.
 Enraged Attack x1.5 -> x1.3 and AttackSpeed x1.25 -> x1.15 (every boss); Goblin Warlord and Inferno Lord Attack 12 -> 11;
 Crushing Blow (Goblin Warlord) 3x -> 2.5x.
+
+## Slow progression and the upgrade loop (2026-11-25, owner request)
+Owner's loop: log in, upgrade (gear, levels, talents, skills, wishes), push a few stages, wait for more upgrades. Not
+big pushes. The bot prints `LOOP` lines per level band: stages cleared, the most new stages in any game hour, and
+the longest wait between two new stages.
+- Leveling: `Economy.LevelPace` multiplies a level's XP cost by band (1.7 around L10, 0.75 around L30, 2.9 at L50,
+  4.4 at L70, 5.8 at L90, 7 at L110).
+- Stages: `LateGrowth.Bands` 1.8% a stage from stage 25, 0.5% from stage 70 (1% left L60-90 runs ~6 stages in
+  120 h); the old x1.1 step at stage 61 removed (on top of the growth it was a 20-50 h wall).
+- Roster (one run per path, before the boss fix): L20 3-4 h, L40 13-16 h (stage 40-51), L60 42-57 h (55-84),
+  L80 97-138 h, L100 188-278 h (stage 70-97, Berserker 141). Hours are active play with fights back to back; away
+  earnings make real players faster.
+- `NumberScale` 10 -> 100 (owner: bigger numbers); balance-neutral (defense and bosses scale with it).
