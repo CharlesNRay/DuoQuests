@@ -29,6 +29,8 @@ local Quests = require(script.Parent.Quests)
 local Progression = require(script.Parent.Progression)
 local Runes = require(script.Parent.Runes)
 local RunesConfig = require(script.Parent.Config.Runes)
+local ClassMastery = require(script.Parent.ClassMastery)
+local Bestiary = require(script.Parent.Bestiary)
 
 local Activities = {}
 
@@ -212,11 +214,15 @@ function Activities.RunDungeon(profile, members, id, seed, now, record)
 		Runes.Grant(profile, runeStat, runeTier, 1)
 		table.insert(lines, "Rune: " .. Runes.Label({ Stat = runeStat, Tier = runeTier }))
 	end
+	if fight and fight.Events then -- the bestiary counts dungeon kills too
+		Bestiary.Record(profile, Bestiary.CountKills(fight.Events, fight.Roster), os.time())
+	end
 	local daily = false
 	if full and not row(profile).Daily[dungeon.Id] then
 		row(profile).Daily[dungeon.Id] = true
 		daily = true
 		local bonus = Activities.DailyBonus
+		ClassMastery.Add(profile, profile.Season.ClassId, require(script.Parent.Config.ClassMastery).XP.Dungeon)
 		local extra = Bosses.GrantRewards(profile, { Gold = math.floor(clearGold(dungeon.Stage) * bonus.GoldClears), Items = table.clone(bonus.Items) }, dungeon.Stage)
 		table.insert(lines, "Daily bonus:")
 		for _, line in ipairs(extra) do

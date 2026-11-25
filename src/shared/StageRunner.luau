@@ -52,6 +52,8 @@ local Consumables = require(script.Parent.Consumables)
 local Gear = require(script.Parent.Gear)
 local SkillProgress = require(script.Parent.SkillProgress)
 local Talents = require(script.Parent.Talents)
+local Bestiary = require(script.Parent.Bestiary)
+local ClassMastery = require(script.Parent.ClassMastery)
 
 local StageRunner = {}
 
@@ -86,6 +88,12 @@ function StageRunner.NewParty(members)
 				table.insert(extraMods, mod)
 			end
 			for _, mod in ipairs(Talents.Mods(member.Profile)) do -- level-up talent points
+				table.insert(extraMods, mod)
+			end
+			for _, mod in ipairs(Bestiary.Mods(member.Profile)) do -- permanent: bestiary zones and class mastery
+				table.insert(extraMods, mod)
+			end
+			for _, mod in ipairs(ClassMastery.Mods(member.Profile, classId)) do
 				table.insert(extraMods, mod)
 			end
 		else

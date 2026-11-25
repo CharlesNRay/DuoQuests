@@ -147,9 +147,11 @@ return function(modulesOverride)
 		local function power(stage) -- health x attack of a monster at this stage
 			return m.Stages.Scale(stage) ^ 2 * m.Stages.HealthMult(stage)
 		end
-		local a, b = power(late.From + 50), power(late.From + 51)
-		check("past LateGrowth.From each stage is at least Rate harder (health x attack)", b / a >= (1 + late.Rate) ^ 2)
-		check("late growth goes more to health than to attack", m.Stages.HealthMult(late.From + 51) / m.Stages.HealthMult(late.From + 50) > 1)
+		local bands = late.Bands or { { From = late.From, Rate = late.Rate } }
+		local last = bands[#bands]
+		local a, b = power(last.From + 50), power(last.From + 51)
+		check("past the last LateGrowth band each stage is at least its Rate harder (health x attack)", b / a >= (1 + last.Rate) ^ 2)
+		check("late growth goes more to health than to attack", m.Stages.HealthMult(last.From + 51) / m.Stages.HealthMult(last.From + 50) > 1)
 	end
 	local soft = m.GearConfig.PercentSoft
 	if soft then

@@ -29,6 +29,25 @@ function Stages.TimeLimit(stage)
 	return if Stages.IsBoss(stage) then Config.BossTimeLimit else Config.TimeLimit
 end
 
+-- Config.LateGrowth: the compounding extra difficulty at this stage (health x attack gets it squared; Scale gives attack
+-- AttackShare of it, HealthMult the rest). Bands = { { From, Rate } }: each rate holds from its From to the next band's.
+local function lateFactor(stage)
+	local late = Config.LateGrowth
+	if not late then
+		return 1
+	end
+	local bands = late.Bands or { { From = late.From, Rate = late.Rate } }
+	local factor = 1
+	for i, band in ipairs(bands) do
+		local stop = if bands[i + 1] then math.min(stage, bands[i + 1].From) else stage
+		if stop > band.From then
+			factor *= (1 + band.Rate) ^ (stop - band.From)
+		end
+	end
+	return factor
+end
+Stages.LateFactor = lateFactor
+
 function Stages.Scale(stage)
 	local scale = 1 + Config.ScalePerStage * (stage - 1) ^ Config.ScalePower
 	for _, tier in ipairs(Config.Tiers or {}) do
@@ -39,8 +58,8 @@ function Stages.Scale(stage)
 	-- past LateGrowth.From every stage is Rate harder on top (compounding). The power curve alone flattens late (stage 150
 	-- is only ~1% harder than 149), so any power spike turned into dozens of free stages (BALANCE.md "Late game runaway").
 	local late = Config.LateGrowth
-	if late and stage > late.From then
-		scale *= (1 + late.Rate) ^ ((stage - late.From) * (late.AttackShare or 1)) -- the rest goes to health (Stages.HealthMult)
+	if late then
+		scale *= lateFactor(stage) ^ (late.AttackShare or 1) -- the rest goes to health (Stages.HealthMult)
 	end
 	local ease = Config.EarlyEase
 	if ease and stage >= ease.From and stage < ease.To then
@@ -68,9 +87,9 @@ function Stages.HealthMult(stage)
 	local ramp = Config.NormalHealth
 	local fight = (Config.FightLength and Config.FightLength.Health) or 1
 	local late = Config.LateGrowth
-	if late and late.AttackShare and stage > late.From then
+	if late and late.AttackShare then
 		-- health gets the part of the late growth that attack does not (see Stages.Scale)
-		fight *= (1 + late.Rate) ^ ((stage - late.From) * 2 * (1 - late.AttackShare))
+		fight *= lateFactor(stage) ^ (2 * (1 - late.AttackShare))
 	end
 	if not ramp or Stages.IsBoss(stage) then
 		return Stages.HealthExtra(stage) * fight
@@ -82,8 +101,8 @@ end
 function Stages.DefenseScale(stage)
 	local scale = Stages.Scale(stage)
 	local late = Config.LateGrowth
-	if late and late.AttackShare and stage > late.From then
-		scale *= (1 + late.Rate) ^ ((stage - late.From) * (1 - late.AttackShare))
+	if late and late.AttackShare then
+		scale *= lateFactor(stage) ^ (1 - late.AttackShare)
 	end
 	return scale
 end

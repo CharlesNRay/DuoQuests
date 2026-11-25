@@ -162,6 +162,8 @@ function ProfileTemplate.Defaults()
 			-- of the guild's upgrades; GuildPending = { [event] = n } waits to be sent to the guild; GuildMarks / GuildPity are personal.
 			GuildMarks = 0,
 			GuildPity = { Epic = 0, Legendary = 0 },
+			Bestiary = { Kills = {} }, -- [enemyId] = kills, every season (Shared/Bestiary)
+			Mastery = {}, -- [classId] = { Level, XP }, every season (Shared/ClassMastery)
 			-- PartyId is added when the player joins a party
 		},
 

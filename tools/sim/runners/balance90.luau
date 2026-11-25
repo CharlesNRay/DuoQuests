@@ -329,7 +329,7 @@ local function run(classId, pathId, seedBase, goalLevel)
 	local nextSample = 10
 	while profile.Season.Level < goalLevel and clock < 600 * 3600 do
 		if profile.Season.HighestStage > lastFrontier then lastFrontier, lastProgress = profile.Season.HighestStage, clock end
-		if clock - lastProgress > 30 * 3600 then stuck = lastFrontier break end -- 6 game hours with no new stage: this build is walled
+		if clock - lastProgress > 120 * 3600 then stuck = lastFrontier break end -- 120 game hours with no new stage (leveling is slow since 2026-11-25): this build is walled
 		seed += 1
 		fights += 1
 		if fights % 100 == 0 then print(("progress %s %s fights %d stage %d lv %d game %.1fh cpu %.0fs"):format(classId, pathId, fights, stage, profile.Season.Level, clock / 3600, os.clock())) end
@@ -366,7 +366,7 @@ local function run(classId, pathId, seedBase, goalLevel)
 		if outcome.Stage % 10 ~= 0 then local band = (outcome.Stage - 1) // 10 durs[band] = durs[band] or { 0, 0 } durs[band][1] += outcome.Duration durs[band][2] += 1 end
 		if outcome.Won then
 			local s = outcome.Stage
-			if first[s] == nil then first[s] = { Minutes = clock / 60, Seconds = outcome.Duration, Losses = losses[s] or 0 } end
+			if first[s] == nil then first[s] = { Minutes = clock / 60, Seconds = outcome.Duration, Losses = losses[s] or 0, Level = profile.Season.Level } end
 		else
 			losses[outcome.Stage] = (losses[outcome.Stage] or 0) + 1
 		end
@@ -469,6 +469,29 @@ local function run(classId, pathId, seedBase, goalLevel)
 	-- can this played profile be saved to a DataStore? (Util/DataSafety; a bad table fails every live save)
 	local problems = m.DataSafety.Problems(profile, 5)
 	print(("SAVECHECK	%s	%s	%s	size %d"):format(classId, pathId, if #problems == 0 then "ok" else table.concat(problems, " | "), m.DataSafety.Size(profile)))
+	-- LOOP: how the frontier moves (2026-11-25, owner: upgrade, push a few stages, wait for more upgrades; no big pushes).
+	-- Per level band: the most new stages cleared in any one game hour, and the longest wait between two new stages.
+	do
+		local firsts = {}
+		for s, f in pairs(first) do table.insert(firsts, { Stage = s, Minutes = f.Minutes, Level = f.Level or 0 }) end
+		table.sort(firsts, function(a, b) return a.Minutes < b.Minutes end)
+		local parts = {}
+		for _, band in ipairs({ { 1, 39 }, { 40, 59 }, { 60, 79 }, { 80, 99 }, { 100, 120 } }) do
+			local list = {}
+			for _, f in ipairs(firsts) do if f.Level >= band[1] and f.Level <= band[2] then table.insert(list, f) end end
+			if #list > 1 then
+				local burst, wait, j = 0, 0, 1
+				for i = 1, #list do
+					while list[i].Minutes - list[j].Minutes > 60 do j += 1 end
+					burst = math.max(burst, i - j + 1)
+					if i > 1 then wait = math.max(wait, list[i].Minutes - list[i - 1].Minutes) end
+				end
+				local span = (list[#list].Minutes - list[1].Minutes) / 60
+				table.insert(parts, ("L%d-%d: %d stages in %.1fh, max %d/h, longest wait %.1fh"):format(band[1], band[2], #list, span, burst, wait / 60))
+			end
+		end
+		print(("LOOP	%s	%s	%s"):format(classId, pathId, table.concat(parts, " | ")))
+	end
 	return { Stuck = stuck, Class = classId, Path = pathId .. (if PARTNER == "solo" then "" else "+" .. PARTNER .. (PARTNER_PATH and ("." .. PARTNER_PATH) or "")), Hours = clock / 3600, Level = profile.Season.Level, Frontier = profile.Season.HighestStage, Fights = fights,
 		Durs = durs, LvAtStage = lvAtStage, Stones30 = stonesAt30, First = first, LevelAt = levelAt, Pet = pet, GearScore = gearScore, RarePets = rarePets }
 end

@@ -35,11 +35,30 @@ local Consumables = require(script.Parent.Consumables)
 local Quests = require(script.Parent.Quests)
 local Passes = require(script.Parent.Passes)
 local Talents = require(script.Parent.Talents)
+local ClassMastery = require(script.Parent.ClassMastery)
 
 local Progression = {}
 
+-- Config/Economy.LevelPace: how much more (or less) a level costs, by level band
+function Progression.LevelPace(level)
+	local points = Economy.LevelPace
+	if not points or #points == 0 then
+		return 1
+	end
+	if level <= points[1].Level then
+		return points[1].Mult
+	end
+	for i = 2, #points do
+		local a, b = points[i - 1], points[i]
+		if level <= b.Level then
+			return a.Mult + (b.Mult - a.Mult) * (level - a.Level) / (b.Level - a.Level)
+		end
+	end
+	return points[#points].Mult
+end
+
 function Progression.XPToNext(level)
-	local need = (Economy.XPBase + Economy.XPCurve * level ^ Economy.XPPower) * (Economy.XPNumber or 1)
+	local need = (Economy.XPBase + Economy.XPCurve * level ^ Economy.XPPower) * (Economy.XPNumber or 1) * Progression.LevelPace(level)
 	local early = Economy.EarlyGame
 	if early and early.LevelCost then
 		-- the first levels are cheaper, fading back to the full cost a few levels later
@@ -140,6 +159,9 @@ function Progression.ApplyClear(profile, stage, rand)
 		skillPicks = Economy.MilestoneSkillPicks
 		season.Currencies.SkillPicks += skillPicks
 	end
+
+	-- class mastery (kept every season): new frontier stages and first boss kills of the season
+	ClassMastery.OnClear(profile, isFrontier, Stages.IsBoss(stage))
 
 	-- quests and the season pass count every won fight
 	Quests.Record(profile, "Clear", 1)

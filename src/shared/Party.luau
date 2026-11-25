@@ -56,6 +56,8 @@ local Power = require(script.Parent.Power)
 local ProfileTemplate = require(script.Parent.ProfileTemplate)
 local Subclasses = require(script.Parent.Subclasses)
 local Talents = require(script.Parent.Talents)
+local Bestiary = require(script.Parent.Bestiary)
+local ClassMastery = require(script.Parent.ClassMastery)
 local TableUtil = require(script.Parent.Util.TableUtil)
 local FIRST_BOSS_STAGE = require(script.Parent.Config.Stages).BossEvery -- stage 10: no farm hold up to it (see Party.OnlineTick)
 local Ultimates = require(script.Parent.Ultimates)
@@ -243,6 +245,12 @@ function Party.MakeSnapshot(profile, userId, name, previous, now)
 				table.insert(mods, mod)
 			end
 			for _, mod in ipairs(Talents.Mods(profile)) do -- level-up talents travel with the ghost too
+				table.insert(mods, mod)
+			end
+			for _, mod in ipairs(Bestiary.Mods(profile)) do -- and the permanent bestiary and class mastery bonuses
+				table.insert(mods, mod)
+			end
+			for _, mod in ipairs(ClassMastery.Mods(profile, classId)) do
 				table.insert(mods, mod)
 			end
 			return mods
@@ -605,6 +613,7 @@ function Party.Claim(party, userId, profile)
 
 	local catchUp = { Stages = 0, Gold = 0, XP = 0, Shards = 0, SkillPicks = 0, LevelsGained = 0 }
 	while season.HighestStage < party.Frontier do
+		Bestiary.Record(profile, Bestiary.KillsForStage(season.HighestStage, 1), os.time()) -- one win per caught-up stage
 		local summary = Progression.ApplyClear(profile, season.HighestStage)
 		catchUp.Stages += 1
 		catchUp.Gold += summary.Gold
@@ -617,6 +626,9 @@ function Party.Claim(party, userId, profile)
 	local afk = party.Pending[key(userId)]
 	party.Pending[key(userId)] = nil
 	if afk then
+		if (afk.Fights or 0) > 0 and afk.Stage then -- the bestiary counts away wins too
+			Bestiary.Record(profile, Bestiary.KillsForStage(afk.Stage, afk.Fights), os.time())
+		end
 		season.Currencies.Gold += afk.Gold
 		season.Currencies.Shards += afk.Shards
 		afk.LevelsGained = Progression.AddXP(season, afk.XP)
@@ -662,6 +674,12 @@ function Party.OnlineTick(party, online, seed, now)
 
 	local stage = party.Stage
 	local outcome = StageRunner.Run(members, stage, seed, StageRunner.UltimateFor(members, party.Frontier, party.UltimateId), true)
+	-- the bestiary: every online member counts every kill of the fight (party kills count for everyone)
+	local kills = Bestiary.CountKills(outcome.Events, outcome.Roster)
+	for _, member in ipairs(online) do
+		outcome.Bestiary = outcome.Bestiary or {}
+		outcome.Bestiary[key(member.UserId)] = Bestiary.Record(member.Profile, kills, now)
+	end
 	if outcome.Won and stage >= party.Frontier then
 		party.Frontier = stage + 1
 	end

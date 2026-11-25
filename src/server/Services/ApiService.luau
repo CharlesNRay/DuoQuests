@@ -88,6 +88,8 @@ local Tutorial = require(Shared.Tutorial)
 local Activities = require(Shared.Activities)
 local Errands = require(Shared.Errands)
 local Talents = require(Shared.Talents)
+local Bestiary = require(Shared.Bestiary)
+local ClassMastery = require(Shared.ClassMastery)
 local Fishing = require(Shared.Fishing)
 local TrainingDummy = require(Shared.TrainingDummy)
 local TownLeisure = require(Shared.TownLeisure)
@@ -170,6 +172,12 @@ local function heroSheetOf(profile)
 		ExtraMods = (function()
 			local mods = table.clone(Pets.Collection(profile).Mods)
 			for _, mod in ipairs(Talents.Mods(profile)) do
+				table.insert(mods, mod)
+			end
+			for _, mod in ipairs(Bestiary.Mods(profile)) do
+				table.insert(mods, mod)
+			end
+			for _, mod in ipairs(ClassMastery.Mods(profile, classId)) do
 				table.insert(mods, mod)
 			end
 			return mods
@@ -279,6 +287,8 @@ local function buildState(player)
 			Settings = profile.Permanent.Settings, -- sound sliders (client/Sound), nil = defaults
 			CanReadLog = PlaytestService.CanRead(player), -- the Feedback screen shows the playtest log (Studio / the place's creator)
 			Talents = Talents.Status(profile), -- level-up points (Shared/Talents)
+			Bestiary = Bestiary.Status(profile, os.time()), -- the permanent monster book (Shared/Bestiary)
+			Mastery = ClassMastery.Status(profile), -- per-class mastery, kept every season (Shared/ClassMastery)
 			Fishing = Fishing.Status(profile, Daily.DayNumber(os.time())), -- the fishing pond (catches left today, fish log)
 			DummyBest = profile.Season.DummyBest or 0, -- best party DPS on the training dummy
 			Relics = TownLeisure.Relics(profile), -- hidden relics found this season

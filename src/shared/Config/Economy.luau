@@ -20,6 +20,9 @@ return {
 	XPBase = 30,
 	XPCurve = 0.9,
 	XPPower = 1.8,
+	-- Pace per level band (2026-11-25, owner: L20 ~4 h, L40 ~10 h, L60 ~30-34 h, then much slower so a season lasts):
+	-- the XP a level costs is multiplied by Mult, read off these points (straight lines between them, flat past the ends).
+	LevelPace = { { Level = 10, Mult = 1.7 }, { Level = 30, Mult = 0.75 }, { Level = 50, Mult = 2.9 }, { Level = 70, Mult = 4.4 }, { Level = 90, Mult = 5.8 }, { Level = 110, Mult = 7 } },
 	-- Low-level heroes are weaker: Health, Attack and Defense from the class are multiplied by Start at level 1, rising in a straight
 	-- line to full strength at FullLevel. So the first stages cannot be skipped at a low level; you have to grow into them.
 	-- Gear carries progression: each level adds only LevelGrowth of a class's per-level stats, and flat gear stats (attack, health, defense)

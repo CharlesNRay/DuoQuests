@@ -44,11 +44,12 @@ return {
 	-- HealthScalePower = nil, -- when set, enemy HEALTH grows on this (steeper) curve and attack on ScalePower (see Stages.HealthExtra)
 	-- Content gets tougher in steps to keep up with the power spikes the player gets
 	-- (subclass at level 30, and so on). Each tier multiplies enemy scale from its stage on.
-	Tiers = { { From = 31, Mult = 1.1 }, { From = 61, Mult = 1.1 } },
+	Tiers = { { From = 31, Mult = 1.1 } }, -- the stage 61 step (x1.1) went 2026-11-25: on top of LateGrowth it was a 20-50 h wall
 	-- past stage From every stage is Rate harder on top of the curve (compounding), so the late game stays a climb
 	-- AttackShare: attack gets Rate x AttackShare per stage and health the rest (health x attack still grows (1+Rate)^2 a
 	-- stage), so late fights get longer instead of more lethal (at 1/1 frontier fights past L50 were 4-7 s again)
-	LateGrowth = { From = 80, Rate = 0.008, AttackShare = 0.5 },
+	-- Bands (2026-11-25, owner: upgrade, push a few stages, wait for more upgrades): 1.8% a stage from 25, 1% from 70.
+	LateGrowth = { Bands = { { From = 25, Rate = 0.018 }, { From = 70, Rate = 0.01 } }, AttackShare = 0.5 },
 	-- Stage monsters: Health times more health and Attack times the attack. The same "who wins" (both sides take about
 	-- 1/Attack x Health longer to fall) but fights last long enough for heals, shields, buffs and debuffs to matter and to
 	-- be watched: at 1/1 frontier fights were over in 3-5 s and the heroes all fell (BALANCE.md "Fight length").

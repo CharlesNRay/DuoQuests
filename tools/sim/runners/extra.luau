@@ -117,3 +117,5 @@ m.DataServiceSim = require("./DataServiceSim") m.ProfileTemplate = m.ProfileTemp
 require("./DataServiceTests")(m)
 m.IconLooks = require("./Config/IconLooks") m.StatusText = require("./StatusText") m.ConsumableConfig = require("./Config/Consumables") m.Statuses = m.Statuses or require("./Config/Statuses") m.TalentConfig = m.TalentConfig or require("./Config/Talents") m.RunesConfig = m.RunesConfig or require("./Config/Runes")
 require("./IconStatusTests")(m)
+m.Bestiary = require("./Bestiary") m.BestiaryConfig = require("./Config/Bestiary") m.ClassMastery = require("./ClassMastery") m.MasteryConfig = require("./Config/ClassMastery") m.ProfileTemplate = m.ProfileTemplate or require("./ProfileTemplate") m.Progression = m.Progression or require("./Progression") m.StageRunner = m.StageRunner or require("./StageRunner") m.DataSafety = m.DataSafety or require("./Util/DataSafety")
+require("./BestiaryMasteryTests")(m)
