@@ -370,3 +370,11 @@ shields, mitigation per path). Roster to L100, 3 seeds per path, companion party
 L40 (2 seeds): every path 44-65 (mean ~53) in 9-13 h. L100 in ~37-45 game hours of active play.
 Supports carry their party late: at L90 a Priest's Blessing added ~412K/s of party damage on top of its own 92K, and
 Taunt's Exposed made Warriors worth 74-171K/s more party damage. Pets do 20-60% of a hero's damage.
+
+## Talents doubled (2026-11-25)
+3 seeds per path at L60, talents on vs off: Berserker 100/95, Priest 101/99, Pyromancer 80/84, Beastmaster 89/72,
+Duelist 96/94, Necromancer 95/94 (about +4 stages for 59 points). Per-rank values about doubled (Might 0.015 -> 0.03,
+Vitality/Bulwark 0.02 -> 0.035, Precision 0.005 -> 0.008, Ferocity 0.03 -> 0.05, Swiftness 0.01 -> 0.018, Focus
+0.008 -> 0.012, Mending 0.025 -> 0.04, Onslaught 0.015 -> 0.025, Fortitude -0.012 -> -0.02, Party Spirit 0.005 ->
+0.008). Now at L60: Berserker 126, Priest 101, Pyromancer 97, Beastmaster 100, Duelist 95, Necromancer 98 (+13 on
+average; the stage ~100 wall caps several). L40 roster unchanged (40-61, 2 seeds).
