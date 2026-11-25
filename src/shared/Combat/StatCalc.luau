@@ -154,14 +154,14 @@ function StatCalc.NewPartyMember(id, name, classId, level, options)
 end
 
 -- `scale` multiplies MaxHealth and Attack (stage difficulty comes later).
-function StatCalc.NewEnemy(id, enemyId, scale, healthMult)
+function StatCalc.NewEnemy(id, enemyId, scale, healthMult, attackMult)
 	local enemy = Enemies[enemyId]
 	assert(enemy ~= nil, "Unknown enemy: " .. tostring(enemyId))
 	scale = scale or 1
 
 	local stats = table.clone(enemy.BaseStats)
 	stats.MaxHealth = math.floor(stats.MaxHealth * scale * (healthMult or 1))
-	stats.Attack = stats.Attack * scale
+	stats.Attack = stats.Attack * scale * (attackMult or 1)
 
 	local entity = Entity.new({
 		Id = id,
@@ -174,6 +174,7 @@ function StatCalc.NewEnemy(id, enemyId, scale, healthMult)
 	})
 	entity.Flags.StunImmune = enemy.IsBoss == true
 	entity.Scale = scale -- summons copy their summoner's scale
+	entity.AttackMult = attackMult -- and its fight-length attack factor (Config/Stages FightLength)
 	return entity
 end
 

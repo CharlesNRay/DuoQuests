@@ -66,10 +66,16 @@ end
 -- Both kinds also get Stages.HealthExtra.
 function Stages.HealthMult(stage)
 	local ramp = Config.NormalHealth
+	local fight = (Config.FightLength and Config.FightLength.Health) or 1
 	if not ramp or Stages.IsBoss(stage) then
-		return Stages.HealthExtra(stage)
+		return Stages.HealthExtra(stage) * fight
 	end
-	return (1 + (ramp.Max - 1) * math.clamp((stage - ramp.From) / ramp.Span, 0, 1)) * Stages.HealthExtra(stage)
+	return (1 + (ramp.Max - 1) * math.clamp((stage - ramp.From) / ramp.Span, 0, 1)) * Stages.HealthExtra(stage) * fight
+end
+
+-- Stage monsters hit this much (Config.FightLength.Attack; 1 when not set)
+function Stages.AttackMult()
+	return (Config.FightLength and Config.FightLength.Attack) or 1
 end
 
 function Stages.Build(stage)
@@ -102,7 +108,7 @@ function Stages.NewEnemies(stage)
 	local built = Stages.Build(stage)
 	local enemies = {}
 	for _, entry in ipairs(built.Enemies) do
-		table.insert(enemies, StatCalc.NewEnemy(entry.Id, entry.EnemyId, entry.Scale, entry.HealthMult))
+		table.insert(enemies, StatCalc.NewEnemy(entry.Id, entry.EnemyId, entry.Scale, entry.HealthMult, Stages.AttackMult()))
 	end
 	return enemies
 end

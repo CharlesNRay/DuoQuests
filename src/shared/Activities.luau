@@ -111,7 +111,7 @@ function Activities.BuildDungeon(dungeon)
 		end
 		local list = {}
 		for _, entry in ipairs(Stages.Build(stage).Enemies) do
-			table.insert(list, StatCalc.NewEnemy(("w%d%s"):format(w, entry.Id), entry.EnemyId, entry.Scale, entry.HealthMult))
+			table.insert(list, StatCalc.NewEnemy(("w%d%s"):format(w, entry.Id), entry.EnemyId, entry.Scale, entry.HealthMult, Stages.AttackMult()))
 		end
 		table.insert(waves, list)
 	end
@@ -119,7 +119,7 @@ function Activities.BuildDungeon(dungeon)
 	local bossStage = math.max(1, math.ceil(bossAt / StagesConfig.BossEvery)) * StagesConfig.BossEvery
 	local bossEntry = Stages.Build(bossStage).Enemies[1]
 	local scale = Stages.Scale(bossAt) * (StagesConfig.BossScaleMult or 1)
-	table.insert(waves, { StatCalc.NewEnemy("boss", bossEntry.EnemyId, scale, Stages.HealthMult(bossStage) * (Activities.BossHealth or 1)) })
+	table.insert(waves, { StatCalc.NewEnemy("boss", bossEntry.EnemyId, scale, Stages.HealthMult(bossStage) * (Activities.BossHealth or 1), Stages.AttackMult()) })
 	local first = table.remove(waves, 1)
 	local seconds = StagesConfig.TimeLimit * dungeon.Waves + StagesConfig.BossTimeLimit
 	return first, waves, seconds

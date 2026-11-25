@@ -47,6 +47,10 @@ return {
 	Tiers = { { From = 31, Mult = 1.1 }, { From = 61, Mult = 1.1 } },
 	-- past stage From every stage is Rate harder on top of the curve (compounding), so the late game stays a climb
 	LateGrowth = { From = 80, Rate = 0.008 },
+	-- Stage monsters: Health times more health and Attack times the attack. The same "who wins" (both sides take about
+	-- 1/Attack x Health longer to fall) but fights last long enough for heals, shields, buffs and debuffs to matter and to
+	-- be watched: at 1/1 frontier fights were over in 3-5 s and the heroes all fell (BALANCE.md "Fight length").
+	FightLength = { Health = 2.4, Attack = 0.7 },
 	-- Softer early zones (the tutorial and the ones after it): from stage From enemies are scaled by Mult, easing back to full strength at To
 	-- (new players have not learned wishing and gear yet; the late game keeps the pair balance). nil = off.
 	EarlyEase = { From = 1, To = 40, Mult = 0.8 },

@@ -313,3 +313,27 @@ Heal/Blessing/RadiantBurst/Smite, every skill at rank 1, 30 seeds. Cleric damage
 stage 14 6210 vs 4907, stage 17 6277 vs 6162, stage 20 (boss, lost) 8781 vs 6715; wins equal. So Judgment is not weak in
 itself: it trails in real play because it is Epic and ranks up slower than the Common/Rare starters (and Smite feeds it).
 No stat change. If players still skip it, the lever is its rank (copies from wishes), not its numbers.
+
+## Late game runaway (2026-11-25)
+Runs to L75-100 (never tried before: the bot used to stop at L40) found that past stage ~80 the party ran away: stage
+80 -> 266 in two game hours (L43 -> L62). The enemy curve `1 + 0.045 x (stage-1)^1.6` flattens in relative terms (stage
+150 is only ~1% harder than 149) while every new stage drops gear that is a bit better (flat stats grow linearly with
+the stage, and percent stats multiply together: crit chance, crit damage, attack speed, damage dealt). Any power spike
+then turned into dozens of free stages.
+- `Config/Gear.PercentSoft { From = 60, Exp = 0.3 }`: percent stats on gear count the item as stage
+  `60 x (S/60)^0.3` past stage 60 (a Legendary +10 ring at stage 200: 0.66 crit chance before, 0.28 now).
+- `Config/Stages.LateGrowth { From = 80, Rate = 0.008 }`: each stage past 80 is 0.8% harder on top (compounding).
+  Tried From 60 with Rate 0.006 / 0.009 / 0.015 / 0.025 / 0.035 (all walled stage ~95 for 20+ levels; 1.5%+ walls
+  everything at ~90) and From 80 / 0.008 (kept). Without it (only PercentSoft) runs still jumped 102 -> 172 by L58.
+- Stage 100 used to be a long wall: rarity stops improving at stage 100 (Gear.Drop anchors end there), so past it only
+  levels and upgrades push.
+
+## Fight length (2026-11-25)
+`Simulation` metrics (balance tools, `setup.Metrics`) showed fights at the frontier lasted 3-5 s at L50+ and the tested
+hero died in nearly every one; healing done was ~0 from L50 on (a Cleric's Heal never fired), so roles only mattered
+through burst. `Config/Stages.FightLength { Health = 2.4, Attack = 0.7 }`: stage monsters (and dungeon waves, and
+monster adds) get 2.4x health and 0.7x attack. Frontier fights now last ~6-12 s.
+- 1.8 / 0.55 kept the same "who wins" maths but made heroes far stronger (L40 frontier 65-91): longer fights let heals,
+  shields and cooldown skills work. 2.4 / 0.7 puts L40 back at ~50-65 (Warrior Berserker high, see below).
+- Fewer fights an hour: `Config/Economy.FightPay = 1.4` (gold, XP and shards per win) keeps the per-hour pace.
+- Tested: 2.6 / 0.85 (L40 ~41-55, too hard) and 3.0 / 0.95 (L40 ~38-48, 15-23 h to L45).

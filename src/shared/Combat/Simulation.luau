@@ -81,6 +81,7 @@ local StatCalc = require(script.Parent.StatCalc)
 local EnemyConfig = require(script.Parent.Parent.Config.Enemies)
 local Classes = require(script.Parent.Parent.Config.Classes)
 local TeamAura = require(script.Parent.Parent.Config.TeamAura)
+local StageConfig = require(script.Parent.Parent.Config.Stages)
 
 local Simulation = {}
 Simulation.__index = Simulation
@@ -166,7 +167,9 @@ Simulation.Effects = {
 		local list = if caster.Team == "Enemy" then sim.Enemies else sim.Party
 		for _ = 1, effect.Count or 1 do
 			sim.SummonCount += 1
-			local minion = sim.SpawnEnemy("s" .. sim.SummonCount, effect.EnemyId, caster.Scale or 1)
+			-- a stage monster's adds get the same fight-length factors as it (Config/Stages FightLength)
+			local fight = if caster.AttackMult then StageConfig.FightLength else nil
+			local minion = sim.SpawnEnemy("s" .. sim.SummonCount, effect.EnemyId, caster.Scale or 1, fight and fight.Health, caster.AttackMult)
 			table.insert(list, minion)
 			sim:_record({
 				Type = "Spawn",

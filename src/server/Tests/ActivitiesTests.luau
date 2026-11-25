@@ -46,7 +46,7 @@ return function(modulesOverride)
 
 	-- waves and the daily bonus: a strong hero clears the Crypt (waves, then the boss) in one fight
 	local strong = ProfileTemplate.New()
-	strong.Season.Level, strong.Season.HighestStage = 60, 60
+	strong.Season.Level, strong.Season.HighestStage = 120, 60 -- level 120: enemies have more health since 2026-11-25 (FightLength)
 	local team = { { Id = "1", Name = "Strong", Profile = strong } }
 	local realStage = crypt.Stage
 	crypt.Stage = 1 -- an easy copy of the dungeon, so the test is about waves and the bonus, not balance

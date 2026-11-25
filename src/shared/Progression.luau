@@ -92,8 +92,10 @@ function Progression.ClearRewards(stage, isFrontier, bonuses)
 	local early = Economy.EarlyGame
 	local fade = if early then math.clamp((early.LastFullStage + early.FadeStages - stage) / early.FadeStages, 0, 1) else 0
 	xpFactor *= 1 + ((early and early.XP or 1) - 1) * fade
-	local factor = Economy.RewardScale * replay -- gold and XP
-	local shards = Economy.ShardsPerClear + stage // Economy.ShardStageStep
+	local pay = Economy.FightPay or 1 -- fights last longer since 2026-11-25: each win pays more
+	local factor = Economy.RewardScale * replay * pay -- gold and XP
+	goldFactor *= pay
+	local shards = (Economy.ShardsPerClear + stage // Economy.ShardStageStep) * pay
 	if Stages.IsBoss(stage) then
 		shards += Economy.BossShardBonus
 	end
