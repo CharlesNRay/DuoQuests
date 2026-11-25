@@ -22,6 +22,7 @@ local Debris = game:GetService("Debris")
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Abilities = require(Shared.Config.Abilities)
 local NumberFormat = require(Shared.Util.NumberFormat)
+local Kit = require(script.Parent.Parent.UI.Kit) -- class colours for damage numbers
 local Ultimates = require(Shared.Config.Ultimates)
 local Actor = require(script.Parent.Actor)
 local StatusLook = require(script.Parent.StatusLook)
@@ -53,7 +54,8 @@ function Replay.new(scene)
 	return setmetatable({ Scene = scene, Heroes = {}, Enemies = {}, Minions = {}, Token = 0 }, Replay)
 end
 
-local function floatText(scene, pos, text, color, size)
+-- far: a fight the local player is in shows its numbers from further away (other lots keep 90 studs, see below)
+local function floatText(scene, pos, text, color, size, far)
 	local anchor = Instance.new("Part")
 	anchor.Anchored = true
 	anchor.CanCollide = false
@@ -63,9 +65,9 @@ local function floatText(scene, pos, text, color, size)
 	anchor.Position = pos
 	anchor.Parent = scene.Folder
 	local gui = Instance.new("BillboardGui")
-	gui.Size = UDim2.fromOffset(140, 36)
+	gui.Size = UDim2.fromOffset(180, 44)
 	gui.AlwaysOnTop = true
-	gui.MaxDistance = 90 -- other lots' numbers must not float over the HUD from across the town
+	gui.MaxDistance = if far then 220 else 90 -- other lots' numbers must not float over the HUD from across the town
 	gui.Adornee = anchor
 	gui.Parent = anchor
 	local label = Instance.new("TextLabel")
@@ -86,7 +88,7 @@ end
 -- a red-white burst and two crossing slash streaks at the target.
 local CRIT_COLOR = Color3.fromRGB(255, 170, 40)
 local CRIT_STROKE = Color3.fromRGB(150, 0, 0)
-local function critText(scene, pos, amountText)
+local function critText(scene, pos, amountText, far, color)
 	local anchor = Instance.new("Part")
 	anchor.Anchored, anchor.CanCollide, anchor.CanQuery, anchor.CanTouch = true, false, false, false
 	anchor.Transparency = 1
@@ -94,9 +96,9 @@ local function critText(scene, pos, amountText)
 	anchor.Position = pos
 	anchor.Parent = scene.Folder
 	local gui = Instance.new("BillboardGui")
-	gui.Size = UDim2.fromOffset(200, 64)
+	gui.Size = UDim2.fromOffset(220, 70)
 	gui.AlwaysOnTop = true
-	gui.MaxDistance = 90
+	gui.MaxDistance = if far then 220 else 90
 	gui.Adornee = anchor
 	gui.Parent = anchor
 	local tag = Instance.new("TextLabel")
@@ -114,17 +116,17 @@ local function critText(scene, pos, amountText)
 	label.Position = UDim2.fromOffset(0, 16)
 	label.BackgroundTransparency = 1
 	label.Text = amountText
-	label.TextColor3 = CRIT_COLOR
+	label.TextColor3 = color or CRIT_COLOR
 	label.TextStrokeColor3 = CRIT_STROKE
 	label.TextStrokeTransparency = 0
 	label.Font = Enum.Font.GothamBlack
 	label.TextSize = 18
 	label.Parent = gui
 	-- pop: small -> big -> settle, then float up and fade
-	TweenService:Create(label, TweenInfo.new(0.12, Enum.EasingStyle.Back, Enum.EasingDirection.Out), { TextSize = 44 }):Play()
+	TweenService:Create(label, TweenInfo.new(0.12, Enum.EasingStyle.Back, Enum.EasingDirection.Out), { TextSize = 50 }):Play()
 	task.delay(0.12, function()
 		if label.Parent then
-			TweenService:Create(label, TweenInfo.new(0.18), { TextSize = 36 }):Play()
+			TweenService:Create(label, TweenInfo.new(0.18), { TextSize = 40 }):Play()
 		end
 	end)
 	task.delay(0.45, function()
@@ -273,6 +275,10 @@ function Replay:_hero(entry, index)
 		local owner = entry.UserId and entry.UserId > 0 and Players:GetPlayerByUserId(entry.UserId) or nil
 		hero = Actor.new(self.Scene, Models.Hero(entry.DefId), { Name = owner and owner:GetAttribute("CharName") or entry.Name, Facing = 1, MaxHealth = entry.MaxHealth })
 		hero.ClassId = entry.DefId
+		hero.Mine = entry.UserId ~= nil and entry.UserId == Players.LocalPlayer.UserId -- the local player's own hero: its numbers stand out
+		if hero.Mine then
+			self.HasMe = true
+		end
 		hero.Pet = Actor.new(self.Scene, Models.Pet(entry.PetId), { Name = "Pet", Facing = 1, MaxHealth = 1 })
 		hero.PetId = entry.PetId
 		hero.Pet.Bar.Enabled = false
@@ -495,13 +501,29 @@ function Replay:_event(e)
 		target:Flinch()
 		target:Absorb(e.Absorbed)
 		target:SetHealth(e.TargetHealth or target.Health)
+		-- who hit whom decides the number's look: your own hero gold and biggest, party members in their class colour,
+		-- pets a size smaller, monsters hitting heroes red with a minus
+		local hitter = self.Heroes[e.Source]
+		local onHero = self.Heroes[e.Target] ~= nil
+		local isPet = type(e.Tag) == "string" and e.Tag:sub(1, 4) == "Pet_"
+		local far = self.HasMe == true
+		local amount = NumberFormat.Short(e.Amount or 0)
+		local color, size, text = Color3.new(1, 1, 1), 26, amount
+		if onHero then
+			color, size, text = Color3.fromRGB(255, 95, 85), 24, "-" .. amount
+		elseif hitter and hitter.Mine then
+			color, size = Color3.fromRGB(255, 214, 80), if isPet then 26 else 34
+		elseif hitter then
+			color = (Kit.Colors[hitter.ClassId] or Color3.new(1, 1, 1)):Lerp(Color3.new(1, 1, 1), 0.35)
+			size = if isPet then 22 else 28
+		end
 		if e.Crit then
 			-- crits stand out: the body flashes red, a burst and slashes at the hit, a big popping number
 			target:Tint(Color3.fromRGB(255, 40, 30), 0.7, 0.35)
 			critBurst(scene, target:Pos())
-			critText(scene, target:Pos() + Vector3.new(0, 2, 0), NumberFormat.Short(e.Amount or 0))
+			critText(scene, target:Pos() + Vector3.new(0, 2, 0), text, far, if hitter and hitter.Mine then Color3.fromRGB(255, 225, 90) else nil)
 		else
-			floatText(scene, target:Pos() + Vector3.new(0, 1.5, 0), NumberFormat.Short(e.Amount or 0), Color3.new(1, 1, 1), 22)
+			floatText(scene, target:Pos() + Vector3.new(0, 1.5, 0), text, color, size, far)
 		end
 	elseif t == "Heal" then
 		local target = actorFor(self, e.Target)
@@ -509,7 +531,7 @@ function Replay:_event(e)
 			target:SetHealth(e.TargetHealth or target.Health)
 			target:HealFx()
 			Sound.PlayAt("Heal", target:Pos())
-			floatText(scene, target:Pos() + Vector3.new(0, 1.5, 0), "+" .. NumberFormat.Short(e.Amount or 0), Color3.fromRGB(110, 235, 140), 22)
+			floatText(scene, target:Pos() + Vector3.new(0, 1.5, 0), "+" .. NumberFormat.Short(e.Amount or 0), Color3.fromRGB(110, 235, 140), 26, self.HasMe == true)
 			safely(SkillEffects.Heal, scene, e.Tag, target:Pos())
 		end
 	elseif t == "Status" then

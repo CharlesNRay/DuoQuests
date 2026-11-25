@@ -55,7 +55,7 @@ return {
 	Season = {
 		Name = "Verdant Colossus", DefId = "Colossus",
 		Look = { Color = { 70, 140, 90 }, Height = 90 },
-		MaxHealth = 60000000, -- the total of every player's best fight (was 30M; doubled for four-hero fights 2026-11-18)
+		MaxHealth = 6000000 * require(script.Parent.Economy).NumberScale, -- 600M at NumberScale 100 (60M at 10), -- the total of every player's best fight (was 30M; doubled for four-hero fights 2026-11-18)
 		-- the last FinaleShare of the season: the boss withers faster and faster, reaching 0 at the end
 		FinaleShare = 0.2,
 		FightSeconds = 150,

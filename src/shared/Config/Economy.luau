@@ -11,7 +11,7 @@ return {
 	-- Player level --------------------------------------------------------
 	-- NumberScale makes every health / attack / defense number this many times bigger (heroes, enemies, gear, bosses) without
 	-- changing the balance: defense is scaled with it (see Simulation) and percentages stay percentages.
-	NumberScale = 10,
+	NumberScale = 100, -- was 10 (2026-11-25, owner: bigger health and damage numbers everywhere)
 	-- XPNumber does the same for experience (needed to level, earned per fight) so levels fly by in bigger numbers.
 	XPNumber = 20,
 	MaxLevel = 120,

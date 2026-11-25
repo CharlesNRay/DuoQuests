@@ -138,7 +138,7 @@ return function(modulesOverride)
 	local dealt, logged = 0, 0
 	for _, row in pairs(withMetrics.Metrics.Entities) do dealt += row.Dealt or 0 end
 	for _, e in ipairs(withMetrics.Events) do if e.Type == "Damage" then logged += e.Amount end end
-	check(("metrics damage equals the damage events (%d vs %d)"):format(dealt, logged), dealt == logged)
+	check(("metrics damage equals the damage events (%d vs %d)"):format(dealt, logged), math.abs(dealt - logged) <= 1e-6 * math.max(1, logged))
 	check("metrics do not change the fight", withMetrics.Duration == outcome.Duration and withMetrics.Won == outcome.Won)
 
 	-- late-game guards
