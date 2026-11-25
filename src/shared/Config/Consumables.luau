@@ -25,25 +25,25 @@ return {
 
 	Defs = {
 		XPTonic = {
-			Id = "XPTonic", DisplayName = "XP Tonic", Kind = "Buff", Glyph = "✨", Rarity = "Common", Duration = 900,
+			Id = "XPTonic", DisplayName = "XP Tonic", Kind = "Buff", Glyph = "🧪", Rarity = "Common", Duration = 900,
 			Description = "+50% XP from fights for 15 minutes.",
 			Effects = { { Stat = "XPGain", Mode = "Add", Value = 0.5 } },
 			Price = { Base = 13800, PerStage = 0 }, Drop = 30,
 		},
 		PowerElixir = {
-			Id = "PowerElixir", DisplayName = "Power Elixir", Kind = "Buff", Glyph = "💥", Rarity = "Rare", Duration = 600,
+			Id = "PowerElixir", DisplayName = "Power Elixir", Kind = "Buff", Glyph = "🍶", Rarity = "Rare", Duration = 600,
 			Description = "+25% damage dealt for 10 minutes.",
 			Effects = { { Stat = "DamageDealt", Mode = "Mul", Value = 0.25 } },
 			Price = { Base = 24000, PerStage = 0 }, Drop = 15,
 		},
 		IronTonic = {
-			Id = "IronTonic", DisplayName = "Iron Tonic", Kind = "Buff", Glyph = "🛡", Rarity = "Rare", Duration = 600,
+			Id = "IronTonic", DisplayName = "Iron Tonic", Kind = "Buff", Glyph = "🍵", Rarity = "Rare", Duration = 600,
 			Description = "-20% damage taken for 10 minutes.",
 			Effects = { { Stat = "DamageTaken", Mode = "Mul", Value = -0.2 } },
 			Price = { Base = 24000, PerStage = 0 }, Drop = 15,
 		},
 		HasteDraught = {
-			Id = "HasteDraught", DisplayName = "Haste Draught", Kind = "Buff", Glyph = "⚡", Rarity = "Rare", Duration = 600,
+			Id = "HasteDraught", DisplayName = "Haste Draught", Kind = "Buff", Glyph = "🥤", Rarity = "Rare", Duration = 600,
 			Description = "+20% attack speed for 10 minutes.",
 			Effects = { { Stat = "AttackSpeed", Mode = "Mul", Value = 0.2 } },
 			Price = { Base = 24000, PerStage = 0 }, Drop = 10,

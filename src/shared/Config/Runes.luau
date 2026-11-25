@@ -13,17 +13,17 @@ return {
 	Order = { "Attack", "MaxHealth", "Defense", "DamageDealt", "DamageTaken", "CritChance", "CritMultiplier", "CritResist", "Haste", "AttackSpeed", "HealingDealt" },
 
 	Stats = {
-		Attack = { Name = "Might", Glyph = "⚔", Label = "Attack", Mode = "Mul", Values = { 0.02, 0.03, 0.045, 0.06 } },
-		MaxHealth = { Name = "Vitality", Glyph = "❤", Label = "Health", Mode = "Mul", Values = { 0.03, 0.045, 0.065, 0.09 } },
-		Defense = { Name = "Stone", Glyph = "🛡", Label = "Defense", Mode = "Mul", Values = { 0.03, 0.045, 0.065, 0.09 } },
-		DamageDealt = { Name = "Fury", Glyph = "🔥", Label = "Damage dealt", Mode = "Mul", Values = { 0.02, 0.03, 0.045, 0.06 } },
-		DamageTaken = { Name = "Warding", Glyph = "🔰", Label = "Damage taken", Mode = "Mul", Values = { -0.015, -0.025, -0.035, -0.05 } },
-		CritChance = { Name = "Precision", Glyph = "🎯", Label = "Crit chance", Mode = "Add", Values = { 0.01, 0.015, 0.02, 0.03 } },
-		CritMultiplier = { Name = "Ruin", Glyph = "💥", Label = "Crit damage", Mode = "Add", Values = { 0.04, 0.07, 0.1, 0.15 } },
-		CritResist = { Name = "Steadfast", Glyph = "🗿", Label = "Crit resistance", Mode = "Add", Values = { 0.01, 0.02, 0.03, 0.04 } },
-		Haste = { Name = "Swiftness", Glyph = "⏳", Label = "Cooldowns", Mode = "Add", Values = { 0.015, 0.025, 0.035, 0.05 } },
-		AttackSpeed = { Name = "Alacrity", Glyph = "⚡", Label = "Attack speed", Mode = "Mul", Values = { 0.015, 0.025, 0.035, 0.05 } },
-		HealingDealt = { Name = "Mercy", Glyph = "✨", Label = "Healing", Mode = "Mul", Values = { 0.03, 0.05, 0.07, 0.1 } },
+		Attack = { Name = "Might", Glyph = "♈", Label = "Attack", Mode = "Mul", Values = { 0.02, 0.03, 0.045, 0.06 } },
+		MaxHealth = { Name = "Vitality", Glyph = "♉", Label = "Health", Mode = "Mul", Values = { 0.03, 0.045, 0.065, 0.09 } },
+		Defense = { Name = "Stone", Glyph = "♑", Label = "Defense", Mode = "Mul", Values = { 0.03, 0.045, 0.065, 0.09 } },
+		DamageDealt = { Name = "Fury", Glyph = "♌", Label = "Damage dealt", Mode = "Mul", Values = { 0.02, 0.03, 0.045, 0.06 } },
+		DamageTaken = { Name = "Warding", Glyph = "♋", Label = "Damage taken", Mode = "Mul", Values = { -0.015, -0.025, -0.035, -0.05 } },
+		CritChance = { Name = "Precision", Glyph = "♐", Label = "Crit chance", Mode = "Add", Values = { 0.01, 0.015, 0.02, 0.03 } },
+		CritMultiplier = { Name = "Ruin", Glyph = "♏", Label = "Crit damage", Mode = "Add", Values = { 0.04, 0.07, 0.1, 0.15 } },
+		CritResist = { Name = "Steadfast", Glyph = "♒", Label = "Crit resistance", Mode = "Add", Values = { 0.01, 0.02, 0.03, 0.04 } },
+		Haste = { Name = "Swiftness", Glyph = "♊", Label = "Cooldowns", Mode = "Add", Values = { 0.015, 0.025, 0.035, 0.05 } },
+		AttackSpeed = { Name = "Alacrity", Glyph = "♍", Label = "Attack speed", Mode = "Mul", Values = { 0.015, 0.025, 0.035, 0.05 } },
+		HealingDealt = { Name = "Mercy", Glyph = "♓", Label = "Healing", Mode = "Mul", Values = { 0.03, 0.05, 0.07, 0.1 } },
 	},
 
 	-- Drops. Tier weights by stage, blended between the anchors (like gear rarity).

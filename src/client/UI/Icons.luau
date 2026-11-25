@@ -102,36 +102,33 @@ local function tile(parent, color, glyph, border, props)
 end
 
 
--- every skill has its own glyph and colour so they can be told apart at a glance
+-- every skill, status, ultimate, pet skill and passive has its own glyph and colour (Config/IconLooks, generated and checked
+-- for duplicates by tools/icons/icons.py)
 local function rgb(r, g, b) return Color3.fromRGB(r, g, b) end
-local SKILL_LOOK = {
-	ShieldBash = { rgb(170, 120, 60), "🔨" }, Taunt = { rgb(150, 80, 60), "📣" }, IronSkin = { rgb(110, 120, 140), "⛓" },
-	Whirlwind = { rgb(70, 150, 170), "🌀" }, ShieldWall = { rgb(60, 100, 180), "🧱" }, CrushingBlow = { rgb(160, 60, 50), "💢" },
-	LastStand = { rgb(190, 90, 50), "💪" }, RallyingCry = { rgb(200, 150, 50), "🚩" }, Smite = { rgb(230, 200, 90), "⚡" },
-	Heal = { rgb(60, 170, 100), "➕" }, Blessing = { rgb(220, 190, 120), "🙏" }, RadiantBurst = { rgb(240, 210, 110), "☀" },
-	DivineShield = { rgb(110, 170, 230), "🔰" }, GroupHeal = { rgb(90, 190, 130), "💞" }, GuardianAngel = { rgb(200, 210, 240), "👼" },
-	Judgment = { rgb(220, 180, 70), "⚖" }, Verdict = { rgb(235, 200, 110), "⚔" }, Resurrection = { rgb(170, 230, 190), "🕊" }, Fireball = { rgb(220, 90, 40), "🔥" },
-	Blizzard = { rgb(100, 180, 230), "❄" }, LightningBolt = { rgb(230, 220, 70), "🌩" }, ArcaneSurge = { rgb(150, 90, 210), "🔮" },
-	BloodFrenzy = { rgb(170, 30, 50), "🩸" }, Cleave = { rgb(190, 90, 80), "🪓" }, ExecutionerStrike = { rgb(110, 40, 60), "☠" },
-	Bulwark = { rgb(90, 110, 150), "🏰" }, Retribution = { rgb(210, 120, 60), "🔁" }, UnbreakableVow = { rgb(180, 170, 130), "💍" },
-	Sanctuary = { rgb(120, 200, 190), "⛪" }, Renewal = { rgb(120, 200, 120), "🌿" }, HolyAegis = { rgb(150, 190, 240), "✝" },
-	HolyWrath = { rgb(240, 170, 60), "✴" }, DivineSmite = { rgb(250, 230, 150), "🌟" }, SlimeSplit = { rgb(100, 200, 110), "🟢" },
-	Enrage = { rgb(200, 50, 40), "😡" }, SporeBurst = { rgb(150, 120, 190), "🍄" }, SporeCall = { rgb(120, 150, 100), "🌱" },
-}
+local Looks = require(game:GetService("ReplicatedStorage"):WaitForChild("Shared").Config.IconLooks)
+local function lookOf(list, key)
+	local own = key and list[key]
+	if own then
+		return { rgb(own.Color[1], own.Color[2], own.Color[3]), own.Glyph }
+	end
+	return nil
+end
+Icons.LookOf = lookOf
+Icons.Looks = Looks
 function Icons.Skill(parent, def, props)
 	local kind = Icons.SkillKind(def)
-	local own = SKILL_LOOK[def.Id]
+	local own = lookOf(Looks.Skills, def.Id)
 	return tile(parent, if own then own[1] else KIND_COLORS[kind], if own then own[2] else KIND_GLYPHS[kind], Kit.rarityColor((props and props.Tier) or def.Rarity), props)
 end
 
--- Passives: tinted by category, with a plain glyph. A nil def is an empty slot.
+-- Passives: each its own glyph and colour (Config/IconLooks); an unknown one falls back to its category. A nil def is an empty slot.
 local PASSIVE_LOOK = {
 	Damage = { Color3.fromRGB(190, 80, 70), "⚔" }, Defense = { Color3.fromRGB(80, 120, 190), "🛡" },
 	Healing = { Color3.fromRGB(80, 170, 110), "✚" }, Gold = { Color3.fromRGB(200, 165, 60), "💰" },
 	XP = { Color3.fromRGB(120, 100, 200), "★" }, Rarity = { Color3.fromRGB(190, 110, 170), "✦" },
 }
 function Icons.Passive(parent, def, props)
-	local look = PASSIVE_LOOK[def and def.Category or ""] or { Color3.fromRGB(70, 74, 96), "+" }
+	local look = (def and lookOf(Looks.Passives, def.Id)) or PASSIVE_LOOK[def and def.Category or ""] or { Color3.fromRGB(70, 74, 96), "+" }
 	return tile(parent, look[1], look[2], if def then Color3.fromRGB(235, 225, 190) else Color3.fromRGB(110, 116, 140), props)
 end
 
@@ -145,35 +142,16 @@ function Icons.Pet(parent, petId, props)
 	return tile(parent, color, PET_GLYPHS[look.Shape] or "●", Kit.rarityColor(def and def.Rarity), props)
 end
 
--- Pet skills: every one has its own glyph and colour, bordered by the pet's rarity, with the pet's rank as the level badge.
-local PET_SKILL_LOOK = {
-	["Goo Bubble"] = { rgb(100, 200, 120), "💧" }, ["Fox Fire"] = { rgb(230, 120, 50), "🔥" }, ["Mossy Guard"] = { rgb(80, 150, 100), "🌿" },
-	Rockfall = { rgb(140, 130, 120), "⛰" }, ["Soft Landing"] = { rgb(190, 210, 235), "☁" }, ["Cheerful Song"] = { rgb(230, 180, 80), "🎵" },
-	Spark = { rgb(230, 220, 90), "⚡" }, ["Ember Claw"] = { rgb(200, 80, 50), "🐾" }, ["Tidal Shell"] = { rgb(70, 140, 200), "🐚" },
-	Tailwind = { rgb(120, 200, 190), "💨" }, ["Cold Snap"] = { rgb(120, 190, 235), "❄" }, ["Star Wish"] = { rgb(240, 220, 120), "🌠" },
-	["Thorn Armor"] = { rgb(90, 140, 70), "🌵" }, Dragonfire = { rgb(210, 70, 50), "🐲" }, ["Colossal Stomp"] = { rgb(150, 110, 80), "👣" },
-	["Aurora Veil"] = { rgb(140, 200, 220), "🌈" },
-	["Royal Decree"] = { rgb(240, 200, 80), "👑" }, ["Victory March"] = { rgb(150, 210, 110), "🏆" },
-	["Banner Guard"] = { rgb(210, 90, 80), "🚩" }, ["Halo Mend"] = { rgb(250, 235, 160), "⭐" },
-}
+-- Pet skills: bordered by the pet's rarity, with the pet's rank as the level badge.
 function Icons.PetSkill(parent, petId, props)
 	local PetConfig = require(game:GetService("ReplicatedStorage"):WaitForChild("Shared").Config.Pets)
 	local def = PetConfig.Defs[petId]
-	local look = def and def.Skill and PET_SKILL_LOOK[def.Skill.Name]
+	local look = def and def.Skill and lookOf(Looks.PetSkills, def.Skill.Name)
 	return tile(parent, if look then look[1] else KIND_COLORS.Buff, if look then look[2] else KIND_GLYPHS.Buff, Kit.rarityColor(def and def.Rarity), props)
 end
 
--- every ultimate has its own glyph and colour (each belongs to a pair of classes)
-local ULT_LOOK = {
-	SanctifiedCharge = { rgb(230, 190, 90), "🐎" }, BulwarkOfDawn = { rgb(240, 160, 90), "🌅" }, RadiantJudgment = { rgb(245, 215, 110), "⚖" },
-	HolyCataclysm = { rgb(240, 130, 70), "☄" }, BlessedBarrage = { rgb(190, 210, 120), "🏹" }, SacredBlades = { rgb(210, 200, 150), "🗡" },
-	SpiritChoir = { rgb(150, 210, 220), "🎶" }, ArcaneArrowstorm = { rgb(120, 130, 220), "🌠" }, Shadowflame = { rgb(150, 70, 170), "🔥" },
-	SpectralTempest = { rgb(110, 170, 200), "🌪" }, RunicSmash = { rgb(160, 110, 200), "🔨" }, HailOfBlades = { rgb(130, 160, 180), "🌧" },
-	WildHunt = { rgb(110, 160, 90), "🐺" }, WarbandVolley = { rgb(200, 100, 70), "🚩" }, ShadowLegion = { rgb(80, 70, 120), "👥" },
-	DuelOfSteel = { rgb(180, 190, 205), "⚔" }, GraveGuard = { rgb(90, 120, 100), "💀" },
-}
 function Icons.Ultimate(parent, def, props)
-	local own = def and ULT_LOOK[def.Id]
+	local own = def and lookOf(Looks.Ultimates, def.Id)
 	return tile(parent, if own then own[1] else KIND_COLORS.Ultimate, if own then own[2] else KIND_GLYPHS.Ultimate, Kit.rarityColor(def and def.Rarity or "Epic"), props)
 end
 

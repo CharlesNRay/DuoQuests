@@ -419,6 +419,8 @@ function Simulation.new(options)
 		-- Waves: more enemy lists that join one after another when the enemies on the field all fall (dungeons). Nothing
 		-- resets between waves: health, cooldowns, statuses and the ultimate charge carry on.
 		Waves = options.Waves,
+		-- Metrics = true: tally who did what (balance tools only; see Simulation:_metric and docs/BALANCE.md "Class report")
+		Metrics = if options.Metrics then { Entities = {}, Statuses = {} } else nil,
 		WaveIndex = 0,
 		SummonCount = 0,
 		Ticks = 0,
@@ -507,6 +509,93 @@ function Simulation:HasFlag(entity, flagName)
 end
 
 -- Base stat with every active status modifier applied: (base + adds) * mults.
+-- Metrics (balance tools only): per entity { Dealt, Taken, Healed, Overheal, Absorbed (their shields soaked),
+-- MitDefense (own Defense), MitByBuffs (damage their buffs kept off allies), Dodged, Enabled (extra damage their buffs and
+-- debuffs caused), Dot, Crits, Hits }, and per status { Extra, Mitigated }.
+function Simulation:_metric(entityId, key, amount)
+	local m = self.Metrics
+	if not m or entityId == nil or amount == 0 then
+		return
+	end
+	local row = m.Entities[entityId]
+	if not row then
+		row = {}
+		m.Entities[entityId] = row
+	end
+	row[key] = (row[key] or 0) + amount
+end
+
+-- the stat without one status (to see how much that status moved it)
+function Simulation:_statWithout(entity, statName, skip)
+	local base = entity.Stats[statName]
+	if base == nil then
+		base = STAT_DEFAULTS[statName] or 0
+	end
+	local add, mult = 0, 1
+	for _, status in ipairs(entity.Statuses) do
+		if status ~= skip then
+			local mods = self:_statusDef(status.Id).Mods
+			for _, mod in ipairs(mods or {}) do
+				if mod.Stat == statName then
+					local strength = status.Strength or 1
+					if mod.Mode == "Add" then
+						add += mod.Value * strength
+					else
+						mult *= 1 + (mod.Value - 1) * strength
+					end
+				end
+			end
+		end
+	end
+	return (base + add) * mult
+end
+
+-- how much each status on the attacker or the target changed one hit (factor > 1 = more damage, < 1 = less)
+function Simulation:_statusFactors(ctx, preDefense, defenseK)
+	local out = {}
+	local source, target = ctx.Source, ctx.Target
+	local typeStat = if ctx.DamageType == "Magical" then "MagicalDamageDealt" elseif ctx.DamageType == "Physical" then "PhysicalDamageDealt" else nil
+	for _, status in ipairs(source.Statuses) do
+		local mods = self:_statusDef(status.Id).Mods
+		if mods then
+			local f = 1
+			for _, mod in ipairs(mods) do
+				local stat = mod.Stat
+				if stat == "Attack" or stat == "DamageDealt" or stat == typeStat then
+					local with, without = self:GetStat(source, stat), self:_statWithout(source, stat, status)
+					if without > 0 then f *= with / without end
+				elseif stat == "CritMultiplier" and ctx.IsCrit then
+					local with, without = self:GetStat(source, stat), self:_statWithout(source, stat, status)
+					if without > 0 then f *= with / without end
+				elseif stat == "CritChance" then
+					local cm = self:GetStat(source, "CritMultiplier") - 1
+					local with, without = self:GetStat(source, stat), self:_statWithout(source, stat, status)
+					f *= (1 + math.clamp(with, 0, 1) * cm) / (1 + math.clamp(without, 0, 1) * cm)
+				end
+			end
+			if f ~= 1 then table.insert(out, { status, f }) end
+		end
+	end
+	for _, status in ipairs(target.Statuses) do
+		local mods = self:_statusDef(status.Id).Mods
+		if mods then
+			local f = 1
+			for _, mod in ipairs(mods) do
+				if mod.Stat == "DamageTaken" then
+					local with, without = self:GetStat(target, "DamageTaken"), self:_statWithout(target, "DamageTaken", status)
+					if without > 0 then f *= with / without end
+				elseif mod.Stat == "Defense" then
+					local with = math.max(0, self:GetStat(target, "Defense"))
+					local without = math.max(0, self:_statWithout(target, "Defense", status))
+					f *= (defenseK + without) / (defenseK + with)
+				end
+			end
+			if f ~= 1 then table.insert(out, { status, f }) end
+		end
+	end
+	return out
+end
+
 function Simulation:GetStat(entity, statName)
 	local base = entity.Stats[statName]
 	if base == nil then
@@ -797,10 +886,17 @@ function Simulation:DealDamage(source, target, amount, info)
 	if scaleExp and source and source.Team == "Enemy" and (source.Scale or 1) > 1 then
 		defenseK *= source.Scale ^ scaleExp
 	end
+	local preDefense = ctx.Amount
 	ctx.Amount = ctx.Amount * defenseK / (defenseK + math.max(0, self:GetStat(target, "Defense")))
+	if self.Metrics then
+		self:_metric(target.Id, "MitDefense", preDefense - ctx.Amount)
+	end
 	ctx.Amount *= self:GetStat(target, "DamageTaken")
 
 	self.Hooks:Fire("OnBeforeDamage", ctx)
+	if self.Metrics and ctx.Prevented then
+		self:_metric(target.Id, "Dodged", ctx.Amount)
+	end
 
 	local final = 0
 	if not ctx.Prevented and ctx.Amount > 0 then
@@ -817,6 +913,9 @@ function Simulation:DealDamage(source, target, amount, info)
 			local flags = self:_statusDef(status.Id).Flags
 			if flags and flags.Absorb and (status.Amount or 0) > 0 then
 				local soak = math.min(status.Amount, final)
+				if self.Metrics then
+					self:_metric(status.Source, "Absorbed", soak)
+				end
 				status.Amount -= soak
 				final -= soak
 				absorbed += soak
@@ -832,6 +931,31 @@ function Simulation:DealDamage(source, target, amount, info)
 	ctx.Final = final
 	ctx.Absorbed = absorbed
 	target.Health -= final
+	if self.Metrics then
+		local landed = final + absorbed
+		self:_metric(source.Id, "Dealt", final)
+		self:_metric(source.Id, "Hits", 1)
+		if ctx.IsCrit then self:_metric(source.Id, "Crits", 1) end
+		if ctx.Dot then self:_metric(source.Id, "Dot", final) end
+		if type(ctx.Tag) == "string" and ctx.Tag:sub(1, 4) == "Pet_" then self:_metric(source.Id, "PetDealt", final) end
+		self:_metric(target.Id, "Taken", final)
+		if landed > 0 then
+			for _, pair in ipairs(self:_statusFactors(ctx, nil, defenseK)) do
+				local status, f = pair[1], pair[2]
+				local row = self.Metrics.Statuses[status.Id] or { Extra = 0, Mitigated = 0 }
+				self.Metrics.Statuses[status.Id] = row
+				if f > 1 then
+					local extra = landed * (1 - 1 / f)
+					row.Extra += extra
+					self:_metric(status.Source, "Enabled", extra)
+				else
+					local kept = landed * (1 / f - 1)
+					row.Mitigated += kept
+					self:_metric(status.Source, "MitByBuffs", kept)
+				end
+			end
+		end
+	end
 
 	self:_record({
 		Type = "Damage",
@@ -890,6 +1014,10 @@ function Simulation:Heal(source, target, amount, info)
 	local wanted = math.max(0, math.floor(ctx.Amount + 0.5))
 	local final = math.min(wanted, self:GetStat(target, "MaxHealth") - target.Health)
 	target.Health += final
+	if self.Metrics then
+		self:_metric(source.Id, if ctx.Tag == "Lifesteal" then "Lifesteal" else "Healed", final)
+		self:_metric(source.Id, "Overheal", wanted - final)
+	end
 
 	ctx.Final = final
 	self:_record({
@@ -1298,6 +1426,7 @@ function Simulation:Step()
 			if entity.Alive and entity.Health <= 0 then
 				entity.Alive = false
 				self:_record({ Type = "Death", Target = entity.Id })
+				self:_metric(entity.Id, "Deaths", 1)
 				self.Hooks:Fire("OnDeath", { Entity = entity })
 			end
 		end

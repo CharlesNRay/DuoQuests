@@ -45,6 +45,8 @@ return {
 	-- Content gets tougher in steps to keep up with the power spikes the player gets
 	-- (subclass at level 30, and so on). Each tier multiplies enemy scale from its stage on.
 	Tiers = { { From = 31, Mult = 1.1 }, { From = 61, Mult = 1.1 } },
+	-- past stage From every stage is Rate harder on top of the curve (compounding), so the late game stays a climb
+	LateGrowth = { From = 80, Rate = 0.008 },
 	-- Softer early zones (the tutorial and the ones after it): from stage From enemies are scaled by Mult, easing back to full strength at To
 	-- (new players have not learned wishing and gear yet; the late game keeps the pair balance). nil = off.
 	EarlyEase = { From = 1, To = 40, Mult = 0.8 },

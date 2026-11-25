@@ -161,6 +161,10 @@ local Gear = {
 	-- common rarity, average roll), the next win drops that par item for that slot. Gear at par or better
 	-- never triggers it, so lucky players gain nothing. Any natural upgrade resets the count.
 	Pity = { After = 10, BelowPar = 0.85 },
+	-- Percentage stats (Haste, AttackSpeed, CritChance, DamageDealt) stop growing linearly past stage From: the
+	-- item counts as stage From * (S / From) ^ Exp. They multiply together, so linear growth outran the enemy
+	-- curve (stage ^ 1.6) past stage ~80 and runs went from stage 80 to 266 in two hours (BALANCE.md "Late game runaway").
+	PercentSoft = { From = 60, Exp = 0.3 },
 }
 
 -- flat health / attack / defense on items is NumberScale times bigger, like the heroes it is worn by (Config/Economy)
@@ -168,6 +172,8 @@ for _, stat in pairs(Gear.Slots) do
 	if stat.Stat == "MaxHealth" or stat.Stat == "Attack" or stat.Stat == "Defense" then
 		stat.Base *= Economy.NumberScale * (Economy.GearPower or 1)
 		stat.PerStage *= Economy.NumberScale * (Economy.GearPower or 1)
+	else
+		stat.Percent = true
 	end
 end
 

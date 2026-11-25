@@ -7,7 +7,7 @@ local m = {
 	PetGear = require("./PetGear"), PetGearConfig = require("./Config/PetGear"), Consumables = require("./Consumables"),
 	Runes = require("./Runes"), RunesConfig = require("./Config/Runes"),
 	Activities = require("./Activities"), Bosses = require("./Bosses"), BossCfg = require("./Config/Bosses"), TableUtil = require("./Util/TableUtil"),
-	Talents = require("./Talents"), DataSafety = require("./Util/DataSafety"),
+	Talents = require("./Talents"), DataSafety = require("./Util/DataSafety"), Stages = require("./Stages"),
 }
 local ARGS = require("./cfg")
 local MODE = ARGS[4] or "full"
@@ -251,6 +251,50 @@ local function goldSpend(profile, classId, now)
 		if not did then break end
 	end
 end
+-- Class report (docs/BALANCE.md "Class report"): N fights at the pushed stage with Simulation metrics on. One METRIC line
+-- per hero (the tested hero first, then the companions/partner), one STATUSFX line with what each buff/debuff added or kept off.
+local METRIC_KEYS = { "Dealt", "PetDealt", "MinionDealt", "Dot", "Enabled", "Healed", "Lifesteal", "Overheal", "Absorbed", "MitByBuffs", "MitDefense", "Dodged", "Taken", "Deaths", "Hits", "Crits" }
+local function sampleMetrics(classId, pathId, profile, team, stage, seed, ultimate, clock)
+	local N = 12
+	local wins, secs, sums, statusSums = 0, 0, {}, {}
+	for i = 1, N do
+		local o = m.StageRunner.Run(team, stage, seed * 31 + i, ultimate, false, { Metrics = true, NoRewards = true })
+		if o.Won then wins += 1 end
+		secs += o.Duration
+		local sim = o.Sim
+		local ownerOf = {}
+		for _, e in ipairs(sim.Party) do if e.OwnerId then ownerOf[e.Id] = e.OwnerId end end
+		for id, row in pairs(o.Metrics.Entities) do
+			local owner = ownerOf[id]
+			local key = owner or id
+			sums[key] = sums[key] or {}
+			for k, v in pairs(row) do
+				if owner and k == "Dealt" then
+					sums[key].MinionDealt = (sums[key].MinionDealt or 0) + v
+				elseif not owner or k ~= "Taken" then
+					sums[key][k] = (sums[key][k] or 0) + v
+				end
+			end
+		end
+		for sid, r in pairs(o.Metrics.Statuses) do
+			statusSums[sid] = statusSums[sid] or { 0, 0 }
+			statusSums[sid][1] += r.Extra
+			statusSums[sid][2] += r.Mitigated
+		end
+	end
+	local enemyScale = m.Stages.Build(stage).Scale
+	for _, member in ipairs(team) do
+		local cls = if member.Profile then member.Profile.Season.ClassId else member.Snapshot.ClassId
+		local row = sums[member.Id] or {}
+		local parts = {}
+		for _, k in ipairs(METRIC_KEYS) do table.insert(parts, ("%s=%.0f"):format(k, (row[k] or 0) / N)) end
+		print(("METRIC	%s	%s	lv%d	fr%d	st%d	h%.2f	win%.2f	dur%.1f	esc%.1f	%s	%s	%s"):format(classId, pathId, profile.Season.Level, profile.Season.HighestStage, stage, clock / 3600, wins / N, secs / N, enemyScale, member.Id, cls, table.concat(parts, " ")))
+	end
+	local fx = {}
+	for sid, r in pairs(statusSums) do table.insert(fx, ("%s=%.0f/%.0f"):format(sid, r[1] / N, r[2] / N)) end
+	table.sort(fx)
+	print(("STATUSFX	%s	%s	lv%d	%s"):format(classId, pathId, profile.Season.Level, table.concat(fx, " ")))
+end
 local function run(classId, pathId, seedBase, goalLevel)
 	lcg = 12345 + seedBase * 7919
 	local profile = m.ProfileTemplate.New()
@@ -282,12 +326,24 @@ local function run(classId, pathId, seedBase, goalLevel)
 	local luckPets = ""
 	local lastFrontier, lastProgress = 1, 0
 	local stuck = nil
+	local nextSample = 10
 	while profile.Season.Level < goalLevel and clock < 600 * 3600 do
 		if profile.Season.HighestStage > lastFrontier then lastFrontier, lastProgress = profile.Season.HighestStage, clock end
 		if clock - lastProgress > 30 * 3600 then stuck = lastFrontier break end -- 6 game hours with no new stage: this build is walled
 		seed += 1
 		fights += 1
 		if fights % 100 == 0 then print(("progress %s %s fights %d stage %d lv %d game %.1fh cpu %.0fs"):format(classId, pathId, fights, stage, profile.Season.Level, clock / 3600, os.clock())) end
+		if fights % 500 == 0 then -- STATS: what the hero fights with vs the enemy scale at its frontier (late-game runaway check)
+			local hero = m.StageRunner.NewParty({ team[1] })[1].Stats
+			local fr = profile.Season.HighestStage
+			local sc = m.Stages.Build(fr).Scale
+			local parts = {}
+			for _, k in ipairs({ "Attack", "MaxHealth", "Defense", "AttackSpeed", "CritChance", "CritMultiplier", "DamageDealt", "DamageTaken", "Haste", "Lifesteal" }) do
+				local v = hero[k]
+				if v then table.insert(parts, ("%s=%s"):format(k, if v >= 100 then ("%.0f"):format(v) else ("%.2f"):format(v))) end
+			end
+			print(("STATS %s %s lv%d fr%d escale=%.1f %s"):format(classId, pathId, profile.Season.Level, fr, sc, table.concat(parts, " ")))
+		end
 		local stonesBefore = profile.Season.Currencies.Wishstones or 0
 		if companionParty then
 			-- what the server does: companions fill the empty seats and follow the owner's level and build
@@ -299,6 +355,10 @@ local function run(classId, pathId, seedBase, goalLevel)
 			end
 		end
 		local ultimate = if #team >= 2 then m.StageRunner.UltimateFor(team, profile.Season.HighestStage, nil) else nil
+		if profile.Season.Level >= nextSample then -- METRIC: a sample of fights at the stage the party is pushing (no rewards)
+			nextSample = (profile.Season.Level // 10 + 1) * 10
+			sampleMetrics(classId, pathId, profile, team, math.max(1, profile.Season.HighestStage), seed, ultimate, clock)
+		end
 		local outcome = m.StageRunner.Run(team, stage, seed, ultimate)
 		stonesEarned += (profile.Season.Currencies.Wishstones or 0) - stonesBefore
 		if profile.Season.Level >= 30 and stonesAt30 == nil then stonesAt30 = { stonesEarned, profile.Season.HighestStage, clock / 3600, fights } end

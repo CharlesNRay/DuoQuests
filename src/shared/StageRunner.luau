@@ -152,13 +152,14 @@ end
 function StageRunner.Run(members, stage, seed, ultimate, record, setup)
 	local sim = Simulation.new({
 		Party = StageRunner.NewParty(members),
-		Enemies = if setup then setup.Enemies else Stages.NewEnemies(stage),
+		Enemies = if setup and setup.Enemies then setup.Enemies else Stages.NewEnemies(stage),
 		Waves = setup and setup.Waves,
 		Seed = seed,
 		Ultimate = ultimate,
 		MaxSeconds = if setup and setup.MaxSeconds then setup.MaxSeconds else Stages.TimeLimit(stage),
 		RecordEvents = record == true,
 		SpawnEnemy = StatCalc.NewEnemy,
+		Metrics = setup and setup.Metrics,
 	})
 	local roster
 	if record then
@@ -199,7 +200,7 @@ function StageRunner.Run(members, stage, seed, ultimate, record, setup)
 	local won = result.Winner == "Party"
 
 	local rewards = {}
-	if won then
+	if won and not (setup and setup.NoRewards) then
 		for _, member in ipairs(members) do
 			if member.Profile then
 				rewards[member.Id] = Progression.ApplyClear(member.Profile, stage)
@@ -216,6 +217,8 @@ function StageRunner.Run(members, stage, seed, ultimate, record, setup)
 		Duration = result.Duration,
 		Result = result,
 		Events = if record then sim.Events else nil,
+		Metrics = sim.Metrics,
+		Sim = if setup and setup.Metrics then sim else nil,
 		Roster = roster,
 	}
 end

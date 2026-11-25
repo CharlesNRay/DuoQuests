@@ -132,7 +132,12 @@ function Gear.StatOf(item)
 	end
 	local mult = Config.RarityMult[item.Rarity] or 1
 	local upgrade = 1 + Config.Upgrade.ValuePerLevel * (item.Upgrade or 0)
-	return slot.Stat, (slot.Base + slot.PerStage * item.Power) * mult * upgrade * (item.Roll or 1)
+	local power = item.Power or 1
+	local soft = Config.PercentSoft
+	if slot.Percent and soft and power > soft.From then
+		power = soft.From * (power / soft.From) ^ soft.Exp
+	end
+	return slot.Stat, (slot.Base + slot.PerStage * power) * mult * upgrade * (item.Roll or 1)
 end
 
 -- Item Power: one number that compares any two items (a weapon against armour too), counting rarity,

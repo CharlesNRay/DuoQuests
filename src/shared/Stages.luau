@@ -36,6 +36,12 @@ function Stages.Scale(stage)
 			scale *= tier.Mult
 		end
 	end
+	-- past LateGrowth.From every stage is Rate harder on top (compounding). The power curve alone flattens late (stage 150
+	-- is only ~1% harder than 149), so any power spike turned into dozens of free stages (BALANCE.md "Late game runaway").
+	local late = Config.LateGrowth
+	if late and stage > late.From then
+		scale *= (1 + late.Rate) ^ (stage - late.From)
+	end
 	local ease = Config.EarlyEase
 	if ease and stage >= ease.From and stage < ease.To then
 		local t = (stage - ease.From) / (ease.To - ease.From) -- 0 at From, 1 at To

@@ -17,6 +17,7 @@ local TweenService = game:GetService("TweenService")
 local Debris = game:GetService("Debris")
 
 local Config = require(ReplicatedStorage:WaitForChild("Shared").Config.SkillEffects)
+local IconLooks = require(ReplicatedStorage:WaitForChild("Shared").Config.IconLooks)
 
 local SkillEffects = {}
 
@@ -481,7 +482,8 @@ function SkillEffects.Status(scene, statusId, tgtPos, ability)
 		local c1, c2 = colorsOf(style)
 		local fn = BUFF[kind]
 		if fn then
-			fn(scene, tgtPos, c1, c2, style.Glyph or status.Glyph)
+			local own = IconLooks.Statuses[statusId] -- the status's own icon (the one on the health bar and in tooltips)
+			fn(scene, tgtPos, c1, c2, style.Glyph or (own and own.Glyph) or status.Glyph)
 		end
 	end
 end
