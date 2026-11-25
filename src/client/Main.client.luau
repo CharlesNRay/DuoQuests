@@ -655,20 +655,31 @@ end
 -- the training dummy: your party hits it for 20 s on the server, the screen shows each hero's damage per second
 Screens.Dummy = require(script.Parent.UI.DummyScreen).Dummy
 local dummyRunning = false
+local DUMMY_COOLDOWN = 8 -- seconds between tests (the server's limit in handlers.TrainDummy)
 function extra.RunDummy()
 	if dummyRunning then
 		return
 	end
+	-- too soon: keep the last results on screen (the button counts down) instead of blanking them
+	if extra.DummyReadyAt and os.clock() < extra.DummyReadyAt and extra.Dummy then
+		return
+	end
 	dummyRunning = true
+	local previous = extra.Dummy
 	extra.Dummy = nil
 	open("Dummy", "Training Dummy", true)
 	local ok, data = api:InvokeServer("TrainDummy")
 	dummyRunning = false
 	if ok and type(data) == "table" then
 		extra.Dummy = data
+		extra.DummyReadyAt = os.clock() + DUMMY_COOLDOWN
 		Sound.Play("Reward")
+	elseif data == "Busy" and previous then
+		extra.Dummy = previous -- the server still had us waiting: show the last results again
+		extra.DummyReadyAt = math.max(extra.DummyReadyAt or 0, os.clock() + 2)
 	else
-		extra.Dummy = { Seconds = 0, Total = 0, Rows = {}, Best = 0 }
+		extra.Dummy = { Seconds = 0, Total = 0, Rows = {}, Best = 0, Error = if data == "TooFar" then "Step up to the training dummy first." elseif data == "Busy" then "The dummy is still wobbling - try again in a few seconds." else nil }
+		extra.DummyReadyAt = os.clock() + 3
 	end
 	if current == "Dummy" then
 		redraw()

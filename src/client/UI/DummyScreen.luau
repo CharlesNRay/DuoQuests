@@ -23,11 +23,35 @@ function DummyScreen.Dummy(container, state, _, extra)
 	Kit.label({ Size = UDim2.new(1, -170, 0, 26), Position = UDim2.fromOffset(10, 4), Text = ("🎯 Party damage: %s per second"):format(Short(result.Total)), TextSize = 18, Font = Enum.Font.GothamBold, TextColor3 = C.Accent, Parent = head })
 	local best = math.max(result.Best or 0, state.Player.DummyBest or 0)
 	Kit.label({ Size = UDim2.new(1, -170, 0, 20), Position = UDim2.fromOffset(10, 30), Text = if result.Total >= best then "A new personal best!" else ("Your best: %s per second"):format(Short(best)), TextSize = 13, TextColor3 = if result.Total >= best then C.Good else C.Dim, Parent = head })
-	Kit.button({ Size = UDim2.fromOffset(140, 40), Position = UDim2.new(1, -150, 0.5, -20), Text = "Test again", BackgroundColor3 = C.Accent, TextColor3 = Color3.fromRGB(30, 24, 10), Parent = head }, function()
-		if extra.RunDummy then
+	-- "Test again" counts down while the dummy recovers (8 s between tests), so a quick press never blanks the results
+	local again = Kit.button({ Size = UDim2.fromOffset(140, 40), Position = UDim2.new(1, -150, 0.5, -20), Text = "Test again", BackgroundColor3 = C.Accent, TextColor3 = Color3.fromRGB(30, 24, 10), Parent = head }, function()
+		if extra.RunDummy and not (extra.DummyReadyAt and os.clock() < extra.DummyReadyAt) then
 			extra.RunDummy()
 		end
 	end)
+	local function tick()
+		local left = if extra.DummyReadyAt then math.ceil(extra.DummyReadyAt - os.clock()) else 0
+		if left > 0 then
+			again.Text = ("Again in %ds"):format(left)
+			again.BackgroundColor3 = C.Panel
+			again.TextColor3 = C.Dim
+		else
+			again.Text = "Test again"
+			again.BackgroundColor3 = C.Accent
+			again.TextColor3 = Color3.fromRGB(30, 24, 10)
+		end
+		return left > 0
+	end
+	if tick() then
+		task.spawn(function()
+			while again.Parent and tick() do
+				task.wait(0.25)
+			end
+		end)
+	end
+	if result.Error then
+		Kit.label({ Size = UDim2.new(1, -8, 0, 24), Position = UDim2.fromOffset(4, 64), Text = result.Error, TextSize = 14, TextColor3 = C.Dim, Parent = container })
+	end
 	local top = (result.Rows[1] and result.Rows[1].DPS) or 1
 	for index, row in ipairs(result.Rows) do
 		local r = Kit.frame({ Size = UDim2.new(1, -8, 0, 32), Position = UDim2.fromOffset(0, 62 + (index - 1) * 36), BackgroundColor3 = C.Panel, Parent = container })
