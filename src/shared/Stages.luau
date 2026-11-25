@@ -78,6 +78,16 @@ function Stages.HealthMult(stage)
 	return (1 + (ramp.Max - 1) * math.clamp((stage - ramp.From) / ramp.Span, 0, 1)) * Stages.HealthExtra(stage) * fight
 end
 
+-- The scale hero Defense is measured against: Stages.Scale with all of the late growth (attack gets only AttackShare of it)
+function Stages.DefenseScale(stage)
+	local scale = Stages.Scale(stage)
+	local late = Config.LateGrowth
+	if late and late.AttackShare and stage > late.From then
+		scale *= (1 + late.Rate) ^ ((stage - late.From) * (1 - late.AttackShare))
+	end
+	return scale
+end
+
 -- Stage monsters hit this much (Config.FightLength.Attack; 1 when not set)
 function Stages.AttackMult()
 	return (Config.FightLength and Config.FightLength.Attack) or 1
@@ -113,7 +123,9 @@ function Stages.NewEnemies(stage)
 	local built = Stages.Build(stage)
 	local enemies = {}
 	for _, entry in ipairs(built.Enemies) do
-		table.insert(enemies, StatCalc.NewEnemy(entry.Id, entry.EnemyId, entry.Scale, entry.HealthMult, Stages.AttackMult()))
+		local enemy = StatCalc.NewEnemy(entry.Id, entry.EnemyId, entry.Scale, entry.HealthMult, Stages.AttackMult())
+		enemy.DefenseScale = entry.Scale * Stages.DefenseScale(stage) / Stages.Scale(stage)
+		table.insert(enemies, enemy)
 	end
 	return enemies
 end

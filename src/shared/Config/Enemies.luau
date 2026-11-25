@@ -327,14 +327,14 @@ local Enemies = {
 		Id = "ThunderHawk", DisplayName = "Thunder Hawk",
 		Look = { Shape = "Bird", Color = { 250, 220, 90 }, Size = 4.5, Glow = { 255, 230, 120 } },
 		IsBoss = false, DamageType = "Physical",
-		BaseStats = { MaxHealth = 68, Attack = 9, Defense = 3, AttackSpeed = 1.2, CritChance = 0.03 },
+		BaseStats = { MaxHealth = 68, Attack = 8, Defense = 3, AttackSpeed = 1.05, CritChance = 0.03 }, -- was 9 / 1.2, like the zone 10 Sky Harpy (BALANCE.md "Zone 10")
 		Abilities = { { Id = "Swoop", Level = 1, Timer = 3 } },
 	},
 	VoltWisp = {
 		Id = "VoltWisp", DisplayName = "Volt Wisp",
 		Look = { Shape = "Elemental", Color = { 140, 220, 255 }, Size = 3.5, Material = "Neon", Glow = { 140, 220, 255 } },
 		IsBoss = false, DamageType = "Magical",
-		BaseStats = { MaxHealth = 62, Attack = 8, Defense = 2, AttackSpeed = 1.1, CritChance = 0.03 },
+		BaseStats = { MaxHealth = 62, Attack = 8, Defense = 2, AttackSpeed = 1.0, CritChance = 0.03 }, -- was 1.1 (zone 10 wall)
 		Abilities = { { Id = "Thunderclap", Level = 1, Timer = 5 } },
 	},
 	ReefCrab = {

@@ -170,6 +170,7 @@ Simulation.Effects = {
 			-- a stage monster's adds get the same fight-length factors as it (Config/Stages FightLength)
 			local fight = if caster.AttackMult then StageConfig.FightLength else nil
 			local minion = sim.SpawnEnemy("s" .. sim.SummonCount, effect.EnemyId, caster.Scale or 1, fight and fight.Health, caster.AttackMult)
+			minion.DefenseScale = caster.DefenseScale
 			table.insert(list, minion)
 			sim:_record({
 				Type = "Spawn",
@@ -886,8 +887,11 @@ function Simulation:DealDamage(source, target, amount, info)
 	-- everything (toughness ~ health x defense outgrows enemy attack, and pairs run away). With DefenseScaleExp set,
 	-- the constant grows with the attacking enemy's stage scale, so Defense keeps a steady share of the work.
 	local scaleExp = EconomyConfig.DefenseScaleExp
-	if scaleExp and source and source.Team == "Enemy" and (source.Scale or 1) > 1 then
-		defenseK *= source.Scale ^ scaleExp
+	-- DefenseScale: the scale with ALL of the late growth (Stages.DefenseScale); Scale itself gives attack only part of it,
+	-- and measured against that, high Defense ran away late (a Guardian went from stage 110 to 167 in ten levels)
+	local against = source and (source.DefenseScale or source.Scale) or 1
+	if scaleExp and source and source.Team == "Enemy" and against > 1 then
+		defenseK *= against ^ scaleExp
 	end
 	local preDefense = ctx.Amount
 	ctx.Amount = ctx.Amount * defenseK / (defenseK + math.max(0, self:GetStat(target, "Defense")))

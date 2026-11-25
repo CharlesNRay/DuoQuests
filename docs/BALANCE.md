@@ -345,3 +345,7 @@ Half the paths sat at stage 91-100 for 20-30 levels (Pyromancer 91-94 from L60 t
 harder than zone 9's at the same scale (Sky Harpy 9 attack x 1.2 speed with a bleeding Swoop every 7 s, Storm Sprite
 1.1 speed with an all-heroes Thunderclap). Sky Harpy Attack 9 -> 8, AttackSpeed 1.2 -> 1.05; Storm Sprite AttackSpeed
 1.1 -> 1.0.
+- Zone 11 copies of those monsters (Thunder Hawk, Volt Wisp) softened the same way: Mage and Summoner paths sat at
+  stage ~100 from L60 to L100.
+- `Stages.DefenseScale`: hero Defense is measured against the monster scale with ALL of the late growth (`Scale` only
+  carries AttackShare of it). Measured against `Scale`, a Guardian ran from stage 110 to 167 in ten levels.
