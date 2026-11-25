@@ -378,3 +378,12 @@ Vitality/Bulwark 0.02 -> 0.035, Precision 0.005 -> 0.008, Ferocity 0.03 -> 0.05,
 0.008 -> 0.012, Mending 0.025 -> 0.04, Onslaught 0.015 -> 0.025, Fortitude -0.012 -> -0.02, Party Spirit 0.005 ->
 0.008). Now at L60: Berserker 126, Priest 101, Pyromancer 97, Beastmaster 100, Duelist 95, Necromancer 98 (+13 on
 average; the stage ~100 wall caps several). L40 roster unchanged (40-61, 2 seeds).
+
+## Final roster (2026-11-25, talents doubled)
+3 seeds per path to L100 (companion party): Pyromancer 141, Beastmaster 138, Priest 137, Templar 134, FrostWeaver 126,
+Necromancer 123, Assassin 120, Sharpshooter 117, SpiritCaller 117, Duelist 116; Warriors still lead: Berserker 170,
+Guardian 156 (after Bulwark 0.035 -> 0.025, Berserker Attack +0.25 -> +0.2, Warrior growth MaxHealth 35 -> 30 and
+Defense 3 -> 2.5; before those 172 / 165). L40: every path ~46-62. L100 in 31-45 game hours.
+Why Warriors lead with a companion party: the player's own hero gets all the gear, pets and talents; when it is the
+tank the party holds, when the tank is the (ungeared) companion it falls first. A real party of four geared players
+does not have that gap, so Warriors were not cut further. Watch it in playtests.

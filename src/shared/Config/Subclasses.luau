@@ -36,7 +36,7 @@ return {
 			UnlockLevel = 30,
 			Description = "All-out offense. Huge attack, attack speed and crits, and every blow heals: a tank that outlasts by hitting hard.",
 			Mods = {
-				{ Stat = "Attack", Mode = "Mul", Value = 0.25 },
+				{ Stat = "Attack", Mode = "Mul", Value = 0.2 }, -- was 0.25 (2026-11-25: Warrior paths led at L100)
 				-- no DamageDealt penalty since 2026-11-23 (was -0.313, then -0.15): Guardian out-damaged it
 				{ Stat = "AttackSpeed", Mode = "Mul", Value = 0.08 },
 				{ Stat = "CritChance", Mode = "Add", Value = 0.05 },

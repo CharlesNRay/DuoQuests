@@ -40,9 +40,9 @@ local Classes = {
 			CritChance = 0.05,
 		},
 		GrowthPerLevel = {
-			MaxHealth = 35, -- was 25
+			MaxHealth = 30, -- was 25, then 35 (2026-11-25: with longer fights Warrior parties led at L100, 165-172)
 			Attack = 2,
-			Defense = 3, -- was 2
+			Defense = 2.5, -- was 2, then 3 (2026-11-25)
 			AttackSpeed = 0,
 			CritChance = 0,
 		},

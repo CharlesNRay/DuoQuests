@@ -73,15 +73,16 @@ def main():
                              "hours": round(sum(x["Hours"] for x in rs) / len(rs), 2), "seeds": len(rs)})
     json.dump({"rows": progress, "meta": meta}, open(os.path.join(outdir, "progress.json"), "w"), indent=0)
 
-    with_runs = load(sys.argv[6])[0] if len(sys.argv) > 6 else runs  # with-talents runs made with the same build as the no-talent ones
-    _, nt_results = load(notalent)  # no-talent runs end at level 60: their RESULT line is the level 60 frontier
+    # talents on vs off: two sets of runs to level 60 (same build, seeds averaged); their RESULT lines are the level 60 frontier
+    _, with_results = load(sys.argv[6])
+    _, nt_results = load(notalent)
+    avg = lambda rs, k: sum(x[k] for x in rs) / len(rs)
     talents = []
     for (cls, path), rs in sorted(nt_results.items()):
-        without = rs[0]
-        with_ = at_level(with_runs.get((cls, path), []), 60)
-        if without and with_:
-            talents.append({"class": cls, "path": path, "stage_with_talents": with_["Frontier"], "stage_without_talents": without["Frontier"],
-                            "hours_with": round(with_["Hours"], 1), "hours_without": round(without["Hours"], 1)})
+        ws = with_results.get((cls, path))
+        if ws:
+            talents.append({"class": cls, "path": path, "stage_with_talents": round(avg(ws, "Frontier")), "stage_without_talents": round(avg(rs, "Frontier")),
+                            "hours_with": round(avg(ws, "Hours"), 1), "hours_without": round(avg(rs, "Hours"), 1), "seeds": len(rs)})
     json.dump({"rows": talents, "meta": meta + [{"label": "No-talent input", "value": "res_%s_*.txt (to level 60)" % notalent}]},
               open(os.path.join(outdir, "talents.json"), "w"), indent=0)
 

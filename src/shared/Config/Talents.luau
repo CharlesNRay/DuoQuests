@@ -20,7 +20,7 @@ return {
 	Defs = {
 		Might = { Name = "Might", Glyph = "🐂", Stat = "Attack", Mode = "Mul", PerRank = 0.03, MaxRank = 10, Label = "Attack" },
 		Vitality = { Name = "Vitality", Glyph = "💓", Stat = "MaxHealth", Mode = "Mul", PerRank = 0.035, MaxRank = 10, Label = "Health" },
-		Bulwark = { Name = "Bulwark", Glyph = "🐢", Stat = "Defense", Mode = "Mul", PerRank = 0.035, MaxRank = 10, Label = "Defense" },
+		Bulwark = { Name = "Bulwark", Glyph = "🐢", Stat = "Defense", Mode = "Mul", PerRank = 0.025, MaxRank = 10, Label = "Defense" },
 		Precision = { Name = "Precision", Glyph = "📐", Stat = "CritChance", Mode = "Add", PerRank = 0.008, MaxRank = 10, Label = "Crit chance" },
 		Ferocity = { Name = "Ferocity", Glyph = "🐯", Stat = "CritMultiplier", Mode = "Add", PerRank = 0.05, MaxRank = 10, Label = "Crit damage" },
 		Swiftness = { Name = "Swiftness", Glyph = "🐆", Stat = "AttackSpeed", Mode = "Mul", PerRank = 0.018, MaxRank = 10, Label = "Attack speed" },
