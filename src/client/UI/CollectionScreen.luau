@@ -9,6 +9,7 @@
 local Kit = require(script.Parent.Kit)
 local C = Kit.Colors
 local Short = require(game:GetService("ReplicatedStorage"):WaitForChild("Shared").Util.NumberFormat).Short
+local Looks = require(game:GetService("ReplicatedStorage"):WaitForChild("Shared").Config.IconLooks)
 
 local CollectionScreen = {}
 
@@ -84,6 +85,26 @@ local function bestiary(area, state, extra, redraw)
 		local nextText = if mon.NextAt then ("%s / %s kills"):format(Short(mon.Kills), Short(mon.NextAt)) else ("%s kills - complete"):format(Short(mon.Kills))
 		Kit.label({ Size = UDim2.new(1, -12, 0, 16), Position = UDim2.new(0, 8, 1, -34), Text = nextText, TextSize = 11, TextColor3 = C.Dim, TextWrapped = false, Parent = card })
 		bar(card, if mon.NextAt then mon.Kills / mon.NextAt else 1, TIER_COLORS[math.max(1, mon.Tier)], { Size = UDim2.new(1, -16, 0, 6), Position = UDim2.new(0, 8, 1, -14) })
+		-- a seen monster: hover for what it does (its skills and the buffs/debuffs they bring)
+		local info = mon.Info
+		if info then
+			Kit.label({ Size = UDim2.new(1, -12, 0, 14), Position = UDim2.fromOffset(8, 46), Text = info.Style .. "  ·  hover for its skills", TextSize = 10, TextColor3 = C.Dim, TextWrapped = false, Parent = card })
+			card.Active = true
+			Kit.Hover(card, function()
+				local lines = { ("<b>%s</b>  %s"):format(mon.Name, info.Style) }
+				for _, a in ipairs(info.Abilities) do
+					table.insert(lines, ("<b>%s</b>: %s"):format(a.Name, a.Text))
+				end
+				for _, st in ipairs(info.Statuses) do
+					local glyph = (Looks.Statuses[st.Id] or {}).Glyph or "•"
+					table.insert(lines, ("%s <b>%s</b>%s: %s"):format(glyph, st.Name, if st.OnSelf then " (on itself)" else "", st.Text))
+				end
+				if #info.Abilities == 0 then
+					table.insert(lines, "Only plain attacks.")
+				end
+				return table.concat(lines, "\n")
+			end)
+		end
 	end
 end
 

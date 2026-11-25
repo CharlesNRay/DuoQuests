@@ -22,5 +22,5 @@ return {
 	MasterBonus = { Attack = 0.005, MaxHealth = 0.005 },
 	Cap = 0.1, -- the most either stat can get from the bestiary
 	-- the weekly hunt: one monster (picked from the week number) counts double
-	WeeklyHunt = { Factor = 2 },
+	WeeklyHunt = { Factor = 2, Wishstones = 5 }, -- Wishstones each time the hunted monster reaches a new tier
 }

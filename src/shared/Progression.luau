@@ -161,7 +161,7 @@ function Progression.ApplyClear(profile, stage, rand)
 	end
 
 	-- class mastery (kept every season): new frontier stages and first boss kills of the season
-	ClassMastery.OnClear(profile, isFrontier, Stages.IsBoss(stage))
+	local masteryGained = ClassMastery.OnClear(profile, isFrontier, Stages.IsBoss(stage))
 
 	-- quests and the season pass count every won fight
 	Quests.Record(profile, "Clear", 1)
@@ -250,6 +250,7 @@ function Progression.ApplyClear(profile, stage, rand)
 		PetGearDrop = petGearDrop,
 		Rune = runeDrop,
 		TutorialReward = tutorialReward,
+		MasteryUp = if masteryGained > 0 then { Class = classId, Level = ClassMastery.Of(profile, classId).Level } else nil,
 		PetLevelsGained = petLevelsGained,
 		LevelsGained = levelsGained,
 		Level = season.Level,

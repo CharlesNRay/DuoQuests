@@ -110,6 +110,26 @@ return function(modulesOverride)
 	m.Progression.ApplyClear(s, 1)
 	check("a frontier clear gives mastery XP", M.Of(s, "Cleric").XP >= m.MasteryConfig.XP.Frontier)
 
+	-- the weekly hunt pays Wishstones per new tier; a seen monster tells what it does
+	local h = m.ProfileTemplate.New()
+	local huntId = B.HuntOf(now)
+	local before = h.Season.Currencies.Wishstones or 0
+	local got = B.Record(h, { [huntId] = 25 }, now)
+	check("the weekly hunt pays Wishstones at a new tier", (h.Season.Currencies.Wishstones or 0) - before == Cfg.WeeklyHunt.Wishstones and got[1].Wishstones == Cfg.WeeklyHunt.Wishstones)
+	local info = B.Info("GoblinWarlord")
+	local names = {}
+	for _, a in ipairs(info.Abilities) do names[a.Name] = true end
+	local stun = false
+	for _, st in ipairs(info.Statuses) do if st.Id == "Stunned" then stun = true end end
+	check("a monster's info lists its skills and the statuses they bring", #info.Abilities >= 2 and stun and info.Style ~= nil)
+	check("unseen monsters show no info", B.Status(m.ProfileTemplate.New(), now).Zones[1].Monsters[1].Info == nil)
+	-- a mastery level from a clear is reported
+	local up = m.ProfileTemplate.New()
+	up.Season.ClassId = "Ranger"
+	local summary
+	for stage = 1, 10 do summary = m.Progression.ApplyClear(up, stage) or summary end
+	check("a clear that raises mastery reports it", M.Of(up, "Ranger").Level >= 1)
+
 	-- save safety
 	local problems = m.DataSafety.Problems(p)
 	check("a filled bestiary is save-safe (" .. table.concat(problems or {}, "; ") .. ")", problems == nil or #problems == 0)

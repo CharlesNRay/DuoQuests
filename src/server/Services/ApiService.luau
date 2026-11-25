@@ -1763,7 +1763,8 @@ function ApiService.Init()
 					Wait = waitSeconds,
 					Roster = outcome.Roster,
 					Events = events,
-					Reward = reward and { Gold = reward.Gold, XP = reward.XP, Shards = reward.Shards, Wishstones = reward.Wishstones, Item = reward.Item and Gear.Name(reward.Item, member.Profile and member.Profile.Season.ClassId) or nil, Pets = reward.PetsGained, Tutorial = tutorialText, Rune = reward.Rune, Lucky = reward.LuckyFind } or nil,
+					Reward = reward and { Gold = reward.Gold, XP = reward.XP, Shards = reward.Shards, Wishstones = reward.Wishstones, Item = reward.Item and Gear.Name(reward.Item, member.Profile and member.Profile.Season.ClassId) or nil, Pets = reward.PetsGained, Tutorial = tutorialText, Rune = reward.Rune, Lucky = reward.LuckyFind, MasteryUp = reward.MasteryUp } or nil,
+					Bestiary = outcome.Bestiary and outcome.Bestiary[tostring(member.UserId)] or nil, -- bestiary tiers this fight reached
 				})
 			end
 		end

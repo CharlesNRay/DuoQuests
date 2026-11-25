@@ -17,6 +17,8 @@ local StageConfig = require(script.Parent.Config.Stages)
 local ZoneConfig = require(script.Parent.Config.Zones)
 local Enemies = require(script.Parent.Config.Enemies)
 local Stages = require(script.Parent.Stages)
+local Abilities = require(script.Parent.Config.Abilities)
+local StatusText = require(script.Parent.StatusText)
 
 local Bestiary = {}
 
@@ -141,7 +143,16 @@ function Bestiary.Record(profile, counts, now)
 			b.Kills[id] = before + gain
 			local tierBefore, tierAfter = Bestiary.TierOf(id, before), Bestiary.TierOf(id, before + gain)
 			if tierAfter > tierBefore then
-				table.insert(reached, { EnemyId = id, Tier = tierAfter })
+				local stones = 0
+				if id == hunt then -- the weekly hunt pays at each new tier
+					stones = Config.WeeklyHunt.Wishstones * (tierAfter - tierBefore)
+					local cur = profile.Season and profile.Season.Currencies
+					if cur then
+						cur.Wishstones = (cur.Wishstones or 0) + stones
+					end
+				end
+				local def = Enemies[id] or {}
+				table.insert(reached, { EnemyId = id, Tier = tierAfter, Name = def.DisplayName or id, TierName = Config.TierNames[tierAfter], Wishstones = stones })
 			end
 		end
 	end
@@ -193,13 +204,40 @@ function Bestiary.Mods(profile)
 	return mods
 end
 
+-- What a seen monster does: its base stats in words, every ability (name, words) and the statuses those put on heroes
+function Bestiary.Info(enemyId)
+	local def = Enemies[enemyId]
+	if not def then
+		return nil
+	end
+	local abilities, statuses, seen = {}, {}, {}
+	for _, slot in ipairs(def.Abilities or {}) do
+		local a = Abilities[slot.Id]
+		if a then
+			table.insert(abilities, { Name = a.DisplayName or slot.Id, Text = a.Description or "" })
+			for _, effect in ipairs(a.Effects or {}) do
+				if effect.Type == "ApplyStatus" and effect.Status and not seen[effect.Status] then
+					seen[effect.Status] = true
+					local d = StatusText.Describe(effect.Status)
+					table.insert(statuses, { Id = effect.Status, Name = d.Name, Text = d.Text, OnSelf = effect.Target == "Self" })
+				end
+			end
+		end
+	end
+	local stats = def.BaseStats or {}
+	local speed = stats.AttackSpeed or 1
+	local style = if (stats.AttackSpeed or 1) >= 1.1 then "fast" elseif speed <= 0.75 then "slow" else "steady"
+	return { Abilities = abilities, Statuses = statuses, Style = ("%s attacker, %s damage"):format(style, string.lower(def.DamageType or "Physical")) }
+end
+
 function Bestiary.Status(profile, now)
 	local kills = book(profile).Kills
 	local out = { Zones = {}, Hunt = Bestiary.HuntOf(now), Bonus = Bestiary.Bonus(profile), Cap = Config.Cap, TierNames = Config.TierNames }
 	local function entry(id)
 		local def = Enemies[id] or {}
 		local k = kills[id] or 0
-		return { Id = id, Name = def.DisplayName or id, Kills = k, Tier = Bestiary.TierOf(id, k), NextAt = Bestiary.NextAt(id, k), Boss = isBoss(id) }
+		local tier = Bestiary.TierOf(id, k)
+		return { Id = id, Name = def.DisplayName or id, Kills = k, Tier = tier, NextAt = Bestiary.NextAt(id, k), Boss = isBoss(id), Info = if tier > 0 then Bestiary.Info(id) else nil }
 	end
 	for _, zone in ipairs(Bestiary.Zones()) do
 		local monsters = {}

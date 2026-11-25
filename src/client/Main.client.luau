@@ -923,6 +923,19 @@ push.OnClientEvent:Connect(function(kind, info)
 			if info.Reward and info.Reward.Tutorial then
 				hud:Notify(info.Reward.Tutorial)
 			end
+			-- the permanent collections: a bestiary tier reached, a class mastery level
+			local notes = {}
+			for _, r in ipairs(info.Bestiary or {}) do
+				table.insert(notes, ("🐾 %s: %s %s%s"):format(r.Name, string.rep("★", r.Tier), r.TierName or "", if (r.Wishstones or 0) > 0 then (" (weekly hunt +%d Wishstones)"):format(r.Wishstones) else ""))
+			end
+			local up = info.Reward and info.Reward.MasteryUp
+			if up then
+				table.insert(notes, ("🏅 %s mastery %d!"):format(up.Class, up.Level))
+			end
+			if #notes > 0 then
+				hud:Notify(table.concat(notes, "   "))
+				Sound.Play("Reward")
+			end
 			local ok, fresh = api:InvokeServer("GetState")
 			if ok and fresh then
 				state = fresh
