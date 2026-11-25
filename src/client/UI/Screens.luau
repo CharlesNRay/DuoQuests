@@ -1049,7 +1049,7 @@ function Screens.Wish(container, state, call, extra)
 	TweenService:Create(gradient, TweenInfo.new(3.5, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), { Offset = Vector2.new(0.35, 0) }):Play()
 	Kit.label({ Size = UDim2.new(0.55, 0, 1, 0), Position = UDim2.fromOffset(14, 0), Text = theme.Title, TextSize = 19, Font = Enum.Font.GothamBlack, TextWrapped = false, TextColor3 = Color3.new(1, 1, 1), TextStrokeTransparency = 0.5, Parent = banner })
 	Kit.label({ Size = UDim2.new(0.45, -14, 1, 0), Position = UDim2.new(0.55, 0, 0, 0), Text = theme.Sub, TextSize = 12, TextXAlignment = Enum.TextXAlignment.Right, TextWrapped = false, TextColor3 = Color3.fromRGB(240, 250, 240), TextStrokeTransparency = 0.6, Parent = banner })
-	for i, glyph in ipairs({ "✦", "✧", "✦" }) do
+	for i, glyph in ipairs({ "✨", "✨", "✨" }) do
 		Kit.label({ Size = UDim2.fromOffset(16, 16), Position = UDim2.new(0.5 + (i - 2) * 0.12, 0, 0, 4 + (i % 2) * 14), Text = glyph, TextSize = 12, TextColor3 = Color3.fromRGB(255, 255, 220), TextTransparency = 0.35, TextStrokeTransparency = 1, Parent = banner })
 	end
 

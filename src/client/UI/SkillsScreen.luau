@@ -198,7 +198,7 @@ function SkillsScreen.Skills(container, state, call, extra)
 	end
 	for index, name in ipairs({ "Skills", "Passives" }) do
 		local on = name == focus
-		local b = Kit.button({ Size = UDim2.fromOffset(86, 24), Position = UDim2.new(1, -(2 - index + 1) * 90 + 4, 0, 0), Text = (if name == "Skills" then "⚔ " else "✦ ") .. name, TextSize = 12, BackgroundColor3 = if on then C.Accent else C.Panel, TextColor3 = if on then Color3.fromRGB(30, 24, 10) else C.Text, Parent = container }, function()
+		local b = Kit.button({ Size = UDim2.fromOffset(86, 24), Position = UDim2.new(1, -(2 - index + 1) * 90 + 4, 0, 0), Text = (if name == "Skills" then "⚔ " else "✨ ") .. name, TextSize = 12, BackgroundColor3 = if on then C.Accent else C.Panel, TextColor3 = if on then Color3.fromRGB(30, 24, 10) else C.Text, Parent = container }, function()
 			extra.SkillsFocus = name
 			extra.SkillSel = if name == "Skills" then { Slot = 1 } else { PSlot = 1 }
 			extra.SkillsScrollTop = true
@@ -293,7 +293,7 @@ function SkillsScreen.Skills(container, state, call, extra)
 			local tile = Icons.Skill(main, def, skillProps(me, id, { Size = UDim2.fromOffset(52, 52), Position = UDim2.fromOffset((slot - 1) * 58, 16), Level = levels[slot] }))
 			slotTiles[slot] = tile
 			if not isPartner and #equipped > 1 then -- unequip
-				local x = Kit.button({ Size = UDim2.fromOffset(18, 18), Position = UDim2.fromOffset((slot - 1) * 58 + 36, 8), Text = "✕", TextSize = 10, BackgroundColor3 = C.Down, ZIndex = 12, Parent = main }, function()
+				local x = Kit.button({ Size = UDim2.fromOffset(18, 18), Position = UDim2.fromOffset((slot - 1) * 58 + 36, 8), Text = "X", TextSize = 10, BackgroundColor3 = C.Down, ZIndex = 12, Parent = main }, function()
 					table.remove(equipped, slot)
 					extra.SkillSel = { Slot = math.min(slot, #equipped) }
 					save(equipped)
@@ -329,7 +329,7 @@ function SkillsScreen.Skills(container, state, call, extra)
 			end
 			passiveTiles[slot] = tile
 			if pdef then
-				local x = Kit.button({ Size = UDim2.fromOffset(16, 16), Position = UDim2.fromOffset(244 + (slot - 1) * 50 + 32, 14), Text = "✕", TextSize = 9, BackgroundColor3 = C.Down, ZIndex = 12, Parent = main }, function()
+				local x = Kit.button({ Size = UDim2.fromOffset(16, 16), Position = UDim2.fromOffset(244 + (slot - 1) * 50 + 32, 14), Text = "X", TextSize = 9, BackgroundColor3 = C.Down, ZIndex = 12, Parent = main }, function()
 					table.remove(pEquipped, slot)
 					extra.SkillSel = { PSlot = math.max(1, math.min(slot, #pEquipped)) }
 					equipPassives()

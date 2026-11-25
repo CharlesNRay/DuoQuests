@@ -125,7 +125,7 @@ end
 local PASSIVE_LOOK = {
 	Damage = { Color3.fromRGB(190, 80, 70), "⚔" }, Defense = { Color3.fromRGB(80, 120, 190), "🛡" },
 	Healing = { Color3.fromRGB(80, 170, 110), "✚" }, Gold = { Color3.fromRGB(200, 165, 60), "💰" },
-	XP = { Color3.fromRGB(120, 100, 200), "★" }, Rarity = { Color3.fromRGB(190, 110, 170), "✦" },
+	XP = { Color3.fromRGB(120, 100, 200), "★" }, Rarity = { Color3.fromRGB(190, 110, 170), "✨" },
 }
 function Icons.Passive(parent, def, props)
 	local look = (def and lookOf(Looks.Passives, def.Id)) or PASSIVE_LOOK[def and def.Category or ""] or { Color3.fromRGB(70, 74, 96), "+" }

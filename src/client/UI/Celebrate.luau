@@ -116,7 +116,7 @@ function Celebrate.Burst(color, count)
 	for i = 1, count or 14 do
 		local star = Instance.new("TextLabel")
 		star.BackgroundTransparency = 1
-		star.Text = if i % 3 == 0 then "✦" else "★"
+		star.Text = if i % 3 == 0 then "✨" else "★"
 		star.TextColor3 = if i % 2 == 0 then color else Color3.new(1, 1, 1)
 		star.TextStrokeTransparency = 0.5
 		star.Font = Enum.Font.GothamBlack

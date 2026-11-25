@@ -356,7 +356,7 @@ function WishAnim.Play(parent, kind, rows, onDone)
 							tween(flash, 1.1, { BackgroundTransparency = 1 })
 							sparkles(stage, cx, cy, Kit.Colors.Legendary, 36, 190, 1.2)
 							ring(stage, cx, cy, WHITE, cw + 220, 0.9)
-							Kit.label({ Size = UDim2.new(1, 0, 0, 24), Position = UDim2.new(0, 0, 0, 10), Text = "✦  NEW LEGENDARY  ✦", TextSize = 20, Font = Enum.Font.GothamBlack, TextColor3 = Kit.Colors.Legendary, TextXAlignment = Enum.TextXAlignment.Center, ZIndex = 40, Parent = stage })
+							Kit.label({ Size = UDim2.new(1, 0, 0, 24), Position = UDim2.new(0, 0, 0, 10), Text = "✨  NEW LEGENDARY  ✨", TextSize = 20, Font = Enum.Font.GothamBlack, TextColor3 = Kit.Colors.Legendary, TextXAlignment = Enum.TextXAlignment.Center, ZIndex = 40, Parent = stage })
 						end
 						for _ = 1, if row.New then 10 else 5 do
 							if skipped or not alive() then

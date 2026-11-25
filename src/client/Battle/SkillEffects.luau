@@ -409,7 +409,7 @@ function BUFF.Chevrons(scene, tgt, c1)
 end
 
 function BUFF.Glyph(scene, tgt, c1, _, glyph)
-	glyphPop(scene, tgt + Vector3.new(0, 2.5, 0), glyph or "✦", c1, 40, 2.5, 0.9)
+	glyphPop(scene, tgt + Vector3.new(0, 2.5, 0), glyph or "✨", c1, 40, 2.5, 0.9)
 	ring(scene, ground(scene, tgt), c1, 2, 7, 0.45, 0.15)
 end
 
