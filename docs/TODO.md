@@ -1,6 +1,6 @@
 # Idle Party Quest: what is left
 
-Last updated 2026-11-24. Claude keeps this list current. Short entries; details are in CLAUDE.md and the other docs.
+Last updated 2026-11-25. Claude keeps this list current. Short entries; details are in CLAUDE.md and the other docs.
 
 ## Waiting on the owner (only you can do these)
 
@@ -30,10 +30,11 @@ Last updated 2026-11-24. Claude keeps this list current. Short entries; details 
 - Phone and tablet: first pass done 2026-11-24 (Device Simulator). Not done: a real phone test; text is still small on
   the smallest phones (HUD size setting helps); Devices in Creator Hub can include Phone + Tablet after a real test.
 - **Party join across servers**: untested live (needs 2 real accounts).
-- Balance pass:
-  - The class roster spread (docs/BALANCE.md).
-  - (Checked 2026-11-24: Judgment is fine at equal rank; it lags only because Epic skills rank up slower.)
-  - Stages 101-200 have not been tuned; the bot rarely gets past stage 90.
+- Balance pass: DONE 2026-11-25 (BALANCE.md from "Late game runaway" on; class report artifact). Still open:
+  - Warriors lead at L100 with a companion party (170/156 vs 116-141); check with real parties before cutting more.
+  - A stage ~95-100 wall still holds several paths for 10-20 levels (Legendary drops stop improving at stage 100).
+  - Late frontier fights are ~6-7 s (10-12 s through L40); longer would need more monster health past stage 80.
+  - Not seen in Studio: how the longer fights feel at the frontier, the doubled talents in the Talents screen numbers.
 
 ## Not seen working in Studio yet
 
