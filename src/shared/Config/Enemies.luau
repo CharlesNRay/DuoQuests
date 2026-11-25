@@ -266,14 +266,14 @@ local Enemies = {
 		Id = "StormSprite", DisplayName = "Storm Sprite",
 		Look = { Shape = "Elemental", Color = { 255, 235, 110 }, Size = 3.5, Hat = true },
 		IsBoss = false, DamageType = "Magical",
-		BaseStats = { MaxHealth = 65, Attack = 8, Defense = 2, AttackSpeed = 1.1, CritChance = 0.03 },
+		BaseStats = { MaxHealth = 65, Attack = 8, Defense = 2, AttackSpeed = 1.0, CritChance = 0.03 }, -- AttackSpeed was 1.1 (zone 10 wall)
 		Abilities = { { Id = "Thunderclap", Level = 1, Timer = 5 } },
 	},
 	SkyHarpy = {
 		Id = "SkyHarpy", DisplayName = "Sky Harpy",
 		Look = { Shape = "Bird", Color = { 150, 200, 240 }, Size = 4.5 },
 		IsBoss = false, DamageType = "Physical",
-		BaseStats = { MaxHealth = 70, Attack = 9, Defense = 3, AttackSpeed = 1.2, CritChance = 0.03 },
+		BaseStats = { MaxHealth = 70, Attack = 8, Defense = 3, AttackSpeed = 1.05, CritChance = 0.03 }, -- was Attack 9, AttackSpeed 1.2: zone 10 walled most runs at stage 91-100 (BALANCE.md "Zone 10")
 		Abilities = { { Id = "Swoop", Level = 1, Timer = 3 } },
 	},
 

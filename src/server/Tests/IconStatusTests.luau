@@ -144,8 +144,12 @@ return function(modulesOverride)
 	-- late-game guards
 	local late = m.StageConfig.LateGrowth
 	if late then
-		local a, b = m.Stages.Scale(late.From + 50), m.Stages.Scale(late.From + 51)
-		check("past LateGrowth.From each stage is at least Rate harder", b / a >= 1 + late.Rate)
+		local function power(stage) -- health x attack of a monster at this stage
+			return m.Stages.Scale(stage) ^ 2 * m.Stages.HealthMult(stage)
+		end
+		local a, b = power(late.From + 50), power(late.From + 51)
+		check("past LateGrowth.From each stage is at least Rate harder (health x attack)", b / a >= (1 + late.Rate) ^ 2)
+		check("late growth goes more to health than to attack", m.Stages.HealthMult(late.From + 51) / m.Stages.HealthMult(late.From + 50) > 1)
 	end
 	local soft = m.GearConfig.PercentSoft
 	if soft then

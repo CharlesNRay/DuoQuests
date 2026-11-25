@@ -40,7 +40,7 @@ function Stages.Scale(stage)
 	-- is only ~1% harder than 149), so any power spike turned into dozens of free stages (BALANCE.md "Late game runaway").
 	local late = Config.LateGrowth
 	if late and stage > late.From then
-		scale *= (1 + late.Rate) ^ (stage - late.From)
+		scale *= (1 + late.Rate) ^ ((stage - late.From) * (late.AttackShare or 1)) -- the rest goes to health (Stages.HealthMult)
 	end
 	local ease = Config.EarlyEase
 	if ease and stage >= ease.From and stage < ease.To then
@@ -67,6 +67,11 @@ end
 function Stages.HealthMult(stage)
 	local ramp = Config.NormalHealth
 	local fight = (Config.FightLength and Config.FightLength.Health) or 1
+	local late = Config.LateGrowth
+	if late and late.AttackShare and stage > late.From then
+		-- health gets the part of the late growth that attack does not (see Stages.Scale)
+		fight *= (1 + late.Rate) ^ ((stage - late.From) * 2 * (1 - late.AttackShare))
+	end
 	if not ramp or Stages.IsBoss(stage) then
 		return Stages.HealthExtra(stage) * fight
 	end

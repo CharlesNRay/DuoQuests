@@ -337,3 +337,11 @@ monster adds) get 2.4x health and 0.7x attack. Frontier fights now last ~6-12 s.
   shields and cooldown skills work. 2.4 / 0.7 puts L40 back at ~50-65 (Warrior Berserker high, see below).
 - Fewer fights an hour: `Config/Economy.FightPay = 1.4` (gold, XP and shards per win) keeps the per-hour pace.
 - Tested: 2.6 / 0.85 (L40 ~41-55, too hard) and 3.0 / 0.95 (L40 ~38-48, 15-23 h to L45).
+- Late fights got short again (L50+ frontier fights 4-7 s): `LateGrowth.AttackShare = 0.5` gives attack half of the
+  late growth and health the rest (health x attack still grows (1+Rate)^2 a stage).
+
+## Zone 10 (2026-11-25)
+Half the paths sat at stage 91-100 for 20-30 levels (Pyromancer 91-94 from L60 to L90). Zone 10's monsters hit ~40%
+harder than zone 9's at the same scale (Sky Harpy 9 attack x 1.2 speed with a bleeding Swoop every 7 s, Storm Sprite
+1.1 speed with an all-heroes Thunderclap). Sky Harpy Attack 9 -> 8, AttackSpeed 1.2 -> 1.05; Storm Sprite AttackSpeed
+1.1 -> 1.0.

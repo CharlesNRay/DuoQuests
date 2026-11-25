@@ -46,7 +46,9 @@ return {
 	-- (subclass at level 30, and so on). Each tier multiplies enemy scale from its stage on.
 	Tiers = { { From = 31, Mult = 1.1 }, { From = 61, Mult = 1.1 } },
 	-- past stage From every stage is Rate harder on top of the curve (compounding), so the late game stays a climb
-	LateGrowth = { From = 80, Rate = 0.008 },
+	-- AttackShare: attack gets Rate x AttackShare per stage and health the rest (health x attack still grows (1+Rate)^2 a
+	-- stage), so late fights get longer instead of more lethal (at 1/1 frontier fights past L50 were 4-7 s again)
+	LateGrowth = { From = 80, Rate = 0.008, AttackShare = 0.5 },
 	-- Stage monsters: Health times more health and Attack times the attack. The same "who wins" (both sides take about
 	-- 1/Attack x Health longer to fall) but fights last long enough for heals, shields, buffs and debuffs to matter and to
 	-- be watched: at 1/1 frontier fights were over in 3-5 s and the heroes all fell (BALANCE.md "Fight length").
