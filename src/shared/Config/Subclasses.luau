@@ -42,7 +42,7 @@ return {
 				{ Stat = "CritChance", Mode = "Add", Value = 0.05 },
 				{ Stat = "MaxHealth", Mode = "Mul", Value = -0.12 }, -- was -0.240
 				-- the squad's tank either way: its damage heals it (2026-11-23; with the Guardian trim, Berserker ~50 -> ~60 vs Guardian ~62 at L40)
-				{ Stat = "Lifesteal", Mode = "Add", Value = 0.25 },
+				{ Stat = "Lifesteal", Mode = "Add", Value = 0.15 }, -- was 0.25 (2026-11-25: Warrior paths led at L100, 171)
 			},
 			Skills = { "BloodFrenzy", "Cleave", "ExecutionerStrike" },
 		},
@@ -55,7 +55,7 @@ return {
 			Description = "An immovable wall. Enormous health and defense, damage reduction and party-wide shields.",
 			Mods = {
 				{ Stat = "MaxHealth", Mode = "Mul", Value = 0.093 },
-				{ Stat = "Defense", Mode = "Mul", Value = 0.3 },
+				{ Stat = "Defense", Mode = "Mul", Value = 0.2 }, -- was 0.3 (2026-11-25: 159 at L100)
 				{ Stat = "DamageTaken", Mode = "Mul", Value = -0.1 },
 				{ Stat = "Attack", Mode = "Mul", Value = 0.15 } }, -- DamageDealt +0.142 removed 2026-11-23 (it out-damaged the Berserker)
 			Skills = { "Bulwark", "Retribution", "UnbreakableVow" },
@@ -128,7 +128,7 @@ return {
 				{ Stat = "Attack", Mode = "Mul", Value = 0.25 },
 				{ Stat = "CritChance", Mode = "Add", Value = 0.1 },
 				{ Stat = "CritMultiplier", Mode = "Add", Value = 0.3 },
-				{ Stat = "DamageDealt", Mode = "Mul", Value = -0.500 }, { Stat = "MaxHealth", Mode = "Mul", Value = -0.300 } },
+				{ Stat = "DamageDealt", Mode = "Mul", Value = -0.40 }, --[[ was -0.500 (2026-11-25) ]] { Stat = "MaxHealth", Mode = "Mul", Value = -0.300 } },
 			Skills = { "DeadEye", "Headshot", "Barrage" },
 		},
 		Beastmaster = {
@@ -157,7 +157,7 @@ return {
 			Description = "Kills from the shadows. Huge crits and big single-target hits.",
 			Mods = {
 				{ Stat = "Attack", Mode = "Mul", Value = 0.28 },
-				{ Stat = "DamageDealt", Mode = "Mul", Value = -0.600 },
+				{ Stat = "DamageDealt", Mode = "Mul", Value = -0.45 }, -- was -0.600 (2026-11-25: lowest at L100, BALANCE.md "Class report")
 				{ Stat = "CritChance", Mode = "Add", Value = 0.05 },
 				{ Stat = "CritMultiplier", Mode = "Add", Value = 0.3 }, { Stat = "MaxHealth", Mode = "Mul", Value = -0.300 } },
 			Skills = { "DeathMark", "Execute", "ShadowStrike" },

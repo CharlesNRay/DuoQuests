@@ -44,7 +44,16 @@ def main():
     runs, results = load(final100)
     progress = []
     for (cls, path), rows in sorted(runs.items()):
-        for r in sorted(rows, key=lambda r: r["Level"]):
+        # several seeds: average each checkpoint (the bot samples when it first reaches 10, 20, ... levels)
+        buckets = {}
+        for r in rows:
+            buckets.setdefault(r["Level"] // 10 * 10, []).append(r)
+        merged = []
+        for lv, group in sorted(buckets.items()):
+            m = {k: sum(g[k] for g in group) / len(group) for k in group[0]}
+            m["Level"], m["Frontier"], m["Seeds"] = lv, round(m["Frontier"]), len(group)
+            merged.append(m)
+        for r in merged:
             d = max(r["Duration"], 0.5)
             progress.append({
                 "class": cls, "path": path, "level": r["Level"], "stage": r["Frontier"], "hours": round(r["Hours"], 2),
@@ -54,14 +63,22 @@ def main():
                 "healing_per_sec": round(r["Healed"] / d), "shield_per_sec": round(r["Absorbed"] / d),
                 "kept_off_by_buffs_per_sec": round(r["MitByBuffs"] / d), "kept_off_by_defense_per_sec": round(r["MitDefense"] / d),
                 "taken_per_sec": round(r["Taken"] / d), "deaths_per_fight": round(r["Deaths"], 2), "crit_rate": round(r["CritRate"], 2),
+                "seeds": r["Seeds"],
             })
+    # stage at level 100 (the RESULT line of each seed), averaged
+    for (cls, path), rs in sorted(results.items()):
+        lv = max(x["Level"] for x in rs)
+        if lv >= 100:
+            progress.append({"class": cls, "path": path, "level": 100, "stage": round(sum(x["Frontier"] for x in rs) / len(rs)),
+                             "hours": round(sum(x["Hours"] for x in rs) / len(rs), 2), "seeds": len(rs)})
     json.dump({"rows": progress, "meta": meta}, open(os.path.join(outdir, "progress.json"), "w"), indent=0)
 
-    nt_runs, _ = load(notalent)
+    with_runs = load(sys.argv[6])[0] if len(sys.argv) > 6 else runs  # with-talents runs made with the same build as the no-talent ones
+    _, nt_results = load(notalent)  # no-talent runs end at level 60: their RESULT line is the level 60 frontier
     talents = []
-    for (cls, path), rows in sorted(nt_runs.items()):
-        without = at_level(rows, 60)
-        with_ = at_level(runs.get((cls, path), []), 60)
+    for (cls, path), rs in sorted(nt_results.items()):
+        without = rs[0]
+        with_ = at_level(with_runs.get((cls, path), []), 60)
         if without and with_:
             talents.append({"class": cls, "path": path, "stage_with_talents": with_["Frontier"], "stage_without_talents": without["Frontier"],
                             "hours_with": round(with_["Hours"], 1), "hours_without": round(without["Hours"], 1)})

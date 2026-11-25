@@ -349,3 +349,24 @@ harder than zone 9's at the same scale (Sky Harpy 9 attack x 1.2 speed with a bl
   stage ~100 from L60 to L100.
 - `Stages.DefenseScale`: hero Defense is measured against the monster scale with ALL of the late growth (`Scale` only
   carries AttackShare of it). Measured against `Scale`, a Guardian ran from stage 110 to 167 in ten levels.
+
+## Class report (2026-11-25)
+Bot METRIC lines (every 10 levels, 12 fights at the best cleared stage with Simulation metrics) and
+`tools/sim/classreport.py` build the class report (stage, hours, damage, pet share, buff/debuff damage, healing,
+shields, mitigation per path). Roster to L100, 3 seeds per path, companion party, talents on:
+| path | L100 stage before tweaks | after |
+|---|---|---|
+| Berserker | 171 | 151 (Lifesteal 0.25 -> 0.15) |
+| Guardian | 159 | 131 (Defense +0.3 -> +0.2) |
+| Priest | 140 | |
+| Necromancer | 130 | |
+| Beastmaster, Duelist | 127 | |
+| Templar | 126 | |
+| FrostWeaver | 121 | |
+| SpiritCaller | 118 | |
+| Pyromancer | 117 | |
+| Sharpshooter | 111 | 118 (DamageDealt -0.5 -> -0.4) |
+| Assassin | 109 | 119 (DamageDealt -0.6 -> -0.45) |
+L40 (2 seeds): every path 44-65 (mean ~53) in 9-13 h. L100 in ~37-45 game hours of active play.
+Supports carry their party late: at L90 a Priest's Blessing added ~412K/s of party damage on top of its own 92K, and
+Taunt's Exposed made Warriors worth 74-171K/s more party damage. Pets do 20-60% of a hero's damage.
