@@ -144,7 +144,7 @@ return {
 				{ Stat = "Defense", Mode = "Mul", Value = 0.2 },
 				{ Stat = "Attack", Mode = "Mul", Value = 0.15 },
 				{ Stat = "PetDamage", Mode = "Mul", Value = 2.0 }, -- the pet is the main damage dealer (was 1.2; owner 2026-11-26: pets a good bit stronger)
-				{ Stat = "DamageDealt", Mode = "Mul", Value = -0.42 }, -- was -0.500 (2026-11-26: lowest at L100)
+				{ Stat = "DamageDealt", Mode = "Mul", Value = -0.35 }, -- was -0.500, then -0.42 (2026-11-26: lowest at L100)
 			},
 			PetBoost = { Stats = 1.25, SkillLevels = 8 }, -- was 0.75 / 4 (owner 2026-11-26)
 			Skills = { "PackHowl", "Stampede", "NaturesBond" },
@@ -160,7 +160,7 @@ return {
 				{ Stat = "Attack", Mode = "Mul", Value = 0.28 },
 				{ Stat = "DamageDealt", Mode = "Mul", Value = 0.10 }, -- (then 0.06) was -0.600, then -0.45, -0.36, -0.30, -0.24, -0.15, -0.08, 0 (owner: buff more; partner check L100 123-133) (2026-11-25: lowest at L100, BALANCE.md "Class report")
 				{ Stat = "CritChance", Mode = "Add", Value = 0.05 },
-				{ Stat = "CritMultiplier", Mode = "Add", Value = 0.3 }, { Stat = "MaxHealth", Mode = "Mul", Value = -0.08 } }, -- health was -0.30, then -0.22, -0.15 (2026-11-26: with a Guardian partner 131 vs Sharpshooter 162)
+				{ Stat = "CritMultiplier", Mode = "Add", Value = 0.3 }, { Stat = "MaxHealth", Mode = "Mul", Value = 0 } }, -- health was -0.30, then -0.22, -0.15, -0.08 (partner check L100 103-108) (2026-11-26: with a Guardian partner 131 vs Sharpshooter 162)
 			Skills = { "DeathMark", "Execute", "ShadowStrike" },
 		},
 		Duelist = {
@@ -201,7 +201,7 @@ return {
 			UnlockLevel = 30,
 			Description = "Calls guardian spirits. Much stronger healing, more health, a spirit that mends allies, and party-wide shields.",
 			Mods = {
-				{ Stat = "HealingDealt", Mode = "Mul", Value = 0.75 }, -- was 0.25, then 1.0, 0.85 (partner check L100 159-191, 191) (2026-11-25 roles: healed a quarter of a Cleric)
+				{ Stat = "HealingDealt", Mode = "Mul", Value = 0.70 }, -- was 0.25, then 1.0, 0.85, 0.75 (partner check L100 159-191, 191) (2026-11-25 roles: healed a quarter of a Cleric)
 				{ Stat = "MaxHealth", Mode = "Mul", Value = -0.090 },
 				{ Stat = "Defense", Mode = "Mul", Value = 0.12 },
 				{ Stat = "Attack", Mode = "Mul", Value = 0.1 }, { Stat = "DamageDealt", Mode = "Mul", Value = -0.5 }, --[[ was -0.405: a healer first ]] { Stat = "Haste", Mode = "Add", Value = 0.08 } },
