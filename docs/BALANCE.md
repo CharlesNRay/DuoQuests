@@ -457,3 +457,11 @@ edit CLASS for a Warrior run). Mage: Common +9-23%, Rare +16-29%, Epic +16-60%, 
 Crownling (season prize) +109% -> +86% (Power 1.3 kept: season prizes must out-stat every wishable pet; Royal Decree damage 3.4x, party shield halved: damage + party shield
 together was the outlier), Spiritling Power 1.6 (was 2.0), Oathgriffin 1.6 / Aurora 1.25 / Wardenowl 1.2 (were below their
 rarity). Defensive pets rank higher on a Warrior (Bannerhound, Thornback +25-29%), as they should.
+
+## Partner checks, converged (2026-11-26)
+3 seeds per path, levelled partner (Warrior paths: Ranger Sharpshooter; others: Warrior Guardian), stage at L100 over the
+last passes: every path lands in ~120-185, most 140-175, and the same path moves +-20-35 stages between identical passes
+(Assassin 154 -> 118 with no change), so differences inside that band are noise. Stop tuning classes from these numbers;
+re-check only after a real change. Roles hold (roles.py): damage paths 42-67% of party damage, tanks take 54-70% of hits,
+Priest/Templar 76-90% of healing. Boss waits average 0-5 h; boss 90/100 still trap the odd run for ~60 h (1 in 36).
+Duelist fix that mattered: its own skills (Riposte 2.8x, Blade Dance 3.8x, Parry taunts), not more stats (105-108 -> 120-147).
