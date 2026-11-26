@@ -122,6 +122,37 @@ PASSIVES = {
 }
 
 
+# Each class has a colour family: every class skill and passive tile is blended toward it (CLASS_SHARE), and the UI draws
+# a band in the class colour on the tile, so a Warrior skill reads as Warrior at a glance (owner 2026-11-26).
+CLASSES = {
+    "Warrior": (178, 58, 46),   # crimson steel
+    "Cleric": (226, 186, 84),   # holy gold
+    "Mage": (58, 112, 214),     # arcane blue
+    "Ranger": (64, 146, 72),    # forest green
+    "Rogue": (128, 58, 158),    # shadow purple
+    "Summoner": (54, 150, 132), # spirit teal
+}
+CLASS_SHARE = 0.55
+
+
+def class_of(rel, idpat):
+    """{ id: class } from a Config file whose entries carry Id = "..." and then Class = "..."."""
+    text = open(os.path.join(ROOT, rel), encoding="utf-8").read()
+    out = {}
+    for m in re.finditer(r'Id = "(\w+)"(.*?)(?=Id = "|\Z)', text, re.S):
+        c = re.search(r'Class = "(\w+)"', m.group(2))
+        if c and c.group(1) in CLASSES:
+            out.setdefault(m.group(1), c.group(1))
+    return out
+
+
+def tint(color, cls):
+    base = CLASSES.get(cls)
+    if not base:
+        return color
+    return tuple(int(round(color[i] * (1 - CLASS_SHARE) + base[i] * CLASS_SHARE)) for i in range(3))
+
+
 def lua_color(c):
     return "{ %d, %d, %d }" % c
 
@@ -139,20 +170,29 @@ def write_lua():
            "\t  Skills[abilityId]     = { Glyph, Color = {r,g,b} }",
            "\t  Statuses[statusId]    = { Kind, Glyph, Color }   Kind: Shield | Buff | Debuff | Dot | Cc",
            "\t  Ultimates[id], PetSkills[skill name], Passives[id] = { Glyph, Color }",
+           "\t  Classes[classId] = { Color }; skills and passives carry Class and are tinted toward it",
            "]]", "", "return {"]
-    def block(name, table, kind=False):
+    skill_class = class_of("src/shared/Config/Abilities.luau", None)
+    passive_class = class_of("src/shared/Config/Passives.luau", None)
+    def block(name, table, kind=False, classes=None):
         out.append("\t%s = {" % name)
         for k, v in table.items():
             if kind:
                 out.append('\t\t%s = { Kind = "%s", Glyph = "%s", Color = %s },' % (lua_key(k), v[0], v[1], lua_color(v[2])))
             else:
-                out.append('\t\t%s = { Glyph = "%s", Color = %s },' % (lua_key(k), v[0], lua_color(v[1])))
+                cls = classes and classes.get(k)
+                extra = ', Class = "%s"' % cls if cls else ""
+                out.append('\t\t%s = { Glyph = "%s", Color = %s%s },' % (lua_key(k), v[0], lua_color(tint(v[1], cls)), extra))
         out.append("\t},")
-    block("Skills", SKILLS)
+    out.append("\tClasses = {")
+    for k, c in CLASSES.items():
+        out.append("\t\t%s = { Color = %s }," % (k, lua_color(c)))
+    out.append("\t},")
+    block("Skills", SKILLS, classes=skill_class)
     block("Statuses", STATUSES, True)
     block("Ultimates", ULTIMATES)
     block("PetSkills", PET_SKILLS)
-    block("Passives", PASSIVES)
+    block("Passives", PASSIVES, classes=passive_class)
     out.append("}")
     path = os.path.join(ROOT, "src", "shared", "Config", "IconLooks.luau")
     with open(path, "w", encoding="utf-8", newline="\n") as f:

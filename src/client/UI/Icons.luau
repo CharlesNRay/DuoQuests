@@ -74,6 +74,11 @@ local function tile(parent, color, glyph, border, props)
 		TextScaled = true, TextTransparency = if props.Locked then 0.5 else 0, Parent = f,
 	})
 	Kit.new("UITextSizeConstraint", { MaxTextSize = 26, MinTextSize = 8, Parent = f:FindFirstChildOfClass("TextLabel") })
+	if props.Band and not props.Locked then
+		-- the class band: a strip in the class colour along the bottom, so a class's skills read as one family
+		local band = Kit.frame({ Size = UDim2.new(1, -8, 0, 5), Position = UDim2.new(0, 4, 1, -7), BackgroundColor3 = props.Band, ZIndex = 1, NoCorner = true, Parent = f })
+		Kit.corner(2).Parent = band
+	end
 	if props.Locked and props.Milestone then
 		-- locked behind a milestone (a stage to reach): dark veil, a big padlock and what unlocks it
 		Kit.frame({ Size = UDim2.fromScale(1, 1), BackgroundColor3 = Color3.fromRGB(8, 8, 14), BackgroundTransparency = 0.3, ZIndex = 4, Parent = f })
@@ -115,9 +120,31 @@ local function lookOf(list, key)
 end
 Icons.LookOf = lookOf
 Icons.Looks = Looks
+local function classBand(classId)
+	local c = classId and Looks.Classes and Looks.Classes[classId]
+	if not c then
+		return nil
+	end
+	-- a brighter version of the class colour, so the band shows on the tinted tile
+	local col = Color3.fromRGB(c.Color[1], c.Color[2], c.Color[3])
+	return col:Lerp(Color3.new(1, 1, 1), 0.15)
+end
+Icons.ClassBand = classBand
+
+local function withBand(props, classId)
+	local band = classBand(classId)
+	if not band then
+		return props
+	end
+	local p = table.clone(props or {})
+	p.Band = p.Band or band
+	return p
+end
+
 function Icons.Skill(parent, def, props)
 	local kind = Icons.SkillKind(def)
 	local own = lookOf(Looks.Skills, def.Id)
+	props = withBand(props, def.Class or (Looks.Skills[def.Id] and Looks.Skills[def.Id].Class))
 	return tile(parent, if own then own[1] else KIND_COLORS[kind], if own then own[2] else KIND_GLYPHS[kind], Kit.rarityColor((props and props.Tier) or def.Rarity), props)
 end
 
@@ -129,6 +156,7 @@ local PASSIVE_LOOK = {
 }
 function Icons.Passive(parent, def, props)
 	local look = (def and lookOf(Looks.Passives, def.Id)) or PASSIVE_LOOK[def and def.Category or ""] or { Color3.fromRGB(70, 74, 96), "+" }
+	props = withBand(props, def and (def.Class or (Looks.Passives[def.Id] and Looks.Passives[def.Id].Class)))
 	return tile(parent, look[1], look[2], if def then Color3.fromRGB(235, 225, 190) else Color3.fromRGB(110, 116, 140), props)
 end
 
