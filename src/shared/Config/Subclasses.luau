@@ -42,7 +42,7 @@ return {
 				{ Stat = "CritChance", Mode = "Add", Value = 0.05 },
 				{ Stat = "MaxHealth", Mode = "Mul", Value = -0.14 }, -- was -0.240, then -0.12 (2026-11-26 long fights)
 				-- the squad's tank either way: its damage heals it (2026-11-23; with the Guardian trim, Berserker ~50 -> ~60 vs Guardian ~62 at L40)
-				{ Stat = "Lifesteal", Mode = "Add", Value = 0.09 }, -- was 0.25, then 0.15, 0.13, 0.11 (2026-11-25: Warrior paths led at L100, 171)
+				{ Stat = "Lifesteal", Mode = "Add", Value = 0.08 }, -- was 0.25, then 0.15, 0.13, 0.11, 0.09 (2026-11-25: Warrior paths led at L100, 171)
 			},
 			Skills = { "BloodFrenzy", "Cleave", "ExecutionerStrike" },
 		},
@@ -54,7 +54,7 @@ return {
 			UnlockLevel = 30,
 			Description = "An immovable wall. Enormous health and defense, damage reduction and party-wide shields.",
 			Mods = {
-				{ Stat = "MaxHealth", Mode = "Mul", Value = 0.093 },
+				{ Stat = "MaxHealth", Mode = "Mul", Value = 0.07 }, -- was 0.093 (2026-11-26: Guardian L100 stage 110-155)
 				{ Stat = "Defense", Mode = "Mul", Value = 0.12 }, -- owner 2026-11-26 (was 0.3, 0.2, 0.18, 0.15): L100 stage 146-152 (2026-11-25: led at L100)
 				{ Stat = "DamageTaken", Mode = "Mul", Value = -0.08 }, -- was -0.1 (2026-11-26 long fights: Guardian L100 stage 146-152)
 				{ Stat = "Attack", Mode = "Mul", Value = 0.15 } }, -- DamageDealt +0.142 removed 2026-11-23 (it out-damaged the Berserker)
@@ -99,7 +99,7 @@ return {
 			Description = "Fire and fury. Big attack and damage, with burning that keeps hurting; hits hard but stays fragile.",
 			Mods = {
 				{ Stat = "Attack", Mode = "Mul", Value = 0.24 },
-				{ Stat = "DamageDealt", Mode = "Mul", Value = -0.30 }, -- was -0.504, then -0.36 (2026-11-25: AoE damage path trailed every damage dealer)
+				{ Stat = "DamageDealt", Mode = "Mul", Value = -0.24 }, -- was -0.504, then -0.36, -0.30 (2026-11-25: AoE damage path trailed every damage dealer)
 				{ Stat = "CritChance", Mode = "Add", Value = 0.04 },
 				{ Stat = "MaxHealth", Mode = "Mul", Value = -0.240 }, { Stat = "Haste", Mode = "Add", Value = 0.06 } },
 			Skills = { "Ignite", "Inferno", "PhoenixFire" },
@@ -158,7 +158,7 @@ return {
 			Description = "Kills from the shadows. Huge crits and big single-target hits.",
 			Mods = {
 				{ Stat = "Attack", Mode = "Mul", Value = 0.28 },
-				{ Stat = "DamageDealt", Mode = "Mul", Value = -0.15 }, -- was -0.600, then -0.45, -0.36, -0.30, -0.24 (owner: buff more) (2026-11-25: lowest at L100, BALANCE.md "Class report")
+				{ Stat = "DamageDealt", Mode = "Mul", Value = -0.08 }, -- was -0.600, then -0.45, -0.36, -0.30, -0.24, -0.15 (owner: buff more; L100 stage 81-82) (2026-11-25: lowest at L100, BALANCE.md "Class report")
 				{ Stat = "CritChance", Mode = "Add", Value = 0.05 },
 				{ Stat = "CritMultiplier", Mode = "Add", Value = 0.3 }, { Stat = "MaxHealth", Mode = "Mul", Value = -0.300 } },
 			Skills = { "DeathMark", "Execute", "ShadowStrike" },
