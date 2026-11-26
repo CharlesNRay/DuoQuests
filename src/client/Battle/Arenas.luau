@@ -122,8 +122,8 @@ buildCard = function(parent)
 	line.BackgroundTransparency = 0.5
 	line.BorderSizePixel = 0
 	line.Parent = frame
-	cardLabel({ Name = "Zone", Size = UDim2.new(0.6, -12, 1, 0), Position = UDim2.fromOffset(12, 0), TextColor3 = Color3.fromRGB(216, 220, 239), Font = Enum.Font.GothamMedium, Parent = head })
-	cardLabel({ Name = "Stage", Size = UDim2.new(0.4, -12, 1, 0), Position = UDim2.new(0.6, 0, 0, 0), TextXAlignment = Enum.TextXAlignment.Right, TextColor3 = Color3.fromRGB(255, 215, 106), Font = Enum.Font.GothamBlack, TextSize = 20, Parent = head })
+	cardLabel({ Name = "Zone", Size = UDim2.new(0.5, -12, 1, 0), Position = UDim2.fromOffset(12, 0), TextColor3 = Color3.fromRGB(216, 220, 239), Font = Enum.Font.GothamMedium, Parent = head })
+	cardLabel({ Name = "Stage", Size = UDim2.new(0.5, -12, 1, 0), Position = UDim2.new(0.5, 0, 0, 0), TextXAlignment = Enum.TextXAlignment.Right, TextColor3 = Color3.fromRGB(255, 215, 106), Font = Enum.Font.GothamBlack, TextSize = 18, Parent = head })
 	-- column headings
 	local dim = Color3.fromRGB(141, 147, 179)
 	local function heading(text, x, w, right)

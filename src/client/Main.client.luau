@@ -522,7 +522,7 @@ hud:AddButton("Party", "dock", "👥", "Party", function() open("Party", "Party"
 hud:AddButton("Talents", "dock", "✨", "Talents", function() open("Talents", "Talents") end)
 Screens.Talents = require(script.Parent.UI.TalentScreen).Talents
 -- the permanent collections (bestiary and class mastery), kept every season
-hud:AddButton("Collection", "dock", "🏅", "Collection: bestiary and class mastery", function() open("Collection", "Collection") end)
+hud:AddButton("Collection", "dock", "🏅", "Collection", function() open("Collection", "Collection") end)
 Screens.Collection = require(script.Parent.UI.CollectionScreen).Collection
 
 -- Studio only: one test panel with every cheat (levels, stages, gold, items, pets, dailies, world boss, premium).

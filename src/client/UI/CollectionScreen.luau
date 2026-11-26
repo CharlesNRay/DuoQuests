@@ -40,7 +40,7 @@ local function bestiary(area, state, extra, redraw)
 	local bonus = info.Bonus or {}
 	Kit.label({
 		Size = UDim2.new(1, -8, 0, 18), Position = UDim2.fromOffset(4, 0),
-		Text = ("Hunt every monster of a zone (★★) for its title and +0.5%% attack and health. Now: +%s attack, +%s health (max %s). Party kills count for everyone; kills are kept every season."):format(pct(bonus.Attack or 0), pct(bonus.MaxHealth or 0), pct(info.Cap or 0.1)),
+		Text = ("A zone at ★★: its title and +0.5%% attack and health. Now +%s attack, +%s health (max %s). Hover a monster for its skills."):format(pct(bonus.Attack or 0), pct(bonus.MaxHealth or 0), pct(info.Cap or 0.1)),
 		TextSize = 11, TextColor3 = C.Dim, TextWrapped = true, Parent = area,
 	})
 	-- zones
@@ -88,7 +88,7 @@ local function bestiary(area, state, extra, redraw)
 		-- a seen monster: hover for what it does (its skills and the buffs/debuffs they bring)
 		local info = mon.Info
 		if info then
-			Kit.label({ Size = UDim2.new(1, -12, 0, 14), Position = UDim2.fromOffset(8, 46), Text = info.Style .. "  ·  hover for its skills", TextSize = 10, TextColor3 = C.Dim, TextWrapped = false, Parent = card })
+			Kit.label({ Size = UDim2.new(1, -12, 0, 14), Position = UDim2.fromOffset(8, 46), Text = info.Style, TextSize = 10, TextColor3 = C.Dim, TextWrapped = false, Parent = card })
 			card.Active = true
 			Kit.Hover(card, function()
 				local lines = { ("<b>%s</b>  %s"):format(mon.Name, info.Style) }
