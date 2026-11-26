@@ -16,7 +16,6 @@
 ]]
 
 local Config = require(script.Parent.Config.Daily)
-local Progression = require(script.Parent.Progression)
 local Pets = require(script.Parent.Pets)
 
 local Daily = {}
@@ -44,9 +43,8 @@ end
 
 function Daily.RewardFor(profile, day)
 	local def = Config.Days[day]
-	local clear = Progression.ClearRewards(profile.Season.HighestStage, true, nil)
 	return {
-		Gold = math.floor(clear.Gold * def.GoldClears),
+		Gold = def.Gold,
 		Shards = def.Shards,
 		SkillPicks = def.SkillPicks or 0,
 		Wishstones = def.Wishstones or 0,

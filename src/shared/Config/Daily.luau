@@ -3,26 +3,25 @@
 	Location: ReplicatedStorage > Shared > Config > Daily
 
 	Daily login rewards: a 7 day cycle. Missing a day restarts the cycle at day 1.
-	Rewards are expressed so they scale with progress instead of being fixed numbers:
+	Every reward is a flat number (owner 2026-11-26: the daily gift does not scale with progress):
 
-	  GoldClears   gold equal to this many frontier clears at your current frontier
-	  Shards       Skill Shards (flat, shards have their own pacing)
+	  Gold         gold
+	  Shards       Skill Shards
 	  Wishstones   Wishing Tree currency
 	  SkillPicks   free skill unlocks
 	  Pet          true: a free pet level for your equipped pet (up to the cap)
 
-	Placeholders: tune once the pacing pass settles income.
 ]]
 
 return {
 	CycleLength = 7,
 	Days = {
-		{ GoldClears = 8, Shards = 2, Wishstones = 2 },
-		{ GoldClears = 10, Shards = 2, Wishstones = 2 },
-		{ GoldClears = 12, Shards = 3, Wishstones = 3 },
-		{ GoldClears = 14, Shards = 3, Wishstones = 3 },
-		{ GoldClears = 16, Shards = 4, Wishstones = 4 },
-		{ GoldClears = 18, Shards = 4, Wishstones = 4 },
-		{ GoldClears = 25, Shards = 8, SkillPicks = 1, Wishstones = 10 },
+		{ Gold = 10000, Shards = 2, Wishstones = 2 },
+		{ Gold = 12000, Shards = 2, Wishstones = 2 },
+		{ Gold = 15000, Shards = 3, Wishstones = 3 },
+		{ Gold = 18000, Shards = 3, Wishstones = 3 },
+		{ Gold = 21000, Shards = 4, Wishstones = 4 },
+		{ Gold = 25000, Shards = 4, Wishstones = 4 },
+		{ Gold = 40000, Shards = 8, SkillPicks = 1, Wishstones = 10 },
 	},
 }

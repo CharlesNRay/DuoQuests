@@ -164,7 +164,7 @@ return function(modulesOverride)
 	local seventh = Daily.Claim(p, t0 + 12 * day)
 	check("Day 7 gives a skill pick", p.Season.Currencies.SkillPicks >= picksBefore)
 	check("The cycle wraps after day 7", select(2, Daily.Claim(p, t0 + 13 * day)).Day == 1 or seventh)
-	check("Rewards grow with the frontier", Daily.RewardFor((function() local q = ProfileTemplate.New() q.Season.HighestStage = 50 return q end)(), 1).Gold > Daily.RewardFor((function() local q = ProfileTemplate.New() q.Season.HighestStage = 5 return q end)(), 1).Gold)
+	check("Rewards are flat (do not grow with the frontier)", Daily.RewardFor((function() local q = ProfileTemplate.New() q.Season.HighestStage = 50 return q end)(), 1).Gold == Daily.RewardFor((function() local q = ProfileTemplate.New() q.Season.HighestStage = 5 return q end)(), 1).Gold)
 
 	-- blacksmith + merchant -------------------------------------------------------
 	local up = ProfileTemplate.New()
