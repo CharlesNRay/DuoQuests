@@ -84,7 +84,7 @@ return {
 			Mods = {
 				{ Stat = "Attack", Mode = "Mul", Value = 0.28 },
 				{ Stat = "DamageDealt", Mode = "Mul", Value = -0.12 }, -- was -0.300 (2026-11-25 roles: damage first)
-				{ Stat = "HealingDealt", Mode = "Mul", Value = -0.5 }, -- heals grow with attack: it out-healed the Priest
+				{ Stat = "HealingDealt", Mode = "Mul", Value = -0.6 }, -- (was -0.35, -0.5; partner check L100 180-200) heals grow with attack: it out-healed the Priest
 				{ Stat = "CritChance", Mode = "Add", Value = 0.04 },
 				{ Stat = "MaxHealth", Mode = "Mul", Value = -0.200 },
 			},
@@ -129,7 +129,7 @@ return {
 				{ Stat = "Attack", Mode = "Mul", Value = 0.25 },
 				{ Stat = "CritChance", Mode = "Add", Value = 0.1 },
 				{ Stat = "CritMultiplier", Mode = "Add", Value = 0.3 },
-				{ Stat = "DamageDealt", Mode = "Mul", Value = -0.35 }, --[[ was -0.500, then -0.40 (2026-11-25) ]] { Stat = "MaxHealth", Mode = "Mul", Value = -0.15 } }, -- health was -0.30, then -0.20 (2026-11-26: long fights punish fragile damage dealers)
+				{ Stat = "DamageDealt", Mode = "Mul", Value = -0.30 }, --[[ was -0.500, then -0.40, -0.35 ]] { Stat = "MaxHealth", Mode = "Mul", Value = -0.15 } }, -- health was -0.30, then -0.20 (2026-11-26: long fights punish fragile damage dealers)
 			Skills = { "DeadEye", "Headshot", "Barrage" },
 		},
 		Beastmaster = {
@@ -158,7 +158,7 @@ return {
 			Description = "Kills from the shadows. Huge crits and big single-target hits.",
 			Mods = {
 				{ Stat = "Attack", Mode = "Mul", Value = 0.28 },
-				{ Stat = "DamageDealt", Mode = "Mul", Value = 0.06 }, -- was -0.600, then -0.45, -0.36, -0.30, -0.24, -0.15, -0.08, 0 (owner: buff more; partner check L100 123-133) (2026-11-25: lowest at L100, BALANCE.md "Class report")
+				{ Stat = "DamageDealt", Mode = "Mul", Value = 0.10 }, -- (then 0.06) was -0.600, then -0.45, -0.36, -0.30, -0.24, -0.15, -0.08, 0 (owner: buff more; partner check L100 123-133) (2026-11-25: lowest at L100, BALANCE.md "Class report")
 				{ Stat = "CritChance", Mode = "Add", Value = 0.05 },
 				{ Stat = "CritMultiplier", Mode = "Add", Value = 0.3 }, { Stat = "MaxHealth", Mode = "Mul", Value = -0.08 } }, -- health was -0.30, then -0.22, -0.15 (2026-11-26: with a Guardian partner 131 vs Sharpshooter 162)
 			Skills = { "DeathMark", "Execute", "ShadowStrike" },
@@ -175,7 +175,7 @@ return {
 				{ Stat = "Defense", Mode = "Mul", Value = 0.25 },
 				{ Stat = "DamageTaken", Mode = "Mul", Value = -0.14 }, -- was -0.1 (2026-11-26: lowest at L100, tankier)
 				{ Stat = "Attack", Mode = "Mul", Value = 0.12 },
-				{ Stat = "AttackSpeed", Mode = "Mul", Value = 0.08 }, { Stat = "DamageDealt", Mode = "Mul", Value = -0.264 } }, -- not raised: the tanky Rogue should not out-damage the Assassin
+				{ Stat = "AttackSpeed", Mode = "Mul", Value = 0.08 }, { Stat = "DamageDealt", Mode = "Mul", Value = -0.20 } }, -- was -0.264 (partner check L100 109-128); not raised further: the tanky Rogue should not out-damage the Assassin
 			Skills = { "Riposte", "Parry", "BladeDance" },
 		},
 		Necromancer = {
@@ -201,7 +201,7 @@ return {
 			UnlockLevel = 30,
 			Description = "Calls guardian spirits. Much stronger healing, more health, a spirit that mends allies, and party-wide shields.",
 			Mods = {
-				{ Stat = "HealingDealt", Mode = "Mul", Value = 0.85 }, -- was 0.25, then 1.0 (partner check L100 159-191) (2026-11-25 roles: healed a quarter of a Cleric)
+				{ Stat = "HealingDealt", Mode = "Mul", Value = 0.75 }, -- was 0.25, then 1.0, 0.85 (partner check L100 159-191, 191) (2026-11-25 roles: healed a quarter of a Cleric)
 				{ Stat = "MaxHealth", Mode = "Mul", Value = -0.090 },
 				{ Stat = "Defense", Mode = "Mul", Value = 0.12 },
 				{ Stat = "Attack", Mode = "Mul", Value = 0.1 }, { Stat = "DamageDealt", Mode = "Mul", Value = -0.5 }, --[[ was -0.405: a healer first ]] { Stat = "Haste", Mode = "Add", Value = 0.08 } },
