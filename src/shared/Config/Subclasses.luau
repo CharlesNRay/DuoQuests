@@ -54,7 +54,7 @@ return {
 			UnlockLevel = 30,
 			Description = "An immovable wall. Enormous health and defense, damage reduction and party-wide shields.",
 			Mods = {
-				{ Stat = "MaxHealth", Mode = "Mul", Value = 0.07 }, -- was 0.093 (2026-11-26: Guardian L100 stage 110-155)
+				{ Stat = "MaxHealth", Mode = "Mul", Value = 0.05 }, -- was 0.093, then 0.07 (2026-11-26: Guardian L100 stage 175-182 with partners)
 				{ Stat = "Defense", Mode = "Mul", Value = 0.12 }, -- owner 2026-11-26 (was 0.3, 0.2, 0.18, 0.15): L100 stage 146-152 (2026-11-25: led at L100)
 				{ Stat = "DamageTaken", Mode = "Mul", Value = -0.05 }, -- was -0.1, then -0.08 (2026-11-26 long fights: Guardian L100 stage 140-155)
 				{ Stat = "Attack", Mode = "Mul", Value = 0.15 } }, -- DamageDealt +0.142 removed 2026-11-23 (it out-damaged the Berserker)

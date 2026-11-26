@@ -1903,7 +1903,7 @@ return {
 		CooldownPerLevel = -0.2,
 		MinCooldown = 4,
 		Effects = {
-			{ Type = "Damage", Target = "Primary", Multiplier = 1.8, PerLevel = { Multiplier = 0.13 } },
+			{ Type = "Damage", Target = "Primary", Multiplier = 2.8, PerLevel = { Multiplier = 0.2 } },
 			{ Type = "Heal", Target = "Self", Multiplier = 0, PercentMaxHealth = 0.06, PerLevel = { PercentMaxHealth = 0.004 } },
 		},
 	},
@@ -1911,7 +1911,7 @@ return {
 	Parry = {
 		Id = "Parry",
 		DisplayName = "Parry",
-		Description = "A perfect guard: tougher and much harder to hurt.",
+		Description = "A perfect guard: tougher and much harder to hurt, and it draws the enemies' attacks for a moment.",
 		Class = "Rogue",
 		Subclass = "Duelist",
 		Rarity = "Epic",
@@ -1922,6 +1922,7 @@ return {
 		Effects = {
 			{ Type = "ApplyStatus", Target = "Self", Status = "Evasive", Duration = 6, PerLevel = { Duration = 0.3 } },
 			{ Type = "ApplyStatus", Target = "Self", Status = "Fortified", Duration = 6, PerLevel = { Duration = 0.3 } },
+			{ Type = "ApplyStatus", Target = "Self", Status = "Taunting", Duration = 3, PerLevel = { Duration = 0.1 } },
 		},
 	},
 
@@ -1937,7 +1938,7 @@ return {
 		MinCooldown = 8,
 		Conditions = { MinEnemies = 2 },
 		Effects = {
-			{ Type = "Damage", Target = "AllEnemies", Multiplier = 3.04, PerLevel = { Multiplier = 0.22 } },
+			{ Type = "Damage", Target = "AllEnemies", Multiplier = 3.8, PerLevel = { Multiplier = 0.27 } },
 			{ Type = "ApplyStatus", Target = "Self", Status = "Evasive", Duration = 3, PerLevel = { Duration = 0.1 } },
 		},
 	},
