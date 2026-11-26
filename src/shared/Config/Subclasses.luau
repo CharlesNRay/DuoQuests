@@ -42,7 +42,7 @@ return {
 				{ Stat = "CritChance", Mode = "Add", Value = 0.05 },
 				{ Stat = "MaxHealth", Mode = "Mul", Value = -0.18 }, -- was -0.240, then -0.12, -0.14, -0.16 (2026-11-26 long fights; partner check L100 170-200)
 				-- the squad's tank either way: its damage heals it (2026-11-23; with the Guardian trim, Berserker ~50 -> ~60 vs Guardian ~62 at L40)
-				{ Stat = "Lifesteal", Mode = "Add", Value = 0.05 }, -- was 0.25, then 0.15, 0.13, 0.11, 0.09, 0.08, 0.07, 0.06 (2026-11-25: Warrior paths led at L100, 171)
+				{ Stat = "Lifesteal", Mode = "Add", Value = 0.04 }, -- was 0.25, then 0.15, 0.13, 0.11, 0.09, 0.08, 0.07, 0.06, 0.05 (2026-11-25: Warrior paths led at L100, 171)
 			},
 			Skills = { "BloodFrenzy", "Cleave", "ExecutionerStrike" },
 		},
@@ -175,7 +175,7 @@ return {
 				{ Stat = "Defense", Mode = "Mul", Value = 0.25 },
 				{ Stat = "DamageTaken", Mode = "Mul", Value = -0.14 }, -- was -0.1 (2026-11-26: lowest at L100, tankier)
 				{ Stat = "Attack", Mode = "Mul", Value = 0.12 },
-				{ Stat = "AttackSpeed", Mode = "Mul", Value = 0.08 }, { Stat = "DamageDealt", Mode = "Mul", Value = -0.14 } }, -- was -0.264, then -0.20 (partner check L100 109-139); not raised further: the tanky Rogue should not out-damage the Assassin
+				{ Stat = "AttackSpeed", Mode = "Mul", Value = 0.08 }, { Stat = "DamageDealt", Mode = "Mul", Value = -0.08 } }, -- was -0.264, then -0.20, -0.14 (partner check L100 109-139); not raised further: the tanky Rogue should not out-damage the Assassin
 			Skills = { "Riposte", "Parry", "BladeDance" },
 		},
 		Necromancer = {
@@ -201,7 +201,7 @@ return {
 			UnlockLevel = 30,
 			Description = "Calls guardian spirits. Much stronger healing, more health, a spirit that mends allies, and party-wide shields.",
 			Mods = {
-				{ Stat = "HealingDealt", Mode = "Mul", Value = 0.70 }, -- was 0.25, then 1.0, 0.85, 0.75 (partner check L100 159-191, 191) (2026-11-25 roles: healed a quarter of a Cleric)
+				{ Stat = "HealingDealt", Mode = "Mul", Value = 0.80 }, -- was 0.25, then 1.0, 0.85, 0.75, 0.70 (dropped to 136) (partner check L100 159-191, 191) (2026-11-25 roles: healed a quarter of a Cleric)
 				{ Stat = "MaxHealth", Mode = "Mul", Value = -0.090 },
 				{ Stat = "Defense", Mode = "Mul", Value = 0.12 },
 				{ Stat = "Attack", Mode = "Mul", Value = 0.1 }, { Stat = "DamageDealt", Mode = "Mul", Value = -0.5 }, --[[ was -0.405: a healer first ]] { Stat = "Haste", Mode = "Add", Value = 0.08 } },
