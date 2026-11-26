@@ -40,9 +40,9 @@ return {
 				-- no DamageDealt penalty since 2026-11-23 (was -0.313, then -0.15): Guardian out-damaged it
 				{ Stat = "AttackSpeed", Mode = "Mul", Value = 0.08 },
 				{ Stat = "CritChance", Mode = "Add", Value = 0.05 },
-				{ Stat = "MaxHealth", Mode = "Mul", Value = -0.16 }, -- was -0.240, then -0.12, -0.14 (2026-11-26 long fights)
+				{ Stat = "MaxHealth", Mode = "Mul", Value = -0.18 }, -- was -0.240, then -0.12, -0.14, -0.16 (2026-11-26 long fights; partner check L100 170-200)
 				-- the squad's tank either way: its damage heals it (2026-11-23; with the Guardian trim, Berserker ~50 -> ~60 vs Guardian ~62 at L40)
-				{ Stat = "Lifesteal", Mode = "Add", Value = 0.06 }, -- was 0.25, then 0.15, 0.13, 0.11, 0.09, 0.08, 0.07 (2026-11-25: Warrior paths led at L100, 171)
+				{ Stat = "Lifesteal", Mode = "Add", Value = 0.05 }, -- was 0.25, then 0.15, 0.13, 0.11, 0.09, 0.08, 0.07, 0.06 (2026-11-25: Warrior paths led at L100, 171)
 			},
 			Skills = { "BloodFrenzy", "Cleave", "ExecutionerStrike" },
 		},
@@ -158,7 +158,7 @@ return {
 			Description = "Kills from the shadows. Huge crits and big single-target hits.",
 			Mods = {
 				{ Stat = "Attack", Mode = "Mul", Value = 0.28 },
-				{ Stat = "DamageDealt", Mode = "Mul", Value = 0 }, -- was -0.600, then -0.45, -0.36, -0.30, -0.24, -0.15, -0.08 (owner: buff more; L100 stage 81-86) (2026-11-25: lowest at L100, BALANCE.md "Class report")
+				{ Stat = "DamageDealt", Mode = "Mul", Value = 0.06 }, -- was -0.600, then -0.45, -0.36, -0.30, -0.24, -0.15, -0.08, 0 (owner: buff more; partner check L100 123-133) (2026-11-25: lowest at L100, BALANCE.md "Class report")
 				{ Stat = "CritChance", Mode = "Add", Value = 0.05 },
 				{ Stat = "CritMultiplier", Mode = "Add", Value = 0.3 }, { Stat = "MaxHealth", Mode = "Mul", Value = -0.08 } }, -- health was -0.30, then -0.22, -0.15 (2026-11-26: with a Guardian partner 131 vs Sharpshooter 162)
 			Skills = { "DeathMark", "Execute", "ShadowStrike" },
@@ -201,7 +201,7 @@ return {
 			UnlockLevel = 30,
 			Description = "Calls guardian spirits. Much stronger healing, more health, a spirit that mends allies, and party-wide shields.",
 			Mods = {
-				{ Stat = "HealingDealt", Mode = "Mul", Value = 1.0 }, -- was 0.25 (2026-11-25 roles: healed a quarter of a Cleric)
+				{ Stat = "HealingDealt", Mode = "Mul", Value = 0.85 }, -- was 0.25, then 1.0 (partner check L100 159-191) (2026-11-25 roles: healed a quarter of a Cleric)
 				{ Stat = "MaxHealth", Mode = "Mul", Value = -0.090 },
 				{ Stat = "Defense", Mode = "Mul", Value = 0.12 },
 				{ Stat = "Attack", Mode = "Mul", Value = 0.1 }, { Stat = "DamageDealt", Mode = "Mul", Value = -0.5 }, --[[ was -0.405: a healer first ]] { Stat = "Haste", Mode = "Add", Value = 0.08 } },
