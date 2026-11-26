@@ -56,7 +56,7 @@ return {
 			Mods = {
 				{ Stat = "MaxHealth", Mode = "Mul", Value = 0.07 }, -- was 0.093 (2026-11-26: Guardian L100 stage 110-155)
 				{ Stat = "Defense", Mode = "Mul", Value = 0.12 }, -- owner 2026-11-26 (was 0.3, 0.2, 0.18, 0.15): L100 stage 146-152 (2026-11-25: led at L100)
-				{ Stat = "DamageTaken", Mode = "Mul", Value = -0.08 }, -- was -0.1 (2026-11-26 long fights: Guardian L100 stage 146-152)
+				{ Stat = "DamageTaken", Mode = "Mul", Value = -0.05 }, -- was -0.1, then -0.08 (2026-11-26 long fights: Guardian L100 stage 140-155)
 				{ Stat = "Attack", Mode = "Mul", Value = 0.15 } }, -- DamageDealt +0.142 removed 2026-11-23 (it out-damaged the Berserker)
 			Skills = { "Bulwark", "Retribution", "UnbreakableVow" },
 		},
@@ -99,7 +99,7 @@ return {
 			Description = "Fire and fury. Big attack and damage, with burning that keeps hurting; hits hard but stays fragile.",
 			Mods = {
 				{ Stat = "Attack", Mode = "Mul", Value = 0.24 },
-				{ Stat = "DamageDealt", Mode = "Mul", Value = -0.24 }, -- was -0.504, then -0.36, -0.30 (2026-11-25: AoE damage path trailed every damage dealer)
+				{ Stat = "DamageDealt", Mode = "Mul", Value = -0.16 }, -- was -0.504, then -0.36, -0.30, -0.24 (2026-11-25: AoE damage path trailed every damage dealer)
 				{ Stat = "CritChance", Mode = "Add", Value = 0.04 },
 				{ Stat = "MaxHealth", Mode = "Mul", Value = -0.15 }, { Stat = "Haste", Mode = "Add", Value = 0.06 } }, -- health was -0.24 (2026-11-26 long fights)
 			Skills = { "Ignite", "Inferno", "PhoenixFire" },
@@ -129,7 +129,7 @@ return {
 				{ Stat = "Attack", Mode = "Mul", Value = 0.25 },
 				{ Stat = "CritChance", Mode = "Add", Value = 0.1 },
 				{ Stat = "CritMultiplier", Mode = "Add", Value = 0.3 },
-				{ Stat = "DamageDealt", Mode = "Mul", Value = -0.35 }, --[[ was -0.500, then -0.40 (2026-11-25) ]] { Stat = "MaxHealth", Mode = "Mul", Value = -0.20 } }, -- health was -0.30 (2026-11-26: long fights punish fragile damage dealers)
+				{ Stat = "DamageDealt", Mode = "Mul", Value = -0.35 }, --[[ was -0.500, then -0.40 (2026-11-25) ]] { Stat = "MaxHealth", Mode = "Mul", Value = -0.15 } }, -- health was -0.30, then -0.20 (2026-11-26: long fights punish fragile damage dealers)
 			Skills = { "DeadEye", "Headshot", "Barrage" },
 		},
 		Beastmaster = {
@@ -160,7 +160,7 @@ return {
 				{ Stat = "Attack", Mode = "Mul", Value = 0.28 },
 				{ Stat = "DamageDealt", Mode = "Mul", Value = -0.08 }, -- was -0.600, then -0.45, -0.36, -0.30, -0.24, -0.15 (owner: buff more; L100 stage 81-82) (2026-11-25: lowest at L100, BALANCE.md "Class report")
 				{ Stat = "CritChance", Mode = "Add", Value = 0.05 },
-				{ Stat = "CritMultiplier", Mode = "Add", Value = 0.3 }, { Stat = "MaxHealth", Mode = "Mul", Value = -0.22 } }, -- health was -0.30 (2026-11-26 long fights)
+				{ Stat = "CritMultiplier", Mode = "Add", Value = 0.3 }, { Stat = "MaxHealth", Mode = "Mul", Value = -0.15 } }, -- health was -0.30, then -0.22 (2026-11-26 long fights)
 			Skills = { "DeathMark", "Execute", "ShadowStrike" },
 		},
 		Duelist = {
