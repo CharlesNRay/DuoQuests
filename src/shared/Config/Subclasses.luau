@@ -36,7 +36,7 @@ return {
 			UnlockLevel = 30,
 			Description = "All-out offense. Huge attack, attack speed and crits, and every blow heals: a tank that outlasts by hitting hard.",
 			Mods = {
-				{ Stat = "Attack", Mode = "Mul", Value = 0.15 }, -- was 0.25, then 0.2, 0.18 (2026-11-26 long fights: L100 stage 177) (2026-11-25: Warrior paths led at L100)
+				{ Stat = "Attack", Mode = "Mul", Value = 0.08 }, -- owner 2026-11-26 (was 0.25, 0.2, 0.18, 0.15): L100 stage 140-177 (2026-11-25: Warrior paths led at L100)
 				-- no DamageDealt penalty since 2026-11-23 (was -0.313, then -0.15): Guardian out-damaged it
 				{ Stat = "AttackSpeed", Mode = "Mul", Value = 0.08 },
 				{ Stat = "CritChance", Mode = "Add", Value = 0.05 },
@@ -55,7 +55,7 @@ return {
 			Description = "An immovable wall. Enormous health and defense, damage reduction and party-wide shields.",
 			Mods = {
 				{ Stat = "MaxHealth", Mode = "Mul", Value = 0.093 },
-				{ Stat = "Defense", Mode = "Mul", Value = 0.15 }, -- was 0.3, then 0.2, 0.18 (2026-11-26 long fights: L100 stage 146) (2026-11-25: led at L100)
+				{ Stat = "Defense", Mode = "Mul", Value = 0.12 }, -- owner 2026-11-26 (was 0.3, 0.2, 0.18, 0.15): L100 stage 146-152 (2026-11-25: led at L100)
 				{ Stat = "DamageTaken", Mode = "Mul", Value = -0.08 }, -- was -0.1 (2026-11-26 long fights: Guardian L100 stage 146-152)
 				{ Stat = "Attack", Mode = "Mul", Value = 0.15 } }, -- DamageDealt +0.142 removed 2026-11-23 (it out-damaged the Berserker)
 			Skills = { "Bulwark", "Retribution", "UnbreakableVow" },
@@ -143,10 +143,10 @@ return {
 				{ Stat = "MaxHealth", Mode = "Mul", Value = -0.236 },
 				{ Stat = "Defense", Mode = "Mul", Value = 0.2 },
 				{ Stat = "Attack", Mode = "Mul", Value = 0.15 },
-				{ Stat = "PetDamage", Mode = "Mul", Value = 1.2 }, -- the pet is the main damage dealer
+				{ Stat = "PetDamage", Mode = "Mul", Value = 2.0 }, -- the pet is the main damage dealer (was 1.2; owner 2026-11-26: pets a good bit stronger)
 				{ Stat = "DamageDealt", Mode = "Mul", Value = -0.42 }, -- was -0.500 (2026-11-26: lowest at L100)
 			},
-			PetBoost = { Stats = 0.75, SkillLevels = 4 },
+			PetBoost = { Stats = 1.25, SkillLevels = 8 }, -- was 0.75 / 4 (owner 2026-11-26)
 			Skills = { "PackHowl", "Stampede", "NaturesBond" },
 		},
 		Assassin = {
@@ -158,7 +158,7 @@ return {
 			Description = "Kills from the shadows. Huge crits and big single-target hits.",
 			Mods = {
 				{ Stat = "Attack", Mode = "Mul", Value = 0.28 },
-				{ Stat = "DamageDealt", Mode = "Mul", Value = -0.24 }, -- was -0.600, then -0.45, -0.36, -0.30 (2026-11-25: lowest at L100, BALANCE.md "Class report")
+				{ Stat = "DamageDealt", Mode = "Mul", Value = -0.15 }, -- was -0.600, then -0.45, -0.36, -0.30, -0.24 (owner: buff more) (2026-11-25: lowest at L100, BALANCE.md "Class report")
 				{ Stat = "CritChance", Mode = "Add", Value = 0.05 },
 				{ Stat = "CritMultiplier", Mode = "Add", Value = 0.3 }, { Stat = "MaxHealth", Mode = "Mul", Value = -0.300 } },
 			Skills = { "DeathMark", "Execute", "ShadowStrike" },
@@ -284,7 +284,7 @@ return {
 			Parent = "Beastmaster",
 			UnlockLevel = 90,
 			Description = "The final form of the Beastmaster: the wild answers every call.",
-			Mods = { { Stat = "MaxHealth", Mode = "Mul", Value = 0.15 }, { Stat = "Attack", Mode = "Mul", Value = 0.12 }, { Stat = "DamageDealt", Mode = "Mul", Value = 0.08 }, { Stat = "PetDamage", Mode = "Mul", Value = 0.5 } },
+			Mods = { { Stat = "MaxHealth", Mode = "Mul", Value = 0.15 }, { Stat = "Attack", Mode = "Mul", Value = 0.12 }, { Stat = "DamageDealt", Mode = "Mul", Value = 0.08 }, { Stat = "PetDamage", Mode = "Mul", Value = 0.8 } }, -- PetDamage was 0.5
 			Skills = { "PrimalSurge" },
 		},
 		Nightblade = {
