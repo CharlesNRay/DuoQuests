@@ -446,3 +446,7 @@ taken -0.05; damage paths' health penalties softened (long fights punish fragili
 skill levels (owner: pets much stronger). Latest: most paths 86-116; Berserker swings 112-200 between passes (seed luck).
 Caveat: in companion mode the tested hero's own upgrades decide how far the whole party survives, which favours tanks;
 roles (roles.py) hold: damage paths 44-69% of party damage, tanks take 59-86% of hits, healers heal most.
+Partner check (2026-11-26): with a second auto-played hero (`abl.sh tag 100 full <Path> <Class> <Path>`) the cross-role gap
+goes away: Sharpshooter+Guardian 144-180 = Guardian+Sharpshooter 151-156, Priest+Guardian 151-171. Companion-mode gaps
+between roles come from the weak companions (a damage dealer has no real tank beside it). Compare classes with partners
+from now on: Warrior paths with a Ranger Sharpshooter, everything else with a Warrior Guardian.
