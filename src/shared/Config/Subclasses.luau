@@ -175,7 +175,7 @@ return {
 				{ Stat = "Defense", Mode = "Mul", Value = 0.25 },
 				{ Stat = "DamageTaken", Mode = "Mul", Value = -0.14 }, -- was -0.1 (2026-11-26: lowest at L100, tankier)
 				{ Stat = "Attack", Mode = "Mul", Value = 0.18 }, -- was 0.12 (2026-11-26 partner checks: lowest)
-				{ Stat = "AttackSpeed", Mode = "Mul", Value = 0.08 }, { Stat = "DamageDealt", Mode = "Mul", Value = -0.08 } }, -- was -0.264, then -0.20, -0.14 (partner check L100 109-139); not raised further: the tanky Rogue should not out-damage the Assassin
+				{ Stat = "AttackSpeed", Mode = "Mul", Value = 0.08 }, { Stat = "DamageDealt", Mode = "Mul", Value = 0 } }, -- was -0.264, then -0.20, -0.14, -0.08 (partner check L100 109-139); not raised further: the tanky Rogue should not out-damage the Assassin
 			Skills = { "Riposte", "Parry", "BladeDance" },
 		},
 		Necromancer = {
