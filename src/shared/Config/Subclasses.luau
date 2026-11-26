@@ -36,13 +36,13 @@ return {
 			UnlockLevel = 30,
 			Description = "All-out offense. Huge attack, attack speed and crits, and every blow heals: a tank that outlasts by hitting hard.",
 			Mods = {
-				{ Stat = "Attack", Mode = "Mul", Value = 0.2 }, -- was 0.25 (2026-11-25: Warrior paths led at L100)
+				{ Stat = "Attack", Mode = "Mul", Value = 0.18 }, -- was 0.25, then 0.2 (2026-11-25: Warrior paths led at L100)
 				-- no DamageDealt penalty since 2026-11-23 (was -0.313, then -0.15): Guardian out-damaged it
 				{ Stat = "AttackSpeed", Mode = "Mul", Value = 0.08 },
 				{ Stat = "CritChance", Mode = "Add", Value = 0.05 },
 				{ Stat = "MaxHealth", Mode = "Mul", Value = -0.12 }, -- was -0.240
 				-- the squad's tank either way: its damage heals it (2026-11-23; with the Guardian trim, Berserker ~50 -> ~60 vs Guardian ~62 at L40)
-				{ Stat = "Lifesteal", Mode = "Add", Value = 0.15 }, -- was 0.25 (2026-11-25: Warrior paths led at L100, 171)
+				{ Stat = "Lifesteal", Mode = "Add", Value = 0.11 }, -- was 0.25, then 0.15, 0.13 (2026-11-25: Warrior paths led at L100, 171)
 			},
 			Skills = { "BloodFrenzy", "Cleave", "ExecutionerStrike" },
 		},
@@ -55,7 +55,7 @@ return {
 			Description = "An immovable wall. Enormous health and defense, damage reduction and party-wide shields.",
 			Mods = {
 				{ Stat = "MaxHealth", Mode = "Mul", Value = 0.093 },
-				{ Stat = "Defense", Mode = "Mul", Value = 0.2 }, -- was 0.3 (2026-11-25: 159 at L100)
+				{ Stat = "Defense", Mode = "Mul", Value = 0.18 }, -- was 0.3, then 0.2 (2026-11-25: led at L100)
 				{ Stat = "DamageTaken", Mode = "Mul", Value = -0.1 },
 				{ Stat = "Attack", Mode = "Mul", Value = 0.15 } }, -- DamageDealt +0.142 removed 2026-11-23 (it out-damaged the Berserker)
 			Skills = { "Bulwark", "Retribution", "UnbreakableVow" },
@@ -68,10 +68,10 @@ return {
 			UnlockLevel = 30,
 			Description = "A true healer. Much stronger healing, more health, and party-wide heals and wards.",
 			Mods = {
-				{ Stat = "HealingDealt", Mode = "Mul", Value = 0.3 },
+				{ Stat = "HealingDealt", Mode = "Mul", Value = 0.45 }, -- was 0.3 (2026-11-25: roles: the Templar out-healed it)
 				{ Stat = "MaxHealth", Mode = "Mul", Value = -0.188 },
 				{ Stat = "Defense", Mode = "Mul", Value = 0.12 },
-				{ Stat = "Attack", Mode = "Mul", Value = 0.2 }, { Stat = "DamageDealt", Mode = "Mul", Value = -0.120 }, { Stat = "Haste", Mode = "Add", Value = 0.08 } },
+				{ Stat = "Attack", Mode = "Mul", Value = 0.1 }, { Stat = "DamageDealt", Mode = "Mul", Value = -0.25 }, { Stat = "Haste", Mode = "Add", Value = 0.08 } }, -- was Attack 0.2, DamageDealt -0.12: a healer, not a Mage
 			Skills = { "Sanctuary", "Renewal", "HolyAegis" },
 		},
 		Templar = {
@@ -83,7 +83,8 @@ return {
 			Description = "A holy warrior. Big attack and holy damage; smites enemies and blesses the party.",
 			Mods = {
 				{ Stat = "Attack", Mode = "Mul", Value = 0.28 },
-				{ Stat = "DamageDealt", Mode = "Mul", Value = -0.300 },
+				{ Stat = "DamageDealt", Mode = "Mul", Value = -0.12 }, -- was -0.300 (2026-11-25 roles: damage first)
+				{ Stat = "HealingDealt", Mode = "Mul", Value = -0.5 }, -- heals grow with attack: it out-healed the Priest
 				{ Stat = "CritChance", Mode = "Add", Value = 0.04 },
 				{ Stat = "MaxHealth", Mode = "Mul", Value = -0.200 },
 			},
@@ -98,7 +99,7 @@ return {
 			Description = "Fire and fury. Big attack and damage, with burning that keeps hurting; hits hard but stays fragile.",
 			Mods = {
 				{ Stat = "Attack", Mode = "Mul", Value = 0.24 },
-				{ Stat = "DamageDealt", Mode = "Mul", Value = -0.504 },
+				{ Stat = "DamageDealt", Mode = "Mul", Value = -0.36 }, -- was -0.504 (2026-11-25: AoE damage path trailed every damage dealer)
 				{ Stat = "CritChance", Mode = "Add", Value = 0.04 },
 				{ Stat = "MaxHealth", Mode = "Mul", Value = -0.240 }, { Stat = "Haste", Mode = "Add", Value = 0.06 } },
 			Skills = { "Ignite", "Inferno", "PhoenixFire" },
@@ -128,7 +129,7 @@ return {
 				{ Stat = "Attack", Mode = "Mul", Value = 0.25 },
 				{ Stat = "CritChance", Mode = "Add", Value = 0.1 },
 				{ Stat = "CritMultiplier", Mode = "Add", Value = 0.3 },
-				{ Stat = "DamageDealt", Mode = "Mul", Value = -0.40 }, --[[ was -0.500 (2026-11-25) ]] { Stat = "MaxHealth", Mode = "Mul", Value = -0.300 } },
+				{ Stat = "DamageDealt", Mode = "Mul", Value = -0.35 }, --[[ was -0.500, then -0.40 (2026-11-25) ]] { Stat = "MaxHealth", Mode = "Mul", Value = -0.300 } },
 			Skills = { "DeadEye", "Headshot", "Barrage" },
 		},
 		Beastmaster = {
@@ -157,7 +158,7 @@ return {
 			Description = "Kills from the shadows. Huge crits and big single-target hits.",
 			Mods = {
 				{ Stat = "Attack", Mode = "Mul", Value = 0.28 },
-				{ Stat = "DamageDealt", Mode = "Mul", Value = -0.45 }, -- was -0.600 (2026-11-25: lowest at L100, BALANCE.md "Class report")
+				{ Stat = "DamageDealt", Mode = "Mul", Value = -0.36 }, -- was -0.600, then -0.45 (2026-11-25: lowest at L100, BALANCE.md "Class report")
 				{ Stat = "CritChance", Mode = "Add", Value = 0.05 },
 				{ Stat = "CritMultiplier", Mode = "Add", Value = 0.3 }, { Stat = "MaxHealth", Mode = "Mul", Value = -0.300 } },
 			Skills = { "DeathMark", "Execute", "ShadowStrike" },
@@ -170,11 +171,11 @@ return {
 			UnlockLevel = 30,
 			Description = "A blade-master who cannot be hit. More health and defense, less damage taken, faster attacks, and ripostes that heal.",
 			Mods = {
-				{ Stat = "MaxHealth", Mode = "Mul", Value = -0.028 },
+				{ Stat = "MaxHealth", Mode = "Mul", Value = 0.06 }, -- was -0.028 (2026-11-25 roles: tankier instead of more damage)
 				{ Stat = "Defense", Mode = "Mul", Value = 0.25 },
-				{ Stat = "DamageTaken", Mode = "Mul", Value = -0.1 },
+				{ Stat = "DamageTaken", Mode = "Mul", Value = -0.14 }, -- was -0.1 (2026-11-26: lowest at L100, tankier)
 				{ Stat = "Attack", Mode = "Mul", Value = 0.12 },
-				{ Stat = "AttackSpeed", Mode = "Mul", Value = 0.08 }, { Stat = "DamageDealt", Mode = "Mul", Value = -0.264 } },
+				{ Stat = "AttackSpeed", Mode = "Mul", Value = 0.08 }, { Stat = "DamageDealt", Mode = "Mul", Value = -0.264 } }, -- not raised: the tanky Rogue should not out-damage the Assassin
 			Skills = { "Riposte", "Parry", "BladeDance" },
 		},
 		Necromancer = {
@@ -200,10 +201,10 @@ return {
 			UnlockLevel = 30,
 			Description = "Calls guardian spirits. Much stronger healing, more health, a spirit that mends allies, and party-wide shields.",
 			Mods = {
-				{ Stat = "HealingDealt", Mode = "Mul", Value = 0.25 },
+				{ Stat = "HealingDealt", Mode = "Mul", Value = 1.0 }, -- was 0.25 (2026-11-25 roles: healed a quarter of a Cleric)
 				{ Stat = "MaxHealth", Mode = "Mul", Value = -0.090 },
 				{ Stat = "Defense", Mode = "Mul", Value = 0.12 },
-				{ Stat = "Attack", Mode = "Mul", Value = 0.1 }, { Stat = "DamageDealt", Mode = "Mul", Value = -0.405 }, { Stat = "Haste", Mode = "Add", Value = 0.08 } },
+				{ Stat = "Attack", Mode = "Mul", Value = 0.1 }, { Stat = "DamageDealt", Mode = "Mul", Value = -0.5 }, --[[ was -0.405: a healer first ]] { Stat = "Haste", Mode = "Add", Value = 0.08 } },
 			Skills = { "GuardianSpirit", "AncestralCall", "SpiritStorm" },
 		},
 		Warlord = {
@@ -213,7 +214,7 @@ return {
 			Parent = "Berserker",
 			UnlockLevel = 90,
 			Description = "The final form of the Berserker: a roaring war leader whose blows shake the whole battlefield.",
-			Mods = { { Stat = "Attack", Mode = "Mul", Value = 0.2 }, { Stat = "DamageDealt", Mode = "Mul", Value = 0.1 }, { Stat = "CritChance", Mode = "Add", Value = 0.04 } },
+			Mods = { { Stat = "Attack", Mode = "Mul", Value = 0.2 }, { Stat = "MaxHealth", Mode = "Mul", Value = 0.06 }, { Stat = "CritChance", Mode = "Add", Value = 0.04 } }, -- DamageDealt +0.1 -> MaxHealth +0.06 (2026-11-25: a tank first)
 			Skills = { "WarlordsRoar" },
 		},
 		Paragon = {
@@ -303,7 +304,7 @@ return {
 			Parent = "Duelist",
 			UnlockLevel = 90,
 			Description = "The final form of the Duelist: a thousand cuts in a breath.",
-			Mods = { { Stat = "AttackSpeed", Mode = "Mul", Value = 0.12 }, { Stat = "Attack", Mode = "Mul", Value = 0.15 }, { Stat = "CritChance", Mode = "Add", Value = 0.05 } },
+			Mods = { { Stat = "AttackSpeed", Mode = "Mul", Value = 0.1 }, { Stat = "Attack", Mode = "Mul", Value = 0.12 }, { Stat = "Defense", Mode = "Mul", Value = 0.15 }, { Stat = "DamageTaken", Mode = "Mul", Value = -0.05 } }, -- was all offense (2026-11-25: the tanky Rogue)
 			Skills = { "ThousandCuts" },
 		},
 		Lich = {
