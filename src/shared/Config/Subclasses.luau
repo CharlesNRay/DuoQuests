@@ -101,7 +101,7 @@ return {
 				{ Stat = "Attack", Mode = "Mul", Value = 0.24 },
 				{ Stat = "DamageDealt", Mode = "Mul", Value = -0.24 }, -- was -0.504, then -0.36, -0.30 (2026-11-25: AoE damage path trailed every damage dealer)
 				{ Stat = "CritChance", Mode = "Add", Value = 0.04 },
-				{ Stat = "MaxHealth", Mode = "Mul", Value = -0.240 }, { Stat = "Haste", Mode = "Add", Value = 0.06 } },
+				{ Stat = "MaxHealth", Mode = "Mul", Value = -0.15 }, { Stat = "Haste", Mode = "Add", Value = 0.06 } }, -- health was -0.24 (2026-11-26 long fights)
 			Skills = { "Ignite", "Inferno", "PhoenixFire" },
 		},
 		FrostWeaver = {
@@ -129,7 +129,7 @@ return {
 				{ Stat = "Attack", Mode = "Mul", Value = 0.25 },
 				{ Stat = "CritChance", Mode = "Add", Value = 0.1 },
 				{ Stat = "CritMultiplier", Mode = "Add", Value = 0.3 },
-				{ Stat = "DamageDealt", Mode = "Mul", Value = -0.35 }, --[[ was -0.500, then -0.40 (2026-11-25) ]] { Stat = "MaxHealth", Mode = "Mul", Value = -0.300 } },
+				{ Stat = "DamageDealt", Mode = "Mul", Value = -0.35 }, --[[ was -0.500, then -0.40 (2026-11-25) ]] { Stat = "MaxHealth", Mode = "Mul", Value = -0.20 } }, -- health was -0.30 (2026-11-26: long fights punish fragile damage dealers)
 			Skills = { "DeadEye", "Headshot", "Barrage" },
 		},
 		Beastmaster = {
@@ -140,7 +140,7 @@ return {
 			UnlockLevel = 30,
 			Description = "Fights beside the wild. The equipped pet's bonuses are far stronger and its skill hits harder and sooner.",
 			Mods = {
-				{ Stat = "MaxHealth", Mode = "Mul", Value = -0.236 },
+				{ Stat = "MaxHealth", Mode = "Mul", Value = -0.15 }, -- was -0.236 (2026-11-26 long fights)
 				{ Stat = "Defense", Mode = "Mul", Value = 0.2 },
 				{ Stat = "Attack", Mode = "Mul", Value = 0.15 },
 				{ Stat = "PetDamage", Mode = "Mul", Value = 2.0 }, -- the pet is the main damage dealer (was 1.2; owner 2026-11-26: pets a good bit stronger)
@@ -160,7 +160,7 @@ return {
 				{ Stat = "Attack", Mode = "Mul", Value = 0.28 },
 				{ Stat = "DamageDealt", Mode = "Mul", Value = -0.08 }, -- was -0.600, then -0.45, -0.36, -0.30, -0.24, -0.15 (owner: buff more; L100 stage 81-82) (2026-11-25: lowest at L100, BALANCE.md "Class report")
 				{ Stat = "CritChance", Mode = "Add", Value = 0.05 },
-				{ Stat = "CritMultiplier", Mode = "Add", Value = 0.3 }, { Stat = "MaxHealth", Mode = "Mul", Value = -0.300 } },
+				{ Stat = "CritMultiplier", Mode = "Add", Value = 0.3 }, { Stat = "MaxHealth", Mode = "Mul", Value = -0.22 } }, -- health was -0.30 (2026-11-26 long fights)
 			Skills = { "DeathMark", "Execute", "ShadowStrike" },
 		},
 		Duelist = {
