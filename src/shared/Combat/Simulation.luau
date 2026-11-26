@@ -245,6 +245,9 @@ Simulation.Effects = {
 				if effect.PercentTargetHealth then -- a small slice of the target's health on top (capped, see percentDamage)
 					amount += percentDamage(sim, caster, target, effect.PercentTargetHealth * (1 + 0.05 * math.max(0, castCtx.Level - 1)), effect.PercentCap)
 				end
+				if effect.Execute and target.Health <= effect.Execute.Below * sim:GetStat(target, "MaxHealth") then
+					amount *= effect.Execute.Mult -- an execute: hits harder on a target low on health
+				end
 				if effect.Consume then -- combo finisher: more damage per layer of the class mark, then the layers are used up
 					for index = #target.Statuses, 1, -1 do
 						local status = target.Statuses[index]

@@ -100,7 +100,7 @@ return {
 	IronSkin = {
 		Id = "IronSkin",
 		DisplayName = "Iron Skin",
-		Description = "Greatly increases the Warrior's defense.",
+		Description = "Greatly increases the Warrior's defense and patches up a little health.",
 		Class = "Warrior",
 		Rarity = "Common",
 		Cooldown = 16,
@@ -115,6 +115,7 @@ return {
 				Duration = 8,
 				PerLevel = { Duration = 0.25, Strength = 0.04 },
 			},
+			{ Type = "Heal", Target = "Self", Multiplier = 0, PercentMaxHealth = 0.08, PerLevel = { PercentMaxHealth = 0.004 } },
 		},
 	},
 
@@ -326,7 +327,7 @@ return {
 	GroupHeal = {
 		Id = "GroupHeal",
 		DisplayName = "Group Heal",
-		Description = "Heals the whole party when several allies are hurt.",
+		Description = "Heals the whole party and fortifies everyone's defense for a moment.",
 		Class = "Cleric",
 		Rarity = "Rare",
 		Cooldown = 14,
@@ -335,7 +336,8 @@ return {
 		Element = "Holy",
 		Conditions = { AllyHealthBelow = 0.6 },
 		Effects = {
-			{ Type = "Heal", Target = "AllAllies", Multiplier = 1.5, PerLevel = { Multiplier = 0.12 } },
+			{ Type = "Heal", Target = "AllAllies", Multiplier = 1.8, PerLevel = { Multiplier = 0.12 } },
+			{ Type = "ApplyStatus", Target = "AllAllies", Status = "Fortified", Duration = 4, PerLevel = { Duration = 0.1 } },
 		},
 	},
 
@@ -436,7 +438,7 @@ return {
 		Element = "Lightning",
 		Effects = {
 			{ Type = "ApplyStatus", Target = "Primary", Status = "ArcaneCharge", Duration = 10, Stacks = 1, PerLevel = {} }, -- combo layer for ArcaneBlast
-			{ Type = "Damage", Target = "Primary", Multiplier = 3.2, DamageType = "Magical" },
+			{ Type = "Damage", Target = "Primary", Multiplier = 4.48, DamageType = "Magical" },
 		},
 	},
 
@@ -461,7 +463,7 @@ return {
 	BloodFrenzy = {
 		Id = "BloodFrenzy",
 		DisplayName = "Blood Frenzy",
-		Description = "Whips the Berserker into a frenzy: attack and attack speed soar.",
+		Description = "Whips the Berserker into a frenzy: attack and attack speed soar, and the rush heals a tenth of its health.",
 		Class = "Warrior",
 		Subclass = "Berserker",
 		Rarity = "Epic",
@@ -471,13 +473,14 @@ return {
 		Conditions = { SelfLacksStatus = "Frenzied" },
 		Effects = {
 			{ Type = "ApplyStatus", Target = "Self", Status = "Frenzied", Duration = 8, PerLevel = { Duration = 0.3, Strength = 0.03 } },
+			{ Type = "Heal", Target = "Self", Multiplier = 0, PercentMaxHealth = 0.1, PerLevel = { PercentMaxHealth = 0.004 } },
 		},
 	},
 
 	Cleave = {
 		Id = "Cleave",
 		DisplayName = "Cleave",
-		Description = "A wide swing that hits every enemy hard.",
+		Description = "A wide swing that hits every enemy hard and leaves them Exposed (they take more damage).",
 		Class = "Warrior",
 		Subclass = "Berserker",
 		Rarity = "Rare",
@@ -487,13 +490,14 @@ return {
 		Conditions = { MinEnemies = 2 },
 		Effects = {
 			{ Type = "Damage", Target = "AllEnemies", Multiplier = 1.6, PerLevel = { Multiplier = 0.12 } },
+			{ Type = "ApplyStatus", Target = "AllEnemies", Status = "Exposed", Duration = 5, PerLevel = { Duration = 0.1 } },
 		},
 	},
 
 	ExecutionerStrike = {
 		Id = "ExecutionerStrike",
 		DisplayName = "Executioner Strike",
-		Description = "A devastating blow on a single enemy.",
+		Description = "A devastating blow on one enemy; 60% harder on a foe below 35% health.",
 		Class = "Warrior",
 		Subclass = "Berserker",
 		Rarity = "Epic",
@@ -501,7 +505,7 @@ return {
 		CooldownPerLevel = -0.25,
 		MinCooldown = 8,
 		Effects = {
-			{ Type = "Damage", Target = "Primary", Multiplier = 4.2, PerLevel = { Multiplier = 0.3 } },
+			{ Type = "Damage", Target = "Primary", Multiplier = 4.4, Execute = { Below = 0.35, Mult = 1.6 }, PerLevel = { Multiplier = 0.3 } },
 		},
 	},
 
@@ -541,7 +545,7 @@ return {
 	UnbreakableVow = {
 		Id = "UnbreakableVow",
 		DisplayName = "Unbreakable Vow",
-		Description = "When hurt, the Guardian's defense more than doubles.",
+		Description = "When hurt, the Guardian's defense more than doubles and it draws every enemy's attacks.",
 		Class = "Warrior",
 		Subclass = "Guardian",
 		Rarity = "Epic",
@@ -551,6 +555,7 @@ return {
 		Conditions = { SelfHealthBelow = 0.6, SelfLacksStatus = "Unbreakable" },
 		Effects = {
 			{ Type = "ApplyStatus", Target = "Self", Status = "Unbreakable", Duration = 6, PerLevel = { Duration = 0.25, Strength = 0.04 } },
+			{ Type = "ApplyStatus", Target = "Self", Status = "Taunting", Duration = 4, PerLevel = { Duration = 0.1 } },
 		},
 	},
 
@@ -577,7 +582,7 @@ return {
 	Renewal = {
 		Id = "Renewal",
 		DisplayName = "Renewal",
-		Description = "A powerful heal for a badly wounded ally.",
+		Description = "A powerful heal for a badly wounded ally that also hardens their defense.",
 		Class = "Cleric",
 		Subclass = "Priest",
 		Rarity = "Rare",
@@ -588,6 +593,7 @@ return {
 		Conditions = { AllyHealthBelow = 0.5 },
 		Effects = {
 			{ Type = "Heal", Target = "LowestAlly", Multiplier = 4, PerLevel = { Multiplier = 0.3 } },
+			{ Type = "ApplyStatus", Target = "LowestAlly", Status = "Fortified", Duration = 5, PerLevel = { Duration = 0.1 } },
 		},
 	},
 
@@ -631,7 +637,7 @@ return {
 	Verdict = {
 		Id = "Verdict",
 		DisplayName = "Verdict",
-		Description = "Holy damage on a single enemy.",
+		Description = "Holy damage on one enemy; the light also mends the most hurt ally.",
 		Class = "Cleric",
 		Subclass = "Templar",
 		Rarity = "Rare",
@@ -641,13 +647,14 @@ return {
 		Element = "Holy",
 		Effects = {
 			{ Type = "Damage", Target = "Primary", Multiplier = 3.2, DamageType = "Magical", PerLevel = { Multiplier = 0.24 } },
+			{ Type = "Heal", Target = "LowestAlly", Multiplier = 0.8, PerLevel = { Multiplier = 0.06 } },
 		},
 	},
 
 	DivineSmite = {
 		Id = "DivineSmite",
 		DisplayName = "Divine Smite",
-		Description = "A massive burst of holy power on one enemy.",
+		Description = "A massive burst of holy power on one enemy that stuns it.",
 		Class = "Cleric",
 		Subclass = "Templar",
 		Rarity = "Epic",
@@ -656,7 +663,8 @@ return {
 		MinCooldown = 10,
 		Element = "Holy",
 		Effects = {
-			{ Type = "Damage", Target = "Primary", Multiplier = 5, DamageType = "Magical", PerLevel = { Multiplier = 0.35 } },
+			{ Type = "Damage", Target = "Primary", Multiplier = 5.6, DamageType = "Magical", PerLevel = { Multiplier = 0.35 } },
+			{ Type = "ApplyStatus", Target = "Primary", Status = "Stunned", Duration = 1.5, PerLevel = { Duration = 0.1 } },
 		},
 	},
 
@@ -724,9 +732,9 @@ return {
 
 	-- Level 90 final-subclass skills (one each)
 	WarlordsRoar = {
-		Id = "WarlordsRoar", DisplayName = "Warlord's Roar", Description = "A roar that smashes every enemy.", Class = "Warrior", Subclass = "Warlord", Rarity = "Legendary",
+		Id = "WarlordsRoar", DisplayName = "Warlord's Roar", Description = "A roar that smashes every enemy and rallies the whole party.", Class = "Warrior", Subclass = "Warlord", Rarity = "Legendary",
 		Cooldown = 18, CooldownPerLevel = -0.3, MinCooldown = 10,
-		Effects = { { Type = "Damage", Target = "AllEnemies", Multiplier = 2.3, PerLevel = { Multiplier = 0.15 } } },
+		Effects = { { Type = "Damage", Target = "AllEnemies", Multiplier = 3.4, PerLevel = { Multiplier = 0.2 } }, { Type = "ApplyStatus", Target = "AllAllies", Status = "Rallied", Duration = 6, PerLevel = { Duration = 0.1 } } },
 	},
 	AegisOfAges = {
 		Id = "AegisOfAges", DisplayName = "Aegis of Ages", Description = "Shields the whole party.", Class = "Warrior", Subclass = "Paragon", Rarity = "Legendary",
@@ -734,54 +742,54 @@ return {
 		Effects = { { Type = "Shield", Target = "AllAllies", PercentMaxHealth = 0.3, Duration = 9, PerLevel = { PercentMaxHealth = 0.012, Duration = 0.2 } } },
 	},
 	Resurgence = {
-		Id = "Resurgence", DisplayName = "Resurgence", Description = "A great wave of healing for everyone.", Class = "Cleric", Subclass = "Archon", Rarity = "Legendary",
+		Id = "Resurgence", DisplayName = "Resurgence", Description = "A great wave of healing for everyone that also blesses them.", Class = "Cleric", Subclass = "Archon", Rarity = "Legendary",
 		Cooldown = 18, CooldownPerLevel = -0.3, MinCooldown = 10,
-		Effects = { { Type = "Heal", Target = "AllAllies", Multiplier = 2.4, PerLevel = { Multiplier = 0.15 } } },
+		Effects = { { Type = "Heal", Target = "AllAllies", Multiplier = 2.8, PerLevel = { Multiplier = 0.18 } }, { Type = "ApplyStatus", Target = "AllAllies", Status = "Blessed", Duration = 6, PerLevel = { Duration = 0.1 } } },
 	},
 	HolyCrusade = {
-		Id = "HolyCrusade", DisplayName = "Holy Crusade", Description = "Holy light on every enemy.", Class = "Cleric", Subclass = "Crusader", Rarity = "Legendary",
+		Id = "HolyCrusade", DisplayName = "Holy Crusade", Description = "Holy light on every enemy that marks each one Judged (a combo layer).", Class = "Cleric", Subclass = "Crusader", Rarity = "Legendary",
 		Cooldown = 18, CooldownPerLevel = -0.3, MinCooldown = 10,
-		Effects = { { Type = "Damage", Target = "AllEnemies", Multiplier = 2.0, DamageType = "Magical", PerLevel = { Multiplier = 0.15 } } },
+		Effects = { { Type = "Damage", Target = "AllEnemies", Multiplier = 2.6, DamageType = "Magical", PerLevel = { Multiplier = 0.18 } }, { Type = "ApplyStatus", Target = "AllEnemies", Status = "Judged", Duration = 10, Stacks = 1, PerLevel = {} } },
 	},
 	Cataclysm = {
-		Id = "Cataclysm", DisplayName = "Cataclysm", Description = "Burns every enemy.", Class = "Mage", Subclass = "Cataclysm", Rarity = "Legendary",
+		Id = "Cataclysm", DisplayName = "Cataclysm", Description = "Ruin falls on every enemy and stuns them.", Class = "Mage", Subclass = "Cataclysm", Rarity = "Legendary",
 		Cooldown = 18, CooldownPerLevel = -0.3, MinCooldown = 10,
-		Effects = { { Type = "Damage", Target = "AllEnemies", Multiplier = 2.4, DamageType = "Magical", PerLevel = { Multiplier = 0.17 } } },
+		Effects = { { Type = "Damage", Target = "AllEnemies", Multiplier = 4.76, DamageType = "Magical", PerLevel = { Multiplier = 0.31 } }, { Type = "ApplyStatus", Target = "AllEnemies", Status = "Stunned", Duration = 1.5, PerLevel = { Duration = 0.1 } } },
 	},
 	AbsoluteZero = {
-		Id = "AbsoluteZero", DisplayName = "Absolute Zero", Description = "Freezes the air: hurts and chills everyone.", Class = "Mage", Subclass = "Glacialist", Rarity = "Legendary",
+		Id = "AbsoluteZero", DisplayName = "Absolute Zero", Description = "Freezes the air: hurts every enemy and chills them (slower attacks).", Class = "Mage", Subclass = "Glacialist", Rarity = "Legendary",
 		Cooldown = 18, CooldownPerLevel = -0.3, MinCooldown = 10,
-		Effects = { { Type = "Damage", Target = "AllEnemies", Multiplier = 1.8, DamageType = "Magical", PerLevel = { Multiplier = 0.14 } } },
+		Effects = { { Type = "Damage", Target = "AllEnemies", Multiplier = 4.2, DamageType = "Magical", PerLevel = { Multiplier = 0.28 } }, { Type = "ApplyStatus", Target = "AllEnemies", Status = "Chilled", Duration = 6, PerLevel = { Duration = 0.1 } } },
 	},
 	RainOfArrows = {
-		Id = "RainOfArrows", DisplayName = "Rain of Arrows", Description = "A volley on every enemy.", Class = "Ranger", Subclass = "Marshal", Rarity = "Legendary",
+		Id = "RainOfArrows", DisplayName = "Rain of Arrows", Description = "A volley on every enemy that leaves them bleeding.", Class = "Ranger", Subclass = "Marshal", Rarity = "Legendary",
 		Cooldown = 18, CooldownPerLevel = -0.3, MinCooldown = 10,
-		Effects = { { Type = "Damage", Target = "AllEnemies", Multiplier = 2.2, PerLevel = { Multiplier = 0.16 } } },
+		Effects = { { Type = "Damage", Target = "AllEnemies", Multiplier = 4.48, PerLevel = { Multiplier = 0.29 } }, { Type = "ApplyStatus", Target = "AllEnemies", Status = "Bleeding", Duration = 6, PerLevel = { Duration = 0.1 } } },
 	},
 	PrimalSurge = {
-		Id = "PrimalSurge", DisplayName = "Primal Surge", Description = "The whole party surges with speed.", Class = "Ranger", Subclass = "Wildlord", Rarity = "Legendary",
+		Id = "PrimalSurge", DisplayName = "Primal Surge", Description = "The whole party surges with speed and is healed.", Class = "Ranger", Subclass = "Wildlord", Rarity = "Legendary",
 		Cooldown = 18, CooldownPerLevel = -0.3, MinCooldown = 10,
-		Effects = { { Type = "ApplyStatus", Target = "AllAllies", Status = "Hasted", Duration = 8, PerLevel = { Duration = 0.3 } } },
+		Effects = { { Type = "ApplyStatus", Target = "AllAllies", Status = "Hasted", Duration = 8, PerLevel = { Duration = 0.3, PerLevel = { Duration = 0.1 } } }, { Type = "Heal", Target = "AllAllies", Multiplier = 0.6, PerLevel = { Multiplier = 0.05 } } },
 	},
 	VanishingStrike = {
-		Id = "VanishingStrike", DisplayName = "Vanishing Strike", Description = "A huge strike from the shadows.", Class = "Rogue", Subclass = "Nightblade", Rarity = "Legendary",
+		Id = "VanishingStrike", DisplayName = "Vanishing Strike", Description = "A huge strike from the shadows, then the Rogue vanishes (takes far less damage).", Class = "Rogue", Subclass = "Nightblade", Rarity = "Legendary",
 		Cooldown = 18, CooldownPerLevel = -0.3, MinCooldown = 10,
-		Effects = { { Type = "Damage", Target = "Primary", Multiplier = 6.5, PerLevel = { Multiplier = 0.45 } } },
+		Effects = { { Type = "Damage", Target = "Primary", Multiplier = 11.16, PerLevel = { Multiplier = 0.78 } }, { Type = "ApplyStatus", Target = "Self", Status = "Evasive", Duration = 4, PerLevel = { Duration = 0.1 } } },
 	},
 	ThousandCuts = {
-		Id = "ThousandCuts", DisplayName = "Thousand Cuts", Description = "Four rapid strikes on one enemy.", Class = "Rogue", Subclass = "Swordsaint", Rarity = "Legendary",
+		Id = "ThousandCuts", DisplayName = "Thousand Cuts", Description = "Four rapid strikes on one enemy that leave it bleeding.", Class = "Rogue", Subclass = "Swordsaint", Rarity = "Legendary",
 		Cooldown = 18, CooldownPerLevel = -0.3, MinCooldown = 10,
-		Effects = { { Type = "Damage", Target = "Primary", Multiplier = 1.5, PerLevel = { Multiplier = 0.1 } }, { Type = "Damage", Target = "Primary", Multiplier = 1.5, PerLevel = { Multiplier = 0.1 } }, { Type = "Damage", Target = "Primary", Multiplier = 1.5, PerLevel = { Multiplier = 0.1 } }, { Type = "Damage", Target = "Primary", Multiplier = 1.5, PerLevel = { Multiplier = 0.1 } } },
+		Effects = { { Type = "Damage", Target = "Primary", Multiplier = 2.33, PerLevel = { Multiplier = 0.16 } }, { Type = "Damage", Target = "Primary", Multiplier = 2.33, PerLevel = { Multiplier = 0.16 } }, { Type = "Damage", Target = "Primary", Multiplier = 2.33, PerLevel = { Multiplier = 0.16 } }, { Type = "Damage", Target = "Primary", Multiplier = 2.33, PerLevel = { Multiplier = 0.16 } }, { Type = "ApplyStatus", Target = "Primary", Status = "Bleeding", Duration = 6, PerLevel = { Duration = 0.1 } } },
 	},
 	SoulHarvest = {
 		Id = "SoulHarvest", DisplayName = "Soul Harvest", Description = "Reaps every enemy and heals you.", Class = "Summoner", Subclass = "Lich", Rarity = "Legendary",
 		Cooldown = 18, CooldownPerLevel = -0.3, MinCooldown = 10,
-		Effects = { { Type = "Damage", Target = "AllEnemies", Multiplier = 1.8, DamageType = "Magical", PerLevel = { Multiplier = 0.13 } }, { Type = "Heal", Target = "Self", Multiplier = 2.0, PerLevel = { Multiplier = 0.1 } } },
+		Effects = { { Type = "Damage", Target = "AllEnemies", Multiplier = 2.8, DamageType = "Magical", PerLevel = { Multiplier = 0.19 } }, { Type = "Heal", Target = "Self", Multiplier = 2.0, PerLevel = { Multiplier = 0.1 } } },
 	},
 	AncestralWrath = {
-		Id = "AncestralWrath", DisplayName = "Ancestral Wrath", Description = "The ancestors strike every enemy.", Class = "Summoner", Subclass = "AncestralSage", Rarity = "Legendary",
+		Id = "AncestralWrath", DisplayName = "Ancestral Wrath", Description = "The ancestors strike every enemy and curse them.", Class = "Summoner", Subclass = "AncestralSage", Rarity = "Legendary",
 		Cooldown = 18, CooldownPerLevel = -0.3, MinCooldown = 10,
-		Effects = { { Type = "Damage", Target = "AllEnemies", Multiplier = 1.9, DamageType = "Magical", PerLevel = { Multiplier = 0.14 } } },
+		Effects = { { Type = "Damage", Target = "AllEnemies", Multiplier = 3.0, DamageType = "Magical", PerLevel = { Multiplier = 0.2 } }, { Type = "ApplyStatus", Target = "AllEnemies", Status = "Cursed", Duration = 6, PerLevel = { Duration = 0.1 } } },
 	},
 
 	-- Monster skills (regular enemies): short, readable moves. Not in any class pool. Anim = how the monster moves while casting.
@@ -796,7 +804,7 @@ return {
 	FeralPounce = {
 		Id = "FeralPounce", DisplayName = "Feral Pounce", Description = "Leaps onto one hero.", Enemy = true, Anim = "Pounce",
 		Rarity = "Common", Cooldown = 8,
-		Effects = { { Type = "Damage", Target = "Primary", Multiplier = 1.9, PerLevel = { Multiplier = 0 } }, { Type = "ApplyStatus", Target = "Primary", Status = "Bleeding", Duration = 6 } },
+		Effects = { { Type = "Damage", Target = "Primary", Multiplier = 1.9, PerLevel = { Multiplier = 0 } }, { Type = "ApplyStatus", Target = "Primary", Status = "Bleeding", Duration = 6, PerLevel = { Duration = 0.1 } } },
 	},
 	Howl = {
 		Id = "Howl", DisplayName = "Howl", Description = "Whips the pack into a frenzy.", Enemy = true, Anim = "Cast",
@@ -875,7 +883,7 @@ return {
 	GroundPound = {
 		Id = "GroundPound", DisplayName = "Ground Pound", Description = "Shakes the ground under the party.", Enemy = true, Anim = "Slam",
 		Rarity = "Common", Cooldown = 12,
-		Effects = { { Type = "Damage", Target = "AllEnemies", Multiplier = 0.8, PerLevel = { Multiplier = 0 } }, { Type = "ApplyStatus", Target = "AllEnemies", Status = "Snared", Duration = 3 } },
+		Effects = { { Type = "Damage", Target = "AllEnemies", Multiplier = 0.8, PerLevel = { Multiplier = 0 } }, { Type = "ApplyStatus", Target = "AllEnemies", Status = "Snared", Duration = 3, PerLevel = { Duration = 0.1 } } },
 	},
 	BoneRattle = {
 		Id = "BoneRattle", DisplayName = "Bone Rattle", Description = "Rattles bones in a frenzy, striking twice.", Enemy = true, Anim = "Spin",
@@ -883,7 +891,7 @@ return {
 		Effects = {
 			{ Type = "Damage", Target = "Primary", Multiplier = 0.9, PerLevel = { Multiplier = 0 } },
 			{ Type = "Damage", Target = "Primary", Multiplier = 0.9, PerLevel = { Multiplier = 0 } },
-			{ Type = "ApplyStatus", Target = "Primary", Status = "Bleeding", Duration = 6 },
+			{ Type = "ApplyStatus", Target = "Primary", Status = "Bleeding", Duration = 6, PerLevel = { Duration = 0.1 } },
 		},
 	},
 	SporeBurst = {
@@ -1309,7 +1317,7 @@ return {
 		Element = "Arcane",
 		Conditions = { MinEnemies = 2 },
 		Effects = {
-			{ Type = "Damage", Consume = { Status = "ArcaneCharge", PerStack = 0.3 }, Target = "AllEnemies", Multiplier = 1.1, PercentTargetHealth = 0.01, PerLevel = { Multiplier = 0.1 } },
+			{ Type = "Damage", Consume = { Status = "ArcaneCharge", PerStack = 0.3 }, Target = "AllEnemies", Multiplier = 1.49, PercentTargetHealth = 0.01, PerLevel = { Multiplier = 0.14 } },
 		},
 	},
 
@@ -1317,7 +1325,7 @@ return {
 		Id = "ChainLightning",
 		AllRows = true,
 		DisplayName = "Chain Lightning",
-		Description = "Lightning leaps between every enemy.",
+		Description = "Lightning leaps between every enemy and stuns the first one.",
 		Class = "Mage",
 		Rarity = "Rare",
 		Cooldown = 9,
@@ -1326,14 +1334,15 @@ return {
 		Element = "Lightning",
 		Conditions = { MinEnemies = 2 },
 		Effects = {
-			{ Type = "Damage", Target = "AllEnemies", Multiplier = 1.5, PercentTargetHealth = 0.007, PerLevel = { Multiplier = 0.12 } },
+			{ Type = "Damage", Target = "AllEnemies", Multiplier = 2.1, PercentTargetHealth = 0.007, PerLevel = { Multiplier = 0.17 } },
+			{ Type = "ApplyStatus", Target = "Primary", Status = "Stunned", Duration = 1, PerLevel = { Duration = 0.1 } },
 		},
 	},
 
 	ManaShield = {
 		Id = "ManaShield",
 		DisplayName = "Mana Shield",
-		Description = "Wraps the mage in a shield of raw magic.",
+		Description = "Wraps the mage in a shield of raw magic and quickens its casting.",
 		Class = "Mage",
 		Rarity = "Rare",
 		Cooldown = 14,
@@ -1343,6 +1352,7 @@ return {
 		Conditions = { SelfHealthBelow = 0.75 },
 		Effects = {
 			{ Type = "Shield", Target = "Self", PercentMaxHealth = 0.3, Duration = 6, PerLevel = { PercentMaxHealth = 0.01, Duration = 0.2 } },
+			{ Type = "ApplyStatus", Target = "Self", Status = "Hasted", Duration = 4, PerLevel = { Duration = 0.1 } },
 		},
 	},
 
@@ -1411,7 +1421,7 @@ return {
 		MinCooldown = 8,
 		Element = "Fire",
 		Effects = {
-			{ Type = "Damage", Target = "Primary", Multiplier = 4.4, PerLevel = { Multiplier = 0.3 } },
+			{ Type = "Damage", Target = "Primary", Multiplier = 7.04, PerLevel = { Multiplier = 0.48 } },
 			{ Type = "Heal", Target = "Self", Multiplier = 0, PercentMaxHealth = 0.08, PerLevel = { PercentMaxHealth = 0.004 } },
 		},
 	},
@@ -1538,7 +1548,7 @@ return {
 	Evasion = {
 		Id = "Evasion",
 		DisplayName = "Evasion",
-		Description = "Dodges aside: takes far less damage for a while.",
+		Description = "Dodges aside: takes far less damage for a while and catches its breath.",
 		Class = "Ranger",
 		Rarity = "Rare",
 		Cooldown = 14,
@@ -1547,6 +1557,7 @@ return {
 		Conditions = { SelfLacksStatus = "Evasive", SelfHealthBelow = 0.8 },
 		Effects = {
 			{ Type = "ApplyStatus", Target = "Self", Status = "Evasive", Duration = 5, PerLevel = { Duration = 0.25 } },
+			{ Type = "Heal", Target = "Self", Multiplier = 0, PercentMaxHealth = 0.08, PerLevel = { PercentMaxHealth = 0.004 } },
 		},
 	},
 
@@ -1569,7 +1580,7 @@ return {
 	RapidFire = {
 		Id = "RapidFire",
 		DisplayName = "Rapid Fire",
-		Description = "Looses arrows faster for a short time.",
+		Description = "Looses arrows faster for a short time; the target is left bleeding.",
 		Class = "Ranger",
 		Rarity = "Epic",
 		Cooldown = 16,
@@ -1578,6 +1589,7 @@ return {
 		Conditions = { SelfLacksStatus = "Hasted" },
 		Effects = {
 			{ Type = "ApplyStatus", Target = "Self", Status = "Hasted", Duration = 6, PerLevel = { Duration = 0.25 } },
+			{ Type = "ApplyStatus", Target = "Primary", Status = "Bleeding", Duration = 6, PerLevel = { Duration = 0.1 } },
 		},
 	},
 
@@ -1602,7 +1614,7 @@ return {
 	DeadEye = {
 		Id = "DeadEye",
 		DisplayName = "Dead Eye",
-		Description = "Locks on: crit chance and attack soar.",
+		Description = "Locks on: crit chance and attack soar, and the target is Tracked twice (combo layers).",
 		Class = "Ranger",
 		Subclass = "Sharpshooter",
 		Rarity = "Epic",
@@ -1612,13 +1624,14 @@ return {
 		Conditions = { SelfLacksStatus = "DeadEye" },
 		Effects = {
 			{ Type = "ApplyStatus", Target = "Self", Status = "DeadEye", Duration = 8, PerLevel = { Duration = 0.3, Strength = 0.03 } },
+			{ Type = "ApplyStatus", Target = "Primary", Status = "Tracked", Duration = 10, Stacks = 2, PerLevel = {} },
 		},
 	},
 
 	Headshot = {
 		Id = "Headshot",
 		DisplayName = "Headshot",
-		Description = "One devastating shot on a single enemy.",
+		Description = "One devastating shot on a single enemy that stuns it.",
 		Class = "Ranger",
 		Subclass = "Sharpshooter",
 		Rarity = "Epic",
@@ -1626,14 +1639,15 @@ return {
 		CooldownPerLevel = -0.2,
 		MinCooldown = 8,
 		Effects = {
-			{ Type = "Damage", Target = "Primary", Multiplier = 4.8, PerLevel = { Multiplier = 0.34 } },
+			{ Type = "Damage", Target = "Primary", Multiplier = 8.06, PerLevel = { Multiplier = 0.53 } },
+			{ Type = "ApplyStatus", Target = "Primary", Status = "Stunned", Duration = 1.5, PerLevel = { Duration = 0.1 } },
 		},
 	},
 
 	Barrage = {
 		Id = "Barrage",
 		DisplayName = "Barrage",
-		Description = "A storm of arrows on every enemy.",
+		Description = "A storm of arrows on every enemy that pins them (slower attacks).",
 		Class = "Ranger",
 		Subclass = "Sharpshooter",
 		Rarity = "Rare",
@@ -1642,7 +1656,8 @@ return {
 		MinCooldown = 4,
 		Conditions = { MinEnemies = 2 },
 		Effects = {
-			{ Type = "Damage", Target = "AllEnemies", Multiplier = 1.7, PerLevel = { Multiplier = 0.12 } },
+			{ Type = "Damage", Target = "AllEnemies", Multiplier = 2.29, PerLevel = { Multiplier = 0.16 } },
+			{ Type = "ApplyStatus", Target = "AllEnemies", Status = "Snared", Duration = 3, PerLevel = { Duration = 0.1 } },
 		},
 	},
 
@@ -1665,7 +1680,7 @@ return {
 	Stampede = {
 		Id = "Stampede",
 		DisplayName = "Stampede",
-		Description = "The beasts stampede through every enemy.",
+		Description = "The beasts stampede through every enemy and knock them down.",
 		Class = "Ranger",
 		Subclass = "Beastmaster",
 		Rarity = "Rare",
@@ -1674,7 +1689,8 @@ return {
 		MinCooldown = 5,
 		Conditions = { MinEnemies = 2 },
 		Effects = {
-			{ Type = "Damage", Target = "AllEnemies", Multiplier = 1.7, PerLevel = { Multiplier = 0.12 } },
+			{ Type = "Damage", Target = "AllEnemies", Multiplier = 2.29, PerLevel = { Multiplier = 0.16 } },
+			{ Type = "ApplyStatus", Target = "AllEnemies", Status = "Stunned", Duration = 1, PerLevel = { Duration = 0.1 } },
 		},
 	},
 
@@ -1747,7 +1763,7 @@ return {
 	Smokescreen = {
 		Id = "Smokescreen",
 		DisplayName = "Smokescreen",
-		Description = "Vanishes in smoke: takes far less damage.",
+		Description = "Vanishes in smoke: takes far less damage, and the choking smoke slows every enemy's attacks.",
 		Class = "Rogue",
 		Rarity = "Rare",
 		Cooldown = 14,
@@ -1756,13 +1772,14 @@ return {
 		Conditions = { SelfLacksStatus = "Evasive", SelfHealthBelow = 0.8 },
 		Effects = {
 			{ Type = "ApplyStatus", Target = "Self", Status = "Evasive", Duration = 5, PerLevel = { Duration = 0.25 } },
+			{ Type = "ApplyStatus", Target = "AllEnemies", Status = "Snared", Duration = 3, PerLevel = { Duration = 0.1 } },
 		},
 	},
 
 	Shadowstep = {
 		Id = "Shadowstep",
 		DisplayName = "Shadowstep",
-		Description = "Slips into the shadows: attacks come faster.",
+		Description = "Slips into the shadows: attacks come faster, and the target is Opened (a combo layer).",
 		Class = "Rogue",
 		Rarity = "Rare",
 		Cooldown = 15,
@@ -1771,6 +1788,7 @@ return {
 		Conditions = { SelfLacksStatus = "Hasted" },
 		Effects = {
 			{ Type = "ApplyStatus", Target = "Self", Status = "Hasted", Duration = 6, PerLevel = { Duration = 0.25 } },
+			{ Type = "ApplyStatus", Target = "Primary", Status = "Opened", Duration = 10, Stacks = 1, PerLevel = {} },
 		},
 	},
 
@@ -1785,7 +1803,7 @@ return {
 		CooldownPerLevel = -0.2,
 		MinCooldown = 7,
 		Effects = {
-			{ Type = "Damage", Consume = { Status = "Opened", PerStack = 0.3 }, Target = "Primary", Multiplier = 4.0, PercentTargetHealth = 0.02, PercentCap = 0.9, PerLevel = { Multiplier = 0.28 } },
+			{ Type = "Damage", Consume = { Status = "Opened", PerStack = 0.3 }, Target = "Primary", Multiplier = 6, PercentTargetHealth = 0.02, PercentCap = 0.9, PerLevel = { Multiplier = 0.42 } },
 		},
 	},
 
@@ -1843,7 +1861,7 @@ return {
 	Execute = {
 		Id = "Execute",
 		DisplayName = "Execute",
-		Description = "A killing blow on a single enemy.",
+		Description = "A killing blow on one enemy; 80% harder on a foe below 35% health.",
 		Class = "Rogue",
 		Subclass = "Assassin",
 		Rarity = "Epic",
@@ -1852,14 +1870,14 @@ return {
 		MinCooldown = 8,
 		Element = "Shadow",
 		Effects = {
-			{ Type = "Damage", Target = "Primary", Multiplier = 5.0, PerLevel = { Multiplier = 0.36 } },
+			{ Type = "Damage", Target = "Primary", Multiplier = 7.5, Execute = { Below = 0.35, Mult = 1.8 }, PerLevel = { Multiplier = 0.54 } },
 		},
 	},
 
 	ShadowStrike = {
 		Id = "ShadowStrike",
 		DisplayName = "Shadow Strike",
-		Description = "Strikes every enemy from the shadows.",
+		Description = "Strikes every enemy from the shadows and leaves them Exposed (they take more damage).",
 		Class = "Rogue",
 		Subclass = "Assassin",
 		Rarity = "Rare",
@@ -1869,7 +1887,8 @@ return {
 		Element = "Shadow",
 		Conditions = { MinEnemies = 2 },
 		Effects = {
-			{ Type = "Damage", Target = "AllEnemies", Multiplier = 1.8, PerLevel = { Multiplier = 0.13 } },
+			{ Type = "Damage", Target = "AllEnemies", Multiplier = 2.61, PerLevel = { Multiplier = 0.19 } },
+			{ Type = "ApplyStatus", Target = "AllEnemies", Status = "Exposed", Duration = 5, PerLevel = { Duration = 0.1 } },
 		},
 	},
 
@@ -1909,7 +1928,7 @@ return {
 	BladeDance = {
 		Id = "BladeDance",
 		DisplayName = "Blade Dance",
-		Description = "Whirls through every enemy in a dance of steel.",
+		Description = "Whirls through every enemy in a dance of steel, hard to hit while it lasts.",
 		Class = "Rogue",
 		Subclass = "Duelist",
 		Rarity = "Epic",
@@ -1918,14 +1937,15 @@ return {
 		MinCooldown = 8,
 		Conditions = { MinEnemies = 2 },
 		Effects = {
-			{ Type = "Damage", Target = "AllEnemies", Multiplier = 2.1, PerLevel = { Multiplier = 0.15 } },
+			{ Type = "Damage", Target = "AllEnemies", Multiplier = 3.04, PerLevel = { Multiplier = 0.22 } },
+			{ Type = "ApplyStatus", Target = "Self", Status = "Evasive", Duration = 3, PerLevel = { Duration = 0.1 } },
 		},
 	},
 
 	SummonImp = {
 		Id = "SummonImp",
 		DisplayName = "Summon Imp",
-		Description = "Spend a little health to summon an imp that hurls fire. Up to 3 imps at once.",
+		Description = "Spend a little health to summon an imp that hurls fire (up to 3 at once); the summoning flash burns the target.",
 		Class = "Summoner",
 		Rarity = "Common",
 		Cooldown = 5,
@@ -1936,6 +1956,7 @@ return {
 		Effects = {
 			{ Type = "SpendHealth", Fraction = 0.05 },
 			{ Type = "Raise", MinionId = "Imp", Count = 1, Max = 3, Power = 1, PerLevel = { Power = 0.07 } },
+			{ Type = "ApplyStatus", Target = "Primary", Status = "Burning", Duration = 6, PerLevel = { Duration = 0.1 } },
 		},
 	},
 
@@ -1943,7 +1964,7 @@ return {
 		Id = "WraithSwarm",
 		AllRows = true,
 		DisplayName = "Wraith Swarm",
-		Description = "Spend health to call two fast, fragile wraiths. Up to 4 at once.",
+		Description = "Spend health to call two fast, fragile wraiths (up to 4 at once); their wail curses every enemy.",
 		Class = "Summoner",
 		Rarity = "Common",
 		Cooldown = 12,
@@ -1954,6 +1975,7 @@ return {
 		Effects = {
 			{ Type = "SpendHealth", Fraction = 0.08 },
 			{ Type = "Raise", MinionId = "Wraith", Count = 2, Max = 4, Power = 1, PerLevel = { Power = 0.07 } },
+			{ Type = "ApplyStatus", Target = "AllEnemies", Status = "Cursed", Duration = 4, PerLevel = { Duration = 0.1 } },
 		},
 	},
 
@@ -2146,7 +2168,7 @@ return {
 	AncestralCall = {
 		Id = "AncestralCall",
 		DisplayName = "Ancestral Call",
-		Description = "Ancestors mend every ally.",
+		Description = "Ancestors mend every ally and embolden them (more attack and speed).",
 		Class = "Summoner",
 		Subclass = "SpiritCaller",
 		Rarity = "Rare",
@@ -2156,6 +2178,7 @@ return {
 		Conditions = { AllyHealthBelow = 0.7 },
 		Effects = {
 			{ Type = "Heal", Target = "AllAllies", Multiplier = 1.5, PercentMaxHealth = 0.12, PerLevel = { Multiplier = 0.1, PercentMaxHealth = 0.005 } },
+			{ Type = "ApplyStatus", Target = "AllAllies", Status = "Emboldened", Duration = 4, PerLevel = { Duration = 0.1 } },
 		},
 	},
 

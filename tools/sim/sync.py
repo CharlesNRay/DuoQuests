@@ -2,7 +2,7 @@ import os,re,shutil,sys
 HERE=os.path.dirname(os.path.abspath(__file__))
 SRC=os.path.join(HERE,"..","..","src")
 OUT=os.path.join(HERE,".build","hl6")
-shutil.rmtree(OUT,ignore_errors=True); os.makedirs(OUT)
+shutil.rmtree(OUT,ignore_errors=True); os.makedirs(OUT, exist_ok=True)  # the folder may be held open (a shell inside it): reuse it
 def tr(text,reldir):
     def rep(m):
         parts=m.group(1).split(".")  # script, Parent, [Parent..], names

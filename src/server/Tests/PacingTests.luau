@@ -104,11 +104,13 @@ return function(modulesOverride, options)
 	if bosses[20] then
 		print(("  (info) boss 20 fell after %d losses"):format(bosses[20].Losses))
 	end
-	check("Boss 20 is reached within 14 hours (a low-gear pair stalls there by design)", snaps[3] ~= nil and snaps[3].Frontier >= 20)
+	-- 2026-11-26 fights last ~3.5x longer: this gearless, petless auto-player now stalls just before boss 20 (the real bot,
+	-- tools/sim/abl.sh, still beats boss 20 in 1-2.3 h and reaches L60 in 32-48 h)
+	check("A gearless pair reaches stage 16 within 14 hours", snaps[3] ~= nil and snaps[3].Frontier >= 16)
 
 	check("15 minutes in: not every skill is owned yet", snaps[1].Owned < 8)
 	check("Week one: every Warrior skill owned", snaps[3].Owned == 8)
-	check("Week one: slots at 20-60% of the cap", snaps[3].SlotAverage >= 0.2 * m.Skills.MAX_SLOT_LEVEL and snaps[3].SlotAverage <= 0.6 * m.Skills.MAX_SLOT_LEVEL)
+	check("Week one: slots at most 60% of the cap (gearless: low gold)", snaps[3].SlotAverage >= 1 and snaps[3].SlotAverage <= 0.6 * m.Skills.MAX_SLOT_LEVEL)
 	check("Progress never goes backwards (the frontier only grows between snapshots)", snaps[3].Frontier >= snaps[2].Frontier and snaps[2].Frontier >= snaps[1].Frontier)
 	if options.Full then
 		check("Season end: a maxed party still has stages to climb", snaps[4].Frontier >= snaps[3].Frontier)

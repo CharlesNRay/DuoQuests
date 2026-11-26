@@ -35,8 +35,8 @@ return {
 		{ "BubbleSlime", "JellySlime", "GummyFrog" },
 		{ "FlyingTome", "RuneGolem", "ArcaneWisp" },
 	},
-	TimeLimit = 60, -- seconds to clear a regular stage; running out counts as a loss
-	BossTimeLimit = 90, -- seconds to clear a boss stage
+	TimeLimit = 200, -- (was 60 before the 2026-11-26 longer fights) seconds to clear a regular stage; running out counts as a loss
+	BossTimeLimit = 300, -- (was 90) seconds to clear a boss stage
 	MaxEnemies = 3, -- regular stages grow from 1 enemy up to this many
 	ScalePerStage = 0.045, -- enemy scale = 1 + ScalePerStage * (stage - 1) ^ ScalePower
 	PartyScale = 2.6, -- every fight has 4 heroes (players, ghosts or companions; since 2026-11-18): enemies are this much stronger
@@ -53,7 +53,8 @@ return {
 	-- Stage monsters: Health times more health and Attack times the attack. The same "who wins" (both sides take about
 	-- 1/Attack x Health longer to fall) but fights last long enough for heals, shields, buffs and debuffs to matter and to
 	-- be watched: at 1/1 frontier fights were over in 3-5 s and the heroes all fell (BALANCE.md "Fight length").
-	FightLength = { Health = 2.4, Attack = 0.7 },
+	-- 2026-11-26 (owner: fights 3-4x longer so every skill cycles): Health 2.4 -> 8.4, Attack 0.7 -> 0.45 (heals and shields gain in long fights).
+	FightLength = { Health = 8.4, Attack = 0.45 }, -- 0.3 made long fights too easy (L60 stage 81-115 vs 55-85)
 	-- Softer early zones (the tutorial and the ones after it): from stage From enemies are scaled by Mult, easing back to full strength at To
 	-- (new players have not learned wishing and gear yet; the late game keeps the pair balance). nil = off.
 	EarlyEase = { From = 1, To = 40, Mult = 0.8 },

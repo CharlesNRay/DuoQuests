@@ -42,7 +42,7 @@ return {
 	GoldCurve = { Base = 60, Growth = 1.065, PerStage = 8 },
 	-- Gold, XP and shards per win are this much bigger since fights last longer (Config/Stages FightLength, 2026-11-25):
 	-- fewer fights an hour, the same pace per hour.
-	FightPay = 1.4,
+	FightPay = 4.3, -- was 1.4; 2026-11-26 fights ~3.5x longer (about 3x fewer an hour)
 	XPScale = 1.0, -- multiplies XP only (the level pacing dial): lv10 ~12 min, lv20 ~27 min, lv30 ~1 h
 	-- Early game (up to the first boss, stage 10) pays extra XP (levels only, no gold) so the opening is quick; the bonus fades out over the next few stages.
 	EarlyGame = { LastFullStage = 10, FadeStages = 8, XP = 4, LevelCost = 1, LastCheapLevel = 9, LevelFade = 6 },
