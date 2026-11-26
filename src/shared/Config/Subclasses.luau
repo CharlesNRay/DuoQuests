@@ -99,7 +99,7 @@ return {
 			Description = "Fire and fury. Big attack and damage, with burning that keeps hurting; hits hard but stays fragile.",
 			Mods = {
 				{ Stat = "Attack", Mode = "Mul", Value = 0.24 },
-				{ Stat = "DamageDealt", Mode = "Mul", Value = -0.08 }, -- was -0.504, then -0.36, -0.30, -0.24, -0.16 (with a Guardian partner: 122 vs Sharpshooter 162) (2026-11-25: AoE damage path trailed every damage dealer)
+				{ Stat = "DamageDealt", Mode = "Mul", Value = 0 }, -- was -0.504, then -0.36, -0.30, -0.24, -0.16, -0.08 (3-run partner check L100 127) (2026-11-25: AoE damage path trailed every damage dealer)
 				{ Stat = "CritChance", Mode = "Add", Value = 0.04 },
 				{ Stat = "MaxHealth", Mode = "Mul", Value = -0.10 }, { Stat = "Haste", Mode = "Add", Value = 0.06 } }, -- health was -0.24, then -0.15 (2026-11-26 long fights)
 			Skills = { "Ignite", "Inferno", "PhoenixFire" },
@@ -129,7 +129,7 @@ return {
 				{ Stat = "Attack", Mode = "Mul", Value = 0.25 },
 				{ Stat = "CritChance", Mode = "Add", Value = 0.1 },
 				{ Stat = "CritMultiplier", Mode = "Add", Value = 0.3 },
-				{ Stat = "DamageDealt", Mode = "Mul", Value = -0.30 }, --[[ was -0.500, then -0.40, -0.35 ]] { Stat = "MaxHealth", Mode = "Mul", Value = -0.15 } }, -- health was -0.30, then -0.20 (2026-11-26: long fights punish fragile damage dealers)
+				{ Stat = "DamageDealt", Mode = "Mul", Value = -0.22 }, --[[ was -0.500, then -0.40, -0.35, -0.30 ]] { Stat = "MaxHealth", Mode = "Mul", Value = -0.05 } }, -- health was -0.30, then -0.20 (2026-11-26: long fights punish fragile damage dealers)
 			Skills = { "DeadEye", "Headshot", "Barrage" },
 		},
 		Beastmaster = {
@@ -158,7 +158,7 @@ return {
 			Description = "Kills from the shadows. Huge crits and big single-target hits.",
 			Mods = {
 				{ Stat = "Attack", Mode = "Mul", Value = 0.28 },
-				{ Stat = "DamageDealt", Mode = "Mul", Value = 0.10 }, -- (then 0.06) was -0.600, then -0.45, -0.36, -0.30, -0.24, -0.15, -0.08, 0 (owner: buff more; partner check L100 123-133) (2026-11-25: lowest at L100, BALANCE.md "Class report")
+				{ Stat = "DamageDealt", Mode = "Mul", Value = 0.15 }, -- (then 0.06, 0.10) was -0.600, then -0.45, -0.36, -0.30, -0.24, -0.15, -0.08, 0 (owner: buff more; partner check L100 123-133) (2026-11-25: lowest at L100, BALANCE.md "Class report")
 				{ Stat = "CritChance", Mode = "Add", Value = 0.05 },
 				{ Stat = "CritMultiplier", Mode = "Add", Value = 0.3 }, { Stat = "MaxHealth", Mode = "Mul", Value = 0 } }, -- health was -0.30, then -0.22, -0.15, -0.08 (partner check L100 103-108) (2026-11-26: with a Guardian partner 131 vs Sharpshooter 162)
 			Skills = { "DeathMark", "Execute", "ShadowStrike" },
@@ -175,7 +175,7 @@ return {
 				{ Stat = "Defense", Mode = "Mul", Value = 0.25 },
 				{ Stat = "DamageTaken", Mode = "Mul", Value = -0.14 }, -- was -0.1 (2026-11-26: lowest at L100, tankier)
 				{ Stat = "Attack", Mode = "Mul", Value = 0.12 },
-				{ Stat = "AttackSpeed", Mode = "Mul", Value = 0.08 }, { Stat = "DamageDealt", Mode = "Mul", Value = -0.20 } }, -- was -0.264 (partner check L100 109-128); not raised further: the tanky Rogue should not out-damage the Assassin
+				{ Stat = "AttackSpeed", Mode = "Mul", Value = 0.08 }, { Stat = "DamageDealt", Mode = "Mul", Value = -0.14 } }, -- was -0.264, then -0.20 (partner check L100 109-139); not raised further: the tanky Rogue should not out-damage the Assassin
 			Skills = { "Riposte", "Parry", "BladeDance" },
 		},
 		Necromancer = {
