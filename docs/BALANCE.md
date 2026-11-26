@@ -454,6 +454,6 @@ from now on: Warrior paths with a Ranger Sharpshooter, everything else with a Wa
 ## Pet pass (2026-11-26)
 `tools/sim/runners/petrank.luau` (each pet at level 60 / rank 1 on one hero, party score near where it starts losing, vs no pet;
 edit CLASS for a Warrior run). Mage: Common +9-23%, Rare +16-29%, Epic +16-60%, Legendary +30-109%. Fixed the outliers:
-Crownling (season prize) +109% -> +63% (Power 1.1, Royal Decree damage 3.4x, party shield halved: damage + party shield
+Crownling (season prize) +109% -> +86% (Power 1.3 kept: season prizes must out-stat every wishable pet; Royal Decree damage 3.4x, party shield halved: damage + party shield
 together was the outlier), Spiritling Power 1.6 (was 2.0), Oathgriffin 1.6 / Aurora 1.25 / Wardenowl 1.2 (were below their
 rarity). Defensive pets rank higher on a Warrior (Bannerhound, Thornback +25-29%), as they should.

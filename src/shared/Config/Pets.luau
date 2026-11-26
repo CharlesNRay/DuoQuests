@@ -215,7 +215,7 @@ return {
 		},
 		-- Season prizes (see Config/SeasonRewards): not wishable, only earned by placing at the end of a season.
 		Crownling = {
-			Id = "Crownling", DisplayName = "Crownling", Rarity = "Legendary", Reward = true, Power = 1.1, -- was 1.7, then 1.3 (petrank: +109%, twice any other Legendary)
+			Id = "Crownling", DisplayName = "Crownling", Rarity = "Legendary", Reward = true, Power = 1.3, -- was 1.7 (petrank: +109%, twice any other Legendary; its skill was trimmed too). Season prizes must out-stat every wishable pet (SeasonRewardsTests)
 			Look = { Shape = "Drake", Color = { 255, 205, 70 }, Size = 1.6, Glow = true },
 			Stats = { { Stat = "Attack", Share = 0.8 }, { Stat = "CritChance", Share = 0.5 } },
 			Skill = { Name = "Royal Decree", Text = "Strikes every enemy and shields the party." },
