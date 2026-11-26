@@ -40,7 +40,7 @@ return {
 				-- no DamageDealt penalty since 2026-11-23 (was -0.313, then -0.15): Guardian out-damaged it
 				{ Stat = "AttackSpeed", Mode = "Mul", Value = 0.08 },
 				{ Stat = "CritChance", Mode = "Add", Value = 0.05 },
-				{ Stat = "MaxHealth", Mode = "Mul", Value = -0.12 }, -- was -0.240
+				{ Stat = "MaxHealth", Mode = "Mul", Value = -0.14 }, -- was -0.240, then -0.12 (2026-11-26 long fights)
 				-- the squad's tank either way: its damage heals it (2026-11-23; with the Guardian trim, Berserker ~50 -> ~60 vs Guardian ~62 at L40)
 				{ Stat = "Lifesteal", Mode = "Add", Value = 0.09 }, -- was 0.25, then 0.15, 0.13, 0.11 (2026-11-25: Warrior paths led at L100, 171)
 			},
@@ -56,7 +56,7 @@ return {
 			Mods = {
 				{ Stat = "MaxHealth", Mode = "Mul", Value = 0.093 },
 				{ Stat = "Defense", Mode = "Mul", Value = 0.15 }, -- was 0.3, then 0.2, 0.18 (2026-11-26 long fights: L100 stage 146) (2026-11-25: led at L100)
-				{ Stat = "DamageTaken", Mode = "Mul", Value = -0.1 },
+				{ Stat = "DamageTaken", Mode = "Mul", Value = -0.08 }, -- was -0.1 (2026-11-26 long fights: Guardian L100 stage 146-152)
 				{ Stat = "Attack", Mode = "Mul", Value = 0.15 } }, -- DamageDealt +0.142 removed 2026-11-23 (it out-damaged the Berserker)
 			Skills = { "Bulwark", "Retribution", "UnbreakableVow" },
 		},
@@ -158,7 +158,7 @@ return {
 			Description = "Kills from the shadows. Huge crits and big single-target hits.",
 			Mods = {
 				{ Stat = "Attack", Mode = "Mul", Value = 0.28 },
-				{ Stat = "DamageDealt", Mode = "Mul", Value = -0.30 }, -- was -0.600, then -0.45, -0.36 (2026-11-25: lowest at L100, BALANCE.md "Class report")
+				{ Stat = "DamageDealt", Mode = "Mul", Value = -0.24 }, -- was -0.600, then -0.45, -0.36, -0.30 (2026-11-25: lowest at L100, BALANCE.md "Class report")
 				{ Stat = "CritChance", Mode = "Add", Value = 0.05 },
 				{ Stat = "CritMultiplier", Mode = "Add", Value = 0.3 }, { Stat = "MaxHealth", Mode = "Mul", Value = -0.300 } },
 			Skills = { "DeathMark", "Execute", "ShadowStrike" },
