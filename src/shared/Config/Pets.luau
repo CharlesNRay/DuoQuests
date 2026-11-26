@@ -165,7 +165,7 @@ return {
 			Skill = { Name = "Colossal Stomp", Text = "Stomps every enemy and braces its owner." },
 		},
 		Aurora = {
-			Id = "Aurora", DisplayName = "Aurora", Rarity = "Legendary", Wish = true,
+			Id = "Aurora", DisplayName = "Aurora", Rarity = "Legendary", Wish = true, Power = 1.25, -- below Epics (petrank 2026-11-26)
 			Look = { Shape = "Wisp", Color = { 120, 255, 200 }, Size = 1.6 },
 			Stats = { { Stat = "Haste", Share = 0.7 }, { Stat = "CritChance", Share = 0.5 } },
 			Skill = { Name = "Aurora Veil", Text = "Heals and shields the whole party." },
@@ -190,7 +190,7 @@ return {
 			Skill = { Name = "Mimic Bite", Text = "A snapping bite on one enemy." },
 		},
 		Wardenowl = {
-			Id = "Wardenowl", DisplayName = "Warden Owl", Rarity = "Epic", Guild = true,
+			Id = "Wardenowl", DisplayName = "Warden Owl", Rarity = "Epic", Guild = true, Power = 1.2, -- below Rares (petrank 2026-11-26)
 			Look = { Shape = "Bird", Color = { 120, 150, 200 }, Size = 1.35, Glow = true },
 			Stats = { { Stat = "MaxHealth", Share = 0.8 }, { Stat = "Defense", Share = 0.4 } },
 			Skill = { Name = "Watchful Mend", Text = "Heals every ally." },
@@ -208,14 +208,14 @@ return {
 			Skill = { Name = "Hearthstorm", Text = "Scorches every enemy." },
 		},
 		Oathgriffin = {
-			Id = "Oathgriffin", DisplayName = "Oathkeeper Griffin", Rarity = "Legendary", Guild = true,
+			Id = "Oathgriffin", DisplayName = "Oathkeeper Griffin", Rarity = "Legendary", Guild = true, Power = 1.6, -- weakest Legendary (petrank 2026-11-26)
 			Look = { Shape = "Bird", Color = { 240, 210, 120 }, Size = 1.6, Glow = true },
 			Stats = { { Stat = "Defense", Share = 0.6 }, { Stat = "CritChance", Share = 0.5 } },
 			Skill = { Name = "Oath Mantle", Text = "Heals and shields the whole party." },
 		},
 		-- Season prizes (see Config/SeasonRewards): not wishable, only earned by placing at the end of a season.
 		Crownling = {
-			Id = "Crownling", DisplayName = "Crownling", Rarity = "Legendary", Reward = true, Power = 1.7,
+			Id = "Crownling", DisplayName = "Crownling", Rarity = "Legendary", Reward = true, Power = 1.1, -- was 1.7, then 1.3 (petrank: +109%, twice any other Legendary)
 			Look = { Shape = "Drake", Color = { 255, 205, 70 }, Size = 1.6, Glow = true },
 			Stats = { { Stat = "Attack", Share = 0.8 }, { Stat = "CritChance", Share = 0.5 } },
 			Skill = { Name = "Royal Decree", Text = "Strikes every enemy and shields the party." },
@@ -257,7 +257,7 @@ return {
 			Skill = { Name = "Shadow Pounce", Text = "Pounces on an enemy; its owner attacks faster for a moment." },
 		},
 		Spiritling = {
-			Id = "Spiritling", DisplayName = "Spiritling", Rarity = "Epic", Reward = true, Power = 2.0,
+			Id = "Spiritling", DisplayName = "Spiritling", Rarity = "Epic", Reward = true, Power = 1.6, -- was 2.0 (beat most Legendaries)
 			Look = { Shape = "Wisp", Color = { 120, 230, 210 }, Size = 1.3, Glow = true },
 			Stats = { { Stat = "MaxHealth", Share = 0.7 }, { Stat = "Attack", Share = 0.5 } },
 			Skill = { Name = "Spirit Link", Text = "Heals the most hurt ally and shields them." },

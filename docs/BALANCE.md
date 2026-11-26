@@ -450,3 +450,10 @@ Partner check (2026-11-26): with a second auto-played hero (`abl.sh tag 100 full
 goes away: Sharpshooter+Guardian 144-180 = Guardian+Sharpshooter 151-156, Priest+Guardian 151-171. Companion-mode gaps
 between roles come from the weak companions (a damage dealer has no real tank beside it). Compare classes with partners
 from now on: Warrior paths with a Ranger Sharpshooter, everything else with a Warrior Guardian.
+
+## Pet pass (2026-11-26)
+`tools/sim/runners/petrank.luau` (each pet at level 60 / rank 1 on one hero, party score near where it starts losing, vs no pet;
+edit CLASS for a Warrior run). Mage: Common +9-23%, Rare +16-29%, Epic +16-60%, Legendary +30-109%. Fixed the outliers:
+Crownling (season prize) +109% -> +63% (Power 1.1, Royal Decree damage 3.4x, party shield halved: damage + party shield
+together was the outlier), Spiritling Power 1.6 (was 2.0), Oathgriffin 1.6 / Aurora 1.25 / Wardenowl 1.2 (were below their
+rarity). Defensive pets rank higher on a Warrior (Bannerhound, Thornback +25-29%), as they should.

@@ -1232,8 +1232,8 @@ return {
 		CooldownPerLevel = -0.3,
 		MinCooldown = 7,
 		Effects = {
-			{ Type = "Damage", Target = "AllEnemies", Multiplier = 4.8, DamageType = "Magical", PerLevel = { Multiplier = 0.32 } },
-			{ Type = "Shield", Target = "AllAllies", Multiplier = 1.2, PercentMaxHealth = 0.08, Duration = 8, PerLevel = { Multiplier = 0.1, PercentMaxHealth = 0.01, Duration = 0.3 } },
+			{ Type = "Damage", Target = "AllEnemies", Multiplier = 3.4, DamageType = "Magical", PerLevel = { Multiplier = 0.23 } },
+			{ Type = "Shield", Target = "AllAllies", Multiplier = 0.6, PercentMaxHealth = 0.04, Duration = 8, PerLevel = { Multiplier = 0.1, PercentMaxHealth = 0.01, Duration = 0.3 } },
 		},
 	},
 
