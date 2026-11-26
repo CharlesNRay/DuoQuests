@@ -171,7 +171,7 @@ return {
 			UnlockLevel = 30,
 			Description = "A blade-master who cannot be hit. More health and defense, less damage taken, faster attacks, and ripostes that heal.",
 			Mods = {
-				{ Stat = "MaxHealth", Mode = "Mul", Value = 0.06 }, -- was -0.028 (2026-11-25 roles: tankier instead of more damage)
+				{ Stat = "MaxHealth", Mode = "Mul", Value = 0.12 }, -- was -0.028, then 0.06 (2026-11-26 roles: tankier; lowest in every partner check)
 				{ Stat = "Defense", Mode = "Mul", Value = 0.25 },
 				{ Stat = "DamageTaken", Mode = "Mul", Value = -0.14 }, -- was -0.1 (2026-11-26: lowest at L100, tankier)
 				{ Stat = "Attack", Mode = "Mul", Value = 0.12 },
