@@ -407,3 +407,32 @@ the longest wait between two new stages.
   L80 97-138 h, L100 188-278 h (stage 70-97, Berserker 141). Hours are active play with fights back to back; away
   earnings make real players faster.
 - `NumberScale` 10 -> 100 (owner: bigger numbers); balance-neutral (defense and bosses scale with it).
+
+## Roles (2026-11-26, owner rule)
+Each path is judged by its role first; its other parts must never beat its primary role.
+- Tanks (Guardian; Berserker = a tank that sustains by hitting; Duelist = the tanky Rogue) take the hits and survive.
+- Healers (Priest; Spirit Caller = the Summoner's healer path) heal the most. A healer class's damage path (Templar) is a
+  damage dealer first: heals grow with attack, so the Templar has HealingDealt -0.5 (it out-healed the Priest before).
+- Damage paths deal the most damage, both single target and area (no "AoE dps" vs "single dps" split).
+Check: `py -3 tools/sim/roles.py <prefix>` (share of party damage / healing / damage taken per level band). A share is
+only meaningful with another healer in the party: the companions often have none, so for healer vs damage path use a
+controlled fight (same party, same stage). Controlled check 2026-11-26: Priest heals 2-2.5x the Templar, the Templar deals ~2x the Priest.
+Changes: Priest healing +45%, less damage; Templar healing -50%, damage penalty -0.12; Spirit Caller healing +100%;
+Duelist and Swordsaint tankier instead of more damage; Warlord's damage bonus -> health; small Berserker/Guardian trims.
+
+## Skills: one job each, and a second purpose (2026-11-26, owner rule)
+Skills are measured in their own category (`tools/sim/runners/skillrank.luau`: each skill alone in the loadout, per second
+of fight): Single (damage on a boss), AoE (damage on a pack), Heal, Shield (soaked), Buff/Debuff (what its statuses added or
+kept off), Summon (its minions' damage). Within a class and category the best skill may do just that; every other one has a
+second purpose (stun, execute, combo layer, self-heal, debuff, cleanse...). `skillaudit.luau` lists purposes and flags PURE.
+- New mechanic: Damage `Execute = { Below, Mult }` (Executioner Strike, Execute).
+- Stacking damage-over-time commons (Fireball, Ignite, Power Shot, Backstab, Fan of Knives, Meteor) lead their categories
+  by far in long fights; the Epic/Legendary damage skills of Mage, Ranger and Rogue were 25-45% of them and were raised
+  x1.35-1.6 (now 45-90%, each with a purpose the top one lacks).
+- Not measured well by the probe: attack-speed buffs (Hasted) and conditional skills (cast only when hurt).
+
+## Longer fights (2026-11-26, owner: 3-4x longer so skills cycle)
+`Config/Stages.FightLength` Health 8.4 (was 2.4), Attack 0.45 (was 0.7); time limits 200 s / 300 s boss (were 60/90);
+`Economy.FightPay` 4.3 (was 1.4: ~3x fewer fights an hour). Regular fights 7-13 s -> 25-60 s. Attack 0.3 was tried first:
+long fights favour heals and shields, L60 stages jumped to 81-115. At 0.45 (8 paths, 1 seed): L30 4.2-4.7 h, L60 32-48 h,
+stage at L60 52-87 (before: 38-65 h, 55-85). Boss 20 first beaten after 1-2.3 h (unchanged).

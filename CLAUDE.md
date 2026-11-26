@@ -75,6 +75,10 @@ Renamed 2026-11-23: only player-visible text says Idle Party Quest (menu title, 
   step removed, boss Enrage softened. Bot `LOOP` lines measure it. `NumberScale` 100 (was 10). Damage numbers by who hit
   whom (`Replay`, your hero gold). Bestiary (`Shared/Bestiary`, `Permanent.Bestiary.Kills`) and Class mastery
   (`Shared/ClassMastery`, `Permanent.Mastery`), screen `UI/CollectionScreen` (dock 🏅).
+- **Roles, skill purposes, long fights 2026-11-26** (tests green, NOT seen in Studio): owner rules in docs/BALANCE.md
+  "Roles" / "Skills: one job each" (primary role strongest; every skill that is not the best of its class + category has a
+  second purpose; damage paths good at single AND area). Tools: `tools/sim/roles.py`, `runners/skillrank.luau`,
+  `runners/skillaudit.luau`. Fights ~3.5x longer (`FightLength` 8.4 / 0.45, timers 200/300 s, `FightPay` 4.3).
 - **Studio test mute**: Workspace attribute `StudioMute = true` (Edit mode, command bar) silences all game sound in Studio
   (owner asked: no sound while Claude tests). Set it before test runs, clear it (nil) before Ctrl+S.
 
