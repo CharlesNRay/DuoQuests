@@ -436,3 +436,13 @@ second purpose (stun, execute, combo layer, self-heal, debuff, cleanse...). `ski
 `Economy.FightPay` 4.3 (was 1.4: ~3x fewer fights an hour). Regular fights 7-13 s -> 25-60 s. Attack 0.3 was tried first:
 long fights favour heals and shields, L60 stages jumped to 81-115. At 0.45 (8 paths, 1 seed): L30 4.2-4.7 h, L60 32-48 h,
 stage at L60 52-87 (before: 38-65 h, 55-85). Boss 20 first beaten after 1-2.3 h (unchanged).
+
+## Long-fight class passes (2026-11-26, overnight)
+12 paths x 2 seeds to L100 per pass (`abl.sh <tag> 100 full <Path> companion`). Stage at L100, first -> latest pass:
+tanks led by far (Berserker 177, Guardian 146) and fragile damage dealers trailed (Assassin 81, Pyromancer 84, Beastmaster 77).
+Changes: Berserker attack +8% (owner), lifesteal 0.07, health -0.16; Guardian defense +12% (owner), health +0.07, damage
+taken -0.05; damage paths' health penalties softened (long fights punish fragility: Pyromancer -0.10, Sharpshooter/Assassin
+-0.15, Beastmaster -0.15); Assassin damage penalty 0; Pyromancer -0.16; Beastmaster pets: PetDamage 2.0, PetBoost 1.25 / +8
+skill levels (owner: pets much stronger). Latest: most paths 86-116; Berserker swings 112-200 between passes (seed luck).
+Caveat: in companion mode the tested hero's own upgrades decide how far the whole party survives, which favours tanks;
+roles (roles.py) hold: damage paths 44-69% of party damage, tanks take 59-86% of hits, healers heal most.
