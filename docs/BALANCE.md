@@ -465,3 +465,24 @@ last passes: every path lands in ~120-185, most 140-175, and the same path moves
 re-check only after a real change. Roles hold (roles.py): damage paths 42-67% of party damage, tanks take 54-70% of hits,
 Priest/Templar 76-90% of healing. Boss waits average 0-5 h; boss 90/100 still trap the odd run for ~60 h (1 in 36).
 Duelist fix that mattered: its own skills (Riposte 2.8x, Blade Dance 3.8x, Parry taunts), not more stats (105-108 -> 120-147).
+
+## Boss traps (2026-11-26)
+Problem: 1 run in 36 sat at boss 90 (Goblin Warlord) or 100 (Spore Mother) for 50-60 h, mostly healer pairs at 100 and
+Guardian pairs at 90; 130/140/180 trapped some runs for 15-30 h. The bot now prints `BOSSWHY` lines (boss stages 60+:
+lost fights split into timeout / wipe, boss health left, seconds, heroes alive). Every lost boss fight was a WIPE 30-60 s
+in with the boss at 20-40% (its enraged half), shorter than a normal frontier fight: bosses hit too hard for their health.
+
+Change: `Config/Stages.BossFightLength = { Health = 1.3, Attack = 0.8 }` on stage bosses only (dungeon, world and season
+bosses unchanged; a boss's summons inherit its attack factor). About the same damage race, more time for heals and shields.
+
+| 12 paths x 3 seeds, L100 | before (X2) | after (Z1) |
+|---|---|---|
+| mean frontier | 151 | 151 |
+| boss 90 wait avg / max | 3.4 h / 59.7 h | 0.2 h / 2.5 h |
+| boss 100 wait avg / max | 3.5 h / 59.2 h | 0.2 h / 2.2 h |
+| worst wait at any boss | 59.7 h | 4.5 h (boss 110) |
+| boss first-clear fight (60+) | 66 s | 87 s |
+
+Frontiers after: Berserker 188, Templar 167, Beastmaster 165, FrostWeaver 165, Necromancer 160, Guardian 157, Priest 148,
+SpiritCaller 144, Sharpshooter 141, Duelist 132, Pyromancer 130, Assassin 118 (within the +-20-35 noise of earlier runs).
+The progress time moved from boss walls into the normal stages; bosses still stop a party briefly (avg 0-0.5 h).

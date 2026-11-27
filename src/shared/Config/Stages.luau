@@ -61,4 +61,8 @@ return {
 	NormalHealth = { From = 5, Span = 25, Max = 1.6 }, -- ordinary enemies: extra health only, ramping from stage 5 to full at stage 30
 	FirstBossMult = 0.6, -- the first boss (stage 10) ends the tutorial, so it is much softer than the later ones
 	BossScaleMult = 1.1, -- extra multiplier on boss health and attack (bosses are the real hurdle)
+	-- Stage bosses on top of FightLength (2026-11-26): every lost boss fight past 60 was a wipe 30-60 s in with the boss at
+	-- 20-40% (its enraged half), shorter than a normal fight, and 1 run in 36 sat at boss 90/100 for 50-60 h (mostly healer
+	-- pairs). More health, less attack: about the same damage race, but heals and shields get time to work.
+	BossFightLength = { Health = 1.3, Attack = 0.8 },
 }

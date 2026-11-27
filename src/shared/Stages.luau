@@ -119,13 +119,14 @@ function Stages.Build(stage)
 
 	if Stages.IsBoss(stage) then
 		local bossNumber = stage // Config.BossEvery
+		local bossFight = Config.BossFightLength or { Health = 1, Attack = 1 }
 		local enemyId = Config.BossPool[(bossNumber - 1) % #Config.BossPool + 1]
 		-- a zone can name its own boss (Config/Zones Boss: Slime Meadows has the Rainbow Slime)
 		local zone = ZoneConfig[(bossNumber - 1) % #ZoneConfig + 1]
 		if zone and zone.Boss then
 			enemyId = zone.Boss
 		end
-		table.insert(enemies, { Id = "e1", EnemyId = enemyId, Scale = scale * (Config.BossScaleMult or 1) * (if bossNumber == 1 then Config.FirstBossMult or 1 else 1), HealthMult = Stages.HealthMult(stage) })
+		table.insert(enemies, { Id = "e1", EnemyId = enemyId, Scale = scale * (Config.BossScaleMult or 1) * (if bossNumber == 1 then Config.FirstBossMult or 1 else 1), HealthMult = Stages.HealthMult(stage) * bossFight.Health, AttackMult = Stages.AttackMult() * bossFight.Attack })
 	else
 		local count = math.min(Config.MaxEnemies, 1 + (stage - 1) // 2)
 		for index = 1, count do
@@ -142,7 +143,7 @@ function Stages.NewEnemies(stage)
 	local built = Stages.Build(stage)
 	local enemies = {}
 	for _, entry in ipairs(built.Enemies) do
-		local enemy = StatCalc.NewEnemy(entry.Id, entry.EnemyId, entry.Scale, entry.HealthMult, Stages.AttackMult())
+		local enemy = StatCalc.NewEnemy(entry.Id, entry.EnemyId, entry.Scale, entry.HealthMult, entry.AttackMult or Stages.AttackMult())
 		enemy.DefenseScale = entry.Scale * Stages.DefenseScale(stage) / Stages.Scale(stage)
 		table.insert(enemies, enemy)
 	end

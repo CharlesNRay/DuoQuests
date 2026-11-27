@@ -322,6 +322,7 @@ local function run(classId, pathId, seedBase, goalLevel)
 	local bossTried = {}
 	local stonesEarned, stonesAt30 = 0, nil
 	local losses = {}
+	local lossWhy = {}
 	local durs = {}
 	local luckPets = ""
 	local lastFrontier, lastProgress = 1, 0
@@ -359,7 +360,18 @@ local function run(classId, pathId, seedBase, goalLevel)
 			nextSample = (profile.Season.Level // 10 + 1) * 10
 			sampleMetrics(classId, pathId, profile, team, math.max(1, profile.Season.HighestStage), seed, ultimate, clock)
 		end
-		local outcome = m.StageRunner.Run(team, stage, seed, ultimate)
+		local bossWatch = stage % 10 == 0 and stage >= 60
+		local outcome = m.StageRunner.Run(team, stage, seed, ultimate, false, if bossWatch then { Metrics = true } else nil)
+		if bossWatch and not outcome.Won and outcome.Sim then -- BOSSWHY: how boss fights are lost (timeout or wipe, boss health left)
+			local w = lossWhy[stage] or { 0, 0, 0, 0, 0 }
+			lossWhy[stage] = w
+			if outcome.TimedOut then w[1] += 1 else w[2] += 1 end
+			local big
+			for _, e in ipairs(outcome.Sim.Enemies) do if big == nil or e.Stats.MaxHealth > big.Stats.MaxHealth then big = e end end
+			if big then w[3] += math.max(0, big.Health) / big.Stats.MaxHealth end
+			w[4] += outcome.Duration
+			w[5] += #outcome.Result.Survivors
+		end
 		stonesEarned += (profile.Season.Currencies.Wishstones or 0) - stonesBefore
 		if profile.Season.Level >= 30 and stonesAt30 == nil then stonesAt30 = { stonesEarned, profile.Season.HighestStage, clock / 3600, fights } end
 		clock += outcome.Duration + 2
@@ -493,7 +505,7 @@ local function run(classId, pathId, seedBase, goalLevel)
 		print(("LOOP	%s	%s	%s"):format(classId, pathId, table.concat(parts, " | ")))
 	end
 	return { Stuck = stuck, Class = classId, Path = pathId .. (if PARTNER == "solo" then "" else "+" .. PARTNER .. (PARTNER_PATH and ("." .. PARTNER_PATH) or "")), Hours = clock / 3600, Level = profile.Season.Level, Frontier = profile.Season.HighestStage, Fights = fights,
-		Durs = durs, LvAtStage = lvAtStage, Stones30 = stonesAt30, First = first, LevelAt = levelAt, Pet = pet, GearScore = gearScore, RarePets = rarePets }
+		Durs = durs, LvAtStage = lvAtStage, Stones30 = stonesAt30, First = first, LevelAt = levelAt, Pet = pet, GearScore = gearScore, RarePets = rarePets, LossWhy = lossWhy }
 end
 
 local paths = {}
@@ -519,6 +531,12 @@ for _, p in ipairs(paths) do
 			for band = 0, 12 do if r.Durs[band] then table.insert(dl, ("s%d-%d=%.1fs(n%d)"):format(band * 10 + 1, band * 10 + 9, r.Durs[band][1] / r.Durs[band][2], r.Durs[band][2])) end end
 			local ls = {} for _, st in ipairs({ 3, 5, 10, 15, 20, 30, 40, 50, 60, 70, 80, 90, 100 }) do if r.LvAtStage[st] then table.insert(ls, ("s%d:L%d"):format(st, r.LvAtStage[st])) end end
 			if r.Stones30 then print(("STONES30 %s %s stones=%d stage=%d hours=%.1f fights=%d"):format(r.Class, r.Path, r.Stones30[1], r.Stones30[2], r.Stones30[3], r.Stones30[4])) end
+			local why = {}
+			for st = 60, r.Frontier + 10, 10 do
+				local w = r.LossWhy[st]
+				if w then local n = w[1] + w[2] table.insert(why, ("%d:n%d/timeout%d/wipe%d/bossleft%.0f%%/%.0fs/alive%.1f"):format(st, n, w[1], w[2], w[3] / n * 100, w[4] / n, w[5] / n)) end
+			end
+			print("BOSSWHY " .. r.Class .. " " .. r.Path .. " " .. table.concat(why, " "))
 			print("LVST " .. r.Class .. " " .. r.Path .. " " .. table.concat(ls, " "))
 			print("DUR " .. r.Class .. " " .. r.Path .. " " .. table.concat(dl, " "))
 			print(("RESULT\t%s\t%s\tseed%d\tSTUCK=%s\tH=%.2f\tlv%d\tfr%d\tfights%d\tpet=%s\tgear=%.0f\t%s\tBOSS %s\tRARE %s"):format(r.Class, r.Path, sd, tostring(r.Stuck), r.Hours, r.Level, r.Frontier, r.Fights, tostring(r.Pet), r.GearScore, table.concat(lv, " "), table.concat(boss, " "), table.concat(r.RarePets, ",")))

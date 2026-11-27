@@ -79,6 +79,9 @@ Renamed 2026-11-23: only player-visible text says Idle Party Quest (menu title, 
   "Roles" / "Skills: one job each" (primary role strongest; every skill that is not the best of its class + category has a
   second purpose; damage paths good at single AND area). Tools: `tools/sim/roles.py`, `runners/skillrank.luau`,
   `runners/skillaudit.luau`. Fights ~3.5x longer (`FightLength` 8.4 / 0.45, timers 200/300 s, `FightPay` 4.3).
+- **Boss traps + flat daily 2026-11-26** (tests green, NOT seen in Studio): stage bosses get `Config/Stages.BossFightLength`
+  (health x1.3, attack x0.8): longest boss wait 60 h -> 4.5 h, same mean frontier (BALANCE.md "Boss traps"; bot `BOSSWHY`
+  lines). Daily login gift is flat gold per streak day (10K..40K, `Config/Daily` Gold), no frontier scaling (owner).
 - **Studio test mute**: Workspace attribute `StudioMute = true` (Edit mode, command bar) silences all game sound in Studio
   (owner asked: no sound while Claude tests). Set it before test runs, clear it (nil) before Ctrl+S.
 
