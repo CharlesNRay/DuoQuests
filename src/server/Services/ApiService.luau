@@ -883,7 +883,8 @@ function handlers.BuyConsumable(player, profile, id, count)
 		return false, "BadArgs"
 	end
 	local isPetFood = Consumables.Defs[id] ~= nil and Consumables.Defs[id].Kind == "PetFood"
-	if not nearShop(player, "Merchant") and not (isPetFood and nearShop(player, "PetStore")) then
+	-- pet food is sold only at the Pet Store, everything else only at the Merchant
+	if not nearShop(player, if isPetFood then "PetStore" else "Merchant") then
 		return false, "TooFar"
 	end
 	return Consumables.Buy(profile, id, count)

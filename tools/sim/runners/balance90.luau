@@ -197,6 +197,19 @@ local function asFull(fn)
 end
 
 local LAZY = MODE == "lazy"
+-- GOLD ledger (2026-11-27): where the tested hero's gold comes from and goes, per level band
+local LEDGER = nil -- { Profile, Bands = { [band] = { Earn, Sell, Pet, Rune, Slot, Gear, Other, Hours, Bank } } }
+local function bandOf(level)
+	return if level >= 100 then 100 else (level // 20) * 20
+end
+local function gnote(profile, key, amount)
+	if LEDGER and LEDGER.Profile == profile and amount ~= 0 then
+		local b = bandOf(profile.Season.Level)
+		local row = LEDGER.Bands[b] or { Earn = 0, Sell = 0, Pet = 0, Rune = 0, Slot = 0, Gear = 0, Other = 0, Hours = 0, Bank = 0, Peak = 0 }
+		LEDGER.Bands[b] = row
+		row[key] += amount
+	end
+end
 local function goldSpend(profile, classId, now)
 	-- half the gold trains skill slots, half upgrades worn gear (cheapest first), like a player using the Trainer and the Blacksmith
 	local cur = profile.Season.Currencies
@@ -217,6 +230,7 @@ local function goldSpend(profile, classId, now)
 				spent += price
 			end
 		end
+		gnote(profile, "Pet", budget - cur.Gold)
 		budget = cur.Gold
 	end
 	-- rune pouches at the Blacksmith: up to a tenth of the gold
@@ -225,6 +239,7 @@ local function goldSpend(profile, classId, now)
 		while spent + m.RunesConfig.Pouch.Gold <= runeBudget and m.Runes.BuyPouch(profile, rand) do
 			spent += m.RunesConfig.Pouch.Gold
 		end
+		gnote(profile, "Rune", budget - cur.Gold)
 		budget = cur.Gold
 	end
 	for _ = 1, 60 do
@@ -238,7 +253,9 @@ local function goldSpend(profile, classId, now)
 			end
 		end
 		if bestSlot and cur.Gold >= bestCost and cur.Gold - bestCost >= budget * 0.5 - 0 then
+			local before = cur.Gold
 			if m.Economy.LevelSlot(profile, classId, bestSlot) then did = true end
+			gnote(profile, "Slot", before - cur.Gold)
 		end
 		local bestItem, bestUp
 		for _, item in pairs(profile.Season.Equipment.Equipped) do
@@ -246,7 +263,9 @@ local function goldSpend(profile, classId, now)
 			if c and (bestUp == nil or c < bestUp) then bestItem, bestUp = item, c end
 		end
 		if bestItem and cur.Gold >= bestUp then
+			local before = cur.Gold
 			if m.Gear.Upgrade(profile, bestItem.Id) then did = true end
+			gnote(profile, "Gear", before - cur.Gold)
 		end
 		if not did then break end
 	end
@@ -316,6 +335,7 @@ local function run(classId, pathId, seedBase, goalLevel)
 		end
 	end
 	local clock, stage, seed, fights = 0, 1, seedBase * 1000, 0
+	LEDGER = { Profile = profile, Bands = {} }
 	local levelAt, first = {}, {}
 	local lvAtStage = {}
 	local dungeonTried = {}
@@ -361,7 +381,10 @@ local function run(classId, pathId, seedBase, goalLevel)
 			sampleMetrics(classId, pathId, profile, team, math.max(1, profile.Season.HighestStage), seed, ultimate, clock)
 		end
 		local bossWatch = stage % 10 == 0 and stage >= 60
+		local goldBefore = profile.Season.Currencies.Gold
 		local outcome = m.StageRunner.Run(team, stage, seed, ultimate, false, if bossWatch then { Metrics = true } else nil)
+		gnote(profile, "Earn", profile.Season.Currencies.Gold - goldBefore)
+		gnote(profile, "Hours", (outcome.Duration + 2) / 3600)
 		if bossWatch and not outcome.Won and outcome.Sim then -- BOSSWHY: how boss fights are lost (timeout or wipe, boss health left)
 			local w = lossWhy[stage] or { 0, 0, 0, 0, 0 }
 			lossWhy[stage] = w
@@ -386,14 +409,25 @@ local function run(classId, pathId, seedBase, goalLevel)
 		if not m.Subclasses.Current(profile, classId) and profile.Season.Level >= 30 then
 			m.Subclasses.Choose(profile, classId, pathId)
 		end
+		local g0 = profile.Season.Currencies.Gold
 		if doGear then equipGear(profile) end
+		gnote(profile, "Sell", profile.Season.Currencies.Gold - g0)
 		if doGold then goldSpend(profile, classId, clock) end
+		g0 = profile.Season.Currencies.Gold
 		if doGear then runeCare(profile) end
 		spendTickets(profile)
 		spend(profile, classId)
 		if doTalent then m.Talents.AutoSpend(profile) end
 		petCare(profile)
 		if doSkill then equipBest(profile, classId) end
+		gnote(profile, "Other", g0 - profile.Season.Currencies.Gold)
+		do
+			local row = LEDGER.Bands[bandOf(profile.Season.Level)]
+			if row then
+				row.Bank = profile.Season.Currencies.Gold
+				row.Peak = math.max(row.Peak, row.Bank)
+			end
+		end
 		if partnerProfile then
 			asFull(function()
 				if not m.Subclasses.Current(partnerProfile, partnerClass) and partnerProfile.Season.Level >= 30 then
@@ -503,6 +537,27 @@ local function run(classId, pathId, seedBase, goalLevel)
 			end
 		end
 		print(("LOOP	%s	%s	%s"):format(classId, pathId, table.concat(parts, " | ")))
+	end
+	-- GOLD: per 20-level band, gold earned per game hour (fights + selling) and where it went; Bank = gold held at the band's end
+	do
+		local function short(n)
+			n = math.floor(n)
+			for _, u in ipairs({ { 1e12, "T" }, { 1e9, "B" }, { 1e6, "M" }, { 1e3, "K" } }) do
+				if math.abs(n) >= u[1] then return ("%.1f%s"):format(n / u[1], u[2]) end
+			end
+			return tostring(n)
+		end
+		for _, b in ipairs({ 0, 20, 40, 60, 80, 100 }) do
+			local r = LEDGER.Bands[b]
+			if r and r.Hours > 0 then
+				local inc = r.Earn + r.Sell
+				local spent = r.Pet + r.Rune + r.Slot + r.Gear + r.Other
+				local function pc(x) return if spent > 0 then math.floor(x / spent * 100 + 0.5) else 0 end
+				print(("GOLD	%s	%s	L%d-%d	%.1fh	earn/h %s (sell %d%%)	spent %d%% of income: pet %d%% rune %d%% slot %d%% gear %d%% other %d%%	bank %s peak %s"):format(
+					classId, pathId, if b == 0 then 1 else b, if b == 100 then 120 else b + 19, r.Hours, short(inc / r.Hours), if inc > 0 then math.floor(r.Sell / inc * 100 + 0.5) else 0,
+					if inc > 0 then math.floor(spent / inc * 100 + 0.5) else 0, pc(r.Pet), pc(r.Rune), pc(r.Slot), pc(r.Gear), pc(r.Other), short(r.Bank), short(r.Peak)))
+			end
+		end
 	end
 	return { Stuck = stuck, Class = classId, Path = pathId .. (if PARTNER == "solo" then "" else "+" .. PARTNER .. (PARTNER_PATH and ("." .. PARTNER_PATH) or "")), Hours = clock / 3600, Level = profile.Season.Level, Frontier = profile.Season.HighestStage, Fights = fights,
 		Durs = durs, LvAtStage = lvAtStage, Stones30 = stonesAt30, First = first, LevelAt = levelAt, Pet = pet, GearScore = gearScore, RarePets = rarePets, LossWhy = lossWhy }

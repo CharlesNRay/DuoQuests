@@ -47,7 +47,7 @@ local function gold(state)
 end
 
 -- Merchant -----------------------------------------------------------------
--- Tabs: Sell (bagged gear, one piece or in bulk) and Supplies (boosts and pet food for gold).
+-- Tabs: Sell (bagged gear, one piece or in bulk) and Supplies (boosts for gold; pet food is at the Pet Store).
 function Shops.Merchant(container, state, call, extra)
 	extra = extra or {}
 	local tab = extra.MerchantTab or "Sell"
@@ -80,6 +80,9 @@ function Shops.Merchant(container, state, call, extra)
 
 	if tab == "Supplies" then
 		for index, item in ipairs(state.Player.Supplies or {}) do
+			if item.Kind == "PetFood" then
+				continue -- pet food is sold only at the Pet Store (owner, 2026-11-27)
+			end
 			local r = row(scroll, 54)
 			r.LayoutOrder = index
 			Kit.label({ Size = UDim2.fromOffset(40, 40), Position = UDim2.fromOffset(8, 7), Text = item.Glyph, TextSize = 26, TextXAlignment = Enum.TextXAlignment.Center, TextStrokeTransparency = 1, Parent = r })
@@ -92,7 +95,7 @@ function Shops.Merchant(container, state, call, extra)
 			end)
 			b.Active = can
 		end
-		Kit.label({ Size = UDim2.new(1, 0, 0, 30), Text = "Boosts and pet food go to your Stash (Bag > Stash).", TextColor3 = C.Dim, TextSize = 12, Parent = scroll })
+		Kit.label({ Size = UDim2.new(1, 0, 0, 30), Text = "Boosts go to your Stash (Bag > Stash). Pet food is at the Pet Store.", TextColor3 = C.Dim, TextSize = 12, Parent = scroll })
 		return
 	end
 

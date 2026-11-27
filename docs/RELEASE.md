@@ -13,7 +13,7 @@ Legend: **[owner]** only you can do it, **[claude]** I build or check it, **[bot
 - [ ] [owner] One test purchase on the live game (cheapest Sunstone pack), or set the product ids to 0 for the test.
 - [ ] [both] Live save check alone: play 5 min, leave, rejoin; then a second server kicks the first, nothing lost.
 - [ ] [both] Two-account check: party by code, guild + chat + gift, duel, headshots on HUD and battle card.
-- [ ] [owner] Decide: does playtest progress carry into launch? (If not, rename the save store just before launch.)
+- [x] [owner] Decided 2026-11-27: playtest progress does NOT carry into launch (fresh start, see section 3).
 
 ## 2. Playtest rounds
 - [ ] [owner] Send testers the checklist in docs/PLAYTEST.md.
@@ -40,10 +40,10 @@ Built 2026-11-27 (tests green, NOT seen in Studio): the season schedule and the 
       test season runs (SEEN: the record stayed season 1 after a test season) and Party.EnsureSeason only resets forward.
 - [ ] [both] A real switch on the live game before the first real season ends (e.g. a short season added to the
       schedule during the playtest). NOTE: it uses real season ids, so launch then needs the fresh start below.
-- [ ] [owner] Season length and launch dates (suggested: first season 4 weeks, then 6-week seasons).
-- [ ] [owner] Does each season get something new? (The config has a `Mechanic` hook: elements, relics, curses...,
-      none built.) Season 1 can launch without one, but season 2 should probably have something.
-- [ ] [claude] Fresh start at launch, if wanted: playtest seasons leave data in the season-keyed stores
+- [~] [owner] Season length: first season 4 weeks (decided 2026-11-27). Still open: the launch date, later season lengths.
+- [~] [owner] Decided 2026-11-27: every season is unique and new. Ideas for the first seasons in docs/SEASONS.md;
+      the owner picks, then Claude builds them (the `Mechanic` hook in Config/Seasons has nothing behind it yet).
+- [ ] [claude] Fresh start at launch (WANTED, owner 2026-11-27): playtest seasons leave data in the season-keyed stores
       (`IPQ_Leaderboard_S<n>`, `IPQ_SeasonResults`, `IPQ_SeasonBoss`, `IPQ_SeasonHist_S<n>`) and in players' saves;
       either rename the stores or start launch at a season id the playtest never used.
 
@@ -77,7 +77,7 @@ Built 2026-11-27 (tests green, NOT seen in Studio): the season schedule and the 
 - [ ] [both] Purchases tested live: each pack, both passes, rejoin keeps them. Sunstone prices use Managed pricing,
       so the Robux shown in our Store may drift: check they match.
 - [ ] [both] Sound: loudness music vs effects, boss music switching, the wish sounds (nobody has listened yet).
-- [ ] [owner] Open questions: Pet Food price (Market 2,304g x5 vs Pet Store 6,900g each), Crypt pay at stage 6,
+- [ ] [owner] Open questions: (Pet food: DONE 2026-11-27, sold only at the Pet Store now) Crypt pay at stage 6,
       the 3 town questions in docs/TOWN.md (fishing + pet park, sparring ring, town size).
 - [ ] [claude] Remaining never-seen UI (docs/TODO.md list): hand-made fishing catch, Elder's errand. SEEN 2026-11-27:
       season prize auras after a claim (Owned + Elite aura worn), pet shard bar (+1600 a snack; fixed: Feed to listed

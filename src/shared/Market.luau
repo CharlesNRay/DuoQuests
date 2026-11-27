@@ -20,7 +20,6 @@ Market.Items = {
 	{ Id = "SkillWish", Name = "Skill Wish", Glyph = "✨", Window = "Day", Limit = 3, Clears = 90, Grant = { Items = { SkillWish = 1 } } },
 	{ Id = "XPTonic", Name = "XP Tonic", Glyph = "🧪", Window = "Day", Limit = 5, Clears = 25, Grant = { Items = { XPTonic = 1 } } },
 	{ Id = "PowerElixir", Name = "Power Elixir", Glyph = "💪", Window = "Day", Limit = 2, Clears = 40, Grant = { Items = { PowerElixir = 1 } } },
-	{ Id = "PetFood", Name = "Pet Food x5", Glyph = "🍖", Window = "Day", Limit = 6, Price = 31000, Grant = { Items = { PetFood = 5 } } }, -- fixed (2026-11-22): ~10% under 5 Pet Snacks at the Pet Store (6,900 each); it was 12 clears' gold, 460 a snack at stage 6
 	{ Id = "Wishstones", Name = "10 Wishstones", Glyph = "💎", Window = "Season", Limit = 3, Clears = 300, Grant = { Wishstones = 10 } },
 	{ Id = "SkillPick", Name = "Skill Pick", Glyph = "🎯", Window = "Season", Limit = 2, Clears = 700, Grant = { SkillPicks = 1 } },
 	{ Id = "EpicChest", Name = "Epic Gear Chest", Glyph = "🎁", Window = "Season", Limit = 1, Clears = 1500, Grant = { Gear = { Rarity = "Epic", Bonus = 8 } } },
