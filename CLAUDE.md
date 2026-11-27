@@ -311,6 +311,9 @@ Git Bash; they find a working Python themselves (`python3`/`python` there are St
   reset dailies (keys, dungeon bonuses, gifts, expedition ready), spawn world boss, toggle premium pass. Add new cheats there, not as new HUD buttons. SEEN in Studio 2026-11-22. Vendor prompts need you within 14 studs;
   teleport from the command bar (Client view): `game.Players.LocalPlayer.Character:PivotTo(CFrame.new(x, 4, z))` - Trainer (13.5, -5), Pet Store (-13.5, -5).
   The command bar has its own module cache, so `require(DataService).GetProfile` there returns nil.
+- Studio sandbox: Test cheats "Start next season" first, then anything (+stages, dungeons, relics, claims, feeding)
+  stays in memory: the profile, party record, boards and results are not saved (seen 2026-11-27). Client code changes
+  need Play restarted (PlayerScripts are copied at Play start); `_G` helpers in the client command bar survive a session.
 - Don't launch Studio via the Start menu while it is open: it starts a second instance (close it).
 - Hook message "N unpushed commits" can be a stale tracking ref: compare `git ls-remote origin <branch>` with `git rev-parse HEAD`.
 - Test files use `warn or print`; `warn` is nil in the headless harness.
