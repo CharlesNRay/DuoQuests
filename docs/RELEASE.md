@@ -79,8 +79,9 @@ Built 2026-11-27 (tests green, NOT seen in Studio): the season schedule and the 
 - [ ] [both] Sound: loudness music vs effects, boss music switching, the wish sounds (nobody has listened yet).
 - [ ] [owner] Open questions: Pet Food price (Market 2,304g x5 vs Pet Store 6,900g each), Crypt pay at stage 6,
       the 3 town questions in docs/TOWN.md (fishing + pet park, sparring ring, town size).
-- [ ] [claude] Remaining never-seen UI (docs/TODO.md list): auras once won, hand-made fishing catch, Elder's errand,
-      pet shard bar. SEEN 2026-11-27: all 10 relics + "ALL RELICS FOUND!" (fixed: relic 2 could not be picked up, the
+- [ ] [claude] Remaining never-seen UI (docs/TODO.md list): hand-made fishing catch, Elder's errand. SEEN 2026-11-27:
+      season prize auras after a claim (Owned + Elite aura worn), pet shard bar (+1600 a snack; fixed: Feed to listed
+      only the first 3 pets in collection order, now every pet, active first, scrolling), all 10 relics + "ALL RELICS FOUND!" (fixed: relic 2 could not be picked up, the
       pet park prompt always won, moved; the card cut off "...and the title Relic Hunter", now grows). Also (test season as a sandbox: nothing saved): dungeon wave banner
       ("Wave 2 / 3"; boss-arena banners moved below the stage card, the stage battle card hides during boss/dungeon
       fights), fallen-ally tags + "fell!" pop + banner, expedition-ready sign over the camp, flat daily gift, Collection.

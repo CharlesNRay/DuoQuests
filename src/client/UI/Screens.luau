@@ -313,18 +313,39 @@ local function stashTab(container, state, call, extra)
 		end)
 	elseif selRow.Kind == "PetFood" then
 		Kit.label({ Size = UDim2.new(1, -16, 0, 16), Position = UDim2.fromOffset(8, 84), Text = "Feed to:", TextSize = 11, TextColor3 = C.Dim, Parent = detail })
-		local y = 100
+		-- every owned pet, your active (and second) pet first, then the rarest: the list used to stop after the first
+		-- three in collection order, so the pet you actually use was often not there (seen 2026-11-27)
+		local RARITY = { Legendary = 5, Epic = 4, Rare = 3, Uncommon = 2, Common = 1 }
+		local feedable = {}
 		for _, pet in ipairs(me.Pets or {}) do
-			if pet.Owned and y < 170 then
-				-- a pet at its cap (your level) still eats: the food becomes pet shard progress (2026-11-22)
-				local full = pet.Level >= (pet.MaxLevel or 10)
-				local feed = Kit.button({ Size = UDim2.new(1, -16, 0, 26), Position = UDim2.fromOffset(8, y), Text = ("%s  Lv %d%s"):format(pet.Name, pet.Level, if full then "  (max: -> shards)" else ""), TextSize = 12, BackgroundColor3 = C.PanelLight, TextColor3 = if full then C.Accent else C.Text, Parent = detail }, function()
-					call("UseConsumable", selRow.Id, pet.Id)
-				end)
-				if full then
-					Kit.Hover(feed, function() return ("%s is at your level (Lv %d), so this food fills the pet shard bar instead (%s): every 16,000 XP of food = 1 %s pet shard."):format(pet.Name, pet.Level, me.PetFoodOverflow and ("%d / 16000"):format(me.PetFoodOverflow) or "0 / 16000", pet.Rarity) end)
-				end
-				y += 30
+			if pet.Owned then
+				table.insert(feedable, pet)
+			end
+		end
+		local function weight(pet)
+			return (if pet.Active then 1000 elseif pet.Id == me.SecondPet then 900 else 0) + (RARITY[pet.Rarity] or 0) * 10
+		end
+		table.sort(feedable, function(a, b)
+			local wa, wb = weight(a), weight(b)
+			if wa ~= wb then
+				return wa > wb
+			end
+			if a.Level ~= b.Level then
+				return a.Level > b.Level
+			end
+			return a.Name < b.Name
+		end)
+		local list = Kit.new("ScrollingFrame", { Size = UDim2.new(1, -8, 1, -108), Position = UDim2.fromOffset(8, 100), BackgroundTransparency = 1, BorderSizePixel = 0, CanvasSize = UDim2.new(), AutomaticCanvasSize = Enum.AutomaticSize.Y, ScrollBarThickness = 4, Parent = detail })
+		Kit.new("UIListLayout", { Padding = UDim.new(0, 4), Parent = list })
+		for _, pet in ipairs(feedable) do
+			-- a pet at its cap (your level) still eats: the food becomes pet shard progress (2026-11-22)
+			local full = pet.Level >= (pet.MaxLevel or 10)
+			local tagText = if pet.Active then "  (active)" elseif pet.Id == me.SecondPet then "  (2nd)" else ""
+			local feed = Kit.button({ Size = UDim2.new(1, -8, 0, 26), Text = ("%s  Lv %d%s%s"):format(pet.Name, pet.Level, tagText, if full then "  (max: -> shards)" else ""), TextSize = 12, BackgroundColor3 = C.PanelLight, TextColor3 = if full then C.Accent else C.Text, Parent = list }, function()
+				call("UseConsumable", selRow.Id, pet.Id)
+			end)
+			if full then
+				Kit.Hover(feed, function() return ("%s is at your level (Lv %d), so this food fills the pet shard bar instead (%s): every 16,000 XP of food = 1 %s pet shard."):format(pet.Name, pet.Level, me.PetFoodOverflow and ("%d / 16000"):format(me.PetFoodOverflow) or "0 / 16000", pet.Rarity) end)
 			end
 		end
 	else

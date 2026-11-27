@@ -31,6 +31,9 @@ not playing. (The notes from 2026-11-15 are in git history.)
 - Relic 2 could not be picked up: it sat inside the pet park ball's prompt range and "Play with your pet" always won
   (moved to the park's back corner; `tools/sim/runners/relicprobe.luau` lists prompts near each relic). The
   "ALL RELICS FOUND!" card cut off its second line (it now grows). All 10 relics + the card seen in Studio.
+- Bag > Stash > pet food "Feed to" listed only the first 3 pets in collection order (often not your active pet):
+  now every owned pet, active (and 2nd) first then rarest, in a scrolling list. Seen, plus the shard bar filling.
+- Also seen: season prize auras show as Owned after a claim and the Elite aura on the hero.
 
 ## Performance (first real numbers, docs/RELEASE.md section 4)
 Test cheats > "Stress test" fills the free lots with fake parties. On your PC, 16 lots, standing among them: ~55 fps,
