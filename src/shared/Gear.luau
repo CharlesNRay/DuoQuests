@@ -28,7 +28,8 @@
 	  Gear.Sell(profile, itemId)            -> true, gold   reasons: "NotFound"
 	  Gear.SellValue(item)                  -> gold
 	  Gear.SellBulk(profile, mode)          -> true, count, gold   mode a rarity ("Common".."Legendary") (never set pieces)
-	  Gear.UpgradeCost(item)                -> gold for the next level (nil at max)
+	  Gear.MaxUpgrade(heroLevel)            -> the highest upgrade level open at this hero level
+	  Gear.UpgradeCost(item, cap?)          -> gold for the next level (nil at cap; cap defaults to the base MaxLevel)
 	  Gear.Upgrade(profile, itemId)         -> true, newLevel   reasons: "NotFound", "MaxLevel", "NoGold"
 	                                           works on worn and bagged items
 	  Gear.Row(item)                        -> the UI row for one item
@@ -131,7 +132,9 @@ function Gear.StatOf(item)
 		return nil, 0
 	end
 	local mult = Config.RarityMult[item.Rarity] or 1
-	local upgrade = 1 + Config.Upgrade.ValuePerLevel * (item.Upgrade or 0)
+	local up, u = Config.Upgrade, item.Upgrade or 0
+	local lateFrom = up.LateFrom or up.MaxLevel
+	local upgrade = 1 + up.ValuePerLevel * math.min(u, lateFrom) + (up.LateValuePerLevel or up.ValuePerLevel) * math.max(0, u - lateFrom)
 	local power = item.Power or 1
 	local soft = Config.PercentSoft
 	if slot.Percent and soft and power > soft.From then
@@ -604,14 +607,15 @@ function Gear.Sell(profile, itemId)
 	return true, gold
 end
 
-local function row(item, classId)
+local function row(item, classId, cap)
+	cap = cap or Config.Upgrade.MaxLevel
 	local stat, value = Gear.StatOf(item)
 	local setName
 	if item.SetId then
 		local def, loop = Gear.SetFor(item.SetId)
 		setName = if loop > 1 then def.Name .. " " .. loop else def.Name
 	end
-	local cost = Gear.UpgradeCost(item)
+	local cost = Gear.UpgradeCost(item, cap)
 	local nextValue = nil
 	if cost then
 		local copy = table.clone(item)
@@ -622,7 +626,7 @@ local function row(item, classId)
 	return {
 		Id = item.Id, Slot = item.Slot, Rarity = item.Rarity, Name = Gear.Name(item, classId), Power = item.Power, Stat = stat, Value = value,
 		ItemPower = Gear.ItemPower(item), StatText = Gear.FormatStat(stat, value), SellValue = Gear.SellValue(item), SetId = item.SetId, SetName = setName,
-		Roll = item.Roll or 1, Upgrade = item.Upgrade or 0, MaxUpgrade = Config.Upgrade.MaxLevel, UpgradeCost = cost, NextValue = nextValue,
+		Roll = item.Roll or 1, Upgrade = item.Upgrade or 0, MaxUpgrade = cap, UpgradeCost = cost, NextValue = nextValue,
 		Rune = if item.Rune then { Stat = item.Rune.Stat, Tier = item.Rune.Tier, Label = Runes.Label(item.Rune) } else nil,
 	}
 end
@@ -654,13 +658,25 @@ function Gear.Sets(profile)
 	return list
 end
 
-function Gear.UpgradeCost(item)
+function Gear.MaxUpgrade(heroLevel)
+	local cfg = Config.Upgrade
+	local lc = cfg.LevelCap
+	if not lc then
+		return cfg.MaxLevel
+	end
+	return math.min(lc.Max, cfg.MaxLevel + math.max(0, (heroLevel or 1) - lc.From) // lc.Every)
+end
+
+function Gear.UpgradeCost(item, cap)
 	local level = item.Upgrade or 0
 	local cfg = Config.Upgrade
-	if level >= cfg.MaxLevel then
+	if level >= (cap or cfg.MaxLevel) then
 		return nil
 	end
-	return math.floor(cfg.BaseCost * cfg.CostGrowth ^ level + cfg.PowerCost * item.Power)
+	local lateFrom = cfg.LateFrom or math.huge
+	local early = math.min(level, lateFrom)
+	local late = math.max(0, level - lateFrom)
+	return math.floor(cfg.BaseCost * cfg.CostGrowth ^ early * (cfg.LateCostGrowth or cfg.CostGrowth) ^ late + cfg.PowerCost * item.Power)
 end
 
 function Gear.Upgrade(profile, itemId)
@@ -678,7 +694,7 @@ function Gear.Upgrade(profile, itemId)
 	if not item then
 		return false, "NotFound"
 	end
-	local cost = Gear.UpgradeCost(item)
+	local cost = Gear.UpgradeCost(item, Gear.MaxUpgrade(profile.Season.Level))
 	if not cost then
 		return false, "MaxLevel"
 	end
@@ -745,11 +761,13 @@ function Gear.List(profile)
 	local equipment = bag(profile)
 	local classId = profile.Season and profile.Season.ClassId
 	local result = { Equipped = {}, Inventory = {}, Cap = Gear.Cap(profile), BagCost = Gear.BagUpgradeCost(profile), BagStep = Config.BagStep, Sets = Gear.Sets(profile) }
+	local cap = Gear.MaxUpgrade(profile.Season and profile.Season.Level)
+	result.UpgradeCap = cap
 	for slotName, item in pairs(equipment.Equipped) do
-		result.Equipped[slotName] = row(item, classId)
+		result.Equipped[slotName] = row(item, classId, cap)
 	end
 	for _, item in ipairs(equipment.Inventory) do
-		table.insert(result.Inventory, row(item, classId))
+		table.insert(result.Inventory, row(item, classId, cap))
 	end
 	-- strongest first, so upgrades are at the top left of the bag
 	table.sort(result.Inventory, function(a, b)

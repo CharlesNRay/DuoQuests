@@ -88,6 +88,7 @@ local Tutorial = require(Shared.Tutorial)
 local Activities = require(Shared.Activities)
 local Errands = require(Shared.Errands)
 local Talents = require(Shared.Talents)
+local Bonds = require(Shared.Bonds)
 local Bestiary = require(Shared.Bestiary)
 local ClassMastery = require(Shared.ClassMastery)
 local Fishing = require(Shared.Fishing)
@@ -288,6 +289,7 @@ local function buildState(player)
 			Settings = profile.Permanent.Settings, -- sound sliders (client/Sound), nil = defaults
 			CanReadLog = PlaytestService.CanRead(player), -- the Feedback screen shows the playtest log (Studio / the place's creator)
 			Talents = Talents.Status(profile), -- level-up points (Shared/Talents)
+			Bonds = if Bonds.On() then Bonds.List(profile) else nil, -- season mechanic Bonds (nil when this season has another)
 			Bestiary = Bestiary.Status(profile, os.time()), -- the permanent monster book (Shared/Bestiary)
 			Mastery = ClassMastery.Status(profile), -- per-class mastery, kept every season (Shared/ClassMastery)
 			Fishing = Fishing.Status(profile, Daily.DayNumber(os.time())), -- the fishing pond (catches left today, fish log)
@@ -1787,6 +1789,7 @@ function ApiService.Init()
 					Events = events,
 					Reward = reward and { Gold = reward.Gold, XP = reward.XP, Shards = reward.Shards, Wishstones = reward.Wishstones, Item = reward.Item and Gear.Name(reward.Item, member.Profile and member.Profile.Season.ClassId) or nil, Pets = reward.PetsGained, Tutorial = tutorialText, Rune = reward.Rune, Lucky = reward.LuckyFind, MasteryUp = reward.MasteryUp } or nil,
 					Bestiary = outcome.Bestiary and outcome.Bestiary[tostring(member.UserId)] or nil, -- bestiary tiers this fight reached
+					BondUps = outcome.BondUps and outcome.BondUps[tostring(member.UserId)] or nil, -- season mechanic Bonds: { { Name, Level } }
 				})
 			end
 		end

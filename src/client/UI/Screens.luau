@@ -1352,6 +1352,30 @@ local function ultimatePane(pane, state, call, extra, redraw)
 	b.Active = canEquip
 end
 
+-- Season mechanic Bonds: your bond level with every hero you have won fights beside (Shared/Bonds)
+local BondsConfig = require(game:GetService("ReplicatedStorage"):WaitForChild("Shared").Config.Bonds)
+local function bondsPane(pane, rows)
+	local scroll = Kit.new("ScrollingFrame", { Size = UDim2.new(1, -12, 1, -12), Position = UDim2.fromOffset(6, 6), BackgroundTransparency = 1, BorderSizePixel = 0, CanvasSize = UDim2.new(), AutomaticCanvasSize = Enum.AutomaticSize.Y, ScrollBarThickness = 3, Parent = pane })
+	Kit.new("UIListLayout", { Padding = UDim.new(0, 4), SortOrder = Enum.SortOrder.LayoutOrder, Parent = scroll })
+	Kit.label({ Size = UDim2.new(1, -6, 0, 44), LayoutOrder = 0, TextWrapped = true, TextSize = 12, TextColor3 = C.Dim, TextYAlignment = Enum.TextYAlignment.Top,
+		Text = ("This season: win fights together to build a bond. Each bond level gives +%s%% Attack and Health while that hero fights beside you (max level %d). Companions bond at half speed."):format(tostring(BondsConfig.PerLevel * 100), BondsConfig.MaxLevel), Parent = scroll })
+	if #rows == 0 then
+		Kit.label({ Size = UDim2.new(1, -6, 0, 24), LayoutOrder = 1, Text = "No bonds yet: win a fight with your party.", TextSize = 12, Parent = scroll })
+		return
+	end
+	for index, row in ipairs(rows) do
+		local r = Kit.frame({ Size = UDim2.new(1, -6, 0, 40), LayoutOrder = index, BackgroundColor3 = C.PanelLight, Parent = scroll })
+		Kit.label({ Size = UDim2.new(0.5, -8, 0, 20), Position = UDim2.fromOffset(8, 2), Text = ("%s %s%s"):format(BondsConfig.Glyph, row.Name, if row.Companion then "  (companion)" else ""), TextSize = 13, Font = Enum.Font.GothamBold, TextTruncate = Enum.TextTruncate.AtEnd, Parent = r })
+		Kit.label({ Size = UDim2.new(0.5, -8, 0, 20), Position = UDim2.new(0.5, 0, 0, 2), Text = ("Level %d   +%s%%"):format(row.Level, tostring(row.Level * BondsConfig.PerLevel * 100)), TextSize = 12, TextXAlignment = Enum.TextXAlignment.Right, TextColor3 = C.Accent, Parent = r })
+		local bar = Kit.frame({ Size = UDim2.new(1, -16, 0, 8), Position = UDim2.fromOffset(8, 26), BackgroundColor3 = C.Panel, Parent = r })
+		local fill = if row.Need then math.clamp(row.Into / row.Need, 0, 1) else 1
+		Kit.frame({ Size = UDim2.fromScale(fill, 1), BackgroundColor3 = Color3.fromRGB(240, 110, 170), Parent = bar })
+		Kit.Hover(r, function()
+			return if row.Need then ("%d / %d wins to level %d"):format(row.Into, row.Need, row.Level + 1) else "Max level"
+		end)
+	end
+end
+
 function Screens.Party(container, state, call, extra)
 	Kit.clear(container)
 	extra = extra or {}
@@ -1382,7 +1406,7 @@ function Screens.Party(container, state, call, extra)
 	-- member cards on the left: you, then up to three teammates
 	local mates = party.Teammates or (party.Partner and { party.Partner }) or {}
 	local pick = math.clamp(extra.PartyMate or 1, 1, math.max(1, #mates))
-	local paneTab = if #mates == 0 then "Ultimate" else (extra.PartyPane or "Skills")
+	local paneTab = if #mates == 0 and extra.PartyPane ~= "Bonds" then "Ultimate" else (extra.PartyPane or "Skills")
 	local cards = Kit.new("ScrollingFrame", { Size = UDim2.new(0, 220, 1, -38), Position = UDim2.fromOffset(0, 38), BackgroundTransparency = 1, BorderSizePixel = 0, CanvasSize = UDim2.new(), AutomaticCanvasSize = Enum.AutomaticSize.Y, ScrollBarThickness = 3, Parent = container })
 	Kit.new("UIListLayout", { Padding = UDim.new(0, 6), SortOrder = Enum.SortOrder.LayoutOrder, Parent = cards })
 	Kit.new("UIPadding", { PaddingTop = UDim.new(0, 3), PaddingLeft = UDim.new(0, 3), Parent = cards })
@@ -1402,8 +1426,12 @@ function Screens.Party(container, state, call, extra)
 	end
 
 	-- right pane: their skills / party ultimate
-	for index, name in ipairs({ "Skills", "Ultimate" }) do
-		Kit.button({ Size = UDim2.fromOffset(120, 26), Position = UDim2.fromOffset(228 + (index - 1) * 126, 38), Text = if name == "Skills" then "Their skills" else "Party ultimate", TextSize = 12, BackgroundColor3 = if name == paneTab then C.Accent else C.Panel, TextColor3 = if name == paneTab then DARK_TEXT else C.Text, Parent = container }, function()
+	local bondRows = state.Player.Bonds
+	if paneTab == "Bonds" and not bondRows then
+		paneTab = if #mates == 0 then "Ultimate" else "Skills"
+	end
+	for index, name in ipairs(if bondRows then { "Skills", "Ultimate", "Bonds" } else { "Skills", "Ultimate" }) do
+		Kit.button({ Size = UDim2.fromOffset(120, 26), Position = UDim2.fromOffset(228 + (index - 1) * 126, 38), Text = if name == "Skills" then "Their skills" elseif name == "Bonds" then BondsConfig.Glyph .. " Bonds" else "Party ultimate", TextSize = 12, BackgroundColor3 = if name == paneTab then C.Accent else C.Panel, TextColor3 = if name == paneTab then DARK_TEXT else C.Text, Parent = container }, function()
 			extra.PartyPane = name
 			redraw()
 		end)
@@ -1411,6 +1439,8 @@ function Screens.Party(container, state, call, extra)
 	local pane = Kit.frame({ Size = UDim2.new(1, -236, 1, -72), Position = UDim2.fromOffset(228, 70), BackgroundColor3 = C.Panel, Parent = container })
 	if paneTab == "Ultimate" then
 		ultimatePane(pane, state, call, extra, redraw)
+	elseif paneTab == "Bonds" then
+		bondsPane(pane, bondRows)
 	else
 		ghostSkills(pane, call, extra, mates[pick], redraw)
 	end

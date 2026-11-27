@@ -39,7 +39,9 @@ return {
 	-- Stage clear rewards (earned at the frontier) --------------------------
 	RewardScale = 0.1, -- one dial that scales gold and XP income (shards have their own numbers below)
 	-- Gold per clear: Base * Growth^stage + PerStage * stage. It climbs fast on purpose: thousands early, millions later.
-	GoldCurve = { Base = 60, Growth = 1.065, PerStage = 8 },
+	-- Past SlowFrom the growth per stage drops to LateGrowth (2026-11-27, owner OK): with 1.065 all the way, gold grew
+	-- ~250x from level 20 to 80 while everything gold buys has a fixed price, so late gold piled up (bot GOLD lines).
+	GoldCurve = { Base = 60, Growth = 1.065, PerStage = 8, SlowFrom = 40, LateGrowth = 1.035 },
 	-- Gold, XP and shards per win are this much bigger since fights last longer (Config/Stages FightLength, 2026-11-25):
 	-- fewer fights an hour, the same pace per hour.
 	FightPay = 4.3, -- was 1.4; 2026-11-26 fights ~3.5x longer (about 3x fewer an hour)

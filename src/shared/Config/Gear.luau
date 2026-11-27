@@ -20,7 +20,15 @@ local Economy = require(script.Parent.Economy)
 local Gear = {
 	-- Blacksmith upgrades: each level adds ValuePerLevel of the item's base stat. The cost grows
 	-- with the level and with the stage the item dropped at. Gold is the only cost.
-	Upgrade = { MaxLevel = 10, ValuePerLevel = 0.1, BaseCost = 1200, CostGrowth = 1.42, PowerCost = 72 },
+-- Upgrades (Blacksmith, gold). +1..+10 add ValuePerLevel each and are open from the start. Past that the cap
+	-- grows with the hero (2026-11-27, owner: gear keeps growing with gold as you level): one more level every
+	-- LevelCap.Every hero levels past LevelCap.From, up to LevelCap.Max. Levels past LateFrom add LateValuePerLevel
+	-- and their cost grows by LateCostGrowth per level (Gear.MaxUpgrade, Gear.UpgradeCost).
+	Upgrade = {
+		MaxLevel = 10, ValuePerLevel = 0.1, BaseCost = 1200, CostGrowth = 1.42, PowerCost = 72,
+		LevelCap = { From = 40, Every = 4, Max = 30 },
+		LateFrom = 10, LateValuePerLevel = 0.03, LateCostGrowth = 1.18,
+	},
 
 	-- every drop rolls its stat between Min and Max of the base value (a 'good roll' shows as a percentage on the item)
 	Roll = { Min = 0.85, Max = 1.15 },

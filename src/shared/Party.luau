@@ -58,6 +58,7 @@ local Subclasses = require(script.Parent.Subclasses)
 local Talents = require(script.Parent.Talents)
 local Bestiary = require(script.Parent.Bestiary)
 local ClassMastery = require(script.Parent.ClassMastery)
+local Bonds = require(script.Parent.Bonds)
 local TableUtil = require(script.Parent.Util.TableUtil)
 local FIRST_BOSS_STAGE = require(script.Parent.Config.Stages).BossEvery -- stage 10: no farm hold up to it (see Party.OnlineTick)
 local Ultimates = require(script.Parent.Ultimates)
@@ -258,6 +259,7 @@ function Party.MakeSnapshot(profile, userId, name, previous, now)
 		end)(),
 		Level = season.Level,
 		PartySpirit = Talents.Rank(profile, "PartySpirit"), -- the Mastery talent that boosts the whole party
+		Bonds = if season.Bonds then table.clone(season.Bonds) else nil, -- season mechanic Bonds: a ghost keeps its bonds
 		Frontier = season.HighestStage,
 		SlotLevels = SkillProgress.SlotLevelsFor(season, season.Loadouts[classId], classId),
 		SlotBonus = SkillProgress.SlotBonus(season, classId, #(season.Loadouts[classId] or {})),
@@ -673,8 +675,37 @@ function Party.OnlineTick(party, online, seed, now)
 	end
 	withCompanion(party, members)
 
+	-- season mechanic Bonds: each hero gets its bond bonus with the others in the fight
+	local bondsOn = Bonds.On()
+	local bondKeys, bondNames = {}, {}
+	if bondsOn then
+		for _, member in ipairs(members) do
+			local heroKey = Bonds.KeyOf(member)
+			member.BondKey = heroKey
+			table.insert(bondKeys, heroKey)
+			bondNames[heroKey] = member.Name
+		end
+		for _, member in ipairs(members) do
+			local bonds = if member.Profile then member.Profile.Season.Bonds else member.Snapshot and member.Snapshot.Bonds
+			local mods = Bonds.Mods(bonds, member.BondKey, bondKeys)
+			member.BondMods = if #mods > 0 then mods else nil
+		end
+	end
+
 	local stage = party.Stage
 	local outcome = StageRunner.Run(members, stage, seed, StageRunner.UltimateFor(members, party.Frontier, party.UltimateId), true)
+	if bondsOn and outcome.Won then
+		for _, member in ipairs(online) do
+			local ups = Bonds.Gain(member.Profile, key(member.UserId), bondKeys, bondNames)
+			if #ups > 0 then
+				outcome.BondUps = outcome.BondUps or {}
+				for _, up in ipairs(ups) do
+					up.Name = bondNames[up.Key]
+				end
+				outcome.BondUps[key(member.UserId)] = ups
+			end
+		end
+	end
 	-- the bestiary: every online member counts every kill of the fight (party kills count for everyone)
 	local kills = Bestiary.CountKills(outcome.Events, outcome.Roster)
 	for _, member in ipairs(online) do

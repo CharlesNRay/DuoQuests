@@ -121,3 +121,6 @@ m.IconLooks = require("./Config/IconLooks") m.StatusText = require("./StatusText
 require("./IconStatusTests")(m)
 m.Bestiary = require("./Bestiary") m.BestiaryConfig = require("./Config/Bestiary") m.ClassMastery = require("./ClassMastery") m.MasteryConfig = require("./Config/ClassMastery") m.ProfileTemplate = m.ProfileTemplate or require("./ProfileTemplate") m.Progression = m.Progression or require("./Progression") m.StageRunner = m.StageRunner or require("./StageRunner") m.DataSafety = m.DataSafety or require("./Util/DataSafety")
 require("./BestiaryMasteryTests")(m)
+
+m.Bonds = require("./Bonds") m.BondsConfig = require("./Config/Bonds") m.Party = m.Party or require("./Party") m.SeasonClock = m.SeasonClock or require("./SeasonClock")
+require("./BondsTests")(m)

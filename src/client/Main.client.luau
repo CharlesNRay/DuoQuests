@@ -954,6 +954,9 @@ push.OnClientEvent:Connect(function(kind, info)
 			if up then
 				table.insert(notes, ("🏅 %s mastery %d!"):format(up.Class, up.Level))
 			end
+			for _, bond in ipairs(info.BondUps or {}) do -- season mechanic Bonds
+				table.insert(notes, ("💞 Bond with %s: level %d!"):format(bond.Name or "?", bond.Level))
+			end
 			if #notes > 0 then
 				hud:Notify(table.concat(notes, "   "))
 				Sound.Play("Reward")

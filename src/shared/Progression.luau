@@ -103,6 +103,14 @@ function Progression.AddXP(season, amount)
 	return gained
 end
 
+-- Gold per clear before bonuses: Base * Growth^stage + PerStage * stage, growing at LateGrowth past SlowFrom
+function Progression.GoldCurve(stage)
+	local c = Economy.GoldCurve
+	local early = math.min(stage, c.SlowFrom or stage)
+	local late = stage - early
+	return c.Base * c.Growth ^ early * (c.LateGrowth or c.Growth) ^ late + c.PerStage * stage
+end
+
 function Progression.ClearRewards(stage, isFrontier, bonuses)
 	local goldFactor = 1 + (if bonuses then bonuses.GoldGain or 0 else 0)
 	local xpFactor = 1 + (if bonuses then bonuses.XPGain or 0 else 0)
@@ -119,7 +127,7 @@ function Progression.ClearRewards(stage, isFrontier, bonuses)
 		shards += Economy.BossShardBonus
 	end
 	return {
-		Gold = math.max(1, math.floor((Economy.GoldCurve.Base * Economy.GoldCurve.Growth ^ stage + Economy.GoldCurve.PerStage * stage) * replay * goldFactor)),
+		Gold = math.max(1, math.floor(Progression.GoldCurve(stage) * replay * goldFactor)),
 		XP = math.max(1, math.floor((Economy.XPRewardBase + Economy.XPRewardPerStage * stage) * factor * xpFactor * (Economy.XPScale or 1) * (Economy.XPNumber or 1))),
 		Shards = math.max(1, math.floor(shards * replay)), -- shards ignore RewardScale: unlock costs are tuned for them
 	}

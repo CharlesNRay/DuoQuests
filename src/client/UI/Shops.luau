@@ -13,6 +13,7 @@ local Kit = require(script.Parent.Kit)
 local Icons = require(script.Parent.Icons)
 local Tips = require(script.Parent.Tips)
 local Gear = require(game:GetService("ReplicatedStorage"):WaitForChild("Shared").Gear)
+local GearConfig = require(game:GetService("ReplicatedStorage"):WaitForChild("Shared").Config.Gear)
 local C = Kit.Colors
 
 local Shops = {}
@@ -156,7 +157,10 @@ local SLOT_ORDER = Gear.WornSlots
 function Shops.Blacksmith(container, state, call)
 	local gear = state.Player.Gear
 	local scroll = list(container, 26)
-	Kit.label({ Size = UDim2.new(1, 0, 0, 24), Text = ("Gold: %s   -   each level adds %d%% of the base stat; costs climb quickly"):format(Short(gold(state)), 6), TextColor3 = C.Accent, TextSize = 13, Parent = container })
+	local up = GearConfig.Upgrade
+	local cap = gear.UpgradeCap or up.MaxLevel
+	local capText = if up.LevelCap and cap < up.LevelCap.Max then ("upgrades open to +%d (one more every %d hero levels past %d, up to +%d)"):format(cap, up.LevelCap.Every, up.LevelCap.From, up.LevelCap.Max) else ("upgrades open to +%d"):format(cap)
+	Kit.label({ Size = UDim2.new(1, 0, 0, 24), Text = ("Gold: %s   -   %s"):format(Short(gold(state)), capText), TextColor3 = C.Accent, TextSize = 13, Parent = container })
 
 	local function block(item, where)
 		local cost = item.UpgradeCost
@@ -173,14 +177,15 @@ function Shops.Blacksmith(container, state, call)
 		Kit.label({ Size = UDim2.new(1, -160, 1, 0), Position = UDim2.fromOffset(60, 0), Text = ("%s   [%s]\n%s"):format(nameOf(item), where, detail), TextColor3 = C.Text, TextSize = 13, Parent = r })
 		if cost then
 			local can = gold(state) >= cost
-			local b = Kit.button({ Size = UDim2.fromOffset(112, 42), Position = UDim2.new(1, -118, 0.5, -21), Text = "Upgrade\n" .. cost .. "g", BackgroundColor3 = if can then C.Up else C.Panel, TextColor3 = if can then C.Text else C.Dim, Parent = r }, function()
+			local b = Kit.button({ Size = UDim2.fromOffset(112, 42), Position = UDim2.new(1, -118, 0.5, -21), Text = "Upgrade\n" .. Short(cost) .. "g", BackgroundColor3 = if can then C.Up else C.Panel, TextColor3 = if can then C.Text else C.Dim, Parent = r }, function()
 				if can then
 					call("UpgradeGear", item.Id)
 				end
 			end)
 			b.Active = can
 		else
-			Kit.label({ Size = UDim2.fromOffset(112, 40), Position = UDim2.new(1, -118, 0.5, -20), Text = "Maxed", TextColor3 = C.Good, TextXAlignment = Enum.TextXAlignment.Center, Parent = r })
+			local atTop = not up.LevelCap or (item.Upgrade or 0) >= up.LevelCap.Max
+			Kit.label({ Size = UDim2.fromOffset(112, 40), Position = UDim2.new(1, -118, 0.5, -20), Text = if atTop then "Maxed" else "Max for\nyour level", TextSize = 12, TextColor3 = C.Good, TextXAlignment = Enum.TextXAlignment.Center, Parent = r })
 		end
 	end
 

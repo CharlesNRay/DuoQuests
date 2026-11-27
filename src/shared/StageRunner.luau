@@ -107,9 +107,12 @@ function StageRunner.NewParty(members)
 			equipped = snapshot.Gear
 			extraMods = snapshot.CollectionMods
 		end
-		if #partyMods > 0 then
+		if #partyMods > 0 or member.BondMods then
 			extraMods = if extraMods then table.clone(extraMods) else {}
 			for _, mod in ipairs(partyMods) do
+				table.insert(extraMods, mod)
+			end
+			for _, mod in ipairs(member.BondMods or {}) do -- season mechanic Bonds (Party.OnlineTick sets them)
 				table.insert(extraMods, mod)
 			end
 		end

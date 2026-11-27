@@ -179,10 +179,16 @@ return function(modulesOverride)
 	local _, boosted = Gear.StatOf(sword)
 	check("Upgrading raises the level, costs gold and boosts the stat", okUp and level == 1 and up.Season.Currencies.Gold == 100000 - cost and boosted > base)
 	check("Each level costs more", Gear.UpgradeCost(sword) > cost)
-	for _ = 1, 20 do
+	up.Season.Currencies.Gold = 1e12
+	for _ = 1, 40 do
 		Gear.Upgrade(up, sword.Id)
 	end
-	check("Upgrades stop at the max level", sword.Upgrade == GearConfig.Upgrade.MaxLevel and select(2, Gear.Upgrade(up, sword.Id)) == "MaxLevel" and Gear.UpgradeCost(sword) == nil)
+	check("Upgrades stop at the cap for the hero's level", sword.Upgrade == Gear.MaxUpgrade(up.Season.Level) and select(2, Gear.Upgrade(up, sword.Id)) == "MaxLevel" and Gear.UpgradeCost(sword, Gear.MaxUpgrade(up.Season.Level)) == nil)
+	local lc = GearConfig.Upgrade.LevelCap
+	check("The cap grows with the hero level", Gear.MaxUpgrade(1) == GearConfig.Upgrade.MaxLevel and Gear.MaxUpgrade(lc.From + lc.Every) == GearConfig.Upgrade.MaxLevel + 1 and Gear.MaxUpgrade(999) == lc.Max)
+	up.Season.Level = 999
+	local okLate = Gear.Upgrade(up, sword.Id)
+	check("A higher hero level opens more upgrades", okLate and sword.Upgrade == GearConfig.Upgrade.MaxLevel + 1)
 	check("Upgrading an unknown item fails", select(2, Gear.Upgrade(up, "nope")) == "NotFound")
 
 	local shop = ProfileTemplate.New()

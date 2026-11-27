@@ -7,7 +7,7 @@ local m = {
 	PetGear = require("./PetGear"), PetGearConfig = require("./Config/PetGear"), Consumables = require("./Consumables"),
 	Runes = require("./Runes"), RunesConfig = require("./Config/Runes"),
 	Activities = require("./Activities"), Bosses = require("./Bosses"), BossCfg = require("./Config/Bosses"), TableUtil = require("./Util/TableUtil"),
-	Talents = require("./Talents"), DataSafety = require("./Util/DataSafety"), Stages = require("./Stages"),
+	Talents = require("./Talents"), DataSafety = require("./Util/DataSafety"), Stages = require("./Stages"), Bonds = require("./Bonds"),
 }
 local ARGS = require("./cfg")
 local MODE = ARGS[4] or "full"
@@ -214,25 +214,6 @@ local function goldSpend(profile, classId, now)
 	-- half the gold trains skill slots, half upgrades worn gear (cheapest first), like a player using the Trainer and the Blacksmith
 	local cur = profile.Season.Currencies
 	local budget = cur.Gold
-	-- the Pet Store first (2026-11-19): up to a fifth of the gold on eggs (3 a day) and, once a pet gear slot is open, crates
-	if doPet then
-		local petBudget = budget * 0.2
-		local spent = 0
-		while spent < petBudget and m.PetGear.EggsLeft(profile, now) > 0 and m.PetGear.EggPrice(profile.Season.HighestStage) <= petBudget - spent do
-			local ok, price = m.PetGear.BuyEgg(profile, now)
-			if not ok then break end
-			spent += price
-		end
-		if m.PetGear.Slots(profile) > 0 then
-			for _ = 1, 10 do
-				local price = m.PetGear.CratePrice("PetCrate", profile.Season.HighestStage)
-				if spent + price > petBudget or not m.PetGear.BuyCrate(profile, "PetCrate", rand) then break end
-				spent += price
-			end
-		end
-		gnote(profile, "Pet", budget - cur.Gold)
-		budget = cur.Gold
-	end
 	-- rune pouches at the Blacksmith: up to a tenth of the gold
 	if doGear then
 		local runeBudget, spent = budget * 0.1, 0
@@ -259,7 +240,7 @@ local function goldSpend(profile, classId, now)
 		end
 		local bestItem, bestUp
 		for _, item in pairs(profile.Season.Equipment.Equipped) do
-			local c = m.Gear.UpgradeCost(item)
+			local c = m.Gear.UpgradeCost(item, m.Gear.MaxUpgrade(profile.Season.Level))
 			if c and (bestUp == nil or c < bestUp) then bestItem, bestUp = item, c end
 		end
 		if bestItem and cur.Gold >= bestUp then
@@ -268,6 +249,34 @@ local function goldSpend(profile, classId, now)
 			gnote(profile, "Gear", before - cur.Gold)
 		end
 		if not did then break end
+	end
+	-- the Pet Store after upgrades (2026-11-27: a player upgrades worn gear first): up to half of what is left on eggs (3 a day) and crates
+	if doPet then
+		budget = cur.Gold
+		-- save for the cheapest worn-gear upgrade first; the Pet Store gets half of what is above that
+		local reserve = 0
+		if doGear then
+			for _, item in pairs(profile.Season.Equipment.Equipped) do
+				local c = m.Gear.UpgradeCost(item, m.Gear.MaxUpgrade(profile.Season.Level))
+				if c and (reserve == 0 or c < reserve) then reserve = c end
+			end
+		end
+		local petBudget = math.max(0, budget - reserve) * 0.5
+		local spent = 0
+		while spent < petBudget and m.PetGear.EggsLeft(profile, now) > 0 and m.PetGear.EggPrice(profile.Season.HighestStage) <= petBudget - spent do
+			local ok, price = m.PetGear.BuyEgg(profile, now)
+			if not ok then break end
+			spent += price
+		end
+		if m.PetGear.Slots(profile) > 0 then
+			for _ = 1, 10 do
+				local price = m.PetGear.CratePrice("PetCrate", profile.Season.HighestStage)
+				if spent + price > petBudget or not m.PetGear.BuyCrate(profile, "PetCrate", rand) then break end
+				spent += price
+			end
+		end
+		gnote(profile, "Pet", budget - cur.Gold)
+		budget = cur.Gold
 	end
 end
 -- Class report (docs/BALANCE.md "Class report"): N fights at the pushed stage with Simulation metrics on. One METRIC line
@@ -381,9 +390,31 @@ local function run(classId, pathId, seedBase, goalLevel)
 			sampleMetrics(classId, pathId, profile, team, math.max(1, profile.Season.HighestStage), seed, ultimate, clock)
 		end
 		local bossWatch = stage % 10 == 0 and stage >= 60
+		-- season mechanic Bonds (as Party.OnlineTick): the tested hero (and a class partner) get their bond bonus
+		local bondKeys = nil
+		if m.Bonds and m.Bonds.On() then
+			bondKeys = {}
+			for _, member in ipairs(team) do
+				member.BondKey = if member.Snapshot then "c:" .. member.Name else member.Id
+				table.insert(bondKeys, member.BondKey)
+			end
+			for _, member in ipairs(team) do
+				if member.Profile then
+					local mods = m.Bonds.Mods(member.Profile.Season.Bonds, member.BondKey, bondKeys)
+					member.BondMods = if #mods > 0 then mods else nil
+				end
+			end
+		end
 		local goldBefore = profile.Season.Currencies.Gold
 		local outcome = m.StageRunner.Run(team, stage, seed, ultimate, false, if bossWatch then { Metrics = true } else nil)
 		gnote(profile, "Earn", profile.Season.Currencies.Gold - goldBefore)
+		if bondKeys and outcome.Won then
+			for _, member in ipairs(team) do
+				if member.Profile then
+					m.Bonds.Gain(member.Profile, member.BondKey, bondKeys)
+				end
+			end
+		end
 		gnote(profile, "Hours", (outcome.Duration + 2) / 3600)
 		if bossWatch and not outcome.Won and outcome.Sim then -- BOSSWHY: how boss fights are lost (timeout or wipe, boss health left)
 			local w = lossWhy[stage] or { 0, 0, 0, 0, 0 }

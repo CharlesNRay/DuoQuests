@@ -24,9 +24,8 @@ return {
 			-- unix seconds; the season boss withers in the last stretch so it dies near EndsAt
 			StartsAt = 1793491200, -- 2026-11-01 (placeholder: set real dates before launch)
 			EndsAt = 1801440000, -- 2027-02-01
-			-- Seasonal mechanic hooks get registered here in later phases
-			-- (elements, relics, curses, partner bonds...).
-			Mechanic = "None",
+			-- The season's own mechanic (docs/SEASONS.md): "Bonds" (Config/Bonds) or "None".
+			Mechanic = "Bonds",
 		},
 	},
 
