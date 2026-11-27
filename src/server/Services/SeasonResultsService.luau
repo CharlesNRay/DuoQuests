@@ -68,6 +68,11 @@ local function inflightOf(seasonId)
 	return inflightBy[seasonId]
 end
 
+local function pendingOf(seasonId)
+	pendingBy[seasonId] = pendingBy[seasonId] or {}
+	return pendingBy[seasonId]
+end
+
 function SeasonResultsService.Ended(seasonId)
 	return SeasonClock.Ended(seasonId)
 end

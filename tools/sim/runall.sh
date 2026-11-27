@@ -11,5 +11,6 @@ if [ -z "$PYTHON" ]; then
 fi
 PYTHON="${PYTHON:-python3}"
 $PYTHON "$H/sync.py" && cp "$H/runners/run_base.luau" "$H/.build/hl6/run.luau" && cp "$H/runners/extra.luau" "$H/.build/hl6/extra.luau"
-cd "$H/.build/hl6"
-($LUAU run.luau; $LUAU extra.luau) 2>&1 | grep -E "FAIL|done:|rror|attempt"
+(cd "$H/.build/hl6"
+  ($LUAU run.luau; $LUAU extra.luau) 2>&1 | grep -E "FAIL|done:|rror|attempt")
+bash "$H/lint.sh" | tail -20

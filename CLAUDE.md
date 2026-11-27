@@ -82,7 +82,7 @@ Renamed 2026-11-23: only player-visible text says Idle Party Quest (menu title, 
 - **Boss traps + flat daily 2026-11-26** (tests green, NOT seen in Studio): stage bosses get `Config/Stages.BossFightLength`
   (health x1.3, attack x0.8): longest boss wait 60 h -> 4.5 h, same mean frontier (BALANCE.md "Boss traps"; bot `BOSSWHY`
   lines). Daily login gift is flat gold per streak day (10K..40K, `Config/Daily` Gold), no frontier scaling (owner).
-- **Season rollover 2026-11-27** (tests green, NOT seen in Studio): `Shared/SeasonClock` (current season = newest
+- **Season rollover 2026-11-27** (SEEN in Studio with the test cheat: card, level 1, stage 1, reward claim; no live switch yet): `Shared/SeasonClock` (current season = newest
   `Config/Seasons` entry whose StartsAt passed; never cache the id; `CurrentSeasonId` is gone), `Shared/SeasonRollover`
   (DataService runs it on load: every character restarts, Permanent + `Config/Seasons.Carry` kept, SeasonHistory rows,
   `Permanent.SeasonNews` card via WelcomeBack + Celebrate, handler `SeenSeasonNews`). Season prize Wishstones claimed
@@ -116,7 +116,7 @@ sim is server-authoritative and deterministic. Read `README.md` and `docs/` (PRO
 `tools/sim/` — see its README. `tools/sim/runall.sh` runs every suite (all must be "0 failed"); `tools/sim/abl.sh` simulates hours of play per class
 with parts turned off (`full|nogear|noskill|nopet|nogold|lazy`). Needs the standalone `luau` binary: on the owner's PC it is
 `~/bin/luau.exe` (official 0.747 release; Aftman cannot install it because luau tags are "0.747", not semver). Run the scripts with
-Git Bash; they find a working Python themselves (`python3`/`python` there are Store stubs; `py -3` works). ~50 s for all 54 suites. New suites go in `src/server/Tests` and
+Git Bash; they find a working Python themselves (`python3`/`python` there are Store stubs; `py -3` works). ~50 s for all 54 suites, then `tools/sim/lint.sh` (luau-analyze: names used but never defined; must say 0). New suites go in `src/server/Tests` and
 `tools/sim/runners/extra.luau`.
 
 ## Systems added/changed 2026-11-15/16 (all tests green, pushed, none verified in Studio)

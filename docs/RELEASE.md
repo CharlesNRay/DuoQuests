@@ -32,8 +32,10 @@ Built 2026-11-27 (tests green, NOT seen in Studio): the season schedule and the 
       StartsAt has passed (`Shared/SeasonClock`). Add the next season ahead of time; players online at the switch are
       asked to rejoin. Season boss, leaderboards, results, parties and the market follow the new id.
 - [x] [claude] Headless tests: SeasonRolloverTests (31) + a DataService section (load after a switch).
-- [ ] [claude] Studio check with the Test cheats > "Start next season" button (memory only: nothing is saved and
-      the real leaderboards are not touched): new-season card, level 1, party back at stage 1, Season screen reward.
+- [x] [claude] Studio check with the Test cheats > "Start next season" button (SEEN 2026-11-27: "Season 2 has begun"
+      card with last season's row, hero + companions level 1, party at stage 1, Season screen reward claimed). Found
+      and fixed: SeasonResultsService crashed every minute (a missing local function); `tools/sim/lint.sh` now finds
+      undefined names in every file and runs at the end of runall.sh.
 - [ ] [both] A real switch on the live game before the first real season ends (e.g. a short season added to the
       schedule during the playtest). NOTE: it uses real season ids, so launch then needs the fresh start below.
 - [ ] [owner] Season length and launch dates (suggested: first season 4 weeks, then 6-week seasons).
@@ -77,7 +79,7 @@ Built 2026-11-27 (tests green, NOT seen in Studio): the season schedule and the 
 - [ ] [claude] Watch the error log and session lengths for the first days; hotfix list ready.
 
 ## Not sure yet, a fair bit of work (summary)
-1. **Season rollover**: built 2026-11-27, headless only; needs a Studio check and one live switch.
+1. **Season rollover**: built 2026-11-27, seen in Studio with the test cheat; needs one live switch.
 2. **Full-server performance**: never measured.
 3. **Pacing with real players**: only sim-tested; may need a round of retuning after playtests.
 4. **Live multiplayer** (cross-server party, guild load, session locks): only headless tests.

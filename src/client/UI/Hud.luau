@@ -48,7 +48,7 @@ local function headshot(parent, userId, size, position, color, z)
 		Image = ("rbxthumb://type=AvatarHeadShot&id=%d&w=48&h=48"):format(userId), ZIndex = z or 2, Parent = parent,
 	})
 	Kit.corner(size // 2).Parent = img
-	Kit.new("UIStroke", { Name = "Ring", Color = color or C.Accent, Thickness = 2, Parent = img })
+	Kit.new("UIStroke", { Name = "Ring", Color = color or Kit.Colors.Accent, Thickness = 2, Parent = img })
 	return img
 end
 local C = Kit.Colors
