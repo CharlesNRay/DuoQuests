@@ -5,7 +5,10 @@
 	Season leaderboards (see Shared/Leaderboards for the rules). Scores live in
 	OrderedDataStores, one per season and category, so every server shares one
 	board. Every minute this server writes the scores of its players (only when
-	they went up) and refreshes a cached top list.
+	they went up, and not after the season ended) and reads up to
+	READS_PER_REFRESH boards in turn (GetSortedAsync budget), so each board's
+	cached top list is at most a few minutes old. These boards are also the
+	season reward boards (SeasonResultsService reads them; it no longer writes).
 
 	  LeaderboardService.Init(onRefresh)     onRefresh(textByCategory) is called after each
 	                                         refresh (the hub sign uses it)
@@ -33,8 +36,13 @@ local LeaderboardService = {}
 
 local REFRESH_SECONDS = 60
 local TOP = 10
+-- GetSortedAsync is the scarcest DataStore budget (5 + 2 per player a minute per server, shared with the season
+-- results). Each refresh reads at most this many boards, in turn, and leaves RESERVE requests for the Season screen.
+local READS_PER_REFRESH = 3
+local RESERVE = 3
 
-local stores = {} -- [categoryId] = OrderedDataStore, or nil in memory mode
+local stores = {} -- [categoryId] = OrderedDataStore of the current season
+local storeSeason = nil -- the season `stores`, `written`, `cache` and `memory` belong to
 local memory = {} -- [categoryId] = { [userId] = value }
 local useMemory = false
 local written = {} -- [categoryId] = { [userId] = last value written }
@@ -42,9 +50,41 @@ local cache = {} -- [categoryId] = { Rows, At }
 local names = {} -- [userId] = name
 local refreshCallback = nil
 local initialized = false
+local nextRead = 1 -- the category the next refresh reads first
 
-local function storeName(categoryId)
-	return ("IPQ_Leaderboard_S%d_%s"):format(SeasonClock.CurrentId(), categoryId)
+local function storeName(seasonId, categoryId)
+	return ("IPQ_Leaderboard_S%d_%s"):format(seasonId, categoryId)
+end
+
+-- a test season (Studio cheat) never touches the real boards
+local function inMemory()
+	return useMemory or SeasonClock.IsTest()
+end
+
+-- The season can change while the server runs: new boards, and nothing remembered from the old season (a level 1 hero
+-- must be written to the new board even though its old score was higher).
+local function syncSeason()
+	local id = SeasonClock.CurrentId()
+	if id ~= storeSeason then
+		storeSeason = id
+		stores, written, cache, memory = {}, {}, {}, {}
+		if not inMemory() then
+			for _, category in ipairs(Leaderboards.Categories) do
+				stores[category.Id] = DataStoreService:GetOrderedDataStore(storeName(id, category.Id))
+			end
+		end
+	end
+	return id
+end
+
+local function sortedBudget()
+	if inMemory() then
+		return math.huge
+	end
+	local ok, budget = pcall(function()
+		return DataStoreService:GetRequestBudgetForRequestType(Enum.DataStoreRequestType.GetSortedAsync)
+	end)
+	return if ok then budget else 0
 end
 
 local function nameOf(userId)
@@ -64,7 +104,7 @@ local function nameOf(userId)
 end
 
 local function writeScore(categoryId, userId, value)
-	if useMemory then
+	if inMemory() then
 		local board = memory[categoryId] or {}
 		memory[categoryId] = board
 		local current = board[userId]
@@ -86,7 +126,7 @@ local function writeScore(categoryId, userId, value)
 end
 
 local function fetchTop(categoryId)
-	if useMemory then
+	if inMemory() then
 		local entries = {}
 		for userId, value in pairs(memory[categoryId] or {}) do
 			table.insert(entries, { UserId = userId, Name = nameOf(userId), Value = value })
@@ -111,31 +151,48 @@ local function fetchTop(categoryId)
 end
 
 local function refresh()
-	local text = {}
-	for _, category in ipairs(Leaderboards.Categories) do
-		local id = category.Id
-		-- write this server's players
-		written[id] = written[id] or {}
-		for _, player in ipairs(Players:GetPlayers()) do
-			local profile = DataService.GetProfile(player)
-			if profile then
-				local score = Leaderboards.ScoreFor(id, profile)
-				if (written[id][player.UserId] or 0) < score then
-					if writeScore(id, player.UserId, score) then
-						written[id][player.UserId] = score
+	local seasonId = syncSeason()
+	-- after a season's end the boards are final (the season rewards read them); a new season gets new boards
+	local open = not SeasonClock.Ended(seasonId)
+	local categories = Leaderboards.Categories
+	if open then
+		for _, category in ipairs(categories) do
+			local id = category.Id
+			written[id] = written[id] or {}
+			for _, player in ipairs(Players:GetPlayers()) do
+				local profile = DataService.GetProfile(player)
+				if profile and profile.Season.SeasonId == seasonId then
+					local score = Leaderboards.ScoreFor(id, profile)
+					if (written[id][player.UserId] or 0) < score then
+						if writeScore(id, player.UserId, score) then
+							written[id][player.UserId] = score
+						end
 					end
 				end
 			end
 		end
+	end
+	-- read a few boards, in turn, while the budget allows
+	local reads = 0
+	for _ = 1, #categories do
+		if reads >= READS_PER_REFRESH or sortedBudget() <= RESERVE then
+			break
+		end
+		local id = categories[nextRead].Id
+		nextRead = nextRead % #categories + 1
 		local rows = fetchTop(id)
+		reads += 1
 		if rows then
 			cache[id] = { Rows = rows, At = os.clock() }
 		end
+	end
+	local text = {}
+	for _, category in ipairs(categories) do
 		local lines = { category.Name }
-		for _, row in ipairs((cache[id] and cache[id].Rows) or {}) do
+		for _, row in ipairs((cache[category.Id] and cache[category.Id].Rows) or {}) do
 			table.insert(lines, ("%d. %s  %d"):format(row.Rank, row.Name, row.Value))
 		end
-		text[id] = table.concat(lines, "\n")
+		text[category.Id] = table.concat(lines, "\n")
 	end
 	if refreshCallback then
 		refreshCallback(text)
@@ -172,11 +229,8 @@ function LeaderboardService.Init(onRefresh)
 	end
 	if useMemory then
 		warn("[LeaderboardService] Studio DataStore access unavailable - using an in-memory board (nothing is saved).")
-	else
-		for _, category in ipairs(Leaderboards.Categories) do
-			stores[category.Id] = DataStoreService:GetOrderedDataStore(storeName(category.Id))
-		end
 	end
+	syncSeason()
 
 	task.spawn(function()
 		task.wait(5) -- let the first profiles load

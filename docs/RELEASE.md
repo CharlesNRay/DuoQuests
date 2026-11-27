@@ -47,8 +47,15 @@ Built 2026-11-27 (tests green, NOT seen in Studio): the season schedule and the 
 - [ ] [claude] **BIG: Performance with a full server.** 16 players = up to 16 lots, each with 4 heroes, summons, pets,
       particles and damage numbers. Never measured. Needs a stress test (fake fights on all lots in Studio, watch
       frame time, memory and network), then cutting effects at distance if needed.
-- [ ] [claude] DataStore budget: guild writes, leaderboards, playtest log and season reports all at once on a full
-      server. Check against Roblox request limits.
+- [x] [claude] DataStore budget (2026-11-27, from the code; not measured live). Roblox per server per minute:
+      reads (GetAsync + every UpdateAsync) and writes 60 + 10/player (220 at 16 players), sorted reads 5 + 2/player.
+      Full server worst case (everyone improving every minute): writes ~105 (16 solo parties saving every 30 s = 32,
+      leaderboards up to 48, profiles 8, guilds ~11, histogram/boss/playtest ~7), reads ~105 + guild screens. Fixed:
+      the 8 boards were read every minute (over budget below 2 players: 8 vs 7) -> 3 per minute in turn, only with
+      budget left; Season screen reads only with budget; the season results no longer write the same scores as the
+      leaderboards (-32 writes). Also fixed: the Top-% histogram counted a player again on every server they joined
+      (and per character) -> counted once, in their save (`Shared/SeasonHistogram`); leaderboards kept the old season's
+      stores and scores after a switch -> follow the season. Watch live: "DataStore request was added to queue".
 - [ ] [both] Party join across servers and guilds with many members, live (only tested headless).
 - [ ] [both] Overflow lots 9-16 (needs 9+ parties on one server; can be faked with test accounts or skipped by
       lowering Max Players).

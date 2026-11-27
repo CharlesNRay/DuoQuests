@@ -13,7 +13,7 @@ local function loadModules(override)
 	return {
 		SeasonClock = require(Shared.SeasonClock), SeasonRollover = require(Shared.SeasonRollover), SeasonRewards = require(Shared.SeasonRewards),
 		ProfileTemplate = require(Shared.ProfileTemplate), Characters = require(Shared.Characters), Premium = require(Shared.Premium),
-		Consumables = require(Shared.Consumables), DataSafety = require(Shared.Util.DataSafety),
+		Consumables = require(Shared.Consumables), DataSafety = require(Shared.Util.DataSafety), SeasonHistogram = require(Shared.SeasonHistogram),
 	}
 end
 
@@ -115,6 +115,46 @@ return function(modulesOverride)
 	check("New characters start in the test season", Template.NewSeasonData(Clock.CurrentId()).SeasonId == testId)
 	Clock.ClearOverride()
 	check("Clearing goes back to the real schedule", Clock.CurrentId() == before and not Clock.IsTest())
+
+	-- the brackets' histogram counts each player once (it used to count every server a player joined)
+	local H = m.SeasonHistogram
+	if H then
+		local shared = {} -- the DataStore histogram all servers add to
+		local function write(pending)
+			for score, change in pairs(pending) do
+				shared[score] = (shared[score] or 0) + change
+				pending[score] = nil
+			end
+		end
+		local function total()
+			local t = 0
+			for _, c in pairs(shared) do
+				t += c
+			end
+			return t
+		end
+		local player = Template.New()
+		-- server A: reaches stage 20, then 25
+		local pendA, flyA = {}, {}
+		H.Move(pendA, flyA, player, 1, 77, 20, 5)
+		write(pendA) H.Commit(flyA, 1)
+		H.Move(pendA, flyA, player, 1, 77, 25, 5)
+		write(pendA) H.Commit(flyA, 1)
+		check("Histogram: a player moving up counts once", total() == 1 and shared[25] == 1 and shared[20] == 0)
+		-- rejoins on server B (fresh server memory), same score, then a second character at a lower stage
+		local pendB, flyB = {}, {}
+		check("Histogram: rejoining another server does not count them again", H.Move(pendB, flyB, player, 1, 77, 25, 5) == false)
+		check("Histogram: a second, weaker character does not count them again", H.Move(pendB, flyB, player, 1, 77, 12, 5) == false and total() == 1)
+		-- a write that fails: the move stays pending and the save is not updated
+		H.Move(pendB, flyB, player, 1, 77, 30, 5)
+		check("Histogram: before the write the save still says 25", player.Permanent.SeasonHist.Score == 25 and H.Counted(player, 1, 77, flyB) == 30)
+		check("Histogram: a repeat report while the write waits adds nothing", H.Move(pendB, flyB, player, 1, 77, 30, 5) == false and pendB[30] == 1)
+		write(pendB) H.Commit(flyB, 1)
+		check("Histogram: after the write, still one player, at 30", total() == 1 and shared[30] == 1 and player.Permanent.SeasonHist.Score == 30)
+		check("Histogram: a new season counts them again from scratch", H.Counted(player, 2, 77, {}) == nil and H.Move({}, {}, player, 2, 77, 6, 5) == true)
+		check("Histogram: below the minimum stage nobody is counted", H.Move({}, {}, Template.New(), 1, 78, 4, 5) == false)
+		check("Histogram: the save field is DataStore-safe", #DS.Problems(player) == 0)
+	end
 
 	print(("SeasonRolloverTests done: %d passed, %d failed"):format(passed, failed))
 end

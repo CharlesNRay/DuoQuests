@@ -89,6 +89,10 @@ Renamed 2026-11-23: only player-visible text says Idle Party Quest (menu title, 
   before the switch wait in `Permanent.SeasonRewards.CarryWishstones`; claimed ledger uses string keys. Online players
   are kicked at a switch (Main.server). Test cheats "Start next season" = `SeasonClock.StartNext`: memory only, real
   DataStores untouched (`SeasonClock.IsTest`) and DataService keeps the stored profile while it is on.
+- **DataStore budget 2026-11-27** (tests green, NOT seen live): LeaderboardService reads 3 boards a minute in turn
+  (GetSortedAsync budget checked, `READS_PER_REFRESH`/`RESERVE`), follows the season (stores rebuilt, old scores
+  forgotten, no writes after a season ends); SeasonResultsService only reads the boards (LeaderboardService writes them)
+  and counts each player once in the Top-% histogram via `Shared/SeasonHistogram` (`Permanent.SeasonHist`).
 - **Studio test mute**: Workspace attribute `StudioMute = true` (Edit mode, command bar) silences all game sound in Studio
   (owner asked: no sound while Claude tests). Set it before test runs, clear it (nil) before Ctrl+S.
 

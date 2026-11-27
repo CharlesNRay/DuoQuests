@@ -5,7 +5,8 @@
 	Collects what the end-of-season rewards need (see Shared/SeasonRewards) and freezes it when a season ends.
 
 	While a season runs, every minute this server reports its players' furthest stage:
-	  * a per-class OrderedDataStore (Leaderboard_S<season>_Class_<class>) holds each player's best stage as that class
+	  * the per-class OrderedDataStores (Leaderboard_S<season>_Class_<class>) and the overall Stage board are written by
+	    LeaderboardService (same stores); this service only reads them
 	  * a histogram DataStore (SeasonHist_S<season>, key "h") counts players per stage, for the Top 10%..100% brackets
 	  (the overall Top 50 comes from the existing Leaderboard_S<season>_Stage board)
 	When a season is over, the first call to Results(seasonId) freezes everything into DataStore "SeasonResults", so every
@@ -27,6 +28,7 @@ local RunService = game:GetService("RunService")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local SeasonClock = require(Shared.SeasonClock)
+local SeasonHistogram = require(Shared.SeasonHistogram)
 local Config = require(Shared.Config.SeasonRewards)
 local Classes = require(Shared.Config.Classes)
 
@@ -38,7 +40,8 @@ local REPORT_SECONDS = 60
 
 local useMemory = false
 local initialized = false
-local reportedBy = {} -- [seasonId] = { [userId] = { Score, ClassId } } what this server last counted for the player
+-- Each PLAYER counts once in the histogram (Shared/SeasonHistogram: the counted score lives in their save).
+local inflightBy = {} -- [seasonId] = { [userId] = { Profile, Score } }
 local pendingBy = {} -- [seasonId] = { [score] = change not yet saved }
 -- Studio fallback (and every test season started by the Studio cheat): memory[seasonId] = { Hist, Stage, Class }
 local memory = {}
@@ -60,14 +63,9 @@ local function mem(seasonId)
 	return m
 end
 
-local function reportedOf(seasonId)
-	reportedBy[seasonId] = reportedBy[seasonId] or {}
-	return reportedBy[seasonId]
-end
-
-local function pendingOf(seasonId)
-	pendingBy[seasonId] = pendingBy[seasonId] or {}
-	return pendingBy[seasonId]
+local function inflightOf(seasonId)
+	inflightBy[seasonId] = inflightBy[seasonId] or {}
+	return inflightBy[seasonId]
 end
 
 function SeasonResultsService.Ended(seasonId)
@@ -91,49 +89,21 @@ local function bump(board, userId, value)
 	end
 end
 
--- Report one player's current numbers: best stage overall, best stage as their class, and the histogram move.
-local function report(seasonId, userId, score, classId)
-	local reported = reportedOf(seasonId)
-	local pendingHist = pendingOf(seasonId)
-	local before = reported[userId]
-	if before and before.Score >= score and before.ClassId == classId then
-		return
-	end
+-- Report one player's current numbers: the histogram move (and, in memory mode, the boards LeaderboardService keeps
+-- for real stores).
+local function report(seasonId, profile, userId, score, classId)
 	local ranked = score >= Config.MinStage
-	local wasRanked = before ~= nil and before.Score >= Config.MinStage
-	if inMemory() then
-		if ranked then
-			local m = mem(seasonId)
-			bump(m.Stage, userId, score)
-			m.Class[classId] = m.Class[classId] or {}
-			bump(m.Class[classId], userId, score)
-		end
-	elseif ranked then
-		local ok, err = pcall(function()
-			local function keep(store)
-				store:UpdateAsync(tostring(userId), function(old)
-					if old ~= nil and old >= score then
-						return nil
-					end
-					return score
-				end)
-			end
-			keep(stageStore(seasonId))
-			keep(classStore(seasonId, classId))
-		end)
-		if not ok then
-			warn("[SeasonResultsService] score write failed: " .. tostring(err))
-			return -- not counted yet: try again next minute
-		end
+	if ranked and inMemory() then
+		local m = mem(seasonId)
+		bump(m.Stage, userId, score)
+		m.Class[classId] = m.Class[classId] or {}
+		bump(m.Class[classId], userId, score)
 	end
-	-- histogram: move this player from their old score to the new one (only players who reached MinStage count)
-	if wasRanked and before.Score ~= score then
-		pendingHist[before.Score] = (pendingHist[before.Score] or 0) - 1
-	end
-	if ranked and (not wasRanked or before.Score ~= score) then
-		pendingHist[score] = (pendingHist[score] or 0) + 1
-	end
-	reported[userId] = { Score = math.max(score, before and before.Score or 0), ClassId = classId }
+	SeasonHistogram.Move(pendingOf(seasonId), inflightOf(seasonId), profile, seasonId, userId, score, Config.MinStage)
+end
+
+local function commitInflight(seasonId)
+	SeasonHistogram.Commit(inflightOf(seasonId), seasonId)
 end
 
 local function flushHistogram(seasonId)
@@ -147,6 +117,11 @@ local function flushHistogram(seasonId)
 		for score, change in pairs(delta) do
 			hist[score] = math.max(0, (hist[score] or 0) + change)
 		end
+		if not SeasonClock.IsTest() then -- a test season's counts must not reach the saved profile
+			commitInflight(seasonId)
+		else
+			inflightBy[seasonId] = {}
+		end
 		return
 	end
 	local ok, err = pcall(function()
@@ -159,7 +134,9 @@ local function flushHistogram(seasonId)
 			return h
 		end)
 	end)
-	if not ok then
+	if ok then
+		commitInflight(seasonId)
+	else
 		warn("[SeasonResultsService] histogram write failed: " .. tostring(err))
 		local pendingHist = pendingOf(seasonId)
 		for score, change in pairs(delta) do -- keep it for the next try
@@ -249,7 +226,21 @@ local function build(seasonId)
 	return results
 end
 
+-- Live standings read 1 + one board per class with GetSortedAsync (the scarcest budget): only when the budget has room,
+-- else nil (ApiService keeps showing its last copy).
 function SeasonResultsService.Live()
+	if not inMemory() then
+		local ok, budget = pcall(function()
+			return DataStoreService:GetRequestBudgetForRequestType(Enum.DataStoreRequestType.GetSortedAsync)
+		end)
+		local needed = 1
+		for _ in pairs(Classes) do
+			needed += 1
+		end
+		if not ok or budget < needed + 1 then
+			return nil
+		end
+	end
 	return build(SeasonClock.CurrentId())
 end
 
@@ -350,9 +341,13 @@ function SeasonResultsService.InfoFor(userId, seasonId, results, profile)
 end
 
 -- Studio cheat: count a player's current numbers for a season right now (in memory while a test season runs).
-function SeasonResultsService.ReportNow(seasonId, userId, score, classId)
-	report(seasonId, userId, math.max(0, math.floor(score)), classId)
+function SeasonResultsService.ReportNow(seasonId, profile, userId)
+	-- test seasons start a fresh memory histogram, so the player's real counted score must not hide this one
+	local saved = profile.Permanent.SeasonHist
+	profile.Permanent.SeasonHist = nil
+	report(seasonId, profile, userId, math.max(0, math.floor(profile.Season.HighestStage)), profile.Season.ClassId)
 	flushHistogram(seasonId)
+	profile.Permanent.SeasonHist = saved
 end
 
 function SeasonResultsService.Init()
@@ -377,7 +372,7 @@ function SeasonResultsService.Init()
 				for _, player in ipairs(Players:GetPlayers()) do
 					local profile = DataService.GetProfile(player)
 					if profile and profile.Season.SeasonId == seasonId and profile.Permanent.Character and profile.Permanent.Character.Created then
-						local ok, err = pcall(report, seasonId, player.UserId, math.max(0, math.floor(profile.Season.HighestStage)), profile.Season.ClassId)
+						local ok, err = pcall(report, seasonId, profile, player.UserId, math.max(0, math.floor(profile.Season.HighestStage)), profile.Season.ClassId)
 						if not ok then
 							warn("[SeasonResultsService] report failed: " .. tostring(err))
 						end

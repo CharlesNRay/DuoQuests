@@ -1021,7 +1021,7 @@ function DEV_ACTIONS.NewSeason(profile, _, player)
 	-- no profile is saved until Studio stops); counts your character for the ending season first
 	local old = SeasonClock.CurrentId()
 	local newId = SeasonClock.StartNext()
-	SeasonResultsService.ReportNow(old, player.UserId, profile.Season.HighestStage, profile.Season.ClassId)
+	SeasonResultsService.ReportNow(old, profile, player.UserId)
 	SeasonResultsService.Results(old) -- freeze it now, while it holds only this score
 	SeasonRollover.Apply(profile, newId, os.time())
 	-- re-enter the party: it follows the new season (Party.EnsureSeason: stage 1)
@@ -1140,7 +1140,7 @@ end
 -- End-of-season rewards. Live standing is cached for a minute (it reads the shared boards).
 local liveCache = nil
 local function liveResults()
-	if liveCache == nil or os.clock() - liveCache.At > 60 then
+	if liveCache == nil or os.clock() - liveCache.At > 120 then
 		local results = SeasonResultsService.Live()
 		if results then
 			liveCache = { At = os.clock(), Results = results }
