@@ -1,6 +1,7 @@
 # Idle Party Quest: what is left
 
 Last updated 2026-11-25. Claude keeps this list current. Short entries; details are in CLAUDE.md and the other docs.
+The release checklist (big picture, phases to launch) is docs/RELEASE.md.
 
 ## Waiting on the owner (only you can do these)
 
