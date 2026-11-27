@@ -25,9 +25,9 @@ local Gear = {
 	-- LevelCap.Every hero levels past LevelCap.From, up to LevelCap.Max. Levels past LateFrom add LateValuePerLevel
 	-- and their cost grows by LateCostGrowth per level (Gear.MaxUpgrade, Gear.UpgradeCost).
 	Upgrade = {
-		MaxLevel = 10, ValuePerLevel = 0.1, BaseCost = 1200, CostGrowth = 1.42, PowerCost = 72,
+		MaxLevel = 10, ValuePerLevel = 0.05, BaseCost = 1200, CostGrowth = 1.42, PowerCost = 72,
 		LevelCap = { From = 40, Every = 4, Max = 30 },
-		LateFrom = 10, LateValuePerLevel = 0.03, LateCostGrowth = 1.18,
+		LateFrom = 10, LateValuePerLevel = 0.015, LateCostGrowth = 1.18,
 	},
 
 	-- every drop rolls its stat between Min and Max of the base value (a 'good roll' shows as a percentage on the item)

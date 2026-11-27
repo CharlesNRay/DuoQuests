@@ -126,15 +126,26 @@ function Gear.Replaced(equipped, itemType)
 	return worst
 end
 
+-- the stat multiplier of an upgrade level
+function Gear.UpgradeMult(level)
+	local up, u = Config.Upgrade, level or 0
+	local lateFrom = up.LateFrom or up.MaxLevel
+	return 1 + up.ValuePerLevel * math.min(u, lateFrom) + (up.LateValuePerLevel or up.ValuePerLevel) * math.max(0, u - lateFrom)
+end
+
+-- the stat without its upgrade levels (upgrades move with the slot, so pieces are compared on this)
+function Gear.BaseStat(item)
+	local stat, value = Gear.StatOf(item)
+	return stat, value / Gear.UpgradeMult(item.Upgrade)
+end
+
 function Gear.StatOf(item)
 	local slot = Config.Slots[item.Slot]
 	if slot == nil then
 		return nil, 0
 	end
 	local mult = Config.RarityMult[item.Rarity] or 1
-	local up, u = Config.Upgrade, item.Upgrade or 0
-	local lateFrom = up.LateFrom or up.MaxLevel
-	local upgrade = 1 + up.ValuePerLevel * math.min(u, lateFrom) + (up.LateValuePerLevel or up.ValuePerLevel) * math.max(0, u - lateFrom)
+	local upgrade = Gear.UpgradeMult(item.Upgrade)
 	local power = item.Power or 1
 	local soft = Config.PercentSoft
 	if slot.Percent and soft and power > soft.From then
@@ -375,7 +386,7 @@ function Gear.IsUpgrade(equipped, item)
 	if replaced == nil then
 		return true
 	end
-	return select(2, Gear.StatOf(item)) > select(2, Gear.StatOf(replaced))
+	return select(2, Gear.BaseStat(item)) > select(2, Gear.BaseStat(replaced)) -- upgrade levels move with the slot
 end
 
 -- Bad-luck protection (Config.Pity): a "par" item (this stage, its most common rarity, roll 1) for the
@@ -437,6 +448,18 @@ local function moveRune(from, to)
 end
 Gear.MoveRune = moveRune
 
+-- Upgrade levels move with the slot too (owner 2026-11-27: gold spent on gear keeps it growing): the piece that replaces
+-- a worn one takes the higher upgrade level and the old piece keeps the lower one (usually 0, so it can be sold).
+local function moveUpgrade(from, to)
+	if from and to and from ~= to and (from.Upgrade or 0) > (to.Upgrade or 0) then
+		to.Upgrade, from.Upgrade = from.Upgrade, to.Upgrade
+		if (from.Upgrade or 0) == 0 then
+			from.Upgrade = nil
+		end
+	end
+end
+Gear.MoveUpgrade = moveUpgrade
+
 function Gear.Equip(profile, itemId, wornSlot)
 	local equipment = bag(profile)
 	local index, item = findInBag(equipment, itemId)
@@ -475,6 +498,7 @@ function Gear.Equip(profile, itemId, wornSlot)
 	equipment.Equipped[target] = item
 	if previous then
 		moveRune(previous, item)
+		moveUpgrade(previous, item)
 		table.insert(equipment.Inventory, previous)
 	end
 	return true
@@ -520,7 +544,8 @@ function Gear.EquipBest(profile)
 			end
 		end
 		table.sort(candidates, function(a, b)
-			local pa, pb = Gear.ItemPower(a), Gear.ItemPower(b)
+			-- compared without upgrade levels: the upgrades of the piece taken off move to the new one
+			local pa, pb = select(2, Gear.BaseStat(a)), select(2, Gear.BaseStat(b))
 			if pa ~= pb then
 				return pa > pb
 			end
@@ -570,6 +595,7 @@ function Gear.EquipBest(profile)
 			local old = oldSlot[slotName]
 			if old and not used[old.Id] then
 				moveRune(old, newEquipped[slotName])
+				moveUpgrade(old, newEquipped[slotName])
 			end
 		end
 	end
@@ -626,6 +652,7 @@ local function row(item, classId, cap)
 	return {
 		Id = item.Id, Slot = item.Slot, Rarity = item.Rarity, Name = Gear.Name(item, classId), Power = item.Power, Stat = stat, Value = value,
 		ItemPower = Gear.ItemPower(item), StatText = Gear.FormatStat(stat, value), SellValue = Gear.SellValue(item), SetId = item.SetId, SetName = setName,
+		BaseValue = select(2, Gear.BaseStat(item)),
 		Roll = item.Roll or 1, Upgrade = item.Upgrade or 0, MaxUpgrade = cap, UpgradeCost = cost, NextValue = nextValue,
 		Rune = if item.Rune then { Stat = item.Rune.Stat, Tier = item.Rune.Tier, Label = Runes.Label(item.Rune) } else nil,
 	}

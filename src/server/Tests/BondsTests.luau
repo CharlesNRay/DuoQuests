@@ -10,6 +10,7 @@ return function(modulesOverride)
 		m = {
 			Bonds = require(Shared.Bonds), BondsConfig = require(Shared.Config.Bonds), Party = require(Shared.Party),
 			ProfileTemplate = require(Shared.ProfileTemplate), DataSafety = require(Shared.Util.DataSafety), SeasonClock = require(Shared.SeasonClock),
+			Bosses = require(Shared.Bosses), SeasonRewards = require(Shared.SeasonRewards), Cosmetics = require(Shared.Cosmetics),
 		}
 	end
 	local Bonds, Config, Party, ProfileTemplate = m.Bonds, m.BondsConfig, m.Party, m.ProfileTemplate
@@ -94,6 +95,28 @@ return function(modulesOverride)
 	check("A ghost keeps its bonds", party.Snapshots["101"].Bonds ~= nil and party.Snapshots["101"].Bonds["202"] == a.Season.Bonds["202"])
 	if m.DataSafety then
 		check("Bond data is save-safe", #m.DataSafety.Problems(a) == 0)
+	end
+
+	-- away wins: much slower
+	local away = Bonds.OfflineXP("1", { "1", "2", "c:Mira" }, 1000)
+	check("Away wins build bonds at the offline share", away["1"] == nil and math.abs(away["2"] - 1000 * Config.OfflineShare) < 1e-9 and math.abs(away["c:Mira"] - 1000 * Config.OfflineShare * Config.CompanionShare) < 1e-9)
+	local o = ProfileTemplate.New()
+	local oups = Bonds.AddXP(o, { ["2"] = Config.XPBase * 4 })
+	check("Away bond XP is paid and can level", Bonds.Level(o.Season.Bonds["2"]) == 2 and #oups == 1 and oups[1].Level == 2)
+
+	-- season 1 theme: its own boss and prize aura
+	if m.Bosses and m.SeasonClock then
+		local cfg = m.Bosses.SeasonCfg(m.SeasonClock.Def(1))
+		check("Season 1 brings its own boss", cfg.Name == "The Oathbreaker" and cfg.DefId == "Oathbreaker" and cfg.Look.Chains == true and cfg.MaxHealth ~= nil and #cfg.Thresholds > 0)
+		check("A season without a Boss keeps the default", m.Bosses.SeasonCfg({}).DefId == "Colossus")
+	end
+	if m.SeasonRewards and m.Cosmetics then
+		local top = m.SeasonRewards.Reward({ Ranked = true, Percent = 0.15, Percentile = { Label = "Top 20%", Sunstones = 1 }, ClassId = "Warrior" }, 1)
+		local low = m.SeasonRewards.Reward({ Ranked = true, Percent = 0.5, Percentile = { Label = "Top 50%", Sunstones = 1 }, ClassId = "Warrior" }, 1)
+		check("Top 20% of season 1 win the Kindred aura", table.find(top.Cosmetics, "Aura_Kindred") ~= nil and table.find(low.Cosmetics, "Aura_Kindred") == nil)
+		check("The Kindred aura is a season prize cosmetic", m.Cosmetics.Def("Aura_Kindred") ~= nil and m.Cosmetics.Def("Aura_Kindred").Source == "Season")
+		local rows = m.SeasonRewards.Brackets(1).Percentiles
+		check("The brackets list the season prize", table.concat(rows[1].Extras, ","):find("Kindred") ~= nil and table.concat(rows[5].Extras, ","):find("Kindred") == nil)
 	end
 
 	print(("BondsTests done: %d passed, %d failed"):format(passed, failed))

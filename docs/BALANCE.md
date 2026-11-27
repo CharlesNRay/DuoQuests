@@ -525,3 +525,13 @@ L100 in 132-143 h (was 113-191 h). Gear takes 40-65% of gold at L40-79; at L80-9
 rune pouches / pet crates take most of it again (gear caps out between level steps). Berserker is the outlier.
 More seeds (same build): Berserker 175 / 152 / 133 (mean ~153), Guardian 126, Sharpshooter 98, Beastmaster 105.
 Warrior paths lead the roster by ~30-50% in frontier at L100 (they led before this change too: 133 vs 88-98).
+
+## Upgrades carry over + Berserker trim (2026-11-27, owner)
+- Upgrade levels now move to the piece that replaces a worn one (`Gear.MoveUpgrade`, with the rune); pieces are compared
+  on their base stat (`Gear.BaseStat`). With full value this ran away (Berserker L100 stage 231-300, gear score x2), so
+  upgrade value is halved: +5% per level to +10, +1.5% per level after (`Config/Gear.Upgrade`).
+- Berserker CritChance +0.05 -> +0.02 (crits are what run away late; cutting Attack or AttackSpeed broke the L30
+  Berserker + Templar check in SubclassTests).
+- Result (one seed, companion, L100): Berserker 141, Priest 136, Pyromancer 102 (before today 133-175 / 98 / 88).
+- Gear now takes less of the gold (12-25% at L60-79): each upgrade level is paid once and kept. Late gold goes to rune
+  pouches and pet crates.

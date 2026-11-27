@@ -7,6 +7,8 @@
 	  Bonds.Level(xp)                   -> level, xp into it, xp the level needs (nil at max)
 	  Bonds.Mods(bonds, selfKey, keys)  -> stat mods for the hero selfKey from its bonds with the other heroes in keys
 	  Bonds.Gain(profile, selfKey, keys, names?) -> list of { Key, Level } bonds that levelled up (also grants titles)
+	  Bonds.OfflineXP(selfKey, keys, fights) -> { [heroKey] = xp } for wins while away (Config.OfflineShare of the live rate)
+	  Bonds.AddXP(profile, xpByKey)     -> list of { Key, Level } that levelled up (Party.Claim pays the away XP)
 	  Bonds.List(profile)               -> rows for the UI, best first: { Key, Name, Level, Into, Need, Companion }
 ]]
 local Config = require(script.Parent.Config.Bonds)
@@ -59,6 +61,43 @@ function Bonds.Mods(bonds, selfKey, keys)
 	return { { Stat = "Attack", Mode = "Mul", Value = value }, { Stat = "MaxHealth", Mode = "Mul", Value = value } }
 end
 
+local function grant(profile, heroKey, gain, ups)
+	local season = profile.Season
+	season.Bonds = season.Bonds or {}
+	local before = Bonds.Level(season.Bonds[heroKey])
+	season.Bonds[heroKey] = (season.Bonds[heroKey] or 0) + gain
+	local after = Bonds.Level(season.Bonds[heroKey])
+	if after > before then
+		table.insert(ups, { Key = heroKey, Level = after })
+		for level = before + 1, after do
+			local title = Config.Titles[level]
+			if title then
+				Cosmetics.GrantTitle(profile, title)
+			end
+		end
+	end
+end
+
+function Bonds.OfflineXP(selfKey, keys, fights)
+	local out = {}
+	for _, other in ipairs(keys) do
+		if other ~= selfKey then
+			out[other] = (fights or 0) * Config.XPPerWin * Config.OfflineShare * (if isCompanion(other) then Config.CompanionShare else 1)
+		end
+	end
+	return out
+end
+
+function Bonds.AddXP(profile, xpByKey)
+	local ups = {}
+	for heroKey, xp in pairs(xpByKey) do
+		if xp > 0 then
+			grant(profile, heroKey, xp, ups)
+		end
+	end
+	return ups
+end
+
 function Bonds.Gain(profile, selfKey, keys, names)
 	local season = profile.Season
 	season.Bonds = season.Bonds or {}
@@ -66,20 +105,10 @@ function Bonds.Gain(profile, selfKey, keys, names)
 	local ups = {}
 	for _, other in ipairs(keys) do
 		if other ~= selfKey then
-			local before = Bonds.Level(season.Bonds[other])
-			local gain = Config.XPPerWin * (if isCompanion(other) then Config.CompanionShare else 1)
-			season.Bonds[other] = (season.Bonds[other] or 0) + gain
 			if names and names[other] and not isCompanion(other) then
 				season.BondNames[other] = names[other]
 			end
-			local after = Bonds.Level(season.Bonds[other])
-			if after > before then
-				table.insert(ups, { Key = other, Level = after })
-				local title = Config.Titles[after]
-				if title then
-					Cosmetics.GrantTitle(profile, title)
-				end
-			end
+			grant(profile, other, Config.XPPerWin * (if isCompanion(other) then Config.CompanionShare else 1), ups)
 		end
 	end
 	return ups

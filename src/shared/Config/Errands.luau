@@ -58,7 +58,7 @@ return {
 		},
 		{
 			Id = "Bones", Name = "Bones from the Deep", Giver = "Warden",
-			Line = "The Colossus likes old bones. There's a pile by the Dungeon in the east wall - bring me a few.",
+			Line = "The giants on the Boss Field like old bones. There's a pile by the Dungeon in the east wall - bring me a few.",
 			Blurb = "Warden Hale needs bones from the Dungeon Gate for the beasts.",
 			Steps = {
 				{ Spot = "Bones", Text = "Gather bones by the Dungeon, in the east wall past the Market.", Prompt = "Gather bones", Carry = "Bones" },

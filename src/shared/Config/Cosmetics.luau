@@ -42,6 +42,8 @@ local Items = {
 	item("Aura_Silver", "Aura", "Silver aura", "Season", 0, { 200, 210, 225 }, { Color2 = { 255, 255, 255 } }),
 	item("Aura_Bronze", "Aura", "Bronze aura", "Season", 0, { 205, 130, 70 }, { Color2 = { 255, 200, 140 } }),
 	item("Aura_Elite", "Aura", "Elite aura", "Season", 0, { 120, 200, 255 }, { Color2 = { 200, 235, 255 } }),
+	-- season 1 (Bonds) prize: two ribbons of light, rose and gold, circling each other (Config/Seasons Prize)
+	item("Aura_Kindred", "Aura", "Kindred aura", "Season", 0, { 255, 120, 170 }, { Color2 = { 255, 215, 120 } }),
 
 	-- Kill effects (shop)
 	item("Kill_Confetti", "Kill", "Confetti burst", "Shop", 150, { 255, 120, 200 }, { Rainbow = true }),

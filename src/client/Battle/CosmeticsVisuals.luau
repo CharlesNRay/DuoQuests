@@ -43,6 +43,8 @@ end
 local FIRE = "rbxasset://textures/particles/fire_main.dds"
 local SMOKE = "rbxasset://textures/particles/smoke_main.dds"
 
+local RunService = game:GetService("RunService")
+
 local function numseq(list)
 	if #list == 1 then
 		return NumberSequence.new(list[1])
@@ -150,6 +152,47 @@ local RECIPES = {
 		layer(a, FIRE, { Color = { rgb(255, 160, 60), rgb(200, 50, 20), rgb(40, 14, 10) }, Rate = 14, Life = { 0.9, 1.5 }, Speed = { 0.5, 1.5 }, Size = { 0.3, 1.2, 0 }, Alpha = { 0.3, 0.4, 1 }, Accel = UP * 3, Spread = 30 })
 		layer(a, SPARKLE, { Color = { rgb(255, 210, 120), rgb(255, 80, 30) }, Rate = 24, Life = { 1.6, 2.4 }, Speed = { 3, 7 }, Size = { 0.4, 0 }, Accel = UP * 3, Spread = 55 })
 		layer(a, SMOKE, { Color = rgb(30, 22, 22), Rate = 5, Life = { 1.5, 2.2 }, Speed = { 0.5, 1 }, Size = { 1.5, 3.5 }, Alpha = { 0.7, 0.8, 1 }, Glow = 0, Accel = UP * 2 })
+	end,
+	-- season 1 (Bonds) prize: a rose ribbon and a gold ribbon spiral round the hero, always opposite each other
+	Aura_Kindred = function(a)
+		local ribbon = { Rate = 46, Life = { 1.1, 1.5 }, Speed = { 0, 0.15 }, Size = { 0.55, 0.35, 0 }, Alpha = { 0, 0.2, 1 }, Spread = 0, Spin = { -40, 40 } }
+		local function with(colour)
+			local o = table.clone(ribbon)
+			o.Color = colour
+			return o
+		end
+		layer(a, SPARKLE, with({ rgb(255, 200, 225), rgb(255, 110, 165) }))
+		local twin = Instance.new("Attachment")
+		twin.Name = "CosAuraTwin"
+		layer(twin, SPARKLE, with({ rgb(255, 245, 200), rgb(255, 200, 90) }))
+		-- a soft shared glow where the ribbons meet
+		layer(a, SMOKE, { Color = rgb(255, 170, 190), Rate = 3, Life = { 2, 2.8 }, Speed = { 0.1, 0.3 }, Size = { 2.5, 4 }, Alpha = { 0.9, 0.93, 1 }, Glow = 0.6 })
+		local base, started, conn = nil, false, nil
+		local function stop()
+			if conn then
+				conn:Disconnect()
+				conn = nil
+			end
+			twin:Destroy()
+		end
+		conn = RunService.Heartbeat:Connect(function()
+			local parent = a.Parent
+			if parent and parent:IsA("BasePart") then
+				if not started then
+					started, base = true, a.Position
+				end
+				if twin.Parent ~= parent then
+					twin.Parent = parent
+				end
+				local t = os.clock() * 2.6
+				local offset = Vector3.new(math.cos(t) * 1.7, math.sin(t * 1.6) * 1.3, math.sin(t) * 1.7)
+				a.Position = base + offset
+				twin.Position = base - offset
+			elseif started then
+				stop() -- the aura was taken off
+			end
+		end)
+		a.Destroying:Connect(stop)
 	end,
 	Aura_Gilded = function(a)
 		layer(a, SPARKLE, { Color = { rgb(255, 250, 200), rgb(255, 205, 70) }, Rate = 44, Life = { 1.2, 2 }, Speed = { 0.8, 2.6 }, Size = { 0.8, 0 } })

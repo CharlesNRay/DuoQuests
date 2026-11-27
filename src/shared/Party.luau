@@ -551,6 +551,12 @@ local function addPending(party, userId, reward, extra)
 	pending.Fights += extra.Fights
 	pending.Seconds += extra.Seconds
 	pending.Stage = extra.Stage
+	if extra.Bonds then -- season mechanic Bonds: bond XP earned while away, paid at Claim
+		pending.Bonds = pending.Bonds or {}
+		for heroKey, xp in pairs(extra.Bonds) do
+			pending.Bonds[heroKey] = (pending.Bonds[heroKey] or 0) + xp
+		end
+	end
 end
 
 -- Call when a member logs in. `partnerOnline` says whether the partner is
@@ -582,11 +588,19 @@ function Party.OpenSession(party, seasonId, userId, name, profile, partnerOnline
 			)
 			if estimate then
 				party.Stage = estimate.Stage -- the party "stays on whatever stage it can clear"
+				local bondKeys = nil
+				if Bonds.On(seasonId) then
+					bondKeys = {}
+					for _, ghost in ipairs(ghosts) do
+						table.insert(bondKeys, Bonds.KeyOf(ghost))
+					end
+				end
 				for _, memberId in ipairs(party.Members) do
 					addPending(party, memberId, estimate.Rewards[key(memberId)], {
 						Fights = estimate.Fights,
 						Seconds = estimate.EffectiveSeconds,
 						Stage = estimate.Stage,
+						Bonds = bondKeys and Bonds.OfflineXP(key(memberId), bondKeys, estimate.Fights) or nil,
 					})
 				end
 			end
@@ -634,6 +648,9 @@ function Party.Claim(party, userId, profile)
 		end
 		season.Currencies.Gold += afk.Gold
 		season.Currencies.Shards += afk.Shards
+		if afk.Bonds and Bonds.On() then
+			afk.BondUps = Bonds.AddXP(profile, afk.Bonds)
+		end
 		afk.LevelsGained = Progression.AddXP(season, afk.XP)
 		afk.Level = season.Level
 	end

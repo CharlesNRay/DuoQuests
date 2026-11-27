@@ -104,6 +104,11 @@ Renamed 2026-11-23: only player-visible text says Idle Party Quest (menu title, 
   "c:Name" for companions), bonus via `member.BondMods` in `Party.OnlineTick` -> `StageRunner.NewParty` (stage fights
   only, not boss/dungeon), Party screen "💞 Bonds" tab, Fight push `BondUps` notice, titles at 5/10. Ideas for later
   seasons: docs/SEASONS.md. Owner: playtest does not carry into launch; first season 4 weeks.
+  Later the same day (NOT seen in Studio): gear upgrades move to the replacing piece (`Gear.MoveUpgrade`, compared on
+  `Gear.BaseStat`), upgrade value halved (+5%/level, +1.5% past +10); Berserker crit +2% (was +5%); bonds from away
+  wins at 5% speed (`Config/Bonds.OfflineShare`, paid in `Party.Claim`); season 1 = "Unbroken": boss The Oathbreaker
+  (`Config/Seasons` Boss -> `Bosses.SeasonCfg`, BossService builds shackles/chains/cracks, arena enemy `Oathbreaker`),
+  prize Kindred aura for the Top 20% (`Config/Seasons` Prize, two orbiting ribbons in CosmeticsVisuals).
 - **Studio test mute**: Workspace attribute `StudioMute = true` (Edit mode, command bar) silences all game sound in Studio
   (owner asked: no sound while Claude tests). Set it before test runs, clear it (nil) before Ctrl+S.
 

@@ -39,7 +39,7 @@ return {
 				{ Stat = "Attack", Mode = "Mul", Value = 0.08 }, -- owner 2026-11-26 (was 0.25, 0.2, 0.18, 0.15): L100 stage 140-177 (2026-11-25: Warrior paths led at L100)
 				-- no DamageDealt penalty since 2026-11-23 (was -0.313, then -0.15): Guardian out-damaged it
 				{ Stat = "AttackSpeed", Mode = "Mul", Value = 0.08 },
-				{ Stat = "CritChance", Mode = "Add", Value = 0.05 },
+				{ Stat = "CritChance", Mode = "Add", Value = 0.02 }, -- owner 2026-11-27 (was 0.05): L100 stage 133-175 vs the roster ~100; crits are what run away late
 				{ Stat = "MaxHealth", Mode = "Mul", Value = -0.18 }, -- was -0.240, then -0.12, -0.14, -0.16 (2026-11-26 long fights; partner check L100 170-200)
 				-- the squad's tank either way: its damage heals it (2026-11-23; with the Guardian trim, Berserker ~50 -> ~60 vs Guardian ~62 at L40)
 				{ Stat = "Lifesteal", Mode = "Add", Value = 0.04 }, -- was 0.25, then 0.15, 0.13, 0.11, 0.09, 0.08, 0.07, 0.06, 0.05 (2026-11-25: Warrior paths led at L100, 171)

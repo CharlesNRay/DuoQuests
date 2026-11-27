@@ -15,7 +15,7 @@
 	SEASON BOSS shared by ALL servers. Every player's best damage is added up into one global total, which is the boss's
 	  PERMANENT health loss (beat your best and the boss loses the difference). The boss also weakens by itself over the last
 	  part of the season (the Finale), so it always falls near the end. Crossing health thresholds gives everyone who contributed
-	  a reward (claimed from the Boss window); when it dies, everyone who contributed gets a Colossus Egg that hatches into a
+	  a reward (claimed from the Boss window); when it dies, everyone who contributed gets a Season Boss Egg that hatches into a
 	  baby of the boss.
 
 	Every number is a PLACEHOLDER to be tuned.
@@ -77,7 +77,7 @@ return {
 			{ Id = "p50", Pct = 0.50, Name = "Half health", Rewards = { Items = { SkillWish = 2, PetWish = 1, PowerElixir = 2 } } },
 			{ Id = "p25", Pct = 0.25, Name = "25% health", Rewards = { Items = { PetWish = 2, GrandPetFood = 2, HasteDraught = 2 } } },
 			{ Id = "p10", Pct = 0.10, Name = "10% health", Rewards = { Items = { SkillWish = 3, PetWish = 3 } } },
-			{ Id = "dead", Pct = 0, Name = "Colossus defeated", Rewards = { Egg = true, Items = { PetWish = 3, SkillWish = 3, GrandPetFood = 3 } } },
+			{ Id = "dead", Pct = 0, Name = "Defeated", Rewards = { Egg = true, Items = { PetWish = 3, SkillWish = 3, GrandPetFood = 3 } } },
 		},
 		EggPet = "Colossling",
 	},

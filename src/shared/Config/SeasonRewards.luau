@@ -62,7 +62,7 @@ return {
 
 	-- Display names for cosmetic ids ("%s" = class name).
 	CosmeticNames = {
-		Aura_Champion = "Champion aura", Aura_Silver = "Silver aura", Aura_Bronze = "Bronze aura", Aura_Elite = "Elite aura",
+		Aura_Champion = "Champion aura", Aura_Silver = "Silver aura", Aura_Bronze = "Bronze aura", Aura_Elite = "Elite aura", Aura_Kindred = "Kindred aura",
 		Kill_Sparks = "Sparks kill effect", Name_Laurel = "Laurel name colour",
 		Aura_Class = "%s aura", Kill_Class = "%s kill effect", Name_Class = "%s name colour",
 	},

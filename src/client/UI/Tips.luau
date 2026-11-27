@@ -69,7 +69,11 @@ function Tips.Compare(item, gear)
 	if worn and worn.Id == item.Id then
 		return { Verdict = "Worn", Delta = 0 }
 	end
+	-- upgrade levels move with the slot: the new piece gets the higher of the two upgrade levels
 	local delta = item.Value - (worn and worn.Value or 0)
+	if worn and item.BaseValue and (worn.Upgrade or 0) > (item.Upgrade or 0) then
+		delta = item.BaseValue * Gear.UpgradeMult(worn.Upgrade) - worn.Value
+	end
 	local setGain, setLoss = nil, nil
 	for _, set in ipairs(gear.Sets or {}) do
 		local before = set.Worn

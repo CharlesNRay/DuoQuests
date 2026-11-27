@@ -33,7 +33,7 @@ local BossService = {}
 
 local IS_STUDIO = RunService:IsStudio()
 local WORLD = Cfg.World
-local SEASON = Cfg.Season
+local SEASON = Cfg.Season -- replaced in Init by this season's own boss (Bosses.SeasonCfg)
 
 local push, getProfile
 local worldModel, colossusModel, hpLabel
@@ -154,9 +154,43 @@ local function buildColossus()
 	glowPart(model, "Head", Vector3.new(h * 0.22, h * 0.2, h * 0.2), origin + Vector3.new(0, 3 + h * 0.72, 0), color:Lerp(Color3.new(1, 1, 1), 0.1))
 	glowPart(model, "ArmL", Vector3.new(h * 0.14, h * 0.42, h * 0.14), origin + Vector3.new(-h * 0.3, 3 + h * 0.35, 0), color:Lerp(Color3.new(0, 0, 0), 0.2))
 	glowPart(model, "ArmR", Vector3.new(h * 0.14, h * 0.42, h * 0.14), origin + Vector3.new(h * 0.3, 3 + h * 0.35, 0), color:Lerp(Color3.new(0, 0, 0), 0.2))
+	local look = SEASON.Look
+	local e = look.EyeColor or { 150, 255, 150 }
+	local eyeColor = Color3.fromRGB(e[1], e[2], e[3])
 	for _, side in ipairs({ -1, 1 }) do
-		local eye = glowPart(model, "Eye", Vector3.new(h * 0.04, h * 0.04, h * 0.03), origin + Vector3.new(side * h * 0.05, 3 + h * 0.74, -h * 0.1), Color3.fromRGB(150, 255, 150), nil, Enum.Material.Neon)
+		local eye = glowPart(model, "Eye", Vector3.new(h * 0.04, h * 0.04, h * 0.03), origin + Vector3.new(side * h * 0.05, 3 + h * 0.74, -h * 0.1), eyeColor, nil, Enum.Material.Neon)
 		eye.Name = "Eye"
+	end
+	-- season extras (Config/Seasons Boss.Look)
+	if look.Cracks then -- glowing cracks down the chest
+		for i, crack in ipairs({ { -0.06, 0.48, 0.18, 12 }, { 0.05, 0.38, 0.14, -18 }, { -0.02, 0.27, 0.16, 8 } }) do
+			local part = glowPart(model, "Crack" .. i, Vector3.new(h * 0.025, h * crack[3], h * 0.02), origin + Vector3.new(h * crack[1], 3 + h * crack[2], -h * 0.151), eyeColor, nil, Enum.Material.Neon)
+			part.Orientation = Vector3.new(0, 0, crack[4])
+		end
+	end
+	if look.Chains then -- broken shackles on both wrists, each trailing a snapped chain
+		local metal = Color3.fromRGB(95, 92, 105)
+		for _, side in ipairs({ -1, 1 }) do
+			local wrist = origin + Vector3.new(side * h * 0.3, 3 + h * 0.16, 0)
+			local cuff = glowPart(model, "Shackle", Vector3.new(h * 0.06, h * 0.2, h * 0.2), wrist, metal, Enum.PartType.Cylinder, Enum.Material.Metal)
+			cuff.Orientation = Vector3.new(0, 0, 90)
+			for link = 1, 6 do
+				local part = glowPart(model, "Link", Vector3.new(h * 0.025, h * 0.05, h * 0.035), wrist + Vector3.new(side * link * h * 0.012, -link * h * 0.035, -link * h * 0.01), metal, nil, Enum.Material.Metal)
+				part.Orientation = Vector3.new(0, if link % 2 == 0 then 90 else 0, side * 10)
+			end
+		end
+		-- the snapped halves of a great chain lie on the altar
+		for i = 1, 5 do
+			local part = glowPart(model, "Fallen", Vector3.new(2.2, 1.2, 3.2), origin + Vector3.new(-12 + i * 4, 3.4, 12 - (i % 2) * 2), metal, nil, Enum.Material.Metal)
+			part.Orientation = Vector3.new(0, i * 37, if i % 2 == 0 then 90 else 0)
+		end
+	end
+	if look.Material then
+		for _, part in ipairs(model:GetChildren()) do
+			if part:IsA("BasePart") and (part.Name == "Body" or part.Name == "Head" or part.Name == "ArmL" or part.Name == "ArmR") then
+				part.Material = Enum.Material[look.Material]
+			end
+		end
 	end
 	for _, part in ipairs(model:GetChildren()) do
 		part.Anchored = true
@@ -171,7 +205,7 @@ local function buildColossus()
 	hpLabel = Instance.new("TextLabel")
 	hpLabel.Size = UDim2.fromScale(1, 1)
 	hpLabel.BackgroundTransparency = 1
-	hpLabel.TextColor3 = Color3.fromRGB(190, 255, 190)
+	hpLabel.TextColor3 = eyeColor:Lerp(Color3.new(1, 1, 1), 0.45)
 	hpLabel.TextStrokeTransparency = 0.3
 	hpLabel.Font = Enum.Font.GothamBold
 	hpLabel.TextScaled = true
@@ -403,6 +437,7 @@ function BossService.Init(pushRemote, profileGetter)
 	worldModel = buildWorldBoss()
 	worldModel:PivotTo(CFrame.new(World.BossSpots.World.X, WORLD.Look.Height * 0.55, World.BossSpots.World.Z)) -- the Boss Field
 	worldModel.Parent = nil
+	SEASON = Bosses.SeasonCfg(SeasonClock.Def(SeasonClock.CurrentId())) -- this season's own boss (Config/Seasons Boss)
 	colossusModel = buildColossus()
 
 	if not IS_STUDIO then

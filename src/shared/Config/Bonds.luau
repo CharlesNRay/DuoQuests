@@ -14,6 +14,7 @@ return {
 	XPBase = 60,
 	XPPerWin = 1,
 	CompanionShare = 0.5,
+	OfflineShare = 0.05, -- wins while everyone is away build bonds 20x slower (owner 2026-11-27: "massively slower")
 	PerLevel = 0.005, -- +0.5% Attack and Health per level, per bonded hero in the fight (3 partners at 10 = +15%)
 	-- titles for your best bond
 	Titles = { [5] = "Trusted Ally", [10] = "Bound by Battle" },

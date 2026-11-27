@@ -15,10 +15,10 @@
 	  SeasonRewards.Percent(results, score)      -> share of ranked players at or above this score, ties counted in (0-1], or nil if unranked
 	  SeasonRewards.Standing(results, info)      -> { Ranked, Score, Percent, Percentile, Rank, RankReward, Class, ClassRank, ClassReward }
 	                                                info = { UserId, Score, ClassId }
-	  SeasonRewards.Reward(standing)             -> { Sunstones, Wishstones, Tickets, Titles, Cosmetics, Lines } (all layers added)
+	  SeasonRewards.Reward(standing, seasonId?)  -> (seasonId adds that season's own Prize, Config/Seasons) { Sunstones, Wishstones, Tickets, Titles, Cosmetics, Lines } (all layers added)
 	  SeasonRewards.Claimed(profile, seasonId)   -> boolean
 	  SeasonRewards.Claim(profile, seasonId, results, info) -> true, reward | false, "AlreadyClaimed" | "NotRanked"
-	  SeasonRewards.Brackets()                   -> display rows for the screen (percentiles, ranks, class ranks)
+	  SeasonRewards.Brackets(seasonId?)          -> display rows for the screen (percentiles, ranks, class ranks)
 ]]
 
 local Config = require(script.Parent.Config.SeasonRewards)
@@ -28,6 +28,7 @@ local Pets = require(script.Parent.Pets)
 local Cosmetics = require(script.Parent.Cosmetics)
 local PetConfig = require(script.Parent.Config.Pets)
 local Premium = require(script.Parent.Premium)
+local SeasonClock = require(script.Parent.SeasonClock)
 
 local SeasonRewards = {}
 
@@ -120,7 +121,13 @@ local function cosmeticName(id, classId)
 	return if template then template:gsub("%%s", className(classId)) else id
 end
 
-function SeasonRewards.Reward(standing)
+-- A season's own prize (Config/Seasons Prize = { Cosmetic, Top }): everyone ranked in the Top share gets it
+local function seasonPrize(seasonId)
+	local def = seasonId and SeasonClock.Def(seasonId)
+	return def and def.Prize
+end
+
+function SeasonRewards.Reward(standing, seasonId)
 	local reward = { Sunstones = 0, Wishstones = 0, Tickets = {}, Titles = {}, Cosmetics = {}, Pets = {}, Lines = {} }
 	if not standing.Ranked then
 		return reward
@@ -150,6 +157,10 @@ function SeasonRewards.Reward(standing)
 		table.insert(reward.Lines, { Label = label, Sunstones = row.Sunstones or 0 })
 	end
 	add(standing.Percentile, standing.Percentile.Label)
+	local prize = seasonPrize(seasonId)
+	if prize and standing.Percent and standing.Percent <= prize.Top + 1e-9 and not table.find(reward.Cosmetics, prize.Cosmetic) then
+		table.insert(reward.Cosmetics, prize.Cosmetic)
+	end
 	for _, row in ipairs(standing.RankRewards or {}) do
 		add(row, row.Label)
 	end
@@ -199,7 +210,7 @@ function SeasonRewards.Claim(profile, seasonId, results, info)
 	if not standing.Ranked then
 		return false, "NotRanked"
 	end
-	local reward = SeasonRewards.Reward(standing)
+	local reward = SeasonRewards.Reward(standing, seasonId)
 	Premium.AddSunstones(profile, reward.Sunstones)
 	if (profile.Season.SeasonId or 0) <= seasonId then
 		-- still in that season's data (claimed before the next season started): the Wishstones would be wiped at the
@@ -250,10 +261,15 @@ local function extrasOf(row, classWord)
 	return extras
 end
 
-function SeasonRewards.Brackets()
+function SeasonRewards.Brackets(seasonId)
 	local out = { Percentiles = {}, Ranks = {}, ClassRanks = {}, MinStage = Config.MinStage, Stack = Config.StackRanks }
+	local prize = seasonPrize(seasonId)
 	for _, row in ipairs(Config.Percentiles) do
-		table.insert(out.Percentiles, { Label = row.Label, Sunstones = row.Sunstones, Wishstones = row.Wishstones, Extras = extrasOf(row, "class") })
+		local extras = extrasOf(row, "class")
+		if prize and row.Top <= prize.Top + 1e-9 then
+			table.insert(extras, cosmeticName(prize.Cosmetic, "class"))
+		end
+		table.insert(out.Percentiles, { Label = row.Label, Sunstones = row.Sunstones, Wishstones = row.Wishstones, Extras = extras })
 	end
 	for _, row in ipairs(Config.Ranks) do
 		table.insert(out.Ranks, { Label = row.Label, Sunstones = row.Sunstones, Extras = extrasOf(row, "class") })

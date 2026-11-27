@@ -605,6 +605,12 @@ local Enemies = {
 		IsBoss = true, DamageType = "Physical", EventOnly = true,
 		BaseStats = { MaxHealth = 1, Attack = 1, Defense = 1, AttackSpeed = 1, CritChance = 0 },
 	},
+	Oathbreaker = { -- season 1 (Bonds) season boss: the giant who breaks every bond
+		Id = "Oathbreaker", DisplayName = "The Oathbreaker",
+		Look = { Shape = "Golem", Color = { 70, 64, 96 }, Size = 13, Glow = { 190, 110, 255 }, Material = "Basalt" },
+		IsBoss = true, DamageType = "Physical", EventOnly = true,
+		BaseStats = { MaxHealth = 1, Attack = 1, Defense = 1, AttackSpeed = 1, CritChance = 0 },
+	},
 	-- Guild raid bosses (stats set by Shared/Bosses; fought from the guild's Raid tab)
 	RaidTitan = {
 		Id = "RaidTitan", DisplayName = "Stone Titan",

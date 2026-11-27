@@ -1162,8 +1162,8 @@ local function describe(standing)
 end
 
 function handlers.GetSeasonRewards(player, profile)
-	local out = { Brackets = SeasonRewards.Brackets(), MinStage = SeasonRewardConfig.MinStage, Pending = {} }
 	local seasonId = SeasonClock.CurrentId()
+	local out = { Brackets = SeasonRewards.Brackets(seasonId), MinStage = SeasonRewardConfig.MinStage, Pending = {} }
 	local season = SeasonClock.Def(seasonId)
 	out.Season = { Id = seasonId, Name = season and season.Name or "", EndsAt = season and season.EndsAt or 0 }
 	local score = math.max(0, math.floor(profile.Season.HighestStage))
@@ -1171,7 +1171,7 @@ function handlers.GetSeasonRewards(player, profile)
 	if results then
 		local standing = SeasonRewards.Standing(results, { UserId = player.UserId, Score = score, ClassId = profile.Season.ClassId })
 		out.Live = describe(standing)
-		out.Live.Projected = SeasonRewards.Reward(standing).Sunstones
+		out.Live.Projected = SeasonRewards.Reward(standing, seasonId).Sunstones
 		out.Live.Players = results.Total
 	else
 		out.Live = { Ranked = false, Score = score }
@@ -1184,7 +1184,7 @@ function handlers.GetSeasonRewards(player, profile)
 				local info = SeasonResultsService.InfoFor(player.UserId, id, final, profile)
 				local standing = SeasonRewards.Standing(final, info)
 				if standing.Ranked then
-					local reward = SeasonRewards.Reward(standing)
+					local reward = SeasonRewards.Reward(standing, id)
 					table.insert(out.Pending, { SeasonId = id, Name = def.Name, Standing = describe(standing), Reward = reward })
 				end
 			end

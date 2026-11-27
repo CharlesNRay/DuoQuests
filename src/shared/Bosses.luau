@@ -17,6 +17,7 @@
 	  Bosses.Claimable(profile, seasonId, cfg, fraction)  -> thresholds crossed, not yet claimed, if you contributed
 	  Bosses.Claim(profile, seasonId, cfg, thresholdId, fraction, stage) -> true, lines | false, reason
 	  Bosses.Hatch(profile, seasonId, cfg)          -> true, petId | false, reason ("NoEgg")
+	  Bosses.SeasonCfg(seasonDef)                   -> Config.Season with the season's own boss (Config/Seasons Boss: Name, DefId, Look) on top
 ]]
 
 local Entity = require(script.Parent.Combat.Entity)
@@ -28,6 +29,20 @@ local ConsumableConfig = require(script.Parent.Config.Consumables)
 local Gear = require(script.Parent.Gear)
 
 local Bosses = {}
+
+-- Each season can bring its own season boss: Config/Seasons [id].Boss overrides Name, DefId and Look (2026-11-27)
+local BossConfig = require(script.Parent.Config.Bosses)
+function Bosses.SeasonCfg(seasonDef)
+	local over = seasonDef and seasonDef.Boss
+	if not over then
+		return BossConfig.Season
+	end
+	local cfg = table.clone(BossConfig.Season)
+	for k, v in pairs(over) do
+		cfg[k] = v
+	end
+	return cfg
+end
 
 local HUGE = 1e12
 
@@ -147,7 +162,7 @@ function Bosses.Describe(rewards)
 		table.insert(lines, rewards.Gear.Rarity .. " gear")
 	end
 	if rewards.Egg then
-		table.insert(lines, "Colossus Egg")
+		table.insert(lines, "Season Boss Egg")
 	end
 	return lines
 end
@@ -244,7 +259,7 @@ function Bosses.Claim(profile, seasonId, cfg, thresholdId, fraction, stage)
 	local lines = Bosses.GrantRewards(profile, threshold.Rewards, stage)
 	if threshold.Rewards.Egg then
 		record.Egg = true
-		table.insert(lines, "Colossus Egg")
+		table.insert(lines, "Season Boss Egg")
 	end
 	return true, lines
 end

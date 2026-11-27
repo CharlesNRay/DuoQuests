@@ -122,5 +122,5 @@ require("./IconStatusTests")(m)
 m.Bestiary = require("./Bestiary") m.BestiaryConfig = require("./Config/Bestiary") m.ClassMastery = require("./ClassMastery") m.MasteryConfig = require("./Config/ClassMastery") m.ProfileTemplate = m.ProfileTemplate or require("./ProfileTemplate") m.Progression = m.Progression or require("./Progression") m.StageRunner = m.StageRunner or require("./StageRunner") m.DataSafety = m.DataSafety or require("./Util/DataSafety")
 require("./BestiaryMasteryTests")(m)
 
-m.Bonds = require("./Bonds") m.BondsConfig = require("./Config/Bonds") m.Party = m.Party or require("./Party") m.SeasonClock = m.SeasonClock or require("./SeasonClock")
+m.Bonds = require("./Bonds") m.BondsConfig = require("./Config/Bonds") m.Party = m.Party or require("./Party") m.SeasonClock = m.SeasonClock or require("./SeasonClock") m.Bosses = m.Bosses or require("./Bosses") m.SeasonRewards = m.SeasonRewards or require("./SeasonRewards") m.Cosmetics = m.Cosmetics or require("./Cosmetics")
 require("./BondsTests")(m)

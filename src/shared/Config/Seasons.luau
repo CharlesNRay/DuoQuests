@@ -20,12 +20,20 @@ return {
 	Seasons = {
 		[1] = {
 			Id = 1,
-			Name = "Prototype Season",
+			Name = "Unbroken",
 			-- unix seconds; the season boss withers in the last stretch so it dies near EndsAt
 			StartsAt = 1793491200, -- 2026-11-01 (placeholder: set real dates before launch)
 			EndsAt = 1801440000, -- 2027-02-01
 			-- The season's own mechanic (docs/SEASONS.md): "Bonds" (Config/Bonds) or "None".
 			Mechanic = "Bonds",
+			-- the season boss for this season (Bosses.SeasonCfg puts it over Config/Bosses Season): the giant who breaks
+			-- every bond, with broken shackles, snapped chains and violet cracks
+			Boss = {
+				Name = "The Oathbreaker", DefId = "Oathbreaker",
+				Look = { Color = { 70, 64, 96 }, Height = 90, EyeColor = { 190, 110, 255 }, Cracks = true, Chains = true, Material = "Basalt" },
+			},
+			-- this season's own prize on top of the usual rewards: the Kindred aura for everyone in the Top 20%
+			Prize = { Cosmetic = "Aura_Kindred", Top = 0.2 },
 		},
 	},
 

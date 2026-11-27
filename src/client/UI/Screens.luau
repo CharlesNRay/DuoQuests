@@ -1548,7 +1548,7 @@ function Screens.Boss(container, state, call, extra)
 		end)
 		b.Active = can
 		if s.Egg then
-			Kit.button({ Size = UDim2.new(1, -16, 0, 32), Position = UDim2.fromOffset(8, 166), Text = "🥚 Hatch the Colossus Egg", TextSize = 13, BackgroundColor3 = C.Up, Parent = left }, function()
+			Kit.button({ Size = UDim2.new(1, -16, 0, 32), Position = UDim2.fromOffset(8, 166), Text = "🥚 Hatch the Season Boss Egg", TextSize = 13, BackgroundColor3 = C.Up, Parent = left }, function()
 				local ok, data = call("BossHatch")
 				extra.BossMsg = if ok then ("It hatched: " .. tostring(data) .. "! Find it in Pets.") else ("Could not hatch: " .. tostring(data))
 				refresh()
