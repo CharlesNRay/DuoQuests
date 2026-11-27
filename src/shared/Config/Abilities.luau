@@ -1625,7 +1625,7 @@ return {
 		MinCooldown = 10,
 		Conditions = { SelfLacksStatus = "DeadEye" },
 		Effects = {
-			{ Type = "ApplyStatus", Target = "Self", Status = "DeadEye", Duration = 8, PerLevel = { Duration = 0.3, Strength = 0.03 } },
+			{ Type = "ApplyStatus", Target = "Self", Status = "DeadEye", Duration = 10, PerLevel = { Duration = 0.3, Strength = 0.03 } },
 			{ Type = "ApplyStatus", Target = "Primary", Status = "Tracked", Duration = 10, Stacks = 2, PerLevel = {} },
 		},
 	},

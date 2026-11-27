@@ -129,7 +129,7 @@ return {
 				{ Stat = "Attack", Mode = "Mul", Value = 0.25 },
 				{ Stat = "CritChance", Mode = "Add", Value = 0.1 },
 				{ Stat = "CritMultiplier", Mode = "Add", Value = 0.3 },
-				{ Stat = "DamageDealt", Mode = "Mul", Value = -0.10 }, --[[ was -0.500, then -0.40, -0.35, -0.30, -0.22: lowest two 3-run checks in a row (118, 114) ]] { Stat = "MaxHealth", Mode = "Mul", Value = 0 } }, -- health was -0.30, -0.15, -0.05; health was -0.30, then -0.20 (2026-11-26: long fights punish fragile damage dealers)
+				{ Stat = "DamageDealt", Mode = "Mul", Value = -0.03 }, --[[ was -0.500, then -0.40, -0.35, -0.30, -0.22, -0.10 (2026-11-26 lowest two after the skill pass): lowest two 3-run checks in a row (118, 114) ]] { Stat = "MaxHealth", Mode = "Mul", Value = 0 } }, -- health was -0.30, -0.15, -0.05; health was -0.30, then -0.20 (2026-11-26: long fights punish fragile damage dealers)
 			Skills = { "DeadEye", "Headshot", "Barrage" },
 		},
 		Beastmaster = {
@@ -174,7 +174,7 @@ return {
 				{ Stat = "MaxHealth", Mode = "Mul", Value = 0.12 }, -- was -0.028, then 0.06 (2026-11-26 roles: tankier; lowest in every partner check)
 				{ Stat = "Defense", Mode = "Mul", Value = 0.25 },
 				{ Stat = "DamageTaken", Mode = "Mul", Value = -0.14 }, -- was -0.1 (2026-11-26: lowest at L100, tankier)
-				{ Stat = "Attack", Mode = "Mul", Value = 0.18 }, -- was 0.12 (2026-11-26 partner checks: lowest)
+				{ Stat = "Attack", Mode = "Mul", Value = 0.24 }, -- was 0.12, 0.18 (2026-11-26 partner checks: lowest, again after the skill pass)
 				{ Stat = "AttackSpeed", Mode = "Mul", Value = 0.08 }, { Stat = "DamageDealt", Mode = "Mul", Value = 0 } }, -- was -0.264, then -0.20, -0.14, -0.08 (partner check L100 109-139); not raised further: the tanky Rogue should not out-damage the Assassin
 			Skills = { "Riposte", "Parry", "BladeDance" },
 		},

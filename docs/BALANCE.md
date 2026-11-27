@@ -502,3 +502,10 @@ maxed Rares avg +40% Mage / +37% Warrior vs rank-1 Epics avg +31% / +21%.
 Roster (12 paths x 3 seeds, L100): mean frontier 151 -> 156, spread 118-188 -> 124-183. Assassin 118 -> 170, Necromancer
 160 -> 183, SpiritCaller 144 -> 180, Priest 148 -> 165; Duelist 124 and Sharpshooter 130 lowest (noise is +-20-35).
 Worst boss wait 6 h.
+
+## Duelist + Sharpshooter lift (2026-11-26)
+The two lowest paths after the skills pass, judged on 6 seeds each (abl.sh `SEEDOFF` runs more seeds of one path as
+parallel jobs; 3 seeds were too noisy): Duelist Attack 0.18 -> 0.24: 124 -> 141 (108-177). Sharpshooter DamageDealt
+-0.10 -> -0.03 did nothing (130 -> 125); its own skill was the gap: Dead Eye's crit part is mostly wasted on a path that
+already crits a lot, so the DeadEye status attack x1.15 -> x1.3 and 8 -> 10 s (skillrank 17% -> 30% of the best Ranger
+buff; Pack Howl buffs the whole party): 125 -> 154 (123-192). Every path's average is now inside ~124-183.

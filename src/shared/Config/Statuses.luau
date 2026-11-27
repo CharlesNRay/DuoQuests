@@ -259,7 +259,7 @@ return {
 		Id = "DeadEye",
 		DisplayName = "Dead Eye",
 		Description = "Crit chance and attack greatly increased.",
-		Mods = { { Stat = "CritChance", Mode = "Add", Value = 0.3 }, { Stat = "Attack", Mode = "Mult", Value = 1.15 } },
+		Mods = { { Stat = "CritChance", Mode = "Add", Value = 0.3 }, { Stat = "Attack", Mode = "Mult", Value = 1.3 } }, -- attack was 1.15 (2026-11-26: Sharpshooter crit is already high, so the crit part was mostly wasted; skillrank 17% of best buff)
 	},
 	Emboldened = {
 		Id = "Emboldened",

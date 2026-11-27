@@ -519,7 +519,7 @@ local t0 = os.clock()
 for _, p in ipairs(paths) do
 	if only == nil or only == p[2] or only == p[1] then
 		for sd = 1, seeds do
-			local r = run(p[1], p[2], sd, goal)
+			local r = run(p[1], p[2], sd + (ARGS.SeedOffset or 0), goal)
 			local lv = {}
 			for _, g in ipairs({ 30, 60, 90 }) do table.insert(lv, ("L%d=%.1fh"):format(g, r.LevelAt[g] or -1)) end
 			local boss = {}
