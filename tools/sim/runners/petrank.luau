@@ -11,6 +11,7 @@ local Pets = require("./Pets")
 local CLASS = (... and select(1, ...)) or "Mage"
 local COMPS = { Mage = { "Warrior", "Cleric", "Ranger" }, Warrior = { "Cleric", "Mage", "Ranger" } }
 local LV, N = 60, 10
+local RANK = 1 -- pet rank for every pet (1..Config/Pets MaxRank); edit to compare maxed pets
 local COMP = COMPS[CLASS] or { "Warrior", "Cleric", "Ranger" }
 
 local function hero(c, petId)
@@ -23,6 +24,7 @@ local function hero(c, petId)
 	if petId then
 		p.Permanent.Pets = { [petId] = true }
 		p.Permanent.PetLevels = { [petId] = LV }
+		if RANK > 1 then p.Permanent.PetRanks = { [petId] = RANK } end
 		Pets.Equip(p, petId)
 	else
 		p.Permanent.Pets = {}

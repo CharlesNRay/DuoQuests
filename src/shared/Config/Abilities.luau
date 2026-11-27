@@ -754,12 +754,12 @@ return {
 	Cataclysm = {
 		Id = "Cataclysm", DisplayName = "Cataclysm", Description = "Ruin falls on every enemy and stuns them.", Class = "Mage", Subclass = "Cataclysm", Rarity = "Legendary",
 		Cooldown = 18, CooldownPerLevel = -0.3, MinCooldown = 10,
-		Effects = { { Type = "Damage", Target = "AllEnemies", Multiplier = 4.76, DamageType = "Magical", PerLevel = { Multiplier = 0.31 } }, { Type = "ApplyStatus", Target = "AllEnemies", Status = "Stunned", Duration = 1.5, PerLevel = { Duration = 0.1 } } },
+		Effects = { { Type = "Damage", Target = "AllEnemies", Multiplier = 5.85, DamageType = "Magical", PerLevel = { Multiplier = 0.38 } }, { Type = "ApplyStatus", Target = "AllEnemies", Status = "Stunned", Duration = 1.5, PerLevel = { Duration = 0.1 } } },
 	},
 	AbsoluteZero = {
 		Id = "AbsoluteZero", DisplayName = "Absolute Zero", Description = "Freezes the air: hurts every enemy and chills them (slower attacks).", Class = "Mage", Subclass = "Glacialist", Rarity = "Legendary",
 		Cooldown = 18, CooldownPerLevel = -0.3, MinCooldown = 10,
-		Effects = { { Type = "Damage", Target = "AllEnemies", Multiplier = 4.2, DamageType = "Magical", PerLevel = { Multiplier = 0.28 } }, { Type = "ApplyStatus", Target = "AllEnemies", Status = "Chilled", Duration = 6, PerLevel = { Duration = 0.1 } } },
+		Effects = { { Type = "Damage", Target = "AllEnemies", Multiplier = 5.6, DamageType = "Magical", PerLevel = { Multiplier = 0.37 } }, { Type = "ApplyStatus", Target = "AllEnemies", Status = "Chilled", Duration = 6, PerLevel = { Duration = 0.1 } } },
 	},
 	RainOfArrows = {
 		Id = "RainOfArrows", DisplayName = "Rain of Arrows", Description = "A volley on every enemy that leaves them bleeding.", Class = "Ranger", Subclass = "Marshal", Rarity = "Legendary",
@@ -774,22 +774,22 @@ return {
 	VanishingStrike = {
 		Id = "VanishingStrike", DisplayName = "Vanishing Strike", Description = "A huge strike from the shadows, then the Rogue vanishes (takes far less damage).", Class = "Rogue", Subclass = "Nightblade", Rarity = "Legendary",
 		Cooldown = 18, CooldownPerLevel = -0.3, MinCooldown = 10,
-		Effects = { { Type = "Damage", Target = "Primary", Multiplier = 11.16, PerLevel = { Multiplier = 0.78 } }, { Type = "ApplyStatus", Target = "Self", Status = "Evasive", Duration = 4, PerLevel = { Duration = 0.1 } } },
+		Effects = { { Type = "Damage", Target = "Primary", Multiplier = 15.1, PerLevel = { Multiplier = 1.05 } }, { Type = "ApplyStatus", Target = "Self", Status = "Evasive", Duration = 4, PerLevel = { Duration = 0.1 } } },
 	},
 	ThousandCuts = {
 		Id = "ThousandCuts", DisplayName = "Thousand Cuts", Description = "Four rapid strikes on one enemy that leave it bleeding.", Class = "Rogue", Subclass = "Swordsaint", Rarity = "Legendary",
 		Cooldown = 18, CooldownPerLevel = -0.3, MinCooldown = 10,
-		Effects = { { Type = "Damage", Target = "Primary", Multiplier = 2.33, PerLevel = { Multiplier = 0.16 } }, { Type = "Damage", Target = "Primary", Multiplier = 2.33, PerLevel = { Multiplier = 0.16 } }, { Type = "Damage", Target = "Primary", Multiplier = 2.33, PerLevel = { Multiplier = 0.16 } }, { Type = "Damage", Target = "Primary", Multiplier = 2.33, PerLevel = { Multiplier = 0.16 } }, { Type = "ApplyStatus", Target = "Primary", Status = "Bleeding", Duration = 6, PerLevel = { Duration = 0.1 } } },
+		Effects = { { Type = "Damage", Target = "Primary", Multiplier = 3.6, PerLevel = { Multiplier = 0.25 } }, { Type = "Damage", Target = "Primary", Multiplier = 3.6, PerLevel = { Multiplier = 0.25 } }, { Type = "Damage", Target = "Primary", Multiplier = 3.6, PerLevel = { Multiplier = 0.25 } }, { Type = "Damage", Target = "Primary", Multiplier = 3.6, PerLevel = { Multiplier = 0.25 } }, { Type = "ApplyStatus", Target = "Primary", Status = "Bleeding", Duration = 6, PerLevel = { Duration = 0.1 } } },
 	},
 	SoulHarvest = {
 		Id = "SoulHarvest", DisplayName = "Soul Harvest", Description = "Reaps every enemy and heals you.", Class = "Summoner", Subclass = "Lich", Rarity = "Legendary",
 		Cooldown = 18, CooldownPerLevel = -0.3, MinCooldown = 10,
-		Effects = { { Type = "Damage", Target = "AllEnemies", Multiplier = 2.8, DamageType = "Magical", PerLevel = { Multiplier = 0.19 } }, { Type = "Heal", Target = "Self", Multiplier = 2.0, PerLevel = { Multiplier = 0.1 } } },
+		Effects = { { Type = "Damage", Target = "AllEnemies", Multiplier = 4.2, DamageType = "Magical", PerLevel = { Multiplier = 0.28 } }, { Type = "Heal", Target = "Self", Multiplier = 2.0, PerLevel = { Multiplier = 0.1 } } },
 	},
 	AncestralWrath = {
 		Id = "AncestralWrath", DisplayName = "Ancestral Wrath", Description = "The ancestors strike every enemy and curse them.", Class = "Summoner", Subclass = "AncestralSage", Rarity = "Legendary",
 		Cooldown = 18, CooldownPerLevel = -0.3, MinCooldown = 10,
-		Effects = { { Type = "Damage", Target = "AllEnemies", Multiplier = 3.0, DamageType = "Magical", PerLevel = { Multiplier = 0.2 } }, { Type = "ApplyStatus", Target = "AllEnemies", Status = "Cursed", Duration = 6, PerLevel = { Duration = 0.1 } } },
+		Effects = { { Type = "Damage", Target = "AllEnemies", Multiplier = 4.05, DamageType = "Magical", PerLevel = { Multiplier = 0.27 } }, { Type = "ApplyStatus", Target = "AllEnemies", Status = "Cursed", Duration = 6, PerLevel = { Duration = 0.1 } } },
 	},
 
 	-- Monster skills (regular enemies): short, readable moves. Not in any class pool. Anim = how the monster moves while casting.
@@ -1028,7 +1028,7 @@ return {
 		MinCooldown = 9,
 		Conditions = { SelfLacksStatus = "Fortified" },
 		Effects = {
-			{ Type = "ApplyStatus", Target = "AllAllies", Status = "Fortified", Duration = 6, PerLevel = { Duration = 0.4 } },
+			{ Type = "ApplyStatus", Target = "AllAllies", Status = "Fortified", Duration = 8, PerLevel = { Duration = 0.4 } }, -- was 6 (weakest pet)
 		},
 	},
 
@@ -1129,7 +1129,7 @@ return {
 	Pet_Zephyr = {
 		Id = "Pet_Zephyr",
 		DisplayName = "Tailwind",
-		Description = "Speeds up its owner's attacks for a while.",
+		Description = "Speeds up the whole party's attacks for a while.", -- was its owner only (2026-11-26 petrank: weakest Rare, below the Commons)
 		Class = "Pet",
 		Pet = true,
 		Rarity = "Rare",
@@ -1138,7 +1138,7 @@ return {
 		MinCooldown = 9,
 		Conditions = { SelfLacksStatus = "Frenzied" },
 		Effects = {
-			{ Type = "ApplyStatus", Target = "Self", Status = "Frenzied", Duration = 6, PerLevel = { Duration = 0.4 } },
+			{ Type = "ApplyStatus", Target = "AllAllies", Status = "Frenzied", Duration = 6, PerLevel = { Duration = 0.4 } },
 		},
 	},
 
@@ -1299,8 +1299,10 @@ return {
 		MinCooldown = 8,
 		Conditions = { AllyHealthBelow = 0.85 },
 		Effects = {
-			{ Type = "Heal", Target = "AllAllies", Multiplier = 1.0, PerLevel = { Multiplier = 0.12 } },
-			{ Type = "Shield", Target = "AllAllies", Multiplier = 1.2, PercentMaxHealth = 0.08, Duration = 8, PerLevel = { Multiplier = 0.1, PercentMaxHealth = 0.01, Duration = 0.3 } },
+			-- 2026-11-26: heal also 4% max health, shield 8% -> 12% max health (petrank: below six Epics for a Warrior; the pet's own
+			-- attack is small, so multipliers did little; Power stays under the prize pets)
+			{ Type = "Heal", Target = "AllAllies", Multiplier = 1.0, PercentMaxHealth = 0.04, PerLevel = { Multiplier = 0.12, PercentMaxHealth = 0.004 } },
+			{ Type = "Shield", Target = "AllAllies", Multiplier = 1.2, PercentMaxHealth = 0.12, Duration = 8, PerLevel = { Multiplier = 0.1, PercentMaxHealth = 0.012, Duration = 0.3 } },
 		},
 	},
 
@@ -1421,7 +1423,7 @@ return {
 		MinCooldown = 8,
 		Element = "Fire",
 		Effects = {
-			{ Type = "Damage", Target = "Primary", Multiplier = 7.04, PerLevel = { Multiplier = 0.48 } },
+			{ Type = "Damage", Target = "Primary", Multiplier = 9.85, PerLevel = { Multiplier = 0.67 } },
 			{ Type = "Heal", Target = "Self", Multiplier = 0, PercentMaxHealth = 0.08, PerLevel = { PercentMaxHealth = 0.004 } },
 		},
 	},

@@ -486,3 +486,19 @@ bosses unchanged; a boss's summons inherit its attack factor). About the same da
 Frontiers after: Berserker 188, Templar 167, Beastmaster 165, FrostWeaver 165, Necromancer 160, Guardian 157, Priest 148,
 SpiritCaller 144, Sharpshooter 141, Duelist 132, Pyromancer 130, Assassin 118 (within the +-20-35 noise of earlier runs).
 The progress time moved from boss walls into the normal stages; bosses still stop a party briefly (avg 0-0.5 h).
+
+## Skills and pets pass (2026-11-26, after the boss fix)
+Skills (`runners/skillrank.luau`): every skill had its second purpose; the gap was rarity. Legendary damage skills sat at
+51-69% of the best skill of their class + category (often a Common), raised to 75-84% (their second job on top):
+Cataclysm 4.76 -> 5.85, Absolute Zero 4.2 -> 5.6, Vanishing Strike 11.16 -> 15.1, Thousand Cuts 4 x 2.33 -> 4 x 3.6,
+Ancestral Wrath 3.0 -> 4.05, Soul Harvest 2.8 -> 4.2 (PerLevel scaled the same); Epic Phoenix Fire 7.04 -> 9.85 (49% -> 59%).
+
+Pets (`runners/petrank.luau`, Mage and Warrior; `RANK` setting added): Aurora (Legendary) was +41% Mage / +17% Warrior
+(below six Epics): stats Haste + Crit -> MaxHealth 0.6 + Haste 0.6, heal + shield partly on max health -> +47% / +31%,
+still under the prize Crownling (Power unchanged). Zephyr's Tailwind now hastes the whole party; Mossback buff 6 -> 8 s.
+Owner rule: pets below Epic are meant to go obsolete; only check that a max-rank Rare beats a rank-1 Epic. It does:
+maxed Rares avg +40% Mage / +37% Warrior vs rank-1 Epics avg +31% / +21%.
+
+Roster (12 paths x 3 seeds, L100): mean frontier 151 -> 156, spread 118-188 -> 124-183. Assassin 118 -> 170, Necromancer
+160 -> 183, SpiritCaller 144 -> 180, Priest 148 -> 165; Duelist 124 and Sharpshooter 130 lowest (noise is +-20-35).
+Worst boss wait 6 h.

@@ -132,7 +132,7 @@ return {
 			Id = "Zephyr", DisplayName = "Zephyr", Rarity = "Rare", Wish = true,
 			Look = { Shape = "Bird", Color = { 130, 200, 235 }, Size = 1.1 },
 			Stats = { { Stat = "AttackSpeed", Share = 0.7 }, { Stat = "Haste", Share = 0.5 } },
-			Skill = { Name = "Tailwind", Text = "Speeds up its owner's attacks for a while." },
+			Skill = { Name = "Tailwind", Text = "Speeds up the whole party's attacks for a while." },
 		},
 		Frostwing = {
 			Id = "Frostwing", DisplayName = "Frostwing", Rarity = "Epic", Wish = true,
@@ -167,7 +167,7 @@ return {
 		Aurora = {
 			Id = "Aurora", DisplayName = "Aurora", Rarity = "Legendary", Wish = true, Power = 1.25, -- below Epics (petrank 2026-11-26)
 			Look = { Shape = "Wisp", Color = { 120, 255, 200 }, Size = 1.6 },
-			Stats = { { Stat = "Haste", Share = 0.7 }, { Stat = "CritChance", Share = 0.5 } },
+			Stats = { { Stat = "MaxHealth", Share = 0.6 }, { Stat = "Haste", Share = 0.6 } }, -- was Haste 0.7 + Crit 0.5 (2026-11-26: worth +41% to a Mage, +17% to a Warrior)
 			Skill = { Name = "Aurora Veil", Text = "Heals and shields the whole party." },
 		},
 		-- Guild pets (Guild = true): only from the Guild Wish (see Config/Guilds.Wish), never the Wishing Tree or shards
