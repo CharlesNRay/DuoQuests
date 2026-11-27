@@ -36,6 +36,8 @@ local Gear = require(Shared.Gear)
 local ProfileTemplate = require(Shared.ProfileTemplate)
 local TableUtil = require(Shared.Util.TableUtil)
 local DataSafety = require(Shared.Util.DataSafety)
+local SeasonClock = require(Shared.SeasonClock)
+local SeasonRollover = require(Shared.SeasonRollover)
 
 local DATASTORE_NAME = "IPQ_PlayerData"
 local AUTOSAVE_INTERVAL = 120 -- seconds between autosaves (also refreshes the lock)
@@ -175,8 +177,10 @@ local function saveSession(userId, session, release)
 			end
 		end
 		session.Data.Meta.LastSaveAt = os.time()
+		-- a Studio test season (SeasonClock.StartNext) is never saved: the stored profile stays as it was
+		local keepStored = SeasonClock.IsTest() and old ~= nil and old.Data ~= nil
 		return {
-			Data = session.Data,
+			Data = if keepStored then old.Data else session.Data,
 			SessionLock = if release then nil else { JobId = SERVER_ID, Timestamp = os.time() },
 		}, { userId } -- the key's user ids (Roblox uses them for data-removal requests)
 	end)
@@ -318,6 +322,11 @@ function DataService.LoadProfile(player)
 		return nil, "NewerSchema"
 	end
 	TableUtil.Reconcile(data, ProfileTemplate.Defaults())
+	-- first join after a new season started: every character starts that season fresh (Permanent stays)
+	local news = SeasonRollover.Apply(data, SeasonClock.CurrentId(os.time()), os.time())
+	if news then
+		print(("[DataService] Profile %d moved from season %d to season %d"):format(userId, news.From, news.To))
+	end
 	Gear.EnsureStarter(data) -- everybody starts with a weapon (old profiles too)
 
 	-- Player may have left while we were loading.

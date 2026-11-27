@@ -286,5 +286,25 @@ return function(modulesOverride)
 	check("...gear, talents and claimed milestones included", pf and #pf.Season.Equipment.Inventory == gearCount and next(pf.Season.StageRewardsClaimed or {}) ~= nil)
 	check(("Calls to the DataStore stay modest (%d for this whole test)"):format(calls), calls < 200)
 
+	-- 13. a new season: the next load moves the profile into it (here a test season, which is never saved)
+	if m.SeasonClock then
+		local G = newServer("server-G")
+		local pg, _, ug = G.Join(701)
+		pg.Permanent.Character.Created = true
+		pg.Season.Level = 55
+		pg.Season.HighestStage = 90
+		G.Leave(ug)
+		m.SeasonClock.StartNext(now)
+		local H = newServer("server-H")
+		local ph, _, uh = H.Join(701)
+		check("Joining after a new season started: the hero starts it fresh", ph ~= nil and ph.Season.SeasonId == 2 and ph.Season.Level == 1 and ph.Season.HighestStage == 1)
+		check("...and last season is in the history", ph and ph.Permanent.SeasonHistory["1"] and ph.Permanent.SeasonHistory["1"].Characters[1].Level == 55)
+		check("...the profile can be saved as it is", ph and #DS.Problems(ph) == 0)
+		H.Leave(uh)
+		check("A test season never reaches the stored profile", stored["Player_701"].Data.Season.SeasonId == 1 and stored["Player_701"].Data.Season.Level == 55)
+		check("...but the lock is still released", stored["Player_701"].SessionLock == nil)
+		m.SeasonClock.ClearOverride()
+	end
+
 	print(("DataServiceTests done: %d passed, %d failed"):format(passed, failed))
 end

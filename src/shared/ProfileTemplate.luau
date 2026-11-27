@@ -38,7 +38,7 @@
 	     unlocked class starts with its first passive equipped
 ]]
 
-local Seasons = require(script.Parent.Config.Seasons)
+local SeasonClock = require(script.Parent.SeasonClock)
 local Skills = require(script.Parent.Skills)
 local Passives = require(script.Parent.Passives)
 
@@ -167,7 +167,7 @@ function ProfileTemplate.Defaults()
 			-- PartyId is added when the player joins a party
 		},
 
-		Season = ProfileTemplate.NewSeasonData(Seasons.CurrentSeasonId),
+		Season = ProfileTemplate.NewSeasonData(SeasonClock.CurrentId()),
 	}
 end
 

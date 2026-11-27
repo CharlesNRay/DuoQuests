@@ -41,6 +41,8 @@ require("./PremiumTests")(m)
 
 m.SeasonRewards = require("./SeasonRewards") m.SeasonRewardsConfig = require("./Config/SeasonRewards")
 require("./SeasonRewardsTests")(m)
+m.SeasonClock = require("./SeasonClock") m.SeasonRollover = require("./SeasonRollover") m.Characters = require("./Characters") m.DataSafety = m.DataSafety or require("./Util/DataSafety")
+require("./SeasonRolloverTests")(m)
 
 m.Cosmetics = require("./Cosmetics") m.CosmeticsConfig = require("./Config/Cosmetics")
 require("./CosmeticsTests")(m)

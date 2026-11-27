@@ -58,6 +58,26 @@ Players.PlayerRemoving:Connect(function(player)
 	DataService.ReleaseProfile(player)
 end)
 
+-- A new season can start while this server runs (Shared/SeasonClock). Profiles move into it when they load, so players
+-- who are online at the switch are asked to rejoin (their data saves as they leave). Test seasons (Studio cheat) do not kick.
+local SeasonClock = require(game:GetService("ReplicatedStorage"):WaitForChild("Shared").SeasonClock)
+task.spawn(function()
+	local running = SeasonClock.CurrentId()
+	while true do
+		task.wait(30)
+		local current = SeasonClock.CurrentId()
+		if current ~= running then
+			running = current
+			if not SeasonClock.IsTest() then
+				local name = (SeasonClock.Def(current) or {}).Name or ("Season " .. current)
+				for _, player in ipairs(Players:GetPlayers()) do
+					player:Kick(("%s has begun! Rejoin to start the new season. Your pets, passes and collections are kept."):format(name))
+				end
+			end
+		end
+	end
+end)
+
 -- Cover players who joined before this script finished starting.
 for _, player in ipairs(Players:GetPlayers()) do
 	task.spawn(onPlayerAdded, player)

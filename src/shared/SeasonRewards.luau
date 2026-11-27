@@ -177,11 +177,18 @@ local function ledger(profile)
 		profile.Permanent.SeasonRewards = a
 	end
 	a.Claimed = a.Claimed or {}
+	-- keys are strings ("1", "2"): number keys with a gap (season 2 claimed, 1 not) cannot be saved in a DataStore
+	for k, v in pairs(a.Claimed) do
+		if type(k) == "number" then
+			a.Claimed[k] = nil
+			a.Claimed[tostring(k)] = v
+		end
+	end
 	return a.Claimed
 end
 
 function SeasonRewards.Claimed(profile, seasonId)
-	return ledger(profile)[seasonId] == true
+	return ledger(profile)[tostring(seasonId)] == true
 end
 
 function SeasonRewards.Claim(profile, seasonId, results, info)
@@ -194,8 +201,15 @@ function SeasonRewards.Claim(profile, seasonId, results, info)
 	end
 	local reward = SeasonRewards.Reward(standing)
 	Premium.AddSunstones(profile, reward.Sunstones)
-	local currencies = profile.Season.Currencies
-	currencies.Wishstones = (currencies.Wishstones or 0) + reward.Wishstones
+	if (profile.Season.SeasonId or 0) <= seasonId then
+		-- still in that season's data (claimed before the next season started): the Wishstones would be wiped at the
+		-- switch, so they wait and SeasonRollover adds them to the new season
+		local a = profile.Permanent.SeasonRewards
+		a.CarryWishstones = (a.CarryWishstones or 0) + reward.Wishstones
+	else
+		local currencies = profile.Season.Currencies
+		currencies.Wishstones = (currencies.Wishstones or 0) + reward.Wishstones
+	end
 	for id, count in pairs(reward.Tickets) do
 		Consumables.Grant(profile, id, count)
 	end
@@ -212,11 +226,11 @@ function SeasonRewards.Claim(profile, seasonId, results, info)
 			profile.Permanent.Pets[petId] = true
 		end
 	end
-	ledger(profile)[seasonId] = true
+	ledger(profile)[tostring(seasonId)] = true
 	-- a small history record for the profile screen
-	profile.Permanent.SeasonHistory[tostring(seasonId)] = {
-		Percent = standing.Percent, Rank = standing.Rank, ClassRank = standing.ClassRank, Score = standing.Score,
-	}
+	local history = profile.Permanent.SeasonHistory[tostring(seasonId)] or {} -- may already hold Characters (SeasonRollover)
+	history.Percent, history.Rank, history.ClassRank, history.Score = standing.Percent, standing.Rank, standing.ClassRank, standing.Score
+	profile.Permanent.SeasonHistory[tostring(seasonId)] = history
 	return true, reward, standing
 end
 

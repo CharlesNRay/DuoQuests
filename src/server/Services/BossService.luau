@@ -27,15 +27,13 @@ local Bosses = require(Shared.Bosses)
 local World = require(Shared.World)
 local Quests = require(Shared.Quests)
 local Cfg = require(Shared.Config.Bosses)
-local SeasonConfig = require(Shared.Config.Seasons)
+local SeasonClock = require(Shared.SeasonClock)
 
 local BossService = {}
 
 local IS_STUDIO = RunService:IsStudio()
 local WORLD = Cfg.World
 local SEASON = Cfg.Season
-local seasonId = SeasonConfig.CurrentSeasonId
-local seasonInfo = SeasonConfig.Seasons[seasonId]
 
 local push, getProfile
 local worldModel, colossusModel, hpLabel
@@ -52,6 +50,20 @@ local function duration() return IS_STUDIO and WORLD.StudioDuration or WORLD.Dur
 local season = { GlobalDamage = 0, Pending = 0 }
 local lastSeasonChallenge = {}
 local store
+
+-- The season can change while this server runs (SeasonClock): a new season brings a fresh boss.
+local seasonIdNow = SeasonClock.CurrentId()
+local function seasonId()
+	local id = SeasonClock.CurrentId()
+	if id ~= seasonIdNow then
+		seasonIdNow = id
+		season.GlobalDamage, season.Pending = 0, 0 -- the sync loop reads the new season's shared total
+	end
+	return id
+end
+local function seasonInfo()
+	return SeasonClock.Def(seasonId())
+end
 
 local function glowPart(parent, name, size, position, color, shape, material)
 	local part = Instance.new("Part")
@@ -185,7 +197,7 @@ local function seasonNow()
 end
 
 local function seasonHealth()
-	return Bosses.SeasonHealth(SEASON, season.GlobalDamage + season.Pending, seasonNow(), seasonInfo.StartsAt, seasonInfo.EndsAt)
+	return Bosses.SeasonHealth(SEASON, season.GlobalDamage + season.Pending, seasonNow(), seasonInfo().StartsAt, seasonInfo().EndsAt)
 end
 
 local function refreshColossus()
@@ -206,7 +218,7 @@ local function syncSeason()
 	local delta = season.Pending
 	if store then
 		local ok, result = pcall(function()
-			return store:UpdateAsync("S" .. seasonId, function(old)
+			return store:UpdateAsync("S" .. seasonId(), function(old)
 				return (old or 0) + delta
 			end)
 		end)
@@ -287,7 +299,7 @@ function BossService.GetState(player, profile)
 	}
 
 	local hp, fraction = seasonHealth()
-	local record = Bosses.Record(profile, seasonId)
+	local record = Bosses.Record(profile, seasonId())
 	local thresholds = {}
 	local crossed = {}
 	for _, t in ipairs(Bosses.SeasonCrossed(SEASON, fraction)) do
@@ -305,7 +317,7 @@ function BossService.GetState(player, profile)
 		MaxHealth = SEASON.MaxHealth,
 		Fraction = fraction,
 		Dead = hp <= 0,
-		EndsIn = math.max(0, seasonInfo.EndsAt - now),
+		EndsIn = math.max(0, seasonInfo().EndsAt - now),
 		Damage = record.Best, -- your best fight: the part of the boss's health you have taken
 		Challenges = record.Challenges,
 		CooldownLeft = math.max(0, math.ceil(SEASON.ChallengeCooldown - (os.clock() - (lastSeasonChallenge[player.UserId] or -1e9)))),
@@ -355,11 +367,11 @@ function BossService.Challenge(player, profile, which, team)
 		local damage, fight = runFight(profile, player, SEASON, frontier, team)
 		Quests.Record(profile, "Strike", 1)
 		-- only a new personal best moves the boss, and only by the improvement
-		local gain = Bosses.RecordBest(profile, seasonId, math.floor(damage))
+		local gain = Bosses.RecordBest(profile, seasonId(), math.floor(damage))
 		season.Pending += gain
 		refreshColossus()
 		local _, after = seasonHealth()
-		local record = Bosses.Record(profile, seasonId)
+		local record = Bosses.Record(profile, seasonId())
 		return true, { Damage = math.floor(damage), Best = record.Best, Gain = gain, Fraction = after, Fight = fight, Label = SEASON.Name }
 	end
 	return false, "BadArgs"
@@ -367,11 +379,11 @@ end
 
 function BossService.Claim(player, profile, thresholdId)
 	local _, fraction = seasonHealth()
-	return Bosses.Claim(profile, seasonId, SEASON, thresholdId, fraction, profile.Season.HighestStage)
+	return Bosses.Claim(profile, seasonId(), SEASON, thresholdId, fraction, profile.Season.HighestStage)
 end
 
 function BossService.Hatch(player, profile)
-	return Bosses.Hatch(profile, seasonId, SEASON)
+	return Bosses.Hatch(profile, seasonId(), SEASON)
 end
 
 -- Studio cheat: start the world boss now (it ends on its normal timer).
@@ -401,7 +413,7 @@ function BossService.Init(pushRemote, profileGetter)
 	end
 	if store then
 		local ok, value = pcall(function()
-			return store:GetAsync("S" .. seasonId)
+			return store:GetAsync("S" .. seasonId())
 		end)
 		season.GlobalDamage = ok and type(value) == "number" and value or 0
 	end

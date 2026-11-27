@@ -24,7 +24,7 @@
 ]]
 
 local ProfileTemplate = require(script.Parent.ProfileTemplate)
-local Seasons = require(script.Parent.Config.Seasons)
+local SeasonClock = require(script.Parent.SeasonClock)
 local Character = require(script.Parent.Character)
 local Gear = require(script.Parent.Gear)
 local Passes = require(script.Parent.Passes)
@@ -95,7 +95,7 @@ function Characters.Create(profile, classId)
 	if not Character.Playable(profile, classId) then
 		return false, "BadClass"
 	end
-	local season = ProfileTemplate.NewSeasonData(Seasons.CurrentSeasonId)
+	local season = ProfileTemplate.NewSeasonData(SeasonClock.CurrentId())
 	season.ClassId = classId
 	ProfileTemplate.GrantClassStarters(season, classId)
 	profile.Permanent.UnlockedClasses[classId] = true
@@ -114,7 +114,7 @@ function Characters.Select(profile, slot)
 		if active ~= 0 and list[active] then
 			list[active].Season = profile.Season
 		end
-		profile.Season = list[slot].Season or ProfileTemplate.NewSeasonData(Seasons.CurrentSeasonId)
+		profile.Season = list[slot].Season or ProfileTemplate.NewSeasonData(SeasonClock.CurrentId())
 		list[slot].Season = nil
 		profile.Season.ClassId = list[slot].ClassId
 		profile.Permanent.ActiveSlot = slot

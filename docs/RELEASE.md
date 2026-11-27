@@ -23,18 +23,25 @@ Legend: **[owner]** only you can do it, **[claude]** I build or check it, **[bot
 - [ ] [both] **BIG: First 10 minutes.** Tutorial, menu, town size: can a new player find their way without help?
 
 ## 3. Seasons (needed before the first season ends)
-Today: one season, "Prototype Season", dates are placeholders (Nov 1 to Feb 1). The end-of-season rewards
+Built 2026-11-27 (tests green, NOT seen in Studio): the season schedule and the rollover. The end-of-season rewards
 (leaderboards, brackets, frozen results, prize pets and auras) are built and tested headless, NEVER run live.
-- [ ] [claude] **BIG: Season rollover is not built.** Nothing moves a player into the new season when
-      `CurrentSeasonId` changes: their old season data would just carry on. Needed: on join, if the player's
-      `Season.SeasonId` is old, pay their season prizes, keep Permanent (pets, passes, collections, cosmetics),
-      start fresh season data for every character slot; parties, guild raids, market, boss records follow the new id.
-- [ ] [claude] Season switch without republishing (the config says "later this moves to a DataStore key").
-- [ ] [claude] A headless test that runs a whole season end: results freeze, prizes paid once, new season starts.
-- [ ] [both] Run a fake short season on the live game (e.g. a 1-hour season) before the real one ends.
+- [x] [claude] Season rollover (`Shared/SeasonRollover`): on the first join after a switch every character keeps its
+      class and starts fresh; kept: everything under Permanent plus unused items, bag size and wish pity
+      (`Config/Seasons.Carry`). Last season's characters go into SeasonHistory; a "Season N begins" card shows once.
+- [x] [claude] Season switch without republishing: the current season is the newest one in `Config/Seasons` whose
+      StartsAt has passed (`Shared/SeasonClock`). Add the next season ahead of time; players online at the switch are
+      asked to rejoin. Season boss, leaderboards, results, parties and the market follow the new id.
+- [x] [claude] Headless tests: SeasonRolloverTests (31) + a DataService section (load after a switch).
+- [ ] [claude] Studio check with the Test cheats > "Start next season" button (memory only: nothing is saved and
+      the real leaderboards are not touched): new-season card, level 1, party back at stage 1, Season screen reward.
+- [ ] [both] A real switch on the live game before the first real season ends (e.g. a short season added to the
+      schedule during the playtest). NOTE: it uses real season ids, so launch then needs the fresh start below.
 - [ ] [owner] Season length and launch dates (suggested: first season 4 weeks, then 6-week seasons).
 - [ ] [owner] Does each season get something new? (The config has a `Mechanic` hook: elements, relics, curses...,
       none built.) Season 1 can launch without one, but season 2 should probably have something.
+- [ ] [claude] Fresh start at launch, if wanted: playtest seasons leave data in the season-keyed stores
+      (`IPQ_Leaderboard_S<n>`, `IPQ_SeasonResults`, `IPQ_SeasonBoss`, `IPQ_SeasonHist_S<n>`) and in players' saves;
+      either rename the stores or start launch at a season id the playtest never used.
 
 ## 4. Scale and safety (before going public)
 - [ ] [claude] **BIG: Performance with a full server.** 16 players = up to 16 lots, each with 4 heroes, summons, pets,
@@ -63,7 +70,7 @@ Today: one season, "Prototype Season", dates are placeholders (Nov 1 to Feb 1). 
 - [ ] [claude] Watch the error log and session lengths for the first days; hotfix list ready.
 
 ## Not sure yet, a fair bit of work (summary)
-1. **Season rollover**: missing, must exist before the first season ends.
+1. **Season rollover**: built 2026-11-27, headless only; needs a Studio check and one live switch.
 2. **Full-server performance**: never measured.
 3. **Pacing with real players**: only sim-tested; may need a round of retuning after playtests.
 4. **Live multiplayer** (cross-server party, guild load, session locks): only headless tests.

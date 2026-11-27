@@ -104,6 +104,7 @@ return function(modulesOverride)
 	-- claiming
 	local p = ProfileTemplate.New()
 	p.Season.Currencies.Wishstones = 5
+	p.Season.SeasonId = 2 -- already playing the next season (claimed during season 1, the Wishstones wait: SeasonRolloverTests)
 	local ok, claimed = SR.Claim(p, 1, results, { UserId = 11, Score = 12, ClassId = "Warrior" })
 	check("Claim succeeds", ok == true)
 	check("Claim adds Sunstones", Premium.Sunstones(p) == expected)

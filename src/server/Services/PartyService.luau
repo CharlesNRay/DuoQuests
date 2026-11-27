@@ -50,7 +50,7 @@ local Party = require(Shared.Party)
 local Pets = require(Shared.Pets)
 local Hero = require(Shared.Hero)
 local OfflineConfig = require(Shared.Config.Offline)
-local Seasons = require(Shared.Config.Seasons)
+local SeasonClock = require(Shared.SeasonClock)
 local Character = require(Shared.Character)
 local Characters = require(Shared.Characters)
 
@@ -256,7 +256,7 @@ function attach(player, profile)
 	end
 
 	partyOf[userId] = partyId
-	local seasonId = Seasons.CurrentSeasonId
+	local seasonId = SeasonClock.CurrentId()
 	local partnerOnline = partnerIsOnline(entry, userId)
 	Party.OpenSession(entry.Record, seasonId, userId, nameOf(player, profile), profile, partnerOnline, now())
 	entry.Online[userId] = { Player = player, Profile = profile, Name = nameOf(player, profile) }
@@ -282,7 +282,7 @@ end
 
 function PartyService.OnPlayerReady(player, profile)
 	local userId = player.UserId
-	local seasonId = Seasons.CurrentSeasonId
+	local seasonId = SeasonClock.CurrentId()
 
 	local partyId = profile.Permanent.PartyId
 	if partyId ~= nil then
@@ -349,7 +349,7 @@ function PartyService.JoinByCode(player, code)
 	end
 	local profile = online.Profile
 
-	local ok, joined, abandoned = PartyCore.JoinByCode(deps, userId, nameOf(player, profile), profile, Seasons.CurrentSeasonId, code)
+	local ok, joined, abandoned = PartyCore.JoinByCode(deps, userId, nameOf(player, profile), profile, SeasonClock.CurrentId(), code)
 	if not ok then
 		return false, joined
 	end
@@ -406,7 +406,7 @@ function PartyService.Leave(player)
 	end
 
 	-- Everyone always has a party: start a fresh solo one.
-	local created, reason = PartyCore.CreateSolo(deps, userId, nameOf(player, profile), profile, Seasons.CurrentSeasonId)
+	local created, reason = PartyCore.CreateSolo(deps, userId, nameOf(player, profile), profile, SeasonClock.CurrentId())
 	if not created then
 		warn("[PartyService] Could not create a new party after leaving: " .. tostring(reason))
 		return true

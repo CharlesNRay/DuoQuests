@@ -101,7 +101,8 @@ local TextService = game:GetService("TextService")
 local CodeList = require(script.Parent.Parent.Data.CodeList) -- server only: clients never see the list
 local CosmeticConfig = require(Shared.Config.Cosmetics)
 local SeasonRewardConfig = require(Shared.Config.SeasonRewards)
-local SeasonConfig = require(Shared.Config.Seasons)
+local SeasonClock = require(Shared.SeasonClock)
+local SeasonRollover = require(Shared.SeasonRollover)
 local SeasonResultsService = require(script.Parent.SeasonResultsService)
 
 local ApiService = {}
@@ -250,7 +251,7 @@ local function buildState(player)
 			IP = Power.Hero(profile),
 			Tutorial = Tutorial.Of(profile),
 			Activities = Activities.Of(profile, os.time()),
-			Market = Market.Of(profile, os.time(), SeasonConfig.CurrentSeasonId),
+			Market = Market.Of(profile, os.time(), SeasonClock.CurrentId()),
 			PetShards = Pets.Shards(profile),
 			PetShardInfo = { PetCost = require(Shared.Config.Pets).Shards.PetCost, CondenseCost = require(Shared.Config.Pets).Shards.CondenseCost },
 			PetCollection = (function() local c = Pets.Collection(profile) return { Points = c.Points, Percent = c.Percent } end)(),
@@ -306,6 +307,7 @@ local function buildState(player)
 		state.Party = party
 	end
 	state.LastClaim = PartyService.GetLastClaim(player)
+	state.SeasonNews = profile.Permanent.SeasonNews -- the "new season" card (SeasonRollover), until SeenSeasonNews
 	return state
 end
 
@@ -550,7 +552,7 @@ function handlers.MarketBuy(player, profile, id)
 	if type(id) ~= "string" then
 		return false, "BadArgs"
 	end
-	local ok, lines = Market.Buy(profile, id, os.time(), SeasonConfig.CurrentSeasonId)
+	local ok, lines = Market.Buy(profile, id, os.time(), SeasonClock.CurrentId())
 	if ok then
 		afterBuildChange(player)
 	end
@@ -1014,6 +1016,19 @@ function handlers.PlaytestRead(player, _, days)
 	return true, PlaytestService.Read(days)
 end
 
+function DEV_ACTIONS.NewSeason(profile, _, player)
+	-- ends this season now and starts the next, for this Studio server only (memory: no real DataStore is touched and
+	-- no profile is saved until Studio stops); counts your character for the ending season first
+	local old = SeasonClock.CurrentId()
+	local newId = SeasonClock.StartNext()
+	SeasonResultsService.ReportNow(old, player.UserId, profile.Season.HighestStage, profile.Season.ClassId)
+	SeasonResultsService.Results(old) -- freeze it now, while it holds only this score
+	SeasonRollover.Apply(profile, newId, os.time())
+	-- re-enter the party: it follows the new season (Party.EnsureSeason: stage 1)
+	PartyService.OnPlayerLeaving(player)
+	PartyService.OnPlayerReady(player, profile)
+	return ("Season %d started (test, not saved). Season %d rewards are on the Season screen."):format(newId, old)
+end
 function handlers.Dev(player, profile, action, n)
 	if not game:GetService("RunService"):IsStudio() then
 		return false, "Forbidden"
@@ -1145,8 +1160,8 @@ end
 
 function handlers.GetSeasonRewards(player, profile)
 	local out = { Brackets = SeasonRewards.Brackets(), MinStage = SeasonRewardConfig.MinStage, Pending = {} }
-	local seasonId = SeasonConfig.CurrentSeasonId
-	local season = SeasonConfig.Seasons[seasonId]
+	local seasonId = SeasonClock.CurrentId()
+	local season = SeasonClock.Def(seasonId)
 	out.Season = { Id = seasonId, Name = season and season.Name or "", EndsAt = season and season.EndsAt or 0 }
 	local score = math.max(0, math.floor(profile.Season.HighestStage))
 	local results = liveResults()
@@ -1158,7 +1173,8 @@ function handlers.GetSeasonRewards(player, profile)
 	else
 		out.Live = { Ranked = false, Score = score }
 	end
-	for id, def in pairs(SeasonConfig.Seasons) do
+	for _, id in ipairs(SeasonClock.Ids()) do
+		local def = SeasonClock.Def(id)
 		if SeasonResultsService.Ended(id) and not SeasonRewards.Claimed(profile, id) then
 			local final = SeasonResultsService.Results(id)
 			if final then
@@ -1177,8 +1193,13 @@ function handlers.GetSeasonRewards(player, profile)
 	return true, out
 end
 
+function handlers.SeenSeasonNews(_, profile)
+	SeasonRollover.SeenNews(profile)
+	return true
+end
+
 function handlers.ClaimSeasonRewards(player, profile, seasonId)
-	if type(seasonId) ~= "number" or SeasonConfig.Seasons[seasonId] == nil then
+	if type(seasonId) ~= "number" or SeasonClock.Def(seasonId) == nil then
 		return false, "BadArgs"
 	end
 	if not SeasonResultsService.Ended(seasonId) then

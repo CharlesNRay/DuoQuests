@@ -25,7 +25,7 @@ local RunService = game:GetService("RunService")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Leaderboards = require(Shared.Leaderboards)
-local Seasons = require(Shared.Config.Seasons)
+local SeasonClock = require(Shared.SeasonClock)
 
 local DataService = require(script.Parent.DataService)
 
@@ -44,7 +44,7 @@ local refreshCallback = nil
 local initialized = false
 
 local function storeName(categoryId)
-	return ("IPQ_Leaderboard_S%d_%s"):format(Seasons.CurrentSeasonId, categoryId)
+	return ("IPQ_Leaderboard_S%d_%s"):format(SeasonClock.CurrentId(), categoryId)
 end
 
 local function nameOf(userId)

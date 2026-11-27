@@ -16,6 +16,7 @@ local ROWS = {
 	{ Title = "Wishes (Wishstones + wish tickets)", Buttons = { { "+500 stones, 25 tickets", "Wishes", 1 }, { "+5K stones, 250 tickets", "Wishes", 10 } } },
 	{ Title = "Items and pets", Buttons = { { "Test items", "Items", 1 }, { "Gear for my stage", "StageGear", 1 }, { "All pets, max level", "Pets", 1 } } },
 	{ Title = "Timers and events", Buttons = { { "Reset dailies", "Daily", 1 }, { "Spawn world boss", "WorldBoss", 1 } } },
+	{ Title = "Season (test, not saved)", Buttons = { { "Start next season", "NewSeason", 1 } } },
 	{ Title = "Passes (toggle)", Buttons = { { "Premium quest pass", "Premium", 1 }, { "+2 char slots", "SlotPass", 1 }, { "VIP pass", "VipPass", 1 } } },
 }
 
