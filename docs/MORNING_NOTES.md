@@ -28,6 +28,9 @@ not playing. (The notes from 2026-11-15 are in git history.)
   the record stayed season 1). `Party.EnsureSeason` only resets forward.
 - Season screen said "Reach stage 3 to be ranked (you are on stage 4)" while waiting for the next bracket update.
 - Boss/dungeon arena banners sat on top of the stage card (moved lower); the stage battle card hides during those fights.
+- Relic 2 could not be picked up: it sat inside the pet park ball's prompt range and "Play with your pet" always won
+  (moved to the park's back corner; `tools/sim/runners/relicprobe.luau` lists prompts near each relic). The
+  "ALL RELICS FOUND!" card cut off its second line (it now grows). All 10 relics + the card seen in Studio.
 
 ## Performance (first real numbers, docs/RELEASE.md section 4)
 Test cheats > "Stress test" fills the free lots with fake parties. On your PC, 16 lots, standing among them: ~55 fps,

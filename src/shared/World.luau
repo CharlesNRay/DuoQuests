@@ -184,7 +184,7 @@ World.TownSpots = {
 	CampDrop = { X = -150, Z = 370 }, -- the camp's stores
 	-- hidden relics (Shared/TownLeisure)
 	Relic1 = { District = "Grove", X = 6, Z = 44 }, -- behind the Wishing Tree
-	Relic2 = { District = "PetArea", X = 24, Z = -2 }, -- by the doghouse in the pet park
+	Relic2 = { District = "PetArea", X = 26.5, Z = -6.5 }, -- the pet park's back corner behind the doghouse (beside it, the ball's "Play with your pet" prompt always won; tools/sim/runners/relicprobe.luau)
 	Relic3 = { District = "Housing", X = 37, Z = 17 }, -- behind the Sleepy Griffin
 	Relic4 = { District = "Housing", X = -14, Z = 36 }, -- behind Old Mabel's garden
 	Relic5 = { District = "Training", X = -32, Z = 20 }, -- beside the sparring ring

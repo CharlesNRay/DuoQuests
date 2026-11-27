@@ -70,6 +70,14 @@ function Celebrate.Show(root, title, subtitle, color)
 	small.TextWrapped = true
 	small.ZIndex = 41
 	small.Parent = holder
+	-- a long subtitle wraps: grow the card so the second line is not cut off (the all-relics line was)
+	local okSize, bounds = pcall(function()
+		return game:GetService("TextService"):GetTextSize(small.Text, 18, Enum.Font.GothamBold, Vector2.new(440, 1000))
+	end)
+	if okSize and bounds.Y > 30 then
+		small.Size = UDim2.new(1, -20, 0, bounds.Y + 4)
+		holder.Size = UDim2.fromOffset(460, 80 + bounds.Y + 8)
+	end
 	TweenService:Create(scale, TweenInfo.new(0.45, Enum.EasingStyle.Back, Enum.EasingDirection.Out), { Scale = 1 }):Play()
 	task.delay(3.2, function()
 		if active ~= holder then
