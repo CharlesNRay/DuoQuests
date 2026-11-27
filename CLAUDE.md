@@ -93,6 +93,10 @@ Renamed 2026-11-23: only player-visible text says Idle Party Quest (menu title, 
   (GetSortedAsync budget checked, `READS_PER_REFRESH`/`RESERVE`), follows the season (stores rebuilt, old scores
   forgotten, no writes after a season ends); SeasonResultsService only reads the boards (LeaderboardService writes them)
   and counts each player once in the Top-% histogram via `Shared/SeasonHistogram` (`Permanent.SeasonHist`).
+- **Stress test 2026-11-27** (SEEN in Studio): Test cheats "Stress test" row (client-only, `client/Battle/StressTest.luau`)
+  fills free lots with fake parties and prints `STRESS` lines; Arenas caps neighbour fights at 6 (3 touch/low gfx);
+  Apply/Hub.SetLots skip unchanged lots; PartyService loop yields after 20 ms; `tools/sim/fightbench.sh` times fights.
+  Studio command bar DataStore/HttpService commands pop a "Dangerous Command" dialog (Continue once).
 - **Studio test mute**: Workspace attribute `StudioMute = true` (Edit mode, command bar) silences all game sound in Studio
   (owner asked: no sound while Claude tests). Set it before test runs, clear it (nil) before Ctrl+S.
 

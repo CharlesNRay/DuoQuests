@@ -353,6 +353,16 @@ function Arenas:_wireClicks(arena)
 	end
 end
 
+-- What a lot's card, sign and idle heroes show: World snapshots arrive every 3 s, and rebuilding all of it for every
+-- party each time was pure waste (stress test 2026-11-27), so Apply redraws a lot only when this changes.
+local function partySig(party)
+	local parts = { tostring(party.Stage) }
+	for _, m in ipairs(party.Members or {}) do
+		table.insert(parts, ("%s/%s/%s/%s/%s/%s"):format(tostring(m.UserId), tostring(m.Name), tostring(m.Level), tostring(m.ClassId), tostring(m.PetId), tostring(m.Online)))
+	end
+	return table.concat(parts, "|")
+end
+
 function Arenas:Apply(snapshot)
 	local seen = {}
 	self.Mine = nil
@@ -385,19 +395,24 @@ function Arenas:Apply(snapshot)
 				self.OnZone(party.Slot, zone.Theme) -- Main re-tints the sky if this is the fight being watched
 			end
 		end
-		fillCard(arena.Label, party, zone)
+		local sig = partySig(party)
 		arena.Party, arena.ZoneDef = party, zone
-		if self.FocusSlot == party.Slot and self.Screen then
-			fillCard(self.Screen, party, zone)
-		end
-		local big, small = ownerText(party)
-		for _, signLabel in ipairs(arena.SignLabels) do
-			signLabel.Name.Text = big
-			signLabel.Rest.Text = small
+		if arena.CardSig ~= sig then
+			arena.CardSig = sig
+			fillCard(arena.Label, party, zone)
+			if self.FocusSlot == party.Slot and self.Screen then
+				fillCard(self.Screen, party, zone)
+			end
+			local big, small = ownerText(party)
+			for _, signLabel in ipairs(arena.SignLabels) do
+				signLabel.Name.Text = big
+				signLabel.Rest.Text = small
+			end
 		end
 		arena.Prompt.ActionText = if party.Slot == self.Mine then "Battle view" else "Watch battle"
 		arena.Prompt.ObjectText = (party.Members[1] and party.Members[1].Name or "") .. " - " .. zone.Name
-		if not arena.Fighting then
+		if not arena.Fighting and arena.IdleSig ~= sig then
+			arena.IdleSig = sig
 			arena.Replay:Idle(rosterOf(party))
 		end
 		arena.Replay.OnBanner = if party.Slot == self.Mine then self.OnBanner else nil
@@ -438,16 +453,44 @@ function Arenas:Focus(slot)
 	end
 end
 
--- Draw a fight in a slot. Others' fights are skipped when you are far away.
+-- How many OTHER parties' fights may animate at once (yours always does). Stress test 2026-11-27 (StressTest, 16 lots,
+-- standing among them): 8 animating lots on a PC cost ~2 ms a frame on average but p95 rose 21 -> 25-33 ms; phones
+-- are several times slower, so touch screens and low graphics settings watch fewer neighbours.
+local function othersCap()
+	local cap = 6
+	local okQ, quality = pcall(function()
+		return UserSettings():GetService("UserGameSettings").SavedQualityLevel.Value
+	end)
+	if Kit.Touch then
+		cap = 3
+	end
+	if okQ and quality ~= 0 and quality <= 3 then -- 0 = Automatic
+		cap = math.min(cap, 3)
+	end
+	return cap
+end
+
+function Arenas:_othersFighting()
+	local n = 0
+	for s, arena in pairs(self.BySlot) do
+		if s ~= self.Mine and arena.Fighting then
+			n += 1
+		end
+	end
+	return n
+end
+
+-- Draw a fight in a slot. Others' fights are skipped when you are far away, or when enough of them already play.
 function Arenas:Play(slot, info, onDone)
 	local arena = self:_get(slot)
-	if slot ~= self.Mine and distanceTo(arena.Scene.Origin) > WATCH_DISTANCE then
+	if slot ~= self.Mine and (distanceTo(arena.Scene.Origin) > WATCH_DISTANCE or (not arena.Fighting and self:_othersFighting() >= othersCap())) then
 		if onDone then
 			onDone()
 		end
 		return
 	end
 	arena.Fighting = true
+	arena.IdleSig = nil -- the next snapshot after this fight lines the heroes up again
 	arena.Replay.OnBanner = if slot == self.Mine then self.OnBanner else nil
 	if slot == self.Mine and self.OnBanner and Stages.IsBoss(info.Stage) then
 		self.OnBanner("BOSS STAGE", Color3.fromRGB(255, 120, 90))

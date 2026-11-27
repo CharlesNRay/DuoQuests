@@ -927,10 +927,17 @@ function PartyService.Init()
 		while true do
 			task.wait(LOOP_INTERVAL)
 			local currentTime = now()
+			-- One fight simulation takes 5-40 ms (tools/sim/fightbench.sh); a full server's 16 parties falling due on
+			-- the same tick would stall the server for half a second, so yield a frame after ~20 ms of work.
+			local sliceStart = os.clock()
 			for _, entry in pairs(table.clone(hosted)) do
 				local ok, err = pcall(tickEntry, entry, currentTime)
 				if not ok then
 					warn("[PartyService] Tick failed: " .. tostring(err))
+				end
+				if os.clock() - sliceStart > 0.02 then
+					task.wait()
+					sliceStart = os.clock()
 				end
 			end
 		end

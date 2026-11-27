@@ -48,9 +48,16 @@ Built 2026-11-27 (tests green, NOT seen in Studio): the season schedule and the 
       either rename the stores or start launch at a season id the playtest never used.
 
 ## 4. Scale and safety (before going public)
-- [ ] [claude] **BIG: Performance with a full server.** 16 players = up to 16 lots, each with 4 heroes, summons, pets,
-      particles and damage numbers. Never measured. Needs a stress test (fake fights on all lots in Studio, watch
-      frame time, memory and network), then cutting effects at distance if needed.
+- [~] [claude] **Performance with a full server** (first pass 2026-11-27, Studio on the owner's PC; phones NOT measured).
+      Client: Test cheats > "Stress test" fills the free lots with fake parties replaying your latest fight and prints
+      `STRESS` lines (frame avg/p95/worst, memory, parts, slowest fight start/event/snapshot). 16 lots, standing among
+      them: 8 animating = avg 18 ms (~55 fps), p95 25-33 ms, worst 70-110 ms vs 1 lot avg 16.7 (60 fps cap), p95 21,
+      worst 28. Fight starts take <= 5 ms, events <= 3 ms, so the hitches are rendering, not our Lua. Changes: at most
+      6 neighbour fights animate at once (3 on touch / low graphics; yours always), lots, cards and open-lot markers
+      are only redrawn when they change (every 3 s snapshot rebuilt all of them; now 0.2-5 ms). Server: one fight
+      simulation costs 5-38 ms (`tools/sim/fightbench.sh`); the party loop now yields after ~20 ms of work so 16
+      parties falling due together cannot stall the server. Still open: a real phone with a busy server, network
+      (ArenaFight pushes) on a live 16-player server.
 - [x] [claude] DataStore budget (2026-11-27, from the code; not measured live). Roblox per server per minute:
       reads (GetAsync + every UpdateAsync) and writes 60 + 10/player (220 at 16 players), sorted reads 5 + 2/player.
       Full server worst case (everyone improving every minute): writes ~105 (16 solo parties saving every 30 s = 32,
@@ -82,7 +89,7 @@ Built 2026-11-27 (tests green, NOT seen in Studio): the season schedule and the 
 
 ## Not sure yet, a fair bit of work (summary)
 1. **Season rollover**: built 2026-11-27, seen in Studio with the test cheat; needs one live switch.
-2. **Full-server performance**: never measured.
+2. **Full-server performance**: PC measured in Studio (fine); phones and live network not measured.
 3. **Pacing with real players**: only sim-tested; may need a round of retuning after playtests.
 4. **Live multiplayer** (cross-server party, guild load, session locks): only headless tests.
 5. **Late game**: stages loop after 200, balance checked to L100 (~150 h); no real player gets near it before launch,

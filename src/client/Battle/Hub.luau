@@ -595,10 +595,22 @@ function Hub.SetDailyReady(ready)
 end
 
 -- Mark every lot nobody has taken, so the world looks ready for more players.
+local lotsKey = nil
 function Hub.SetLots(taken)
 	if not lotFolder then
 		return
 	end
+	-- World snapshots come every 3 s: only rebuild the open-lot markers when the taken lots changed
+	local slots = {}
+	for slot in pairs(taken) do
+		table.insert(slots, tostring(slot))
+	end
+	table.sort(slots)
+	local key = table.concat(slots, ",")
+	if key == lotsKey then
+		return
+	end
+	lotsKey = key
 	for _, child in ipairs(lotFolder:GetChildren()) do
 		child:Destroy()
 	end

@@ -9,7 +9,7 @@ if [ -z "$A" ]; then
   if command -v luau-analyze >/dev/null 2>&1; then A=luau-analyze; elif [ -x "$HOME/bin/luau-analyze.exe" ]; then A="$HOME/bin/luau-analyze.exe"; fi
 fi
 if [ -z "$A" ]; then echo "lint: skipped (no luau-analyze)"; exit 0; fi
-R='game|task|warn|script|Instance|Enum|CFrame|Vector3|Vector2|Vector3int16|Vector2int16|Color3|UDim2|UDim|TweenInfo|workspace|typeof|tick|Ray|NumberSequence|ColorSequence|NumberRange|BrickColor|Rect|NumberSequenceKeypoint|ColorSequenceKeypoint|PhysicalProperties|Font|DateTime|RaycastParams|OverlapParams|delay|spawn|wait|settings|plugin|shared|Random|Faces|Axes|Region3|PathWaypoint|elapsedTime|time|version|require|SharedTable|utf8|buffer|vector'
+R='game|task|warn|script|Instance|Enum|CFrame|Vector3|Vector2|Vector3int16|Vector2int16|Color3|UDim2|UDim|TweenInfo|workspace|typeof|tick|Ray|NumberSequence|ColorSequence|NumberRange|BrickColor|Rect|NumberSequenceKeypoint|ColorSequenceKeypoint|PhysicalProperties|Font|DateTime|RaycastParams|OverlapParams|delay|spawn|wait|settings|plugin|shared|Random|Faces|Axes|Region3|PathWaypoint|elapsedTime|time|version|require|SharedTable|utf8|buffer|vector|UserSettings|stats|gcinfo|debug'
 cd "$ROOT"
 n=0
 for f in $(git ls-files 'src/*.luau' 'src/**/*.luau'); do

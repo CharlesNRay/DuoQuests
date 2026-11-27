@@ -54,6 +54,7 @@ local BossArena = require(script.Parent.Battle.BossArena)
 local PetFollower = require(script.Parent.Battle.PetFollower)
 local BattleCamera = require(script.Parent.Battle.BattleCamera)
 local ZoneLighting = require(script.Parent.Battle.ZoneLighting)
+local StressTest = require(script.Parent.Battle.StressTest)
 
 local folder = ReplicatedStorage:WaitForChild(Remotes.FolderName)
 local api = folder:WaitForChild(Remotes.Api)
@@ -137,8 +138,10 @@ local mapPinKey = function(snapshot)
 	return table.concat(parts, ",")
 end
 local function applyWorld(snapshot)
+	local applyStart = os.clock()
 	lastWorld = snapshot
 	extra.World = snapshot
+	snapshot = StressTest.Merge(snapshot) -- Studio stress test: fake parties on the free lots (nil effect otherwise)
 	arenas:Apply(snapshot)
 	local mine = arenas:MySlot()
 	if mine then
@@ -149,6 +152,7 @@ local function applyWorld(snapshot)
 		taken[party.Slot] = true
 	end
 	Hub.SetLots(taken)
+	StressTest.Note(os.clock() - applyStart)
 	-- keep the map's player pins current without redrawing it every few seconds for nothing
 	local key = mapPinKey(snapshot)
 	if key ~= lastMapKey then
@@ -500,6 +504,24 @@ extra.OpenPanel = function(name, label)
 end
 extra.RefreshSeason = function()
 	showSeason(true)
+end
+-- Studio stress test (Test cheats): fill the free lots with fake parties replaying your latest fight
+extra.Stress = function(n)
+	if not RunService:IsStudio() then
+		return false, "Studio only"
+	end
+	if n <= 0 then
+		StressTest.Stop()
+		return true, "stopped"
+	end
+	return StressTest.Start(n, {
+		Arenas = arenas, UserId = Players.LocalPlayer.UserId, ApplyWorld = applyWorld,
+		GetWorld = function() return lastWorld end,
+		GetFight = function() return extra.LastFight end,
+	})
+end
+extra.StressLine = function()
+	return StressTest.Last
 end
 extra.OpenSeason = function()
 	extra.SeasonMsg = nil
