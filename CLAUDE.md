@@ -155,7 +155,7 @@ Git Bash; they find a working Python themselves (`python3`/`python` there are St
    (their skills: pick a slot, Earlier/Later, swap in any skill they own; Party ultimate: icon row + Equip). Checked the rest in Studio:
    Hero, Skills, Map, Quests, Store, Battle, Wish were already in the new style. VIP second pet slot done 2026-11-16 (`Pets.Second`, support pet: its stats count, only the main pet fights; Pets screen "Set 2nd"; not seen in Studio).
 4. DONE 2026-11-22 (tests green, NOT seen in Studio): guild chat (Guild > Chat tab, `GuildService.Chat`, filtered, 30 kept, 1 msg/3 s), gifting (`Shared/Gifts`, Bag > Stash "🎁 Gift" to online party/guild mates on this server, 5 sent/10 received a day, no wish tickets), cosmetics try-on (Cosmetics shop "Try", 60 s, local only via `CosmeticsVisuals.TryOn`). (Skipped-tutorial payout notice DONE 2026-11-19: the Fight push carries `Reward.Tutorial`, the HUD toast shows it after that fight; toast is now 520x40 and wraps. Not seen in Studio.)
-5. Owner-side: create the VIP and Extra Character Slots Game Passes + Sunstone Developer Products and give the ids (`GamePassId`/`ProductId` are 0); upload `branding/logo.png` (new Idle Party Quest art, `branding/make_art.py`) and set `Config/Branding.LogoImage`.
+5. Owner-side: Game Passes (VIP, Extra Character Slots) and the 4 Sunstone products HAVE real ids (Config/Premium). Still open: upload `branding/logo.png` and set `Config/Branding.LogoImage` (empty).
 6. DONE 2026-11-22: `docs/ROADMAP.md` has a 2026-11-17..22 entry; keep adding a dated entry when a batch of work lands.
 
 - **Skill rework 2026-11-19** (tests green, NOT seen in Studio): class combos (builders add layers, a finisher consumes them),
