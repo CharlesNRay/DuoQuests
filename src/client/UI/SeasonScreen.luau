@@ -108,6 +108,9 @@ function SeasonScreen.Season(container, state, call, extra)
 			table.insert(bits, ("rank #%d as %s"):format(live.ClassRank, live.ClassId))
 		end
 		mine = table.concat(bits, "  -  ") .. ("  -  about 🔶 %s now"):format(commas(live.Projected or 0))
+	elseif (live.Score or 1) >= (data.MinStage or 1) then
+		-- high enough, but the shared brackets are only updated about once a minute (SeasonResultsService)
+		mine = ("Furthest stage %d - you will show up in the brackets within a few minutes."):format(live.Score or 1)
 	else
 		mine = ("Reach stage %d to be ranked (you are on stage %d)."):format(data.MinStage, live.Score or 1)
 	end

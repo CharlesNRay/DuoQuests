@@ -6,7 +6,8 @@
 	  Afk     = { Gold, XP, Shards, Fights, Seconds, Stage, LevelsGained } the AFK farming while everyone was offline
 	  At      = os.time() of the claim (so the same claim is only shown once)
 
-	  waiting = { { glyph, text } }   things ready for you now (an expedition back, the daily chest), listed under the rewards
+	  waiting = { { glyph, text, onClick? } }   things ready for you now (an expedition back, the daily chest), listed under
+	                                           the rewards; with onClick the line is a button (closes the card, then calls it)
 
 	  WelcomeBack.Worth(claim, waiting)        -> true when there is anything to show
 	  WelcomeBack.Show(root, claim, waiting)   the card (stays until Nice! is pressed)
@@ -96,7 +97,18 @@ function WelcomeBack.Show(root, claim, waiting)
 	-- what is waiting for you now
 	local wy = 82 + #rows * 24 + (if #rows > 0 then 6 else 0)
 	for i, w in ipairs(waiting) do
-		Kit.label({ Size = UDim2.new(1, -40, 0, 22), Position = UDim2.fromOffset(20, wy + (i - 1) * 24), Text = w[1] .. "  " .. w[2], TextSize = 13, Font = Enum.Font.GothamBold, TextColor3 = C.Accent, TextWrapped = true, ZIndex = 62, Parent = card })
+		if type(w[3]) == "function" then
+			-- a line with somewhere to go: a button that closes the card and opens it
+			Kit.button({ Size = UDim2.new(1, -40, 0, 22), Position = UDim2.fromOffset(20, wy + (i - 1) * 24), Text = w[1] .. "  " .. w[2] .. "  >", TextSize = 13, Font = Enum.Font.GothamBold, BackgroundColor3 = C.PanelLight, TextColor3 = C.Accent, ZIndex = 62, Parent = card }, function()
+				if open == card then
+					open = nil
+				end
+				card:Destroy()
+				w[3]()
+			end)
+		else
+			Kit.label({ Size = UDim2.new(1, -40, 0, 22), Position = UDim2.fromOffset(20, wy + (i - 1) * 24), Text = w[1] .. "  " .. w[2], TextSize = 13, Font = Enum.Font.GothamBold, TextColor3 = C.Accent, TextWrapped = true, ZIndex = 62, Parent = card })
+		end
 	end
 	card.Size = UDim2.fromOffset(400, wy + #waiting * 24 + 70)
 

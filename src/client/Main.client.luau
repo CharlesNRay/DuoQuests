@@ -1046,7 +1046,11 @@ function extra.CheckWelcome()
 			for _, row in ipairs(news.Characters or {}) do
 				table.insert(waiting, 1, { "📜", ("Last season: %s, level %d, stage %d"):format(tostring(row.ClassId), row.Level or 1, row.HighestStage or 1) })
 			end
-			table.insert(waiting, 1, { "🎖", ("Season %d rewards: open the Season screen"):format(news.From or 0) })
+			table.insert(waiting, 1, { "🎖", ("Season %d rewards: open the Season screen"):format(news.From or 0), function()
+				if extra.OpenSeason then
+					extra.OpenSeason()
+				end
+			end })
 			table.insert(waiting, 1, { "🐾", "Pets, passes and collections are kept" })
 			table.insert(waiting, 1, { "🏆", ("Season %d has begun! Heroes restart at level 1"):format(news.To or 0) })
 			Celebrate.Show(root, ("SEASON %d BEGINS!"):format(news.To or 0), "A fresh start for every hero", Color3.fromRGB(255, 214, 90))
