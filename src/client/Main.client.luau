@@ -1083,6 +1083,9 @@ task.spawn(function()
 				end
 			end
 		end
+		if BossArena.IsActive() then
+			focus = nil -- a boss / dungeon / duel fight is on screen: the stage card would describe the wrong fight
+		end
 		if focus ~= arenas.FocusSlot then
 			arenas:Focus(focus)
 		end

@@ -79,8 +79,10 @@ Built 2026-11-27 (tests green, NOT seen in Studio): the season schedule and the 
 - [ ] [both] Sound: loudness music vs effects, boss music switching, the wish sounds (nobody has listened yet).
 - [ ] [owner] Open questions: Pet Food price (Market 2,304g x5 vs Pet Store 6,900g each), Crypt pay at stage 6,
       the 3 town questions in docs/TOWN.md (fishing + pet park, sparring ring, town size).
-- [ ] [claude] Remaining never-seen UI (docs/TODO.md list): wave banners, auras once won, relic title, hand-made
-      fishing catch, Elder's errand, expedition sign, pet shard bar.
+- [ ] [claude] Remaining never-seen UI (docs/TODO.md list): auras once won, relic title, hand-made fishing catch,
+      Elder's errand, pet shard bar. SEEN 2026-11-27 (test season as a sandbox: nothing saved): dungeon wave banner
+      ("Wave 2 / 3"; boss-arena banners moved below the stage card, the stage battle card hides during boss/dungeon
+      fights), fallen-ally tags + "fell!" pop + banner, expedition-ready sign over the camp, flat daily gift, Collection.
 
 ## 6. Launch day
 - [ ] [owner] Set the real season dates, final save-store decision, publish.
