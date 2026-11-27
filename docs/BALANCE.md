@@ -509,3 +509,19 @@ parallel jobs; 3 seeds were too noisy): Duelist Attack 0.18 -> 0.24: 124 -> 141 
 -0.10 -> -0.03 did nothing (130 -> 125); its own skill was the gap: Dead Eye's crit part is mostly wasted on a path that
 already crits a lot, so the DeadEye status attack x1.15 -> x1.3 and 8 -> 10 s (skillrank 17% -> 30% of the best Ranger
 buff; Pack Howl buffs the whole party): 125 -> 154 (123-192). Every path's average is now inside ~124-183.
+
+## Gold sinks and income (2026-11-27)
+Bot `GOLD` lines (per 20-level band: gold per game hour, where it went, gold held). Before: income grew ~250x from
+L20 to L80 (`GoldCurve` Growth 1.065 every stage) while everything gold buys has a fixed price; past L40 gear and
+skill slots were maxed and nearly all gold went to 24K Pet Store crates (L80-99: 1.5-28M/h).
+Changes (owner OK, "gear keeps growing with gold as you level"):
+- `Economy.GoldCurve` SlowFrom 40, LateGrowth 1.035 (`Progression.GoldCurve`); everything priced in "clears" follows.
+- Gear upgrade cap grows with the hero: +10, then one more every 4 levels past 40, up to +30 (`Gear.MaxUpgrade`,
+  `Config/Gear.Upgrade.LevelCap`). Levels past +10 add 3% each (not 10%) and cost x1.18 per level.
+- The bot now upgrades worn gear first and saves for the next upgrade; the Pet Store gets half of what is above that.
+- Season 1 mechanic Bonds is in these runs (+0.5% Attack/Health per bond level, the hero bonds with its companions).
+Result (one seed, companion): L100 frontier Priest 98 (was 98), Pyromancer 101 (was 88), Berserker 175 (was 133);
+L100 in 132-143 h (was 113-191 h). Gear takes 40-65% of gold at L40-79; at L80-99 gold per hour is 1.1-5M and
+rune pouches / pet crates take most of it again (gear caps out between level steps). Berserker is the outlier.
+More seeds (same build): Berserker 175 / 152 / 133 (mean ~153), Guardian 126, Sharpshooter 98, Beastmaster 105.
+Warrior paths lead the roster by ~30-50% in frontier at L100 (they led before this change too: 133 vs 88-98).

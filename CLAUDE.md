@@ -97,6 +97,13 @@ Renamed 2026-11-23: only player-visible text says Idle Party Quest (menu title, 
   fills free lots with fake parties and prints `STRESS` lines; Arenas caps neighbour fights at 6 (3 touch/low gfx);
   Apply/Hub.SetLots skip unchanged lots; PartyService loop yields after 20 ms; `tools/sim/fightbench.sh` times fights.
   Studio command bar DataStore/HttpService commands pop a "Dangerous Command" dialog (Continue once).
+- **Gold + Bonds 2026-11-27** (tests green, 55 suites, NOT seen in Studio): pet food only at the Pet Store (gone from
+  the Market and the Merchant); gold grows slower past stage 40 (`Economy.GoldCurve` SlowFrom/LateGrowth); gear upgrade
+  cap grows with hero level up to +30 (`Gear.MaxUpgrade`, Blacksmith shows it); bot `GOLD` lines (BALANCE.md "Gold
+  sinks"). Season 1 `Mechanic = "Bonds"`: `Shared/Bonds` + `Config/Bonds`, `Season.Bonds[heroKey]` (user id, or
+  "c:Name" for companions), bonus via `member.BondMods` in `Party.OnlineTick` -> `StageRunner.NewParty` (stage fights
+  only, not boss/dungeon), Party screen "💞 Bonds" tab, Fight push `BondUps` notice, titles at 5/10. Ideas for later
+  seasons: docs/SEASONS.md. Owner: playtest does not carry into launch; first season 4 weeks.
 - **Studio test mute**: Workspace attribute `StudioMute = true` (Edit mode, command bar) silences all game sound in Studio
   (owner asked: no sound while Claude tests). Set it before test runs, clear it (nil) before Ctrl+S.
 

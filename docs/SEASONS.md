@@ -27,7 +27,8 @@ name, season boss look, prize aura and a title.
    a shared reward track. Most social, most new code (a server-wide event).
 
 ## Suggested order
-- **Season 1 (launch, 4 weeks): Bonds.** Simple, co-op first, safe to build and balance before launch.
+- **Season 1 (launch, 4 weeks): Bonds.** PICKED and BUILT 2026-11-27 (Config/Bonds, Shared/Bonds; on for the playtest
+  season too). Not seen in Studio yet. Still to make: its season boss look, prize aura and season name.
 - **Season 2: Elemental tides.** Weekly change, reuses the elemental zones; light on new UI.
 - **Season 3: Relics.** The big build-variety season, once the base game balance is settled from real players.
 - Later: Mutations, Curses, Invasion.
