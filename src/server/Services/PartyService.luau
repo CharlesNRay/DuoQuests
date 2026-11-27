@@ -100,17 +100,57 @@ end
 local function newDataStoreStore(name)
 	local dataStore = DataStoreService:GetDataStore(name)
 	local store = {}
+	-- A test season (Studio cheat, SeasonClock.IsTest) must never write the real party records: with Studio API access
+	-- they are the live game's, and a season-2 record would reset the party's stage when season 1 comes back. While it
+	-- is on, reads fall back to the real store once and every write stays in this server's memory.
+	local overlay = {} -- [key] = { Value = copy } | false (removed)
+	local function overlaid(key)
+		local hit = overlay[key]
+		if hit == nil then
+			local ok, value = retry("Get " .. key, function()
+				return dataStore:GetAsync(key)
+			end)
+			if not ok then
+				return false, value
+			end
+			hit = { Value = if value ~= nil then TableUtil.DeepCopy(value) else nil }
+			overlay[key] = hit
+		end
+		return true, hit
+	end
 	function store:Get(key)
+		if SeasonClock.IsTest() then
+			local ok, hit = overlaid(key)
+			if not ok then
+				return false, hit
+			end
+			return true, if hit.Value ~= nil then TableUtil.DeepCopy(hit.Value) else nil
+		end
 		return retry("Get " .. key, function()
 			return dataStore:GetAsync(key)
 		end)
 	end
 	function store:Update(key, transform)
+		if SeasonClock.IsTest() then
+			local ok, hit = overlaid(key)
+			if not ok then
+				return false, hit
+			end
+			local result = transform(if hit.Value ~= nil then TableUtil.DeepCopy(hit.Value) else nil)
+			if result ~= nil then
+				hit.Value = TableUtil.DeepCopy(result)
+			end
+			return true, result
+		end
 		return retry("Update " .. key, function()
 			return dataStore:UpdateAsync(key, transform)
 		end)
 	end
 	function store:Remove(key)
+		if SeasonClock.IsTest() then
+			overlay[key] = { Value = nil }
+			return true
+		end
 		return (retry("Remove " .. key, function()
 			dataStore:RemoveAsync(key)
 		end))

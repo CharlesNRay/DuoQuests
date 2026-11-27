@@ -187,9 +187,10 @@ function Party.Partner(party, userId)
 	return Party.Others(party, userId)[1]
 end
 
--- A new season wipes the shared stage, not the party itself.
+-- A new season wipes the shared stage, not the party itself. Only forward: a record from a NEWER season (a Studio test
+-- season that reached a real store, or a server behind the schedule) is left alone rather than wiped back again.
 function Party.EnsureSeason(party, seasonId)
-	if party.SeasonId == seasonId then
+	if (party.SeasonId or 0) >= seasonId then
 		return false
 	end
 	party.SeasonId = seasonId

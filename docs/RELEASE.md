@@ -35,7 +35,9 @@ Built 2026-11-27 (tests green, NOT seen in Studio): the season schedule and the 
 - [x] [claude] Studio check with the Test cheats > "Start next season" button (SEEN 2026-11-27: "Season 2 has begun"
       card with last season's row, hero + companions level 1, party at stage 1, Season screen reward claimed). Found
       and fixed: SeasonResultsService crashed every minute (a missing local function); `tools/sim/lint.sh` now finds
-      undefined names in every file and runs at the end of runall.sh.
+      undefined names in every file and runs at the end of runall.sh. Also found: the test season saved the real party
+      record (IPQ_Parties) as season 2 and back at stage 1; now PartyService keeps every party write in memory while a
+      test season runs (SEEN: the record stayed season 1 after a test season) and Party.EnsureSeason only resets forward.
 - [ ] [both] A real switch on the live game before the first real season ends (e.g. a short season added to the
       schedule during the playtest). NOTE: it uses real season ids, so launch then needs the fresh start below.
 - [ ] [owner] Season length and launch dates (suggested: first season 4 weeks, then 6-week seasons).
