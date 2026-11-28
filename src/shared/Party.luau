@@ -579,6 +579,11 @@ function Party.OpenSession(party, seasonId, userId, name, profile, partnerOnline
 			end
 		end
 		if complete then
+			if party.Companions == nil and #party.Members < Party.SEATS then
+				-- records saved before 2026-11-27 lost their companions (PartyCore did not save them): without
+				-- this the away fights would run with empty seats
+				Party.SyncCompanions(party, profile, now)
+			end
 			local ghosts = withCompanion(party, ghostMembers(party))
 			estimate = Offline.Estimate(
 				ghosts,

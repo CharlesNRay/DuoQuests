@@ -23,8 +23,8 @@
 	  Membership (Members, Rev, and the member list's snapshots) is changed only
 	  through the join/leave functions here, each a single atomic Update that
 	  bumps Rev.
-	  Progress (Stage, Frontier, Pending, LastActiveAt, snapshots of members who
-	  are online) is written only by the HOST server, which holds `Host`.
+	  Progress (Stage, Frontier, Pending, LastActiveAt, Companions, UltimateId, Farm,
+	  snapshots of members who are online) is written only by the HOST server, which holds `Host`.
 	  If a host tries to save and finds Rev changed, it does not overwrite
 	  anything: it gets the new record back (membershipChanged) and carries on.
 
@@ -177,6 +177,11 @@ function PartyCore.SaveProgress(deps, mine, managed)
 		old.SeasonId = mine.SeasonId
 		old.LastActiveAt = mine.LastActiveAt
 		old.Pending = mine.Pending
+		-- host-owned too (2026-11-27: these were never saved, so away fights ran without companions and a solo
+		-- player's companion bonds, companion skill edits and the picked ultimate were lost on rejoin)
+		old.Companions = mine.Companions
+		old.UltimateId = mine.UltimateId
+		old.Farm = mine.Farm
 		for _, userId in ipairs(old.Members) do
 			if managed[key(userId)] and mine.Snapshots[key(userId)] then
 				old.Snapshots[key(userId)] = mine.Snapshots[key(userId)]

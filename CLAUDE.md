@@ -109,6 +109,11 @@ Renamed 2026-11-23: only player-visible text says Idle Party Quest (menu title, 
   wins at 5% speed (`Config/Bonds.OfflineShare`, paid in `Party.Claim`); season 1 = "Unbroken": boss The Oathbreaker
   (`Config/Seasons` Boss -> `Bosses.SeasonCfg`, BossService builds shackles/chains/cracks, arena enemy `Oathbreaker`),
   prize Kindred aura for the Top 20% (`Config/Seasons` Prize, two orbiting ribbons in CosmeticsVisuals).
+- **Party save fix 2026-11-27** (tests green, NOT seen in Studio): `PartyCore.SaveProgress` never saved `Companions`,
+  `UltimateId` or `Farm`, so after a rejoin the away fights ran a solo player's hero ALONE (owner's Rogue farmed stage 25
+  with frontier 51), away bond XP was 0 and companion skill edits / the picked ultimate were lost. Now saved;
+  `Party.OpenSession` rebuilds missing companions for old records. Join log prints `away: N fights, bond XP`.
+  Seen in Studio: Party > 💞 Bonds tab (companion rows, "2 / 60 wins" tooltip).
 - **Studio test mute**: Workspace attribute `StudioMute = true` (Edit mode, command bar) silences all game sound in Studio
   (owner asked: no sound while Claude tests). Set it before test runs, clear it (nil) before Ctrl+S.
 

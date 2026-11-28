@@ -127,6 +127,13 @@ return function(modulesOverride)
 	record.Snapshots["1001"].Level = 99
 	local _, notManaged = PartyCore.SaveProgress(d, record, {})
 	check("Snapshots of members the host does not manage are left alone", notManaged.Snapshots["1001"].Level == 12)
+	-- companions, the chosen ultimate and the farm flag are the host's too (companions were never saved: away
+	-- fights ran without them and companion bonds/ghost skill edits were lost on rejoin, found 2026-11-27)
+	record.Companions = { { UserId = -1, Name = "Mira", ClassId = "Cleric" } }
+	record.UltimateId, record.Farm = "Ult_Test", true
+	local _, withCompanions = PartyCore.SaveProgress(d, record, { ["1001"] = true })
+	local _, reread = PartyCore.Get(d, partyA.PartyId)
+	check("The host saves companions, the ultimate and the farm flag", reread.Companions ~= nil and reread.Companions[1].Name == "Mira" and reread.UltimateId == "Ult_Test" and reread.Farm == true and withCompanions.Companions ~= nil)
 
 	-- Join codes --------------------------------------------------------------------------
 	check("Codes are normalised and validated", PartyCore.NormalizeCode(" ab c2 3d ") == "ABC23D" and PartyCore.NormalizeCode("ABC") == nil and PartyCore.NormalizeCode("ABCDE0") == nil and PartyCore.NormalizeCode(5) == nil)

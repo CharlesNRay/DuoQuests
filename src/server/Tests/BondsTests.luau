@@ -118,6 +118,16 @@ return function(modulesOverride)
 		paid += xp
 	end
 	check("A solo login pays away bond XP with the companions", pend ~= nil and pend.Fights > 0 and paid > 0 and claim.Afk ~= nil)
+	-- a stored record that lost its companions (saved before 2026-11-27) still fights away with them
+	local lost = Party.NewOpen("lost", 1, 404, 100, 1)
+	local lostP = ProfileTemplate.New()
+	lostP.Season.ClassId = "Warrior"
+	Party.SyncCompanions(lost, lostP, 100)
+	Party.CloseSession(lost, 404, "Solo", lostP, 200)
+	lost.Companions = nil
+	Party.OpenSession(lost, 1, 404, "Solo", lostP, false, 200 + 5 * 3600)
+	local lostPend = lost.Pending["404"]
+	check("A record without companions gets them back for away fights", lost.Companions ~= nil and #lost.Companions == 3 and lostPend ~= nil and lostPend.Bonds ~= nil and next(lostPend.Bonds) ~= nil)
 
 	-- season 1 theme: its own boss and prize aura
 	if m.Bosses and m.SeasonClock then
