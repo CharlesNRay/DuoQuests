@@ -158,7 +158,7 @@ return {
 			Description = "Kills from the shadows. Huge crits and big single-target hits.",
 			Mods = {
 				{ Stat = "Attack", Mode = "Mul", Value = 0.28 },
-				{ Stat = "DamageDealt", Mode = "Mul", Value = 0.20 }, -- (then 0.06, 0.10, 0.15) was -0.600, then -0.45, -0.36, -0.30, -0.24, -0.15, -0.08, 0 (owner: buff more; partner check L100 123-133) (2026-11-25: lowest at L100, BALANCE.md "Class report")
+				{ Stat = "DamageDealt", Mode = "Mul", Value = 0.30 }, -- 0.20 -> 0.30 2026-11-28 (lowest at L100 with talented companions: 123-132) (then 0.06, 0.10, 0.15) was -0.600, then -0.45, -0.36, -0.30, -0.24, -0.15, -0.08, 0 (owner: buff more; partner check L100 123-133) (2026-11-25: lowest at L100, BALANCE.md "Class report")
 				{ Stat = "CritChance", Mode = "Add", Value = 0.05 },
 				{ Stat = "CritMultiplier", Mode = "Add", Value = 0.3 }, { Stat = "MaxHealth", Mode = "Mul", Value = 0 } }, -- health was -0.30, then -0.22, -0.15, -0.08 (partner check L100 103-108) (2026-11-26: with a Guardian partner 131 vs Sharpshooter 162)
 			Skills = { "DeathMark", "Execute", "ShadowStrike" },
@@ -174,7 +174,7 @@ return {
 				{ Stat = "MaxHealth", Mode = "Mul", Value = 0.12 }, -- was -0.028, then 0.06 (2026-11-26 roles: tankier; lowest in every partner check)
 				{ Stat = "Defense", Mode = "Mul", Value = 0.25 },
 				{ Stat = "DamageTaken", Mode = "Mul", Value = -0.14 }, -- was -0.1 (2026-11-26: lowest at L100, tankier)
-				{ Stat = "Attack", Mode = "Mul", Value = 0.24 }, -- was 0.12, 0.18 (2026-11-26 partner checks: lowest, again after the skill pass)
+				{ Stat = "Attack", Mode = "Mul", Value = 0.32 }, -- was 0.12, 0.18, 0.24 (2026-11-26 partner checks: lowest, again after the skill pass; 2026-11-28 lowest at L100 again, 123-126)
 				{ Stat = "AttackSpeed", Mode = "Mul", Value = 0.08 }, { Stat = "DamageDealt", Mode = "Mul", Value = 0 } }, -- was -0.264, then -0.20, -0.14, -0.08 (partner check L100 109-139); not raised further: the tanky Rogue should not out-damage the Assassin
 			Skills = { "Riposte", "Parry", "BladeDance" },
 		},

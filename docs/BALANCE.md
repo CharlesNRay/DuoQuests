@@ -568,3 +568,11 @@ That sped everyone up late (L100 stage ~205, ~25% fewer hours), so `Config/Stage
 
 Before: Warriors 155-191, the rest 101-139, mean hours ~165. After: 126-154 except one Guardian seed (176), mean
 hours ~153. Single seeds are noisy (the earlier Guardian seeds were 155 and 191); re-check Guardian with SEEDS=3.
+
+Confirmation on new seeds (2026-11-28, 2 seeds per path, L100 stage / hours): Priest 151,151 / 119-129; Templar
+149,151; FrostWeaver 139,139 / 180-229 h; Pyromancer 143,109; Beastmaster 136,137; Sharpshooter 139,131; Assassin
+126,123; Duelist 126,123; Necromancer 136,168; SpiritCaller 158,146; Berserker 137,139; Guardian 143,152 (+147).
+Both Rogue paths were lowest on every seed, so: Assassin DamageDealt +0.20 -> +0.30, Duelist Attack +0.24 -> +0.32.
+After (4 seeds): Assassin 142,146,126,132 (mean 137), Duelist 143,126,126,145 (mean 135); pack mean ~141.
+Open: FrostWeaver reaches a normal stage but levels slowest (180-229 h to L100 vs ~105-185): its control fights
+last longer, so fewer wins an hour. Left as is (control is its job); a question for the owner.
