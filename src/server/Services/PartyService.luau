@@ -315,6 +315,14 @@ function attach(player, profile)
 			if claim.Afk then ("%d gold, %d XP, %d shards"):format(claim.Afk.Gold, claim.Afk.XP, claim.Afk.Shards) else "none"
 		)
 	)
+	if claim.Afk then
+		local bondXP, heroes = 0, 0
+		for _, xp in pairs(claim.Afk.Bonds or {}) do
+			bondXP += xp
+			heroes += 1
+		end
+		print(("[PartyService] away: %d fights, bond XP %.1f with %d hero(es)"):format(claim.Afk.Fights or 0, bondXP, heroes))
+	end
 	return true
 end
 

@@ -103,6 +103,21 @@ return function(modulesOverride)
 	local o = ProfileTemplate.New()
 	local oups = Bonds.AddXP(o, { ["2"] = Config.XPBase * 4 })
 	check("Away bond XP is paid and can level", Bonds.Level(o.Season.Bonds["2"]) == 2 and #oups == 1 and oups[1].Level == 2)
+	-- the real login path: a solo player with companions comes back after hours away
+	local alone = Party.NewOpen("alone", 1, 303, 100, 1)
+	local aloneP = ProfileTemplate.New()
+	aloneP.Season.ClassId = "Warrior"
+	Party.SyncCompanions(alone, aloneP, 100)
+	Party.OpenSession(alone, 1, 303, "Solo", aloneP, false, 100)
+	Party.CloseSession(alone, 303, "Solo", aloneP, 200)
+	Party.OpenSession(alone, 1, 303, "Solo", aloneP, false, 200 + 5 * 3600)
+	local pend = alone.Pending["303"]
+	local claim = Party.Claim(alone, 303, aloneP)
+	local paid = 0
+	for _, xp in pairs(aloneP.Season.Bonds or {}) do
+		paid += xp
+	end
+	check("A solo login pays away bond XP with the companions", pend ~= nil and pend.Fights > 0 and paid > 0 and claim.Afk ~= nil)
 
 	-- season 1 theme: its own boss and prize aura
 	if m.Bosses and m.SeasonClock then
