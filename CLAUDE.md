@@ -122,7 +122,7 @@ Renamed 2026-11-23: only player-visible text says Idle Party Quest (menu title, 
   0.9% (BALANCE.md "Companion talents"). Season histogram undoes moves of players who left mid-write. Every DataStore
   name = `Config/DataStores.Prefix` .. name (change ONCE at launch). Draft season 2 "Tidebreak" (Elemental Tides,
   `Shared/Tides`, `Config/Seasons.Drafts[2]`: only the "Start next season" cheat runs it; boss The Maelstrom, prize
-  Tidebound aura; Season screen tide card + map card note SEEN). New season clears the party Farm flag. Gold bag can
+  Tidebound aura; Season screen tide card + map card note SEEN). New season clears the party Farm flag. Gear bag can
   exceed its size with lucky finds (`drop.Keep`, "Bag 73/50" seen): not changed, owner to decide.
 - **Studio test mute**: Workspace attribute `StudioMute = true` (Edit mode, command bar) silences all game sound in Studio
   (owner asked: no sound while Claude tests). Set it before test runs, clear it (nil) before Ctrl+S.
