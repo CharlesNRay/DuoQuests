@@ -8,6 +8,8 @@
 
 local Players = game:GetService("Players")
 Players.CharacterAutoLoads = false -- nobody spawns until they pick a character at the main menu
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+game:GetService("StarterPlayer").CharacterWalkSpeed = require(ReplicatedStorage:WaitForChild("Shared").World).WALK_SPEED
 
 local Services = script.Parent.Services
 local DataService = require(Services.DataService)

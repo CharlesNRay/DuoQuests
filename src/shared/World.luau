@@ -117,6 +117,9 @@ World.PlazaSpots = {
 	Tree = { Angle = 45, Radius = 165 }, -- the heart of the Wishing Grove (north-east)
 }
 
+-- How fast heroes walk in town (Roblox default 16). Owner 2026-11-28: the town takes a while to cross.
+World.WALK_SPEED = 28
+
 -- The districts. Size = radius of the district's ground. Each has a spoke road from the plaza.
 World.TOWN_RING = 220 -- the town's districts all lie within this distance of the plaza centre
 World.Districts = {
