@@ -37,6 +37,29 @@ return {
 		},
 	},
 
+	-- Seasons built but not scheduled: the real calendar never starts these. Studio's "Start next season" cheat
+	-- (SeasonClock.StartNext) runs the draft with the next id, so a draft can be tried before the owner picks it.
+	-- To schedule one, move it into Seasons above with real dates.
+	Drafts = {
+		[2] = {
+			Id = 2,
+			Name = "Tidebreak",
+			StartsAt = 1801440000, -- placeholder (season 1's EndsAt)
+			EndsAt = 1803859200, -- placeholder (4 weeks later)
+			-- every week one element rises (Config/Tides): its zones are tougher and pay double gold, one class is in
+			-- the spotlight
+			Mechanic = "Tides",
+			Boss = {
+				Name = "The Maelstrom", DefId = "Maelstrom",
+				Look = {
+					Color = { 50, 90, 140 }, Height = 90, EyeColor = { 120, 220, 255 }, Cracks = true, Material = "Glacier",
+					Orbs = { { 255, 110, 40 }, { 120, 190, 255 }, { 220, 240, 255 }, { 170, 70, 255 } }, -- fire, storm, frost, void
+				},
+			},
+			Prize = { Cosmetic = "Aura_Tidebound", Top = 0.2 },
+		},
+	},
+
 	Carry = {
 		Stash = true, -- unused consumables (tonics, elixirs, pet food, wish tickets)
 		BagUpgrades = true, -- bag size

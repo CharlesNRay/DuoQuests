@@ -611,6 +611,12 @@ local Enemies = {
 		IsBoss = true, DamageType = "Physical", EventOnly = true,
 		BaseStats = { MaxHealth = 1, Attack = 1, Defense = 1, AttackSpeed = 1, CritChance = 0 },
 	},
+	Maelstrom = { -- draft season 2 (Tides) season boss: a storm giant ringed by the four tides
+		Id = "Maelstrom", DisplayName = "The Maelstrom",
+		Look = { Shape = "Elemental", Color = { 50, 90, 140 }, Size = 13, Glow = { 120, 220, 255 } },
+		IsBoss = true, DamageType = "Magical", EventOnly = true,
+		BaseStats = { MaxHealth = 1, Attack = 1, Defense = 1, AttackSpeed = 1, CritChance = 0 },
+	},
 	-- Guild raid bosses (stats set by Shared/Bosses; fought from the guild's Raid tab)
 	RaidTitan = {
 		Id = "RaidTitan", DisplayName = "Stone Titan",

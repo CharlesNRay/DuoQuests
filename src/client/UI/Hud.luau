@@ -409,6 +409,20 @@ function Hud.new(root)
 		self.MapCard.BackgroundColor3 = ground:Lerp(Color3.new(0, 0, 0), 0.25)
 		self.MapGlyph.Text = MAP_GLYPHS[theme.Scenery] or "🗺️"
 		self.MapZone.Text = zone.Name
+		-- season mechanic Tides: a rising zone shows its tide in the tide's colour (it pays double gold)
+		self.MapZoneColor = self.MapZoneColor or self.MapZone.TextColor3
+		local tide = me.Tide
+		local rising = false
+		if tide then
+			local themeIndex = (zone.Index - 1) % Zones.Count() + 1
+			rising = table.find(tide.ZoneIndexes, themeIndex) ~= nil
+		end
+		if rising then
+			self.MapZone.Text = ("%s  -  %s"):format(zone.Name, tide.Name)
+			self.MapZone.TextColor3 = Color3.fromRGB(tide.Color[1], tide.Color[2], tide.Color[3])
+		else
+			self.MapZone.TextColor3 = self.MapZoneColor
+		end
 		self.MapStage.Text = ("Stage %d%s"):format(stage, Stages.IsBoss(stage) and "  👑" or "")
 		Kit.clear(self.MapPips)
 		local first = zone.FirstStage
@@ -429,7 +443,9 @@ function Hud.new(root)
 		-- the card shown while spectating mirrors it
 		self.CombatCard.BackgroundColor3 = self.MapCard.BackgroundColor3
 		self.CGlyph.Text = self.MapGlyph.Text
-		self.Zone.Text = zone.Name
+		self.Zone.Text = self.MapZone.Text
+		self.ZoneColor = self.ZoneColor or self.Zone.TextColor3
+		self.Zone.TextColor3 = if rising then self.MapZone.TextColor3 else self.ZoneColor
 		self.Stage.Text = self.MapStage.Text
 		Kit.clear(self.CPips)
 		for i = 0, 9 do

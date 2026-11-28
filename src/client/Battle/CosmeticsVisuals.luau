@@ -194,6 +194,57 @@ local RECIPES = {
 		end)
 		a.Destroying:Connect(stop)
 	end,
+	-- draft season 2 "Tidebound" prize: four sparks, one per tide (fire, storm, frost, void), circling the hero in a ring
+	Aura_Tidebound = function(a)
+		local colours = {
+			{ rgb(255, 210, 120), rgb(255, 110, 40) }, -- fire
+			{ rgb(220, 240, 255), rgb(120, 190, 255) }, -- storm
+			{ rgb(255, 255, 255), rgb(180, 225, 255) }, -- frost
+			{ rgb(230, 180, 255), rgb(170, 70, 255) }, -- void
+		}
+		local spark = { Rate = 34, Life = { 0.7, 1.1 }, Speed = { 0, 0.2 }, Size = { 0.5, 0.3, 0 }, Alpha = { 0, 0.25, 1 }, Spread = 0, Spin = { -60, 60 } }
+		local points = { a }
+		for index = 2, 4 do
+			local extraPoint = Instance.new("Attachment")
+			extraPoint.Name = "CosAuraTide" .. index
+			points[index] = extraPoint
+		end
+		for index, point in ipairs(points) do
+			local o = table.clone(spark)
+			o.Color = colours[index]
+			layer(point, SPARKLE, o)
+		end
+		layer(a, SMOKE, { Color = rgb(150, 170, 255), Rate = 2, Life = { 2, 2.8 }, Speed = { 0.1, 0.3 }, Size = { 2.5, 4 }, Alpha = { 0.92, 0.95, 1 }, Glow = 0.5 })
+		local base, started, conn = nil, false, nil
+		local function stop()
+			if conn then
+				conn:Disconnect()
+				conn = nil
+			end
+			for index = 2, 4 do
+				points[index]:Destroy()
+			end
+		end
+		conn = RunService.Heartbeat:Connect(function()
+			local parent = a.Parent
+			if parent and parent:IsA("BasePart") then
+				if not started then
+					started, base = true, a.Position
+				end
+				local t = os.clock() * 1.9
+				for index, point in ipairs(points) do
+					if point.Parent ~= parent then
+						point.Parent = parent
+					end
+					local angle = t + (index - 1) * math.pi / 2
+					point.Position = base + Vector3.new(math.cos(angle) * 2.1, math.sin(t * 2 + index) * 0.35, math.sin(angle) * 2.1)
+				end
+			elseif started then
+				stop() -- the aura was taken off
+			end
+		end)
+		a.Destroying:Connect(stop)
+	end,
 	Aura_Gilded = function(a)
 		layer(a, SPARKLE, { Color = { rgb(255, 250, 200), rgb(255, 205, 70) }, Rate = 44, Life = { 1.2, 2 }, Speed = { 0.8, 2.6 }, Size = { 0.8, 0 } })
 		layer(a, SPARKLE, { Color = rgb(255, 215, 90), Rate = 7, Life = { 0.8, 1.4 }, Speed = { 0.2, 1 }, Size = { 0, 1.9, 0 }, Spin = { 120, 360 } })

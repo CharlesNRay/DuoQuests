@@ -31,5 +31,14 @@ name, season boss look, prize aura and a title.
   season too). Name "Unbroken", season boss The Oathbreaker (broken shackles, snapped chains, violet
   cracks), prize Kindred aura (rose + gold ribbons circling each other) for the Top 20%. Not seen in Studio yet.
 - **Season 2: Elemental tides.** Weekly change, reuses the elemental zones; light on new UI.
+  DRAFT BUILT 2026-11-28 (owner has not picked it yet): `Config/Tides` + `Shared/Tides`, draft season in
+  `Config/Seasons.Drafts[2]` (the real calendar never starts a draft; Studio's "Start next season" cheat does).
+  Name "Tidebreak". Each week one element rises (Fire, Storm, Frost, Void; 5 zones each, so all 20 zones are covered):
+  monsters there +20% health and attack, wins there +100% gold, +25% XP and an extra rune roll; one class a week
+  in the spotlight (+10% attack and health in stage fights). Season boss The Maelstrom (storm-blue giant, glowing
+  cracks, four tide orbs round its shoulders); prize Tidebound aura (four sparks, one per tide, circling the hero) for
+  the Top 20%. Shown on the Season screen (tide card) and the HUD map card (a rising zone's name in the tide colour).
+  Away fights (Offline estimate) ignore the tide. Not balance-simmed yet: a rising frontier zone is a harder push for
+  a week, paid back by double gold there. To make it real: move the entry into `Seasons` with real dates.
 - **Season 3: Relics.** The big build-variety season, once the base game balance is settled from real players.
 - Later: Mutations, Curses, Invasion.

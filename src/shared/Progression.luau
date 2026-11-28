@@ -35,6 +35,7 @@ local Consumables = require(script.Parent.Consumables)
 local Quests = require(script.Parent.Quests)
 local Passes = require(script.Parent.Passes)
 local Talents = require(script.Parent.Talents)
+local Tides = require(script.Parent.Tides)
 local ClassMastery = require(script.Parent.ClassMastery)
 
 local Progression = {}
@@ -142,7 +143,8 @@ function Progression.ApplyClear(profile, stage, rand)
 	local guildBuffs = profile.Permanent and profile.Permanent.GuildBuffs or {} -- from the guild's upgrades
 	local perks = Passes.Perks(profile)
 	local fortune = Talents.Rewards(profile) -- the Fortune Mastery talent
-	bonuses = { GoldGain = (bonuses.GoldGain or 0) + boost.GoldGain + (guildBuffs.GoldGain or 0) + perks.GoldGain + fortune.GoldGain, XPGain = (bonuses.XPGain or 0) + boost.XPGain + (guildBuffs.XPGain or 0) + perks.XPGain + fortune.XPGain, ItemRarity = bonuses.ItemRarity }
+	local tide = Tides.Rewards(stage, os.time()) -- season mechanic Tides: a rising zone pays more
+	bonuses = { GoldGain = (bonuses.GoldGain or 0) + boost.GoldGain + (guildBuffs.GoldGain or 0) + perks.GoldGain + fortune.GoldGain + tide.GoldGain, XPGain = (bonuses.XPGain or 0) + boost.XPGain + (guildBuffs.XPGain or 0) + perks.XPGain + fortune.XPGain + tide.XPGain, ItemRarity = bonuses.ItemRarity }
 	local rewards = Progression.ClearRewards(stage, isFrontier, bonuses)
 
 	season.Currencies.Gold += rewards.Gold
@@ -213,6 +215,13 @@ function Progression.ApplyClear(profile, stage, rand)
 	if runeStat then
 		Runes.Grant(profile, runeStat, runeTier, 1)
 		runeDrop = Runes.Label({ Stat = runeStat, Tier = runeTier })
+	end
+	for _ = 1, tide.RuneRolls do -- a rising zone rolls again (the shown drop is the first one)
+		local extraStat, extraTier = Runes.RollDrop(stage, isFrontier, false, rand or math.random)
+		if extraStat then
+			Runes.Grant(profile, extraStat, extraTier, 1)
+			runeDrop = runeDrop or Runes.Label({ Stat = extraStat, Tier = extraTier })
+		end
 	end
 
 	local consumableId = Consumables.RollDrop(Stages.IsBoss(stage), rand or math.random)

@@ -75,7 +75,7 @@ function SeasonClock.StartNext(now)
 	def.EndsAt = math.min(def.EndsAt or now, now)
 	override.Defs[current] = def
 	local nextId = current + 1
-	local planned = Config.Seasons[nextId]
+	local planned = Config.Seasons[nextId] or (Config.Drafts and Config.Drafts[nextId]) -- a draft can be tried here
 	local nextDef = if planned then table.clone(planned) else { Id = nextId, Name = "Test Season " .. nextId, EndsAt = now + 14 * 86400, Mechanic = "None" }
 	nextDef.StartsAt = now
 	override.Defs[nextId] = nextDef

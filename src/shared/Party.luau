@@ -59,6 +59,8 @@ local Talents = require(script.Parent.Talents)
 local Bestiary = require(script.Parent.Bestiary)
 local ClassMastery = require(script.Parent.ClassMastery)
 local Bonds = require(script.Parent.Bonds)
+local Tides = require(script.Parent.Tides)
+local Stages = require(script.Parent.Stages)
 local TableUtil = require(script.Parent.Util.TableUtil)
 local FIRST_BOSS_STAGE = require(script.Parent.Config.Stages).BossEvery -- stage 10: no farm hold up to it (see Party.OnlineTick)
 local Ultimates = require(script.Parent.Ultimates)
@@ -728,7 +730,26 @@ function Party.OnlineTick(party, online, seed, now)
 	end
 
 	local stage = party.Stage
-	local outcome = StageRunner.Run(members, stage, seed, StageRunner.UltimateFor(members, party.Frontier, party.UltimateId), true)
+	-- season mechanic Tides: the class in the spotlight fights stronger, a rising zone's monsters are tougher
+	local setup = nil
+	if Tides.On() then
+		for _, member in ipairs(members) do
+			local classId = if member.Profile then member.Profile.Season.ClassId else member.Snapshot and member.Snapshot.ClassId
+			local mods = Tides.ClassMods(classId, now)
+			if #mods > 0 then
+				member.BondMods = member.BondMods or {} -- the season's extra mods (StageRunner.NewParty adds them)
+				for _, mod in ipairs(mods) do
+					table.insert(member.BondMods, mod)
+				end
+			end
+		end
+		local mult = Tides.EnemyMult(stage, now)
+		if mult ~= 1 then
+			setup = { Enemies = Stages.NewEnemies(stage, mult) }
+		end
+	end
+	local outcome = StageRunner.Run(members, stage, seed, StageRunner.UltimateFor(members, party.Frontier, party.UltimateId), true, setup)
+	outcome.Tide = if setup then true else nil
 	if bondsOn and outcome.Won then
 		for _, member in ipairs(online) do
 			local ups = Bonds.Gain(member.Profile, key(member.UserId), bondKeys, bondNames)

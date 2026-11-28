@@ -124,3 +124,6 @@ require("./BestiaryMasteryTests")(m)
 
 m.Bonds = require("./Bonds") m.BondsConfig = require("./Config/Bonds") m.Party = m.Party or require("./Party") m.SeasonClock = m.SeasonClock or require("./SeasonClock") m.Bosses = m.Bosses or require("./Bosses") m.SeasonRewards = m.SeasonRewards or require("./SeasonRewards") m.Cosmetics = m.Cosmetics or require("./Cosmetics")
 require("./BondsTests")(m)
+
+m.Tides = require("./Tides") m.TidesConfig = require("./Config/Tides") m.Seasons = require("./Config/Seasons") m.Zones = m.Zones or require("./Zones") m.ZoneConfig = require("./Config/Zones") m.Stages = m.Stages or require("./Stages") m.Progression = m.Progression or require("./Progression") m.ProfileTemplate = m.ProfileTemplate or require("./ProfileTemplate")
+require("./TidesTests")(m)

@@ -139,11 +139,13 @@ function Stages.Build(stage)
 	return { Stage = stage, IsBoss = Stages.IsBoss(stage), Scale = scale, Enemies = enemies }
 end
 
-function Stages.NewEnemies(stage)
+-- mult (optional): extra health and attack factor for this fight (season mechanic Tides: a rising zone)
+function Stages.NewEnemies(stage, mult)
+	mult = mult or 1
 	local built = Stages.Build(stage)
 	local enemies = {}
 	for _, entry in ipairs(built.Enemies) do
-		local enemy = StatCalc.NewEnemy(entry.Id, entry.EnemyId, entry.Scale, entry.HealthMult, entry.AttackMult or Stages.AttackMult())
+		local enemy = StatCalc.NewEnemy(entry.Id, entry.EnemyId, entry.Scale, (entry.HealthMult or 1) * mult, (entry.AttackMult or Stages.AttackMult()) * mult)
 		enemy.DefenseScale = entry.Scale * Stages.DefenseScale(stage) / Stages.Scale(stage)
 		table.insert(enemies, enemy)
 	end

@@ -54,11 +54,15 @@ local store
 
 -- The season can change while this server runs (SeasonClock): a new season brings a fresh boss.
 local seasonIdNow = SeasonClock.CurrentId()
+local rebuildSeasonBoss -- set below buildColossus: the new season's own boss replaces the old one
 local function seasonId()
 	local id = SeasonClock.CurrentId()
 	if id ~= seasonIdNow then
 		seasonIdNow = id
 		season.GlobalDamage, season.Pending = 0, 0 -- the sync loop reads the new season's shared total
+		if rebuildSeasonBoss then
+			task.defer(rebuildSeasonBoss)
+		end
 	end
 	return id
 end
@@ -191,6 +195,13 @@ local function buildColossus()
 			part.Orientation = Vector3.new(0, i * 37, if i % 2 == 0 then 90 else 0)
 		end
 	end
+	if look.Orbs then -- four glowing orbs, one per tide, floating round the shoulders
+		for index, orb in ipairs(look.Orbs) do
+			local angle = (index - 1) * math.pi / 2 + math.pi / 4
+			local part = glowPart(model, "Orb", Vector3.new(h * 0.09, h * 0.09, h * 0.09), origin + Vector3.new(math.cos(angle) * h * 0.38, 3 + h * 0.62, math.sin(angle) * h * 0.3), Color3.fromRGB(orb[1], orb[2], orb[3]), Enum.PartType.Ball, Enum.Material.Neon)
+			part.Name = "Orb"
+		end
+	end
 	if look.Material then
 		for _, part in ipairs(model:GetChildren()) do
 			if part:IsA("BasePart") and (part.Name == "Body" or part.Name == "Head" or part.Name == "ArmL" or part.Name == "ArmR" or part.Name == "Leg") then
@@ -230,6 +241,14 @@ local function buildColossus()
 	model:PivotTo(CFrame.lookAt(body.Position, Vector3.new(0, body.Position.Y, 0)))
 	model.Parent = workspace
 	return model
+end
+
+rebuildSeasonBoss = function()
+	SEASON = Bosses.SeasonCfg(SeasonClock.Def(SeasonClock.CurrentId()))
+	if colossusModel then
+		colossusModel:Destroy()
+		colossusModel = buildColossus()
+	end
 end
 
 -- Season health -------------------------------------------------------------------------------------

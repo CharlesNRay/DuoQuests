@@ -117,6 +117,19 @@ function SeasonScreen.Season(container, state, call, extra)
 	local card = Kit.frame({ Size = UDim2.new(1, -8, 0, 28), BackgroundColor3 = C.Panel, Parent = scroll })
 	Kit.label({ Size = UDim2.new(1, -20, 1, 0), Position = UDim2.fromOffset(10, 0), Text = mine, TextSize = 12, TextWrapped = false, TextTruncate = Enum.TextTruncate.AtEnd, TextColor3 = BLUE, Parent = card })
 
+	-- season mechanic Tides: this week's rising element, its zones and the class in the spotlight
+	local tide = state.Player and state.Player.Tide
+	if tide then
+		local color = Color3.fromRGB(tide.Color[1], tide.Color[2], tide.Color[3])
+		local hours = math.max(0, math.ceil(((tide.EndsAt or 0) - os.time()) / 3600))
+		local box = Kit.frame({ Size = UDim2.new(1, -8, 0, 0), AutomaticSize = Enum.AutomaticSize.Y, BackgroundColor3 = C.PanelLight, Parent = scroll })
+		Kit.new("UIPadding", { PaddingTop = UDim.new(0, 6), PaddingBottom = UDim.new(0, 6), PaddingLeft = UDim.new(0, 10), PaddingRight = UDim.new(0, 10), Parent = box })
+		Kit.new("UIListLayout", { Padding = UDim.new(0, 2), SortOrder = Enum.SortOrder.LayoutOrder, Parent = box })
+		Kit.label({ Size = UDim2.new(1, 0, 0, 20), LayoutOrder = 1, Text = ("%s this week  -  %s next in %s"):format(tide.Name, tide.Next, if hours > 48 then ("%d days"):format(math.ceil(hours / 24)) else ("%d h"):format(hours)), TextSize = 14, Font = Enum.Font.GothamBold, TextColor3 = color, Parent = box })
+		Kit.label({ Size = UDim2.new(1, 0, 0, 0), AutomaticSize = Enum.AutomaticSize.Y, LayoutOrder = 2, TextWrapped = true, Text = ("Rising zones: %s. Their monsters have +%d%% health and attack, and every win there pays +%d%% gold, +%d%% XP and an extra rune roll."):format(table.concat(tide.Zones, ", "), math.floor(tide.Power * 100 + 0.5), math.floor(tide.GoldGain * 100 + 0.5), math.floor(tide.XPGain * 100 + 0.5)), TextSize = 12, TextYAlignment = Enum.TextYAlignment.Top, TextColor3 = C.Text, Parent = box })
+		Kit.label({ Size = UDim2.new(1, 0, 0, 18), LayoutOrder = 3, Text = ("Class in the spotlight: %s (+10%% attack and health in stage fights)"):format(tide.Spotlight), TextSize = 12, TextColor3 = C.Dim, Parent = box })
+	end
+
 	-- every bracket, so nobody is left guessing
 	for _, row in ipairs(data.Brackets.Percentiles) do
 		bracketRow(scroll, row.Label, rewardText(row), live.Percentile == row.Label, row.Extras)
