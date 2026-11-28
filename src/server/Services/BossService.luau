@@ -23,6 +23,7 @@ local RunService = game:GetService("RunService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
+local STORE_PREFIX = require(Shared.Config.DataStores).Prefix -- every DataStore name starts with it (Config/DataStores)
 local Bosses = require(Shared.Bosses)
 local World = require(Shared.World)
 local Quests = require(Shared.Quests)
@@ -450,7 +451,7 @@ function BossService.Init(pushRemote, profileGetter)
 
 	if not IS_STUDIO then
 		local ok, result = pcall(function()
-			return DataStoreService:GetDataStore("IPQ_SeasonBoss")
+			return DataStoreService:GetDataStore(STORE_PREFIX .. "SeasonBoss")
 		end)
 		store = ok and result or nil
 	end

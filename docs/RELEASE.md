@@ -43,9 +43,12 @@ Built 2026-11-27 (tests green, NOT seen in Studio): the season schedule and the 
 - [~] [owner] Season length: first season 4 weeks (decided 2026-11-27). Still open: the launch date, later season lengths.
 - [~] [owner] Decided 2026-11-27: every season is unique and new. Ideas for the first seasons in docs/SEASONS.md;
       the owner picks, then Claude builds them (the `Mechanic` hook in Config/Seasons has nothing behind it yet).
-- [ ] [claude] Fresh start at launch (WANTED, owner 2026-11-27): playtest seasons leave data in the season-keyed stores
-      (`IPQ_Leaderboard_S<n>`, `IPQ_SeasonResults`, `IPQ_SeasonBoss`, `IPQ_SeasonHist_S<n>`) and in players' saves;
-      either rename the stores or start launch at a season id the playtest never used.
+- [x] [claude] Fresh start at launch (WANTED, owner 2026-11-27): playtest seasons leave data in the season-keyed stores
+      (`IPQ_Leaderboard_S<n>`, `IPQ_SeasonResults`, `IPQ_SeasonBoss`, `IPQ_SeasonHist_S<n>`) and in players' saves.
+      Done 2026-11-28: every store name comes from `Config/DataStores.Prefix` ("IPQ_").
+- [ ] [claude] AT LAUNCH: change `Config/DataStores.Prefix` once (e.g. "IPQL_") and set Season 1's real StartsAt/EndsAt
+      (4 weeks) in Config/Seasons. Never change the prefix again after launch. (The playtest histogram is already
+      inflated: "Top 90% of 32 players" while rank #1, from older counting; the new prefix drops it.)
 
 ## 4. Scale and safety (before going public)
 - [~] [claude] **Performance with a full server** (first pass 2026-11-27, Studio on the owner's PC; phones NOT measured).

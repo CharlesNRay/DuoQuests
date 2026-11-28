@@ -27,6 +27,7 @@ local TextService = game:GetService("TextService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
+local STORE_PREFIX = require(Shared.Config.DataStores).Prefix -- every DataStore name starts with it (Config/DataStores)
 local Guilds = require(Shared.Guilds)
 local GuildWish = require(Shared.GuildWish)
 local Config = require(Shared.Config.Guilds)
@@ -705,7 +706,7 @@ function GuildService.Init(profileGetter, changedCallback)
 	getProfile, onChanged = profileGetter, changedCallback
 	if not IS_STUDIO then
 		local ok, result = pcall(function()
-			return DataStoreService:GetDataStore("IPQ_Guilds")
+			return DataStoreService:GetDataStore(STORE_PREFIX .. "Guilds")
 		end)
 		store = if ok then result else nil
 	end

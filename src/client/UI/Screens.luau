@@ -1371,7 +1371,12 @@ local function bondsPane(pane, rows)
 		local fill = if row.Need then math.clamp(row.Into / row.Need, 0, 1) else 1
 		Kit.frame({ Size = UDim2.fromScale(fill, 1), BackgroundColor3 = Color3.fromRGB(240, 110, 170), Parent = bar })
 		Kit.Hover(r, function()
-			return if row.Need then ("%d / %d wins to level %d"):format(row.Into, row.Need, row.Level + 1) else "Max level"
+			-- bond XP, not wins: a win with a companion gives half, an away win a twentieth (seen in Studio 2026-11-28)
+			return if row.Need
+				then ("%d / %d bond XP to level %d\nA win together: +%s (%s while you are away)"):format(row.Into, row.Need, row.Level + 1,
+					tostring(BondsConfig.XPPerWin * (if row.Companion then BondsConfig.CompanionShare else 1)),
+					tostring(BondsConfig.XPPerWin * BondsConfig.OfflineShare * (if row.Companion then BondsConfig.CompanionShare else 1)))
+				else "Max level"
 		end)
 	end
 end

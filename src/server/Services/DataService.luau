@@ -32,6 +32,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
+local STORE_PREFIX = require(Shared.Config.DataStores).Prefix -- every DataStore name starts with it (Config/DataStores)
 local Gear = require(Shared.Gear)
 local ProfileTemplate = require(Shared.ProfileTemplate)
 local TableUtil = require(Shared.Util.TableUtil)
@@ -39,7 +40,7 @@ local DataSafety = require(Shared.Util.DataSafety)
 local SeasonClock = require(Shared.SeasonClock)
 local SeasonRollover = require(Shared.SeasonRollover)
 
-local DATASTORE_NAME = "IPQ_PlayerData"
+local DATASTORE_NAME = STORE_PREFIX .. "PlayerData"
 local AUTOSAVE_INTERVAL = 120 -- seconds between autosaves (also refreshes the lock)
 local LOCK_TIMEOUT = 300 -- a lock older than this is treated as a crashed server
 local MAX_ATTEMPTS = 3 -- DataStore call retries

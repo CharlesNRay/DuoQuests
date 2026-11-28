@@ -27,6 +27,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
+local STORE_PREFIX = require(Shared.Config.DataStores).Prefix -- every DataStore name starts with it (Config/DataStores)
 local Leaderboards = require(Shared.Leaderboards)
 local SeasonClock = require(Shared.SeasonClock)
 
@@ -53,7 +54,7 @@ local initialized = false
 local nextRead = 1 -- the category the next refresh reads first
 
 local function storeName(seasonId, categoryId)
-	return ("IPQ_Leaderboard_S%d_%s"):format(seasonId, categoryId)
+	return (STORE_PREFIX .. "Leaderboard_S%d_%s"):format(seasonId, categoryId)
 end
 
 -- a test season (Studio cheat) never touches the real boards

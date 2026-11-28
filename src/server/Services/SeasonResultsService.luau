@@ -27,6 +27,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
+local STORE_PREFIX = require(Shared.Config.DataStores).Prefix -- every DataStore name starts with it (Config/DataStores)
 local SeasonClock = require(Shared.SeasonClock)
 local SeasonHistogram = require(Shared.SeasonHistogram)
 local Config = require(Shared.Config.SeasonRewards)
@@ -78,13 +79,13 @@ function SeasonResultsService.Ended(seasonId)
 end
 
 local function stageStore(seasonId)
-	return DataStoreService:GetOrderedDataStore(("IPQ_Leaderboard_S%d_Stage"):format(seasonId))
+	return DataStoreService:GetOrderedDataStore((STORE_PREFIX .. "Leaderboard_S%d_Stage"):format(seasonId))
 end
 local function classStore(seasonId, classId)
-	return DataStoreService:GetOrderedDataStore(("IPQ_Leaderboard_S%d_Class_%s"):format(seasonId, classId))
+	return DataStoreService:GetOrderedDataStore((STORE_PREFIX .. "Leaderboard_S%d_Class_%s"):format(seasonId, classId))
 end
 local function histStore(seasonId)
-	return DataStoreService:GetDataStore(("IPQ_SeasonHist_S%d"):format(seasonId))
+	return DataStoreService:GetDataStore((STORE_PREFIX .. "SeasonHist_S%d"):format(seasonId))
 end
 
 local function bump(board, userId, value)
@@ -263,7 +264,7 @@ function SeasonResultsService.Results(seasonId)
 		return nil
 	end
 	local memoryMode = inMemory()
-	local store = if memoryMode then nil else DataStoreService:GetDataStore("IPQ_SeasonResults")
+	local store = if memoryMode then nil else DataStoreService:GetDataStore(STORE_PREFIX .. "SeasonResults")
 	local key = "S" .. seasonId
 	if memoryMode then
 		frozen[seasonId] = memoryFinal[seasonId]

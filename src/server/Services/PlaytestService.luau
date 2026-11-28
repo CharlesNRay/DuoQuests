@@ -20,11 +20,12 @@ local RunService = game:GetService("RunService")
 local ScriptContext = game:GetService("ScriptContext")
 
 local Shared = game:GetService("ReplicatedStorage"):WaitForChild("Shared")
+local STORE_PREFIX = require(Shared.Config.DataStores).Prefix -- every DataStore name starts with it (Config/DataStores)
 local PlaytestLog = require(Shared.PlaytestLog)
 
 local PlaytestService = {}
 
-local STORE_NAME = "IPQ_Playtest"
+local STORE_NAME = STORE_PREFIX .. "Playtest"
 local FLUSH_EVERY = 60
 local READ_MAX = 200 -- rows per list sent to the reader (keeps the remote reply small)
 
