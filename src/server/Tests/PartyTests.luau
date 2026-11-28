@@ -212,6 +212,25 @@ return function(modulesOverride)
 	local soloClaim = Party.Claim(alone, WARRIOR_ID, aloneP)
 	check("The solo AFK gains are paid at login", soloClaim.Afk ~= nil and soloClaim.Afk.Gold == soloPending.Gold and alone.Pending[tostring(WARRIOR_ID)] == nil)
 
+	-- companions spend their owner's talent points by their own role (a talented player tank outlasted them before)
+	aloneP.Season.Level = 41
+	local comps = Party.SyncCompanions(alone, aloneP, 300)
+	local function modOf(companion, stat)
+		local total = 0
+		for _, mod in ipairs(companion.CollectionMods or {}) do
+			if mod.Stat == stat then
+				total += mod.Value
+			end
+		end
+		return total
+	end
+	local mage, healer = nil, nil
+	for _, c in ipairs(comps) do
+		if c.ClassId == "Cleric" then healer = c end
+		if c.ClassId == "Mage" then mage = c end
+	end
+	check("Companions get their owner's talent points", healer ~= nil and modOf(healer, "Attack") > 0 and mage ~= nil and modOf(mage, "Attack") > 0)
+
 	-- Season reset
 	local sp = newParty(newPlayers())
 	sp.Stage, sp.Frontier = 40, 40

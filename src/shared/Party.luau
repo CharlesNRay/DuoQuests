@@ -333,7 +333,20 @@ local function followOwner(companion, ownerProfile)
 		end
 		companion.PetId, companion.PetLevel, companion.PetRank = pick, petLevel, petRank
 	end
-	companion.CollectionMods = Pets.Collection(ownerProfile).Mods
+	-- the owner's pet collection and bestiary bonuses, and the owner's talent points spent by the companion's own role
+	-- (2026-11-28: companions had no talents, so a Warrior player's talented tank far outlasted every other class's
+	-- companion tank and Warriors ran ~45 stages ahead at level 100)
+	local mods = table.clone(Pets.Collection(ownerProfile).Mods)
+	local talentProfile = { Season = { Level = season.Level, ClassId = companion.ClassId, Talents = {} } }
+	Talents.AutoSpend(talentProfile)
+	for _, mod in ipairs(Talents.Mods(talentProfile)) do
+		table.insert(mods, mod)
+	end
+	for _, mod in ipairs(Bestiary.Mods(ownerProfile)) do
+		table.insert(mods, mod)
+	end
+	companion.CollectionMods = mods
+	companion.PartySpirit = nil -- Party Spirit rewards playing with real people: companions add no ranks to it
 	for index = 1, Skills.SLOTS do
 		companion.SlotLevels[index] = level
 	end

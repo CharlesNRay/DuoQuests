@@ -535,3 +535,36 @@ Warrior paths lead the roster by ~30-50% in frontier at L100 (they led before th
 - Result (one seed, companion, L100): Berserker 141, Priest 136, Pyromancer 102 (before today 133-175 / 98 / 88).
 - Gear now takes less of the gold (12-25% at L60-79): each upgrade level is paid once and kept. Late gold goes to rune
   pouches and pet crates.
+
+## Companion talents (2026-11-28)
+Problem: the 12-path check (`abl.sh ... companion`, 2 seeds, to L100) had Warriors far ahead: Berserker stage 178-183 and
+Guardian 155-191 at level 100, every other path 101-139, and Warriors pulled away between L40 and L60 (stage 83-90 vs
+56-66). Cause: companions (`Party.followOwner`) copied the owner's level, gear, pet and skill levels but got NO talents
+(talents came after companions), so a Warrior player had a fully talented tank while every other class leaned on an
+untalented companion tank.
+
+Fix: companions spend their owner's talent points by their own role (`Talents.AutoSpend` on a stand-in profile) and
+share the owner's bestiary bonus. They add no Party Spirit ranks (that talent rewards playing with real people; with
+companions counted it gave a 4-hero party up to +20% Attack and Health). Party save fix the same day (PartyCore never
+saved Companions) means away fights now use companions too.
+
+That sped everyone up late (L100 stage ~205, ~25% fewer hours), so `Config/Stages.LateGrowth` past stage 70 went
+0.5% -> 0.9% a stage. One seed per path to L100 with companions:
+
+| path | L60 | L80 | L100 stage | hours |
+|---|---|---|---|---|
+| Priest | 92 | 104 | 147 | 166 |
+| Templar | 68 | 102 | 154 | 106 |
+| FrostWeaver | 85 | 102 | 139 | 190 |
+| Pyromancer | 84 | 101 | 133 | 142 |
+| Beastmaster | 69 | 101 | 126 | 132 |
+| Sharpshooter | 68 | 87 | 126 | 136 |
+| Assassin | 88 | 121 | 132 | 189 |
+| Duelist | 79 | 101 | 126 | 181 |
+| Necromancer | 77 | 104 | 133 | 163 |
+| SpiritCaller | 91 | 105 | 139 | 163 |
+| Berserker | 88 | 111 | 136 | 102 |
+| Guardian | 83 | 115 | 176 | 167 |
+
+Before: Warriors 155-191, the rest 101-139, mean hours ~165. After: 126-154 except one Guardian seed (176), mean
+hours ~153. Single seeds are noisy (the earlier Guardian seeds were 155 and 191); re-check Guardian with SEEDS=3.

@@ -49,7 +49,9 @@ return {
 	-- AttackShare: attack gets Rate x AttackShare per stage and health the rest (health x attack still grows (1+Rate)^2 a
 	-- stage), so late fights get longer instead of more lethal (at 1/1 frontier fights past L50 were 4-7 s again)
 	-- Bands (2026-11-25, owner: upgrade, push a few stages, wait for more upgrades): 1.8% a stage from 25, 0.5% from 70 (1% from 70 left L60-90 runs ~6 stages in 120 h).
-	LateGrowth = { Bands = { { From = 25, Rate = 0.018 }, { From = 70, Rate = 0.005 } }, AttackShare = 0.5 },
+	-- 2026-11-28: 0.9% from 70: companions now get talents (Party.luau followOwner), which sped the late game up (L100 stage ~205
+	-- -> ~140 again, BALANCE.md "Companion talents").
+	LateGrowth = { Bands = { { From = 25, Rate = 0.018 }, { From = 70, Rate = 0.009 } }, AttackShare = 0.5 },
 	-- Stage monsters: Health times more health and Attack times the attack. The same "who wins" (both sides take about
 	-- 1/Attack x Health longer to fall) but fights last long enough for heals, shields, buffs and debuffs to matter and to
 	-- be watched: at 1/1 frontier fights were over in 3-5 s and the heroes all fell (BALANCE.md "Fight length").
