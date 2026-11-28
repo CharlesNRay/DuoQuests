@@ -114,6 +114,16 @@ Renamed 2026-11-23: only player-visible text says Idle Party Quest (menu title, 
   with frontier 51), away bond XP was 0 and companion skill edits / the picked ultimate were lost. Now saved;
   `Party.OpenSession` rebuilds missing companions for old records. Join log prints `away: N fights, bond XP`.
   Seen in Studio: Party > 💞 Bonds tab (companion rows, "2 / 60 wins" tooltip).
+- **Overnight 2026-11-28** (tests green, 56 suites; SEEN in Studio unless noted): away fights pay bond XP (log
+  "away: 107 fights, bond XP 8.1 with 3 hero(es)", away stage 61 not 25); Bonds tab + tooltip in bond XP; Blacksmith
+  "+29" cap line; Pet Store food + "bag full" crate note (note NOT re-seen); Merchant has no pet food; season boss faces
+  the town, head on body, legs (`BossService.buildColossus`), rebuilt on a season switch; Kindred + Tidebound auras.
+  Companions get their owner's talents by role + bestiary, no Party Spirit (`Party.followOwner`); late growth past 70
+  0.9% (BALANCE.md "Companion talents"). Season histogram undoes moves of players who left mid-write. Every DataStore
+  name = `Config/DataStores.Prefix` .. name (change ONCE at launch). Draft season 2 "Tidebreak" (Elemental Tides,
+  `Shared/Tides`, `Config/Seasons.Drafts[2]`: only the "Start next season" cheat runs it; boss The Maelstrom, prize
+  Tidebound aura; Season screen tide card + map card note SEEN). New season clears the party Farm flag. Gold bag can
+  exceed its size with lucky finds (`drop.Keep`, "Bag 73/50" seen): not changed, owner to decide.
 - **Studio test mute**: Workspace attribute `StudioMute = true` (Edit mode, command bar) silences all game sound in Studio
   (owner asked: no sound while Claude tests). Set it before test runs, clear it (nil) before Ctrl+S.
 
