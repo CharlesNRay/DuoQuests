@@ -65,7 +65,7 @@ function WelcomeBack.Show(root, claim, waiting)
 	Kit.label({ Size = UDim2.new(1, -20, 0, 30), Position = UDim2.fromOffset(10, 10), Text = "🌙 Welcome back!", TextSize = 24, Font = Enum.Font.GothamBlack, TextColor3 = C.Accent, TextXAlignment = Enum.TextXAlignment.Center, ZIndex = 61, Parent = card })
 	local intro
 	if afk and (afk.Seconds or 0) > 0 then
-		intro = ("Your party kept fighting while you were away: %s fights on stage %d."):format(Short(afk.Fights or 0), afk.Stage or 1)
+		intro = ("Your party kept fighting while you were away: %s %s on stage %d."):format(Short(afk.Fights or 0), if (afk.Fights or 0) == 1 then "fight" else "fights", afk.Stage or 1)
 	elseif earned then
 		intro = "Your party kept going while you were away."
 	else
@@ -76,7 +76,7 @@ function WelcomeBack.Show(root, claim, waiting)
 	-- the rewards, one row each
 	local rows = {}
 	if earned then
-		table.insert(rows, { "🪙", "Gold", "+" .. Short(gold) })
+		table.insert(rows, { "💰", "Gold", "+" .. Short(gold) }) -- not 🪙: emoji 13 draws as a box in Roblox
 		table.insert(rows, { "⭐", "XP", "+" .. Short(xp) })
 	end
 	if shards > 0 then

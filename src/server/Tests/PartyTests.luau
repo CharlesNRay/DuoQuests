@@ -235,7 +235,9 @@ return function(modulesOverride)
 	local sp = newParty(newPlayers())
 	sp.Stage, sp.Frontier = 40, 40
 	sp.Pending[tostring(WARRIOR_ID)] = { Gold = 5 }
+	sp.Farm = true -- replaying an old stage when the season ends
 	check("A new season resets the shared stage but keeps the party", Party.EnsureSeason(sp, 2) and sp.Stage == 1 and sp.Frontier == 1 and next(sp.Pending) == nil and sp.PartyId == "party1" and #sp.Members == 2)
+	check("A new season stops last season's replay (no hold at stage 1)", sp.Farm == nil)
 	check("The same season is left alone", not Party.EnsureSeason(sp, 2))
 	sp.Stage, sp.Frontier = 9, 9
 	check("An older season never wipes a newer record", not Party.EnsureSeason(sp, 1) and sp.SeasonId == 2 and sp.Frontier == 9)

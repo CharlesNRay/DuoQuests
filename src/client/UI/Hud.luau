@@ -58,7 +58,7 @@ local short
 
 local MAP_GLYPHS = {
 	Trees = "🌳", Pines = "🌲", Rocks = "⛰️", Crystals = "💎", Cacti = "🌵",
-	SnowPines = "❄️", LavaRocks = "🌋", DeadTrees = "🪦", Pillars = "🏛️", Clouds = "☁️",
+	SnowPines = "❄️", LavaRocks = "🌋", DeadTrees = "🥀", Pillars = "🏛️", Clouds = "☁️",
 	StormRocks = "⚡", Coral = "🐚", FlameCrystals = "🔥", GlowShrooms = "🍄", IceSpikes = "🌌", StarRocks = "⭐", VoidShards = "🌑", GoldPillars = "☀", WindTrees = "💨", RuneStones = "🔮", Slimelings = "💚",
 }
 local INTRO = 0.8 -- matches Battle/Replay: monsters run in before the first blow
@@ -417,8 +417,7 @@ function Hud.new(root)
 			local themeIndex = (zone.Index - 1) % Zones.Count() + 1
 			rising = table.find(tide.ZoneIndexes, themeIndex) ~= nil
 		end
-		if rising then
-			self.MapZone.Text = ("%s  -  %s"):format(zone.Name, tide.Name)
+		if rising then -- the name alone fits the card; the note line below says which tide (seen cut off 2026-11-28)
 			self.MapZone.TextColor3 = Color3.fromRGB(tide.Color[1], tide.Color[2], tide.Color[3])
 		else
 			self.MapZone.TextColor3 = self.MapZoneColor
@@ -438,6 +437,11 @@ function Hud.new(root)
 		local holding = party and party.Holding == true
 		self.AdvanceButton.Visible = holding
 		self.MapNote.Text = if holding then "Holding - tap Advance" elseif party then ("Furthest: %d"):format(frontier) else "No party yet"
+		if rising and not holding then
+			self.MapNote.Text = ("%s: x%d gold  -  %s"):format(tide.Name, 1 + math.floor(tide.GoldGain + 0.5), self.MapNote.Text)
+		end
+		self.MapNoteColor = self.MapNoteColor or self.MapNote.TextColor3
+		self.MapNote.TextColor3 = if rising and not holding then self.MapZone.TextColor3 else self.MapNoteColor
 		self.MapNote.Size = UDim2.new(1, if holding then -90 else -12, 0, 16)
 
 		-- the card shown while spectating mirrors it

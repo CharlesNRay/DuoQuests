@@ -200,6 +200,7 @@ function Party.EnsureSeason(party, seasonId)
 	party.Stage = 1
 	party.Frontier = 1
 	party.Pending = {}
+	party.Farm = nil -- a replay picked last season must not hold the new season at stage 1 (seen 2026-11-28)
 	party.Companion = nil
 	party.Companions = nil
 	return true
