@@ -107,8 +107,14 @@ local function report(seasonId, profile, userId, score, classId)
 	SeasonHistogram.Move(pendingOf(seasonId), inflightOf(seasonId), profile, seasonId, userId, score, Config.MinStage)
 end
 
+-- a player who left during the write has had their last save: their moves are undone instead (SeasonHistogram.Commit)
+local function isLive(userId, profile)
+	local player = Players:GetPlayerByUserId(userId)
+	return player ~= nil and DataService.GetProfile(player) == profile
+end
+
 local function commitInflight(seasonId)
-	SeasonHistogram.Commit(inflightOf(seasonId), seasonId)
+	SeasonHistogram.Commit(inflightOf(seasonId), seasonId, isLive, pendingOf(seasonId))
 end
 
 local function flushHistogram(seasonId)

@@ -154,6 +154,17 @@ return function(modulesOverride)
 		check("Histogram: a new season counts them again from scratch", H.Counted(player, 2, 77, {}) == nil and H.Move({}, {}, player, 2, 77, 6, 5) == true)
 		check("Histogram: below the minimum stage nobody is counted", H.Move({}, {}, Template.New(), 1, 78, 4, 5) == false)
 		check("Histogram: the save field is DataStore-safe", #DS.Problems(player) == 0)
+		-- the player leaves while the write is in flight: their last save keeps 30, so the move to 40 is undone
+		local pendC, flyC = {}, {}
+		H.Move(pendC, flyC, player, 1, 77, 35, 5)
+		H.Move(pendC, flyC, player, 1, 77, 40, 5)
+		write(pendC)
+		H.Commit(flyC, 1, function() return false end, pendC)
+		write(pendC)
+		check("Histogram: a player who left during the write is undone, not counted twice", total() == 1 and shared[30] == 1 and (shared[40] or 0) == 0 and player.Permanent.SeasonHist.Score == 30)
+		H.Move(pendC, flyC, player, 1, 77, 40, 5)
+		write(pendC) H.Commit(flyC, 1, function() return true end, pendC)
+		check("Histogram: on the next join they move up once", total() == 1 and shared[40] == 1 and player.Permanent.SeasonHist.Score == 40)
 	end
 
 	print(("SeasonRolloverTests done: %d passed, %d failed"):format(passed, failed))

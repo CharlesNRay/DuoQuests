@@ -151,14 +151,19 @@ local function buildColossus()
 	local altar = glowPart(model, "Altar", Vector3.new(34, 3, 34), origin + Vector3.new(0, 1.5, 0), Color3.fromRGB(110, 110, 118))
 	local body = glowPart(model, "Body", Vector3.new(h * 0.45, h * 0.45, h * 0.3), origin + Vector3.new(0, 3 + h * 0.35, 0), color)
 	model.PrimaryPart = body
-	glowPart(model, "Head", Vector3.new(h * 0.22, h * 0.2, h * 0.2), origin + Vector3.new(0, 3 + h * 0.72, 0), color:Lerp(Color3.new(1, 1, 1), 0.1))
+	-- the head sits on the body (it floated 4 studs above it at Height 90) and legs stand on the altar (the body hung
+	-- 11 studs over it; seen in Studio 2026-11-28)
+	glowPart(model, "Head", Vector3.new(h * 0.22, h * 0.2, h * 0.2), origin + Vector3.new(0, 3 + h * 0.67, 0), color:Lerp(Color3.new(1, 1, 1), 0.1))
+	for _, side in ipairs({ -1, 1 }) do
+		glowPart(model, "Leg", Vector3.new(h * 0.15, h * 0.15, h * 0.17), origin + Vector3.new(side * h * 0.12, 3 + h * 0.07, 0), color:Lerp(Color3.new(0, 0, 0), 0.25))
+	end
 	glowPart(model, "ArmL", Vector3.new(h * 0.14, h * 0.42, h * 0.14), origin + Vector3.new(-h * 0.3, 3 + h * 0.35, 0), color:Lerp(Color3.new(0, 0, 0), 0.2))
 	glowPart(model, "ArmR", Vector3.new(h * 0.14, h * 0.42, h * 0.14), origin + Vector3.new(h * 0.3, 3 + h * 0.35, 0), color:Lerp(Color3.new(0, 0, 0), 0.2))
 	local look = SEASON.Look
 	local e = look.EyeColor or { 150, 255, 150 }
 	local eyeColor = Color3.fromRGB(e[1], e[2], e[3])
 	for _, side in ipairs({ -1, 1 }) do
-		local eye = glowPart(model, "Eye", Vector3.new(h * 0.04, h * 0.04, h * 0.03), origin + Vector3.new(side * h * 0.05, 3 + h * 0.74, -h * 0.1), eyeColor, nil, Enum.Material.Neon)
+		local eye = glowPart(model, "Eye", Vector3.new(h * 0.04, h * 0.04, h * 0.03), origin + Vector3.new(side * h * 0.05, 3 + h * 0.69, -h * 0.1), eyeColor, nil, Enum.Material.Neon)
 		eye.Name = "Eye"
 	end
 	-- season extras (Config/Seasons Boss.Look)
@@ -187,7 +192,7 @@ local function buildColossus()
 	end
 	if look.Material then
 		for _, part in ipairs(model:GetChildren()) do
-			if part:IsA("BasePart") and (part.Name == "Body" or part.Name == "Head" or part.Name == "ArmL" or part.Name == "ArmR") then
+			if part:IsA("BasePart") and (part.Name == "Body" or part.Name == "Head" or part.Name == "ArmL" or part.Name == "ArmR" or part.Name == "Leg") then
 				part.Material = Enum.Material[look.Material]
 			end
 		end
@@ -220,6 +225,8 @@ local function buildColossus()
 	prompt.Triggered:Connect(function(player)
 		push:FireClient(player, "OpenBoss", "Season")
 	end)
+	-- built facing -Z; turn it to face the town (it showed its back to players coming out of the gate)
+	model:PivotTo(CFrame.lookAt(body.Position, Vector3.new(0, body.Position.Y, 0)))
 	model.Parent = workspace
 	return model
 end
@@ -435,7 +442,8 @@ end
 function BossService.Init(pushRemote, profileGetter)
 	push, getProfile = pushRemote, profileGetter
 	worldModel = buildWorldBoss()
-	worldModel:PivotTo(CFrame.new(World.BossSpots.World.X, WORLD.Look.Height * 0.55, World.BossSpots.World.Z)) -- the Boss Field
+	local spot = Vector3.new(World.BossSpots.World.X, WORLD.Look.Height * 0.55, World.BossSpots.World.Z)
+	worldModel:PivotTo(CFrame.lookAt(spot, Vector3.new(0, spot.Y, 0))) -- the Boss Field, facing the town
 	worldModel.Parent = nil
 	SEASON = Bosses.SeasonCfg(SeasonClock.Def(SeasonClock.CurrentId())) -- this season's own boss (Config/Seasons Boss)
 	colossusModel = buildColossus()

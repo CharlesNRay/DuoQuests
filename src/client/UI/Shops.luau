@@ -299,7 +299,11 @@ function Shops.PetStore(container, state, call)
 		for _, rarity in ipairs({ "Common", "Rare", "Epic", "Legendary" }) do
 			table.insert(odds, ("%s %d%%"):format(rarity:sub(1, 1), crate.Odds[rarity] or 0))
 		end
-		offer(crate.Glyph, crate.Name, "One piece of pet gear.  " .. table.concat(odds, "  "), crate.Price, "Open", function()
+		local full = #g.Bag >= g.BagSize
+		local text = if full
+			then ("Pet gear bag full (%d/%d): wear or sell some on the Pets screen first."):format(#g.Bag, g.BagSize)
+			else "One piece of pet gear.  " .. table.concat(odds, "  ")
+		offer(crate.Glyph, crate.Name, text, crate.Price, "Open", function()
 			local ok, piece = call("BuyPetGearCrate", crate.Id)
 			if ok and type(piece) == "table" and piece.Kind then
 				showPull(container, pullText(piece))
