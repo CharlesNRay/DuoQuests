@@ -1,7 +1,7 @@
 # Idle Party Quest Roadmap
 
 > Living document. Updated whenever we finish or reprioritise something.
-> **Last updated:** 2026-11-24
+> **Last updated:** 2026-11-27
 
 **Jump to:** [Now](#now) · [Next up](#next-up) · [Later](#later) · [Done](#done) · [Open questions](#open-questions) · [Known gaps](#known-gaps)
 
@@ -36,8 +36,22 @@ In rough order.
 ## Done
 Newest first.
 
+### 2026-11-25 to 2026-11-27 (slow pacing, seasons, gold, Bonds)
+- Balance: late-game runaway fixed, fights ~3.5x longer, slow upgrade loop (`Economy.LevelPace`), boss traps eased,
+  roles and "one job per skill" rules (docs/BALANCE.md), every icon unique (`tools/icons/icons.py`).
+- Collections: Bestiary and Class mastery (dock 🏅). Combat log Effects view and 📌 hold.
+- Seasons: rollover at load (everyone restarts, Permanent kept, season news card), DataStore read budget for the
+  leaderboards, Top-% histogram, stress test cheat (fake parties on free lots).
+- Gold: income slower past stage 40, gear upgrade cap grows with hero level (up to +30), upgrades move to the replacing
+  piece (half value now), pet food only at the Pet Store, flat daily login gold.
+- Season 1 "Unbroken" (4 weeks at launch): mechanic Bonds (bond levels with partners and companions, +0.5% Attack/Health
+  each, 5% speed while away), season boss The Oathbreaker, Kindred aura for the Top 20%. Ideas for later seasons:
+  docs/SEASONS.md.
+- Fix: party saves dropped companions, the picked ultimate and the farm flag (away fights ran solo players without
+  companions). Seen in Studio: Party > Bonds tab. Not seen: the rest of 11-27.
+
 ### 2026-11-24 (rename, homes street, biomes 101-200, Mastery)
-- Renamed to Idle Party Quest (player-visible text only; DataStore and instance names keep DuoQuest).
+- Renamed to Idle Party Quest (player-visible text first; on 11-24 DataStores and instances became `IPQ_*` / `IdleParty*`).
 - Main menu: 4-hero menu battle, centered on big screens, +2 character slots Game Pass (locked card), back to the menu from Settings.
 - HUD: size setting (HUD and combat log only), Roblox headshots on the portrait and party rows.
 - Town: player homes are a street (lots both sides facing it, owner signs), shops in a ring round the Market square.
